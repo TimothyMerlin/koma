@@ -1,0 +1,19 @@
+---
+title: "Estimating and Forecasting with the koma Package"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{koma}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{R, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{R setup}
+library(koma)
+```

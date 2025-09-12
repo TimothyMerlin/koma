@@ -1,0 +1,3 @@
+# ignore all files in scripts folder (only used for dev)
+scripts/
+data-raw/

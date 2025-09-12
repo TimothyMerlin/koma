@@ -1,0 +1,44 @@
+Package: koma
+Title: A Large Scale Macroeconomic Model 
+Version: 0.1.0
+Authors@R: c(
+    person("Samad", "Sarferaz", , "sarferaz@kof.ethz.ch", role = c("aut", "cph")),
+    person("Laurent", "Florin", , "florin@kof.ethz.ch", role = c("aut")),
+    person("Merlin", "Scherer", , "scherer@kof.ethz.ch", role = c("aut", "cre"), comment = c(ORCID = "0009-0005-7479-168X")))
+Description: A Bayesian Simultaneous Equations Model for Forecasting.
+License: GPL (>= 3)
+Suggests:
+    devtools (>= 2.4.5),
+    testthat (>= 3.1.9),
+    usethis (>= 2.2.1),
+    pkgdown (>= 2.0.7),
+    knitr (>= 1.43),
+    rmarkdown (>= 2.24),
+    future (>= 1.33.0),
+    parallelly (>= 1.36.0),
+    withr (>= 3.0.0),
+    texreg (>= 1.39.4)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+Config/testthat/edition: 3
+Imports:
+    cli (>= 3.6.3),
+    doFuture (>= 1.0.0),
+    expm (>= 0.999.7),
+    foreach (>= 1.5.2),
+    glue (>= 1.8.0),
+    Matrix (>= 1.5.4.1),
+    MCMCpack (>= 1.6.3),
+    plotly (>= 4.10.2),
+    progressr (>= 0.15.0),
+    purrr (>= 1.0.4),
+    rlang (>= 1.1.6),
+    stats (>= 4.0.2),
+    stringr (>= 1.5.0),
+    tempdisagg (>= 1.1),
+    tidyr (>= 1.3.0)
+Depends: 
+    R (>= 3.5)
+LazyData: true
+VignetteBuilder: knitr

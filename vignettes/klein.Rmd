@@ -1,0 +1,201 @@
+---
+title: "Estimating Klein's Model I"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{klein}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Equations of Klein's Model
+
+## Stochastic equations
+
+$$
+\begin{aligned}
+\text{consumption}\quad   C_t     &= \beta_0 + \alpha_1 P_t + \alpha_2 P_{t-1}
+                                   + \alpha_3\bigl(W^p_t + W^g_t\bigr)
+                                   + \varepsilon_{1t},\\
+\text{investment}\quad    I_t     &= \beta_0  + \beta_1 P_t + \beta_2 P_{t-1}
+                                   + \beta_3 K_{t-1}
+                                   + \varepsilon_{2t},\\
+\text{private wages}\quad W^p_t   &= \gamma_0 + \gamma_1 Y_t + \gamma_2 Y_{t-1}
+                                   + \gamma_3 A_t
+                                   + \varepsilon_{3t}.
+\end{aligned}
+$$
+
+The $\alpha$'s, $\beta$'s, and $\gamma$'s are the coefficients of the model. $P_t$ is the private profits, $W^p_t$ is the private wages, $W^g_t$ is the government wages, $K_{t-1}$ is the capital stock at time $t-1$, and $A_t$ is a time trend. The $\varepsilon_{it}$ are stochastic error terms.
+
+## Equilibrium condition
+$$
+\begin{aligned}
+\text{equilibrium demand}\quad Y_t &= C_t + I_t + G_t
+\end{aligned}
+$$
+
+$Y_t$ is the equilibrium demand, $C_t$ is the consumption, $I_t$ is the investment, and $G_t$ is the government spending.
+
+## Identities
+
+$$
+\begin{aligned}
+\text{equilibrium demand}\quad Y_t &= C_t + I_t + G_t\\
+\text{private profits}\quad P_t &= Y_t - T_t - W^p_t\\
+\text{capital stock}\quad K_t &= K_{t-1} + I_t
+\end{aligned}
+$$
+
+Here, $T_t$ represents taxes, $K_t$ denotes the capital stock at time $t$, and $G_t$ signifies government spending.
+
+# Defining Klein's Model in R
+To estimate and forecast this model, we need to specify the equations, the exogenous variables, and the date ranges for estimation and forecasting.
+
+```{R}
+equations <- "consumption ~ profits + profits.L(1) + total_wages,
+investment ~ profits + profits.L(1) + capital_stock.L(1),
+wages ~ gdp + gdp.L(1) + time_trend,
+gdp == (n_consumption/n_gdp)*consumption + (n_investment/n_gdp)*investment + (n_government/n_gdp)*government,
+profits == (n_gdp/n_profits)*gdp - (n_taxes/n_profits)*taxes - (n_wages/n_profits)*wages,
+capital_stock == 1.001*capital_stock.L(1) + 0.0002*investment,
+total_wages == (n_wages/n_total_wages)*wages + (n_government_wages/n_total_wages)*government_wages"
+
+exogenous_variables <- c("government", "government_wages", "taxes", "time_trend")
+```
+
+The `equations` string contains the model equations, while `exogenous_variables` lists the exogenous variables. The `.L(1)` notation indicates a lag of one period.
+For further details on the syntax, please refer to the [equation syntax documentation](../equations.html).
+
+# Creating the SEM
+
+The `system_of_equations` function is used to create a system of equations object, which can then be used for estimation and forecasting.
+```{R, collapse=TRUE}
+library(koma)
+
+sys_eq <- system_of_equations(
+  equations = equations,
+  exogenous_variables = exogenous_variables
+)
+
+print(sys_eq)
+```
+
+# Defing the Estimation and Forecast Dates
+Now, we need to specify the dates for estimation and forecasting.
+
+```{R}
+dates <- list(
+  estimation = list(start = c(1990, 1), end = c(2020, 4)),
+  forecast = list(start = c(2021, 1), end = c(2023, 4)),
+  dynamic_weights = list(start = c(1990, 1), end = c(2020, 4))
+)
+```
+
+# Preparing the Data
+
+We will use the `klein` dataset, which contains the required variables for the model. 
+This dataset is a list of standard time series (`ts`) objects, where each object corresponds to a variable in the model. 
+You can explore the dataset by using the `?klein` command to view its documentation and structure.
+
+```{R}
+?klein
+```
+
+To prepare the dataset for use with the `koma` package, we need to convert the `ts` objects to the `ets` format using the `as_ets` function.
+
+The model is estimated in growth rates. The `klein` dataset is in levels. We use the `ets` to tell the model that the data is in levels and how to convert it to growth rates.
+`ets` is generalized to accept any additional attributes. Below we use this feature to save the series' value_type (real or nominal).
+
+```{R}
+# Some series in the klein dataset are nominal. We need to deflate them using the GDP deflator.
+klein$profits <- klein$n_profits / (klein$d_gdp / 100)
+klein$capital_stock <- klein$n_capital_stock / (klein$d_gdp / 100)
+klein$wages <- klein$n_wages / (klein$d_gdp / 100)
+klein$government_wages <- klein$n_government_wages / (klein$d_gdp / 100)
+klein$taxes <- klein$n_taxes / (klein$d_gdp / 100)
+
+real_series <- c(
+  "gdp", "consumption", "investment", "profits", "capital_stock",
+  "government", "wages", "government_wages", "taxes"
+)
+real_ts_data <- lapply(real_series, function(x) {
+  as_ets(klein[[x]],
+    series_type = "level", method = "diff_log", value_type = "real"
+  )
+})
+names(real_ts_data) <- real_series
+
+real_ts_data$total_wages <- real_ts_data$government_wages + real_ts_data$wages
+
+# net exports can be negative, we thus want to use percentage change instead of log difference
+real_ts_data$net_exports <- as_ets(klein$net_exports,
+  series_type = "level", method = "percentage", value_type = "real"
+)
+
+# To compute the weights in the model, we include the nominal series in the dataset as well.
+nominal_series <- c(
+  "n_gdp", "n_investment", "n_government", "n_government_wages",
+  "n_taxes", "n_profits", "n_wages", "n_consumption"
+)
+nominal_ts_data <- lapply(nominal_series, function(x) {
+  as_ets(klein[[x]],
+    series_type = "level", method = "diff_log", value_type = "nominal"
+  )
+})
+names(nominal_ts_data) <- nominal_series
+
+nominal_ts_data$n_total_wages <- nominal_ts_data$n_government_wages + nominal_ts_data$n_wages
+
+# Combining the real and nominal series
+ts_data <- c(real_ts_data, nominal_ts_data)
+
+# Adding the time trend
+ts_data$time_trend <- ets(seq_len(length(klein$taxes)),
+  start = stats::start(ts_data$taxes), frequency = 4,
+  series_type = "level", method = "none", value_type = NA
+)
+```
+
+With the data prepared, we can now proceed to estimate the model. 
+Before forecasting, however, we need to truncate the endogenous variables to ensure they only include data up to the forecast start date.
+
+```{R}
+ts_data[sys_eq$endogenous_variables] <-
+  lapply(sys_eq$endogenous_variables, function(x) {
+    stats::window(ts_data[[x]], end = c(2020, 4))
+  })
+```
+
+# Estimating the Model
+
+The names of the list elements should match the variable names used in the equations.
+Now, we can estimate the model using the `estimate` function. 
+
+```{R, collapse=TRUE}
+estimates <- estimate(
+  sys_eq,
+  ts_data = ts_data,
+  dates = dates
+)
+print(estimates)
+```
+```{R, collapse=TRUE}
+summary(estimates)
+```
+
+To see how to run the estimation in parallel, refer to the [parallel estimation vignette](../parallel.html).
+
+# Forecasting
+
+To forecast the model, we can use the `forecast` function. This function will generate forecasts for the specified date range.
+```{R, collapse=TRUE}
+forecasts <- forecast(
+  estimates,
+  dates = dates
+)
+print(forecasts)
+```
+
+```{R, eval=FALSE}
+plot(forecasts, variables = "gdp")
+```
