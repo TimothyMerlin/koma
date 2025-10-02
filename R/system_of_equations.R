@@ -8,11 +8,17 @@
 #' by commas if provided as a single string.
 #'
 #' @section Equations:
-#' - "epsilon" flags stochastic equations; equations without "epsilon" are
-#'    treated as identity equations.
+#' - Stochastic equations use `~` (e.g. `y ~ x1 + x2`).
+#' - Identity equations use `==` (e.g. `y == 0.5*x1 + 0.5*x2`).
 #' - Lagged variables are denoted by `X.L(x)` for variable `X` and lag `L(x)`
 #'  (e.g. `.L(1)`, `.L(2)`).
-#' - To add an intercept, include "constant" in the equation.
+#' - Intercept are included by default, you can also explicitly specify the
+#' constant by adding `constant` to the equation (e.g. `y ~ constant + x1`).
+#' To exclude the intercept, add `+0` or `-1` to the equation
+#' (e.g. `y ~ 0 + x1`).
+#'
+#' For more details on the equation syntax, see
+#' \code{vignette("equations")}.
 #'
 #' @param equations A character string or vector containing the system of
 #' equations. If a single string, equations should be separated by commas.

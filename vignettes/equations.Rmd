@@ -37,14 +37,9 @@ Identity equations enforce exact relationships.
 gdp == 0.7*consumption + 0.2*investment + 0.2*government - 0.1*net_exports 
 ```
 
-## 3. Injected Parameters & Constants
-
-Known constants or parameters can be inserted via `()` in any equation.
+## 3. Injected Parameters
 
 ```r
-# Injected parameter s:
-gdp == (s) * cons
-
 # Ratios computed from data:
 gdp == (nom_cons/nom_gdp) * cons
 ```

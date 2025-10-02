@@ -41,12 +41,18 @@ by commas if provided as a single string.
 \section{Equations}{
 
 \itemize{
-\item "epsilon" flags stochastic equations; equations without "epsilon" are
-treated as identity equations.
+\item Stochastic equations use \code{~} (e.g. \code{y ~ x1 + x2}).
+\item Identity equations use \code{==} (e.g. \code{y == 0.5*x1 + 0.5*x2}).
 \item Lagged variables are denoted by \code{X.L(x)} for variable \code{X} and lag \code{L(x)}
 (e.g. \code{.L(1)}, \code{.L(2)}).
-\item To add an intercept, include "constant" in the equation.
+\item Intercept are included by default, you can also explicitly specify the
+constant by adding \code{constant} to the equation (e.g. \code{y ~ constant + x1}).
+To exclude the intercept, add \code{+0} or \code{-1} to the equation
+(e.g. \code{y ~ 0 + x1}).
 }
+
+For more details on the equation syntax, see
+\code{vignette("equations")}.
 }
 
 \examples{
