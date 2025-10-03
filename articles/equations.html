@@ -101,15 +101,10 @@ error term. An intercept is included by default.</p>
 <span><span class="va">gdp</span> <span class="op">==</span> <span class="fl">0.7</span><span class="op">*</span><span class="va">consumption</span> <span class="op">+</span> <span class="fl">0.2</span><span class="op">*</span><span class="va">investment</span> <span class="op">+</span> <span class="fl">0.2</span><span class="op">*</span><span class="va">government</span> <span class="op">-</span> <span class="fl">0.1</span><span class="op">*</span><span class="va">net_exports</span> </span></code></pre></div>
 </div>
 <div class="section level3">
-<h3 id="injected-parameters-constants">3. Injected Parameters &amp; Constants<a class="anchor" aria-label="anchor" href="#injected-parameters-constants"></a>
+<h3 id="injected-parameters">3. Injected Parameters<a class="anchor" aria-label="anchor" href="#injected-parameters"></a>
 </h3>
-<p>Known constants or parameters can be inserted via <code>()</code> in
-any equation.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Injected parameter s:</span></span>
-<span><span class="va">gdp</span> <span class="op">==</span> <span class="op">(</span><span class="va">s</span><span class="op">)</span> <span class="op">*</span> <span class="va">cons</span></span>
-<span></span>
-<span><span class="co"># Ratios computed from data:</span></span>
+<code class="sourceCode R"><span><span class="co"># Ratios computed from data:</span></span>
 <span><span class="va">gdp</span> <span class="op">==</span> <span class="op">(</span><span class="va">nom_cons</span><span class="op">/</span><span class="va">nom_gdp</span><span class="op">)</span> <span class="op">*</span> <span class="va">cons</span></span></code></pre></div>
 </div>
 <div class="section level3">
