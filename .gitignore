@@ -12,7 +12,6 @@ inst/doc
 fred_key.R
 .drone.yaml
 .r-test-coverage.gitlab-ci.yml
-.gitlab-ci.yml
 .hooks
 .pre-commit-config.yaml
 /scripts

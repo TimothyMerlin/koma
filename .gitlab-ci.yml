@@ -1,0 +1,18 @@
+variables:
+  CI_RUN: "true"
+  ERROR_LEVEL: "error"
+
+include:
+  - project: KOF/pipeline-templates
+    ref: main
+    file: r-cmd-check.gitlab-ci.yml
+  #  - project: KOF/pipeline-templates
+  #    ref: main
+  #  file: r-pre-commit.gitlab-ci.yml
+  #  - local: ".r-test-coverage.gitlab-ci.yml"
+  - project: KOF/pipeline-templates
+    ref: main
+    file: publish-kran.gitlab-ci.yml
+  - project: KOF/pipeline-templates
+    ref: main
+    file: r-publish-docs.gitlab-ci.yml
