@@ -74,22 +74,18 @@ to_long <- function(mts, start) {
   start <- num_to_dates(start, frequency = 4)
   date_str <- paste0(start[1], "-Q", start[2])
 
-  # convert to df
-  data_frame <- cbind(
-    as.data.frame(as.matrix(mts)),
-    dates = stats::time(mts),
-    sample_status = sample_status,
-    frames = rep(date_str, nrow(mts))
-  )
+  df <- as.data.frame(as.matrix(mts))
+  df$dates <- stats::time(mts)
+  df$sample_status <- sample_status
+  df$frames <- rep(date_str, nrow(df))
 
-  # convert to long format
-  out <- tidyr::pivot_longer(
-    as.data.frame(data_frame),
-    cols = setdiff(
-      colnames(data_frame),
-      c("dates", "frames", "sample_status")
-    ),
-    names_to = "variable"
+  stacked <- utils::stack(df[setdiff(names(df), c("dates", "sample_status", "frames"))])
+  out <- data.frame(
+    dates = rep(df$dates, times = length(unique(stacked$ind))),
+    sample_status = rep(df$sample_status, times = length(unique(stacked$ind))),
+    frames = rep(df$frames, times = length(unique(stacked$ind))),
+    variable = stacked$ind,
+    value = stacked$values
   )
 
   out

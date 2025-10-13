@@ -79,36 +79,35 @@ test_that("to_long", {
 
   result <- to_long(mts, forecast_start)
 
-  expected_result <- structure(list(
-    dates = c(
-      2000, 2000, 2000.25, 2000.25, 2000.5,
-      2000.5, 2000.75, 2000.75, 2001, 2001, 2001.25, 2001.25, 2001.5,
-      2001.5, 2001.75, 2001.75, 2002, 2002, 2002.25, 2002.25
-    ), sample_status = structure(c(
-      2L,
-      2L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L,
-      1L, 1L, 1L
-    ), levels = c("forecast", "in_sample"), class = "factor"),
-    frames = c(
-      "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1",
-      "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1",
-      "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1",
-      "2001-Q1", "2001-Q1", "2001-Q1"
-    ), variable = c(
-      "Series 1",
-      "Series 2", "Series 1", "Series 2", "Series 1", "Series 2",
-      "Series 1", "Series 2", "Series 1", "Series 2", "Series 1",
-      "Series 2", "Series 1", "Series 2", "Series 1", "Series 2",
-      "Series 1", "Series 2", "Series 1", "Series 2"
-    ), value = c(
-      1L,
-      11L, 2L, 12L, 3L, 13L, 4L, 14L, 5L, 15L, 6L, 16L, 7L, 17L,
-      8L, 18L, 9L, 19L, 10L, 20L
-    )
-  ), row.names = c(NA, -20L), class = c(
-    "tbl_df",
-    "tbl", "data.frame"
-  ))
+  expected_result <- structure(
+    list(
+      dates = c(
+        2000, 2000.25, 2000.5, 2000.75, 2001,
+        2001.25, 2001.5, 2001.75, 2002, 2002.25, 2000, 2000.25, 2000.5,
+        2000.75, 2001, 2001.25, 2001.5, 2001.75, 2002, 2002.25
+      ),
+      sample_status = structure(
+        c(
+          2L,
+          2L, 2L, 2L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 2L, 1L, 1L, 1L,
+          1L, 1L, 1L
+        ),
+        class = "factor",
+        levels = c("forecast", "in_sample")
+      ),
+      frames = c(
+        "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1",
+        "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1",
+        "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1", "2001-Q1",
+        "2001-Q1", "2001-Q1", "2001-Q1"
+      ),
+      variable = structure(c(
+        1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 1L, 2L, 2L, 2L, 2L, 2L, 2L, 2L,
+        2L, 2L, 2L
+      ), class = "factor", levels = c("Series 1", "Series 2")), value = 1:20
+    ),
+    class = "data.frame", row.names = c(NA, -20L)
+  )
 
   expect_equal(result, expected_result)
 })
