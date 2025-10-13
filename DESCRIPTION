@@ -25,7 +25,6 @@ Config/testthat/edition: 3
 Imports:
     cli (>= 3.6.3),
     doFuture (>= 1.0.0),
-    expm (>= 0.999.7),
     foreach (>= 1.5.2),
     glue (>= 1.8.0),
     Matrix (>= 1.5.4.1),

@@ -191,7 +191,6 @@ forecast_single_draw <- function(sys_eq, estimates, jx,
 #'
 #' @return A matrix with the base forecast of Y.
 #'
-#' @importFrom expm %^%
 #' @keywords internal
 compute_forecast_values <- function(companion_matrix, reduced_form, y_matrix,
                                     forecast_x_matrix, horizon, freq,
@@ -249,10 +248,9 @@ compute_forecast_values <- function(companion_matrix, reduced_form, y_matrix,
   if (length(names(restrictions)) == 0) {
     out <- base_forecast
   } else {
-    psi_s <- lapply(0:(horizon - 1), function(x) {
-      thetax <- companion_theta %^% x # nolint: object_usage_linter.
-      temp <- t((solve(companion_gamma_matrix) %*% thetax))
-      temp
+    theta_powers <- powers(companion_theta, horizon)
+    psi_s <- lapply(theta_powers, function(thetax) {
+      t(solve(companion_gamma_matrix) %*% thetax)
     })
 
     R <- list()
@@ -304,4 +302,15 @@ compute_forecast_values <- function(companion_matrix, reduced_form, y_matrix,
   }
 
   stats::ts(out, start = start_forecast, frequency = freq)
+}
+
+# Precompute powers of companion_theta up to horizon-1
+powers <- function(mat, n) {
+  mats <- vector("list", n)
+  mats[[1]] <- diag(nrow(mat)) # mat^0
+  if (n > 1) mats[[2]] <- mat # mat^1
+  if (n > 2) {
+    for (i in 3:n) mats[[i]] <- mats[[i - 1]] %*% mat
+  }
+  mats
 }
