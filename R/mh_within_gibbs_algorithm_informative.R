@@ -313,7 +313,7 @@ draw_omega_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
   omega_bar <- omega_hat + priors_j[["omega_scale"]]
 
   # Draw Omega_j
-  omega_jw <- MCMCpack::riwish(
+  omega_jw <- riwish(
     number_of_observations + priors_j[["omega_df"]],
     omega_bar
   )

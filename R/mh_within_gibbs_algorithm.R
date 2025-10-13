@@ -282,7 +282,7 @@ draw_omega_j <- function(y_matrix, x_matrix, character_gamma_matrix,
     (z_matrix_j - x_matrix %*% theta_hat) %*% Matrix::solve(a_matrix_j)
 
   # Draw Omega_j
-  omega_jw <- MCMCpack::riwish(
+  omega_jw <- riwish(
     number_of_observations - number_of_exogenous,
     omega_hat
   )

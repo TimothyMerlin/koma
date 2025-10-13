@@ -28,7 +28,6 @@ Imports:
     foreach (>= 1.5.2),
     glue (>= 1.8.0),
     Matrix (>= 1.5.4.1),
-    MCMCpack (>= 1.6.3),
     plotly (>= 4.10.2),
     progressr (>= 0.15.0),
     purrr (>= 1.0.4),

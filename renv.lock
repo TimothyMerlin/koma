@@ -46,39 +46,6 @@
       "Repository": "PPM",
       "Encoding": "UTF-8"
     },
-    "MCMCpack": {
-      "Package": "MCMCpack",
-      "Version": "1.7-1",
-      "Source": "Repository",
-      "Date": "2024-08-27",
-      "Title": "Markov Chain Monte Carlo (MCMC) Package",
-      "Authors@R": "c(person(given = c(\"Andrew\", \"D.\"), family = \"Martin\", role = \"aut\"), person(given = c(\"Kevin\", \"M.\"), family = \"Quinn\", role = \"aut\"), person(given = c(\"Jong\", \"Hee\"), family = \"Park\", role = c(\"aut\", \"cre\"), email = \"jongheepark@snu.ac.kr\"), person(given = \"Ghislain\", family = \"Vieilledent\", role = \"ctb\"), person(given = \"Michael\", family = \"Malecki\", role = \"ctb\"), person(given = \"Matthew\", family = \"Blackwell\", role = \"ctb\"), person(given = \"Keith\", family = \"Poole\", role = \"ctb\"), person(given = \"Craig\", family = \"Reed\", role = \"ctb\"), person(given = \"Ben\", family = \"Goodrich\", role = \"ctb\"), person(given = \"Qiushi\", family = \"Yu\", role = \"ctb\"), person(given = \"Ross\", family = \"Ihaka\", role = \"cph\"), person(given = c(\"The\", \"R\", \"Development\", \"Core\"), family = \"Team\", role = \"cph\"), person(given = c(\"The\", \"R\"), family = \"Foundation\", role = \"cph\"), person(given = \"Pierre\", family = \"L'Ecuyer\", role = \"cph\"), person(given = \"Makoto\", family = \"Matsumoto\", role = \"cph\"), person(given = \"Takuji\", family = \"Nishimura\", role = \"cph\"))",
-      "Depends": [
-        "R (>= 3.6)",
-        "coda (>= 0.11-3)",
-        "MASS",
-        "stats"
-      ],
-      "Imports": [
-        "graphics",
-        "grDevices",
-        "lattice",
-        "methods",
-        "utils",
-        "mcmc",
-        "quantreg"
-      ],
-      "Description": "Contains functions to perform Bayesian inference using posterior simulation for a number of statistical models. Most simulation is done in compiled C++ written in the Scythe Statistical Library Version 1.0.3. All models return 'coda' mcmc objects that can then be summarized using the 'coda' package. Some useful utility functions such as density functions, pseudo-random number generators for statistical distributions, a general purpose Metropolis sampling algorithm, and tools for visualization are provided.",
-      "License": "GPL-3",
-      "SystemRequirements": "gcc (>= 4.0)",
-      "URL": "https://CRAN.R-project.org/package=MCMCpack",
-      "NeedsCompilation": "yes",
-      "Repository": "PPM",
-      "RoxygenNote": "7.3.1",
-      "Encoding": "UTF-8",
-      "Author": "Andrew D. Martin [aut], Kevin M. Quinn [aut], Jong Hee Park [aut, cre], Ghislain Vieilledent [ctb], Michael Malecki [ctb], Matthew Blackwell [ctb], Keith Poole [ctb], Craig Reed [ctb], Ben Goodrich [ctb], Qiushi Yu [ctb], Ross Ihaka [cph], The R Development Core Team [cph], The R Foundation [cph], Pierre L'Ecuyer [cph], Makoto Matsumoto [cph], Takuji Nishimura [cph]",
-      "Maintainer": "Jong Hee Park <jongheepark@snu.ac.kr>"
-    },
     "Matrix": {
       "Package": "Matrix",
       "Version": "1.7-3",
@@ -123,36 +90,6 @@
       "Author": "Douglas Bates [aut] (<https://orcid.org/0000-0001-8316-9503>), Martin Maechler [aut, cre] (<https://orcid.org/0000-0002-8685-9910>), Mikael Jagan [aut] (<https://orcid.org/0000-0002-3542-2938>), Timothy A. Davis [ctb] (<https://orcid.org/0000-0001-7614-6899>, SuiteSparse libraries, collaborators listed in dir(system.file(\"doc\", \"SuiteSparse\", package=\"Matrix\"), pattern=\"License\", full.names=TRUE, recursive=TRUE)), George Karypis [ctb] (<https://orcid.org/0000-0003-2753-1437>, METIS library, Copyright: Regents of the University of Minnesota), Jason Riedy [ctb] (<https://orcid.org/0000-0002-4345-4200>, GNU Octave's condest() and onenormest(), Copyright: Regents of the University of California), Jens Oehlschlägel [ctb] (initial nearPD()), R Core Team [ctb] (02zz1nj61, base R's matrix implementation)",
       "Maintainer": "Martin Maechler <mmaechler+Matrix@gmail.com>",
       "Repository": "PPM"
-    },
-    "MatrixModels": {
-      "Package": "MatrixModels",
-      "Version": "0.5-4",
-      "Source": "Repository",
-      "VersionNote": "Released 0.5-3 on 2023-11-06",
-      "Date": "2025-03-25",
-      "Title": "Modelling with Sparse and Dense Matrices",
-      "Contact": "Matrix-authors@R-project.org",
-      "Authors@R": "c( person(\"Douglas\", \"Bates\", role = \"aut\", email = \"bates@stat.wisc.edu\", comment = c(ORCID = \"0000-0001-8316-9503\")), person(\"Martin\", \"Maechler\", role = c(\"aut\", \"cre\"), email = \"mmaechler+Matrix@gmail.com\", comment = c(ORCID = \"0000-0002-8685-9910\")))",
-      "Description": "Generalized Linear Modelling with sparse and dense 'Matrix' matrices, using modular prediction and response module classes.",
-      "Depends": [
-        "R (>= 3.6.0)"
-      ],
-      "Imports": [
-        "stats",
-        "methods",
-        "Matrix (>= 1.6-0)",
-        "Matrix(< 1.8-0)"
-      ],
-      "ImportsNote": "_not_yet_stats4",
-      "Encoding": "UTF-8",
-      "LazyLoad": "yes",
-      "License": "GPL (>= 2)",
-      "URL": "https://Matrix.R-forge.R-project.org/, https://r-forge.r-project.org/R/?group_id=61",
-      "BugReports": "https://R-forge.R-project.org/tracker/?func=add&atid=294&group_id=61",
-      "NeedsCompilation": "no",
-      "Author": "Douglas Bates [aut] (<https://orcid.org/0000-0001-8316-9503>), Martin Maechler [aut, cre] (<https://orcid.org/0000-0002-8685-9910>)",
-      "Maintainer": "Martin Maechler <mmaechler+Matrix@gmail.com>",
-      "Repository": "CRAN"
     },
     "R6": {
       "Package": "R6",
@@ -226,34 +163,6 @@
       "Author": "Dirk Eddelbuettel [aut, cre] (<https://orcid.org/0000-0001-6419-907X>), Romain Francois [aut] (<https://orcid.org/0000-0002-2444-4226>), JJ Allaire [aut] (<https://orcid.org/0000-0003-0174-9868>), Kevin Ushey [aut] (<https://orcid.org/0000-0003-2880-7407>), Qiang Kou [aut] (<https://orcid.org/0000-0001-6786-5453>), Nathan Russell [aut], Iñaki Ucar [aut] (<https://orcid.org/0000-0001-6403-5550>), Doug Bates [aut] (<https://orcid.org/0000-0001-8316-9503>), John Chambers [aut]",
       "Maintainer": "Dirk Eddelbuettel <edd@debian.org>",
       "Repository": "CRAN"
-    },
-    "SparseM": {
-      "Package": "SparseM",
-      "Version": "1.84-2",
-      "Source": "Repository",
-      "Authors@R": "c( person(\"Roger\", \"Koenker\",  role = c(\"cre\",\"aut\"), email =  \"rkoenker@uiuc.edu\"), person(c(\"Pin\", \"Tian\"), \"Ng\",  role = c(\"ctb\"), comment = \"Contributions to Sparse QR code\", email =  \"pin.ng@nau.edu\") , person(\"Yousef\", \"Saad\",  role = c(\"ctb\"), comment = \"author of sparskit2\") , person(\"Ben\", \"Shaby\", role = c(\"ctb\"), comment = \"author of chol2csr\") , person(\"Martin\", \"Maechler\", role = \"ctb\", comment = c(\"chol() tweaks; S4\", ORCID = \"0000-0002-8685-9910\")) )",
-      "Maintainer": "Roger Koenker <rkoenker@uiuc.edu>",
-      "Depends": [
-        "R (>= 2.15)",
-        "methods"
-      ],
-      "Imports": [
-        "graphics",
-        "stats",
-        "utils"
-      ],
-      "VignetteBuilder": "knitr",
-      "Suggests": [
-        "knitr"
-      ],
-      "Description": "Some basic linear algebra functionality for sparse matrices is provided:  including Cholesky decomposition and backsolving as well as standard R subsetting and Kronecker products.",
-      "License": "GPL (>= 2)",
-      "Title": "Sparse Linear Algebra",
-      "URL": "http://www.econ.uiuc.edu/~roger/research/sparse/sparse.html",
-      "NeedsCompilation": "yes",
-      "Author": "Roger Koenker [cre, aut], Pin Tian Ng [ctb] (Contributions to Sparse QR code), Yousef Saad [ctb] (author of sparskit2), Ben Shaby [ctb] (author of chol2csr), Martin Maechler [ctb] (chol() tweaks; S4, <https://orcid.org/0000-0002-8685-9910>)",
-      "Repository": "PPM",
-      "Encoding": "UTF-8"
     },
     "askpass": {
       "Package": "askpass",
@@ -494,27 +403,6 @@
       "Author": "Gábor Csárdi [aut, cre], Hadley Wickham [ctb], Kirill Müller [ctb], Salim Brüggemann [ctb] (<https://orcid.org/0000-0002-5329-5987>), Posit Software, PBC [cph, fnd]",
       "Maintainer": "Gábor Csárdi <gabor@posit.co>",
       "Repository": "CRAN"
-    },
-    "coda": {
-      "Package": "coda",
-      "Version": "0.19-4.1",
-      "Source": "Repository",
-      "Date": "2020-09-30",
-      "Title": "Output Analysis and Diagnostics for MCMC",
-      "Authors@R": "c(person(\"Martyn\", \"Plummer\", role=c(\"aut\",\"cre\",\"trl\"), email=\"martyn.plummer@gmail.com\"), person(\"Nicky\", \"Best\", role=\"aut\"), person(\"Kate\", \"Cowles\", role=\"aut\"), person(\"Karen\", \"Vines\", role=\"aut\"), person(\"Deepayan\", \"Sarkar\", role=\"aut\"), person(\"Douglas\", \"Bates\", role=\"aut\"), person(\"Russell\", \"Almond\", role=\"aut\"), person(\"Arni\", \"Magnusson\", role=\"aut\"))",
-      "Depends": [
-        "R (>= 2.14.0)"
-      ],
-      "Imports": [
-        "lattice"
-      ],
-      "Description": "Provides functions for summarizing and plotting the output from Markov Chain Monte Carlo (MCMC) simulations, as well as diagnostic tests of convergence to the equilibrium distribution of the Markov chain.",
-      "License": "GPL (>= 2)",
-      "NeedsCompilation": "no",
-      "Author": "Martyn Plummer [aut, cre, trl], Nicky Best [aut], Kate Cowles [aut], Karen Vines [aut], Deepayan Sarkar [aut], Douglas Bates [aut], Russell Almond [aut], Arni Magnusson [aut]",
-      "Maintainer": "Martyn Plummer <martyn.plummer@gmail.com>",
-      "Repository": "RSPM",
-      "Encoding": "UTF-8"
     },
     "codetools": {
       "Package": "codetools",
@@ -1040,37 +928,6 @@
       "Author": "Hadley Wickham [aut, cre], Yihui Xie [aut] (<https://orcid.org/0000-0003-0645-5666>), Michael Lawrence [ctb], Thomas Kluyver [ctb], Jeroen Ooms [ctb], Barret Schloerke [ctb], Adam Ryczkowski [ctb], Hiroaki Yutani [ctb], Michel Lang [ctb], Karolis Koncevičius [ctb], Posit Software, PBC [cph, fnd]",
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
       "Repository": "CRAN"
-    },
-    "expm": {
-      "Package": "expm",
-      "Version": "1.0-0",
-      "Source": "Repository",
-      "Type": "Package",
-      "Title": "Matrix Exponential, Log, 'etc'",
-      "Date": "2024-08-19",
-      "Authors@R": "c(person(\"Martin\", \"Maechler\", role=c(\"aut\",\"cre\"), email=\"maechler@stat.math.ethz.ch\", comment = c(ORCID = \"0000-0002-8685-9910\")) , person(\"Christophe\",\"Dutang\", role = \"aut\", comment = c(ORCID = \"0000-0001-6732-1501\")) , person(\"Vincent\",   \"Goulet\", role = \"aut\", comment = c(ORCID = \"0000-0002-9315-5719\")) , person(\"Douglas\",   \"Bates\",      role = \"ctb\", comment = \"cosmetic clean up, in svn r42\") , person(\"David\",     \"Firth\",      role = \"ctb\", comment = \"expm(method= \\\"PadeO\\\" and \\\"TaylorO\\\")\") , person(\"Marina\",    \"Shapira\",    role = \"ctb\", comment = \"expm(method= \\\"PadeO\\\" and \\\"TaylorO\\\")\") , person(\"Michael\",   \"Stadelmann\", role = \"ctb\", comment = \"\\\"Higham08*\\\" methods, see ?expm.Higham08...\") )",
-      "Contact": "expm-developers@lists.R-forge.R-project.org",
-      "Description": "Computation of the matrix exponential, logarithm, sqrt, and related quantities, using traditional and modern methods.",
-      "Depends": [
-        "Matrix"
-      ],
-      "Imports": [
-        "methods"
-      ],
-      "Suggests": [
-        "RColorBrewer",
-        "sfsmisc",
-        "Rmpfr"
-      ],
-      "BuildResaveData": "no",
-      "License": "GPL (>= 2)",
-      "URL": "https://R-Forge.R-project.org/projects/expm/",
-      "BugReports": "https://R-forge.R-project.org/tracker/?atid=472&group_id=107",
-      "Encoding": "UTF-8",
-      "NeedsCompilation": "yes",
-      "Author": "Martin Maechler [aut, cre] (<https://orcid.org/0000-0002-8685-9910>), Christophe Dutang [aut] (<https://orcid.org/0000-0001-6732-1501>), Vincent Goulet [aut] (<https://orcid.org/0000-0002-9315-5719>), Douglas Bates [ctb] (cosmetic clean up, in svn r42), David Firth [ctb] (expm(method= \"PadeO\" and \"TaylorO\")), Marina Shapira [ctb] (expm(method= \"PadeO\" and \"TaylorO\")), Michael Stadelmann [ctb] (\"Higham08*\" methods, see ?expm.Higham08...)",
-      "Maintainer": "Martin Maechler <maechler@stat.math.ethz.ch>",
-      "Repository": "PPM"
     },
     "fansi": {
       "Package": "fansi",
@@ -2136,32 +1993,6 @@
       "Maintainer": "Lionel Henry <lionel@rstudio.com>",
       "Repository": "https://cran.r-project.org"
     },
-    "mcmc": {
-      "Package": "mcmc",
-      "Version": "0.9-8",
-      "Source": "Repository",
-      "Date": "2023-11-14",
-      "Title": "Markov Chain Monte Carlo",
-      "Author": "Charles J. Geyer <geyer@umn.edu> and Leif T. Johnson <ltjohnson@google.com>",
-      "Maintainer": "Charles J. Geyer <geyer@umn.edu>",
-      "Depends": [
-        "R (>= 3.6.0)"
-      ],
-      "Imports": [
-        "stats"
-      ],
-      "Suggests": [
-        "xtable",
-        "Iso"
-      ],
-      "ByteCompile": "TRUE",
-      "Description": "Simulates continuous distributions of random vectors using Markov chain Monte Carlo (MCMC).  Users specify the distribution by an R function that evaluates the log unnormalized density.  Algorithms are random walk Metropolis algorithm (function metrop), simulated tempering (function temper), and morphometric random walk Metropolis (Johnson and Geyer, 2012, <doi:10.1214/12-AOS1048>, function morph.metrop), which achieves geometric ergodicity by change of variable.",
-      "License": "MIT + file LICENSE",
-      "URL": "http://www.stat.umn.edu/geyer/mcmc/, https://github.com/cjgeyer/mcmc",
-      "NeedsCompilation": "yes",
-      "Repository": "RSPM",
-      "Encoding": "UTF-8"
-    },
     "memoise": {
       "Package": "memoise",
       "Version": "2.0.1",
@@ -2919,45 +2750,6 @@
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
       "Repository": "CRAN"
     },
-    "quantreg": {
-      "Package": "quantreg",
-      "Version": "6.1",
-      "Source": "Repository",
-      "Title": "Quantile Regression",
-      "Description": "Estimation and inference methods for models for conditional quantile functions:  Linear and nonlinear parametric and non-parametric (total variation penalized) models  for conditional quantiles of a univariate response and several methods for handling censored survival data.  Portfolio selection methods based on expected shortfall risk are also now included. See Koenker, R. (2005) Quantile Regression, Cambridge U. Press, <doi:10.1017/CBO9780511754098> and Koenker, R. et al. (2017) Handbook of Quantile Regression,  CRC Press, <doi:10.1201/9781315120256>.",
-      "Authors@R": "c( person(\"Roger\", \"Koenker\",  role = c(\"cre\",\"aut\"), email =  \"rkoenker@illinois.edu\"), person(\"Stephen\", \"Portnoy\",  role = c(\"ctb\"),  comment = \"Contributions to Censored QR code\", email =  \"sportnoy@illinois.edu\"), person(c(\"Pin\", \"Tian\"), \"Ng\",  role = c(\"ctb\"),  comment = \"Contributions to Sparse QR code\", email =  \"pin.ng@nau.edu\"), person(\"Blaise\", \"Melly\",  role = c(\"ctb\"),  comment = \"Contributions to preprocessing code\", email =  \"mellyblaise@gmail.com\"), person(\"Achim\", \"Zeileis\",  role = c(\"ctb\"),  comment = \"Contributions to dynrq code essentially identical to his dynlm code\",  email =  \"Achim.Zeileis@uibk.ac.at\"), person(\"Philip\", \"Grosjean\",  role = c(\"ctb\"),  comment = \"Contributions to nlrq code\", email =  \"phgrosjean@sciviews.org\"), person(\"Cleve\", \"Moler\",  role = c(\"ctb\"),  comment = \"author of several linpack routines\"), person(\"Yousef\", \"Saad\",  role = c(\"ctb\"),  comment = \"author of sparskit2\"), person(\"Victor\", \"Chernozhukov\",  role = c(\"ctb\"),  comment = \"contributions to extreme value inference code\"), person(\"Ivan\", \"Fernandez-Val\",  role = c(\"ctb\"),  comment = \"contributions to extreme value inference code\"), person(\"Martin\", \"Maechler\", role = \"ctb\", comment = c(\"tweaks (src/chlfct.f, 'tiny','Large')\", ORCID = \"0000-0002-8685-9910\")), person(c(\"Brian\", \"D\"), \"Ripley\",  role = c(\"trl\",\"ctb\"),  comment = \"Initial (2001) R port from S (to my everlasting shame --  how could I have been so slow to adopt R!) and for numerous other  suggestions and useful advice\", email =  \"ripley@stats.ox.ac.uk\"))",
-      "Maintainer": "Roger Koenker <rkoenker@illinois.edu>",
-      "Repository": "CRAN",
-      "Depends": [
-        "R (>= 3.5)",
-        "stats",
-        "SparseM"
-      ],
-      "Imports": [
-        "methods",
-        "graphics",
-        "Matrix",
-        "MatrixModels",
-        "survival",
-        "MASS"
-      ],
-      "Suggests": [
-        "interp",
-        "rgl",
-        "logspline",
-        "nor1mix",
-        "Formula",
-        "zoo",
-        "R.rsp",
-        "conquer"
-      ],
-      "License": "GPL (>= 2)",
-      "URL": "https://www.r-project.org",
-      "NeedsCompilation": "yes",
-      "VignetteBuilder": "R.rsp",
-      "Author": "Roger Koenker [cre, aut], Stephen Portnoy [ctb] (Contributions to Censored QR code), Pin Tian Ng [ctb] (Contributions to Sparse QR code), Blaise Melly [ctb] (Contributions to preprocessing code), Achim Zeileis [ctb] (Contributions to dynrq code essentially identical to his dynlm code), Philip Grosjean [ctb] (Contributions to nlrq code), Cleve Moler [ctb] (author of several linpack routines), Yousef Saad [ctb] (author of sparskit2), Victor Chernozhukov [ctb] (contributions to extreme value inference code), Ivan Fernandez-Val [ctb] (contributions to extreme value inference code), Martin Maechler [ctb] (tweaks (src/chlfct.f, 'tiny','Large'), <https://orcid.org/0000-0002-8685-9910>), Brian D Ripley [trl, ctb] (Initial (2001) R port from S (to my everlasting shame -- how could I have been so slow to adopt R!) and for numerous other suggestions and useful advice)",
-      "Encoding": "UTF-8"
-    },
     "ragg": {
       "Package": "ragg",
       "Version": "1.4.0",
@@ -3368,37 +3160,6 @@
       "Author": "Hadley Wickham [aut, cre, cph], Posit Software, PBC [cph, fnd]",
       "Maintainer": "Hadley Wickham <hadley@posit.co>",
       "Repository": "https://cran.r-project.org"
-    },
-    "survival": {
-      "Package": "survival",
-      "Version": "3.8-3",
-      "Source": "Repository",
-      "Title": "Survival Analysis",
-      "Priority": "recommended",
-      "Date": "2024-12-17",
-      "Depends": [
-        "R (>= 3.5.0)"
-      ],
-      "Imports": [
-        "graphics",
-        "Matrix",
-        "methods",
-        "splines",
-        "stats",
-        "utils"
-      ],
-      "LazyData": "Yes",
-      "LazyDataCompression": "xz",
-      "ByteCompile": "Yes",
-      "Authors@R": "c(person(c(\"Terry\", \"M\"), \"Therneau\", email=\"therneau.terry@mayo.edu\", role=c(\"aut\", \"cre\")), person(\"Thomas\", \"Lumley\", role=c(\"ctb\", \"trl\"), comment=\"original S->R port and R maintainer until 2009\"), person(\"Atkinson\", \"Elizabeth\", role=\"ctb\"), person(\"Crowson\", \"Cynthia\", role=\"ctb\"))",
-      "Description": "Contains the core survival analysis routines, including definition of Surv objects,  Kaplan-Meier and Aalen-Johansen (multi-state) curves, Cox models, and parametric accelerated failure time models.",
-      "License": "LGPL (>= 2)",
-      "URL": "https://github.com/therneau/survival",
-      "NeedsCompilation": "yes",
-      "Author": "Terry M Therneau [aut, cre], Thomas Lumley [ctb, trl] (original S->R port and R maintainer until 2009), Atkinson Elizabeth [ctb], Crowson Cynthia [ctb]",
-      "Maintainer": "Terry M Therneau <therneau.terry@mayo.edu>",
-      "Repository": "PPM",
-      "Encoding": "UTF-8"
     },
     "sys": {
       "Package": "sys",
