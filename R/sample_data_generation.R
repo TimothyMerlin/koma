@@ -158,7 +158,7 @@ get_lagged_values <- function(predetermined_matrix, y_matrix, tx) {
     var <- variable_names[w]
     if (grepl("\\.L\\(\\d+\\)$", var)) {
       pattern <- "^(.*)(?=\\.L\\(\\d+\\)$)"
-      var <- stringr::str_extract(var, pattern)
+      var <- regmatches(var, regexpr(pattern, var, perl = TRUE))
     }
     column_in_y_matrix <- which(colnames(y_matrix) == var)
 

@@ -16,7 +16,7 @@ detect_lag <- function(variable_name) {
   }
 
   pattern <- "(?<=\\.L\\()[^)]*(?=\\))"
-  lag_text <- stringr::str_extract(variable_name, pattern)
+  lag_text <- regmatches(variable_name, regexpr(pattern, variable_name, perl = TRUE))
   out <- tryCatch(
     {
       eval(parse(text = lag_text))
