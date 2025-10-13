@@ -1,9 +1,8 @@
 KOMA - Large Macroeconomic Model
 ================
 
-\[\![Lifecycle: experimental\]
-(<https://img.shields.io/badge/lifecycle-experimental-orange.svg>)\]
-(<https://lifecycle.r-lib.org/articles/stages.html#experimental>)
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 
 > **⚠️ Beta Release**: This package is in active development. Core
 > features are working but exported functions may change and bugs are
