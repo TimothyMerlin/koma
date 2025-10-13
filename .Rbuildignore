@@ -2,6 +2,7 @@
 ^Dockerfile$
 ^LICENSE\.md$
 ^Meta$
+^README\.Rmd$
 ^\.Rproj\.user$
 ^\.drone\.yaml$
 ^\.github$
