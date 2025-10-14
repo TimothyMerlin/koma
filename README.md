@@ -3,6 +3,7 @@ KOMA - Large Macroeconomic Model
 
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![codecov](https://codecov.io/gh/TimothyMerlin/koma/branch/main/graph/badge.svg?token=8X0PR1F6TP)](https://codecov.io/gh/TimothyMerlin/koma)
 
 > **⚠️ Beta Release**: This package is in active development. Core
 > features are working but exported functions may change and bugs are
