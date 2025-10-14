@@ -96,3 +96,23 @@ test_that("plot density forecasts", {
   expected_x_axis_tickvals <- 1977:2025
   expect_equal(x_axis_tickvals, expected_x_axis_tickvals)
 })
+
+test_that("plot.koma_forecast() errors cleanly when plotly is missing", {
+  skip_if(
+    requireNamespace("plotly", quietly = TRUE),
+    "plotly is installed; skipping missing-package test."
+  )
+
+  fake_forecast <- list(
+    mean = list(GDP = ts(1:8, start = c(2024, 1), freq = 4)),
+    ts_data = list(GDP = ts(1:8, start = c(2022, 1), freq = 4)),
+    quantiles = list()
+  )
+  class(fake_forecast) <- "koma_forecast"
+
+  expect_error(
+    plot.koma_forecast(fake_forecast, variables = "GDP"),
+    regexp = "plotly.*required",
+    class = "cli_error"
+  )
+})

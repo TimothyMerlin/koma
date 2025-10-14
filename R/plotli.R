@@ -18,7 +18,6 @@
 #' A Plotly figure object displaying the data with the specified formatting.
 #' @references
 #' \url{https://plotly.com/r/reference/#Layout_and_layout_style_objects}
-#' @export
 plotli <- function(df_long, fig = NULL, theme = NULL, ...) {
   if (is.null(theme)) {
     theme <- init_koma_theme()

@@ -42,6 +42,14 @@ new_plot <- function(x, ...) {
       !is.null(variables) || is.character(variables)
   )
 
+  # check plotly availability
+  if (!requireNamespace("plotly", quietly = TRUE)) {
+    cli::cli_abort(c(
+      "!" = "The {.pkg plotly} package is required for plotting.",
+      "i" = "Install it with: {.code install.packages('plotly')}"
+    ))
+  }
+
   stopifnot(
     "fig must be a plotly object or NULL." =
       is.null(fig) || inherits(fig, "plotly")

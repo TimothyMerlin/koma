@@ -9,7 +9,6 @@ Description: A Bayesian Simultaneous Equations Model for Forecasting.
 License: GPL (>= 3)
 Suggests:
     devtools (>= 2.4.5),
-    testthat (>= 3.1.9),
     usethis (>= 2.2.1),
     pkgdown (>= 2.0.7),
     knitr (>= 1.43),
@@ -17,7 +16,9 @@ Suggests:
     future (>= 1.33.0),
     parallelly (>= 1.36.0),
     withr (>= 3.0.0),
-    texreg (>= 1.39.4)
+    texreg (>= 1.39.4),
+    testthat (>= 3.2.3),
+    plotly (>= 4.11.0)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
@@ -28,7 +29,6 @@ Imports:
     foreach (>= 1.5.2),
     glue (>= 1.8.0),
     Matrix (>= 1.5.4.1),
-    plotly (>= 4.10.2),
     progressr (>= 0.15.0),
     purrr (>= 1.0.4),
     rlang (>= 1.1.6),
