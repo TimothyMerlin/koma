@@ -2,6 +2,9 @@
 # Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
 on:
     workflow_dispatch:
+    push:
+        tags:
+            - "*"
 
 name: R-CMD-check.yaml
 
@@ -41,6 +44,10 @@ jobs:
                   r-version: ${{ matrix.config.r }}
                   http-user-agent: ${{ matrix.config.http-user-agent }}
                   use-public-rspm: true
+
+            - name: Install pak from CRAN on Windows
+              if: runner.os == 'Windows'
+              run: Rscript -e "install.packages('pak', repos = 'https://cran.rstudio.com')"
 
             - uses: r-lib/actions/setup-r-dependencies@v2
               with:
