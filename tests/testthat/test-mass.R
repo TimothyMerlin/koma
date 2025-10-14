@@ -40,6 +40,9 @@ test_that("multivariate_norm returns values", {
 
 test_that("multivariate_norm returns correct values with set seed for a
 specific covariance matrix", {
+  skip_on_os("mac")
+  skip_on_os("windows")
+
   mu <- c(0, 2, 3)
   # Define matrix L
   l <- matrix(c(

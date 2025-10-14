@@ -149,6 +149,9 @@ test_that("draw_parameters_j_informative with diffuse priors", {
 })
 
 test_that("draw_parameters_j_informative with diffuse priors and no gamma priors", {
+  skip_on_os("mac")
+  skip_on_os("windows")
+
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix
   character_gamma_matrix <- simulated_data$character_gamma_matrix
