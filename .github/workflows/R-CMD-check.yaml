@@ -45,11 +45,12 @@ jobs:
                   http-user-agent: ${{ matrix.config.http-user-agent }}
                   use-public-rspm: true
 
-            - name: Restore renv environment (Windows)
+            - name: Install dependencies (Windows)
               if: runner.os == 'Windows'
               run: |
-                Rscript -e "if (!requireNamespace('renv')) install.packages('renv')"
-                Rscript -e "renv::restore(lockfile = 'renv.lock', prompt = FALSE)"
+                 Rscript -e "install.packages('rcmdcheck', repos = 'https://cloud.r-project.org')"
+                 Rscript -e "deps <- tools::package_dependencies('.', recursive = TRUE)$.; \
+                             install.packages(unique(deps), repos = 'https://cloud.r-project.org')"
 
             - uses: r-lib/actions/setup-r-dependencies@v2
               if: runner.os != 'Windows'
