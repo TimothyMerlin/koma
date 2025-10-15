@@ -8,6 +8,8 @@ test_that("draw_parameters returns correct parameters for equation 1", {
   ##### Fix environment variables for test
   ## Gibbs sampler specifications
   set_gibbs_settings(settings = NULL, simulated_data$sys_eq$equation_settings)
+  gibbs_settings <- get_gibbs_settings()
+  gibbs_sampler <- gibbs_settings[[colnames(character_gamma_matrix)[jx]]]
 
   result <-
     withr::with_seed(
@@ -17,7 +19,8 @@ test_that("draw_parameters returns correct parameters for equation 1", {
         x_matrix,
         character_gamma_matrix,
         character_beta_matrix,
-        jx
+        jx,
+        gibbs_sampler
       )
     )
 
@@ -87,6 +90,8 @@ exogenous variables in the equation", {
   ##### Fix environment variables for test
   ## Gibbs sampler specifications
   set_gibbs_settings(settings = NULL, simulated_data$sys_eq$equation_settings)
+  gibbs_settings <- get_gibbs_settings()
+  gibbs_sampler <- gibbs_settings[[colnames(character_gamma_matrix)[jx]]]
 
   result <-
     withr::with_seed(
@@ -96,7 +101,8 @@ exogenous variables in the equation", {
         x_matrix,
         character_gamma_matrix,
         character_beta_matrix,
-        jx
+        jx,
+        gibbs_sampler
       )
     )
   expected_gamma <- replicate(1000, NA, simplify = FALSE)

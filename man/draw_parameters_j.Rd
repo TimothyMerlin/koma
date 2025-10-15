@@ -9,7 +9,8 @@ draw_parameters_j(
   x_matrix,
   character_gamma_matrix,
   character_beta_matrix,
-  jx
+  jx,
+  gibbs_sampler
 )
 }
 \arguments{
@@ -31,6 +32,9 @@ matrix are \eqn{(k \times n)}, where \eqn{k} is the number of
 exogenous variables and \eqn{n} the number of equations.}
 
 \item{jx}{The index of equation \eqn{j}.}
+
+\item{gibbs_sampler}{An object of class \code{gibbs_sampler} that holds an
+equations gibbs settings.}
 }
 \value{
 A list containing matrices for the saved draws of parameters and

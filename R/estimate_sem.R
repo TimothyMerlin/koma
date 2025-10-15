@@ -38,23 +38,23 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
     stopifnot(is.vector(eq_jx), all(sapply(eq_jx, is.numeric)))
   }
 
-  safe_draw_parameters <- purrr::safely(function(eq_jx) {
-    if (length(priors[[eq_jx]]) == 0) {
-      draw_parameters_j(
-        y_matrix, x_matrix, character_gamma_matrix,
-        character_beta_matrix, eq_jx
-      )
-    } else {
-      draw_parameters_j_informative(
-        y_matrix, x_matrix, character_gamma_matrix,
-        character_beta_matrix, eq_jx, priors
-      )
-    }
-  }, quiet = FALSE)
-
   set_progress_handler(operation = "estimation")
   p <- progressr::progressor(
     steps = length(stochastic_equations)
+  )
+
+  gibbs_settings <- get_gibbs_settings()
+
+  globals_to_export <- c(
+    "p",
+    "safe_draw_parameters",
+    "stochastic_equations",
+    "y_matrix",
+    "x_matrix",
+    "character_gamma_matrix",
+    "character_beta_matrix",
+    "priors",
+    "gibbs_settings"
   )
 
   suppressPackageStartupMessages(
@@ -62,11 +62,7 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
       eq_jx = eq_jx,
       .options.future = list(
         packages = c("koma"),
-        globals = c(
-          "p", # Export the progressor function
-          "stochastic_equations", # Export the stochastic equations
-          "safe_draw_parameters" # Export the safe_draw_parameters function
-        ),
+        globals = globals_to_export,
         seed = TRUE # Enable future seed
       )
     ) %dofuture% {
@@ -89,3 +85,20 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
   }
   out
 }
+
+safe_draw_parameters <- purrr::safely(function(eq_jx) {
+  gibbs_sampler <- gibbs_settings[[colnames(character_gamma_matrix)[eq_jx]]]
+
+  if (length(priors[[eq_jx]]) == 0) {
+    draw_parameters_j(
+      y_matrix, x_matrix, character_gamma_matrix,
+      character_beta_matrix, eq_jx, gibbs_sampler
+    )
+  } else {
+    draw_parameters_j_informative(
+      y_matrix, x_matrix, character_gamma_matrix,
+      character_beta_matrix, eq_jx, gibbs_sampler, priors
+    )
+  }
+}, quiet = FALSE)
+

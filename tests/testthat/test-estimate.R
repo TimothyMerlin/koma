@@ -213,16 +213,10 @@ test_that("estimate works for ragged edge", {
   # use future::plan for parallel execution
   workers <- parallelly::availableCores(omit = 1)
 
-  if (.Platform$OS.type == "unix") {
-    # Unix: Will fork the current R session for each parallel worker.
-    # This is memory-efficient because child processes can share memory
-    # with the parent process.
-    future::plan(future::multicore, workers = workers)
-  } else {
-    # Windows: Since Windows does not support forking, multisession
-    # will spawn new R sessions for each parallel worker.
-    future::plan(future::multisession, workers = workers)
-  }
+  # Windows: Since Windows does not support forking, multisession
+  # will spawn new R sessions for each parallel worker.
+  # Testing here if all global variables are exported correctly for mutlisession.
+  future::plan(future::multisession, workers = workers)
 
   suppressWarnings(
     result <- withr::with_seed(
@@ -543,6 +537,8 @@ test_that("estimate correctly reestimates model", {
   )
 
   # expect_equal(out$estimates$consumption, estimates$estimates$consumption)
+  gibbs_settings <- get_gibbs_settings()
+  gibbs_sampler <- gibbs_settings[[1]]
 
   draw_cons_out <- withr::with_seed(
     7,
@@ -551,7 +547,8 @@ test_that("estimate correctly reestimates model", {
       out$x_matrix,
       out$sys_eq$character_gamma_matrix,
       out$sys_eq$character_beta_matrix,
-      1
+      1,
+      gibbs_sampler
     )
   )
   draw_cons_rest <- withr::with_seed(
@@ -561,7 +558,8 @@ test_that("estimate correctly reestimates model", {
       reestimates$x_matrix,
       reestimates$sys_eq$character_gamma_matrix,
       reestimates$sys_eq$character_beta_matrix,
-      1
+      1,
+      gibbs_sampler
     )
   )
   expect_equal(draw_cons_out, draw_cons_rest)
@@ -572,7 +570,8 @@ test_that("estimate correctly reestimates model", {
       estimates$x_matrix,
       estimates$sys_eq$character_gamma_matrix,
       estimates$sys_eq$character_beta_matrix,
-      1
+      1,
+      gibbs_sampler
     )
   )
   # expect_equal(draw_cons_rest, draw_cons_est)

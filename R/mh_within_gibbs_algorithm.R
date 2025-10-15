@@ -28,16 +28,16 @@
 #' matrix are \eqn{(k \times n)}, where \eqn{k} is the number of
 #' exogenous variables and \eqn{n} the number of equations.
 #' @param jx The index of equation \eqn{j}.
+#' @param gibbs_sampler An object of class `gibbs_sampler` that holds an
+#' equations gibbs settings.
 #'
 #' @return A list containing matrices for the saved draws of parameters and
 #' additional diagnostic information.
 #' @keywords internal
 draw_parameters_j <- function(y_matrix, x_matrix, character_gamma_matrix,
-                              character_beta_matrix, jx) {
-  gibbs_sampler <- get_gibbs_settings(equation = colnames(character_gamma_matrix)[jx])
+                              character_beta_matrix, jx, gibbs_sampler) {
 
-  # pre-define matrices for saving
-  out <- list()
+out <- list()
   out$beta_jw <- vector("list", gibbs_sampler$nsave)
   out$theta_jw <- vector("list", gibbs_sampler$nsave)
   out$gamma_jw <- vector("list", gibbs_sampler$nsave)

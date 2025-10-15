@@ -8,6 +8,8 @@ test_that("draw_parameters_j_informative returns parameters for equation 1", {
   ##### Fix environment variables for test
   ## Gibbs sampler specifications
   set_gibbs_settings(settings = list(ndraws = 200), simulated_data$sys_eq$equation_settings)
+  gibbs_settings <- get_gibbs_settings()
+  gibbs_sampler <- gibbs_settings[[colnames(character_gamma_matrix)[jx]]]
 
   ## Specify priors
   number_endogenous_in_j <-
@@ -36,6 +38,7 @@ test_that("draw_parameters_j_informative returns parameters for equation 1", {
         character_gamma_matrix,
         character_beta_matrix,
         jx,
+        gibbs_sampler,
         priors
       )
     )
@@ -65,6 +68,8 @@ test_that("draw_parameters_j_informative with diffuse priors", {
   ##### Fix environment variables for test
   ## Gibbs sampler specifications
   set_gibbs_settings(settings = list(ndraws = 200), simulated_data$sys_eq$equation_settings)
+  gibbs_settings <- get_gibbs_settings()
+  gibbs_sampler <- gibbs_settings[[colnames(character_gamma_matrix)[jx]]]
 
   ## Specify priors
   number_endogenous_in_j <-
@@ -93,6 +98,7 @@ test_that("draw_parameters_j_informative with diffuse priors", {
         character_gamma_matrix,
         character_beta_matrix,
         jx,
+        gibbs_sampler,
         priors
       )
     )
@@ -161,6 +167,8 @@ test_that("draw_parameters_j_informative with diffuse priors and no gamma priors
   ##### Fix environment variables for test
   ## Gibbs sampler specifications
   set_gibbs_settings(settings = list(ndraws = 200), simulated_data$sys_eq$equation_settings)
+  gibbs_settings <- get_gibbs_settings()
+  gibbs_sampler <- gibbs_settings[[colnames(character_gamma_matrix)[jx]]]
 
   ## Specify priors
   number_endogenous_in_j <-
@@ -188,6 +196,7 @@ test_that("draw_parameters_j_informative with diffuse priors and no gamma priors
         character_gamma_matrix,
         character_beta_matrix,
         jx,
+        gibbs_sampler,
         priors
       )
     )

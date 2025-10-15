@@ -10,6 +10,7 @@ draw_parameters_j_informative(
   character_gamma_matrix,
   character_beta_matrix,
   jx,
+  gibbs_sampler,
   priors
 )
 }
@@ -32,6 +33,9 @@ matrix are \eqn{(k \times n)}, where \eqn{k} is the number of
 exogenous variables and \eqn{n} the number of equations.}
 
 \item{jx}{The index of equation \eqn{j}.}
+
+\item{gibbs_sampler}{An object of class \code{gibbs_sampler} that holds an
+equations gibbs settings.}
 
 \item{priors}{The priors for \eqn{\theta} in equation \eqn{j}.}
 }

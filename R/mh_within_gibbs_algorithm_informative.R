@@ -28,6 +28,8 @@
 #' matrix are \eqn{(k \times n)}, where \eqn{k} is the number of
 #' exogenous variables and \eqn{n} the number of equations.
 #' @param jx The index of equation \eqn{j}.
+#' @param gibbs_sampler An object of class `gibbs_sampler` that holds an
+#' equations gibbs settings.
 #' @param priors The priors for \eqn{\theta} in equation \eqn{j}.
 #'
 #' @return A list containing matrices for the saved draws of parameters and
@@ -35,7 +37,8 @@
 #' @keywords internal
 draw_parameters_j_informative <- function(y_matrix, x_matrix,
                                           character_gamma_matrix,
-                                          character_beta_matrix, jx, priors) {
+                                          character_beta_matrix, jx, 
+                                          gibbs_sampler, priors) {
   gibbs_sampler <- get_gibbs_settings(equation = colnames(character_gamma_matrix)[jx])
 
   priors_j <- construct_priors_j(
