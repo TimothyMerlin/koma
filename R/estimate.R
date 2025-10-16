@@ -79,6 +79,36 @@ estimate.list <- function(ts_data, sys_eq, dates,
     cli::cli_abort("`ts_data` must be a list. You provided a {class(ts_data)}.")
   }
   if (!all(sapply(ts_data, function(x) inherits(x, "koma_ts")))) {
+    # defaults
+    series_type <- "level"
+    method <- "percentage"
+
+    cli::cli_text(
+      "Some of the time series in `ts_data` are not `ets`.",
+      "They will be automatically converted with `as_ets` using the defaults:"
+    )
+    cli::cli_h2("Default settings")
+    cli::cli_text("series_type = {series_type}")
+    cli::cli_text("method = {method}")
+
+    user_input <- readline("Are these correct? (y/n): ")
+    if (tolower(user_input) != "y") {
+      series_type <- readline("Enter series_type: ")
+      method <- readline("Enter method: ")
+    }
+
+    # Convert ts -> koma_ts if needed
+    ts_data <- lapply(ts_data, function(x) {
+      if (inherits(x, "ts") && !inherits(x, "koma_ts")) {
+        x <- as_ets(x, series_type = series_type, method = method)
+      }
+      if (!inherits(x, "koma_ts")) {
+        cli::cli_abort("All elements must be koma_ts after conversion")
+      }
+      x
+    })
+  }
+  if (!all(sapply(ts_data, function(x) inherits(x, "koma_ts")))) {
     cli::cli_abort("Each element in `ts_data` must be of class 'koma_ts'.")
   }
   if (!inherits(sys_eq, "koma_seq")) {

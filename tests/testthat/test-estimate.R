@@ -318,13 +318,6 @@ test_that("estimate throws error", {
     )
   )
 
-  ts_data$gdp <- as.ts(ts_data$gdp)
-  # type mismatch in ts_data
-  expect_error(
-    estimate(ts_data, sys_eq, dates),
-    "Each element in"
-  )
-
   ts_data <- simulated_data$ts_data
   attr(ts_data$gdp, "method") <- NA
 
@@ -1003,6 +996,84 @@ test_that("estimate, accpetance probability", {
     service = set_gibbs_spec(ndraws = 500)
   )
   expect_equal(estimates$gibbs_specifications, expected_result)
+})
+
+test_that("estimate, ts provided instead of ets", {
+  dates <- list(estimation = list(
+    start = c(1977, 1),
+    end = c(2019, 4)
+  ))
+
+  equations <-
+    "consumption ~ gdp + consumption.L(1:2),
+    investment ~ gdp + investment.L(1) + real_interest_rate,
+    current_account ~ current_account.L(1) + world_gdp,
+    manufacturing ~ manufacturing.L(1) + world_gdp,
+    service ~ service.L(1) + population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
+
+  exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
+
+  sys_eq <- system_of_equations(equations, exogenous_variables)
+
+  ts_data <- lapply(simulated_data$ts_data, as.ts)
+
+  # mock response to YES with y
+  expect_error(
+    testthat::with_mocked_bindings(
+      {
+        withr::with_seed(
+          7,
+          estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+        )
+      },
+      readline = function(...) "y",
+      .package = "base"
+    ), NA
+  )
+})
+
+test_that("estimate, ts provided instead of ets", {
+  dates <- list(estimation = list(
+    start = c(1977, 1),
+    end = c(2019, 4)
+  ))
+
+  equations <-
+    "consumption ~ gdp + consumption.L(1:2),
+    investment ~ gdp + investment.L(1) + real_interest_rate,
+    current_account ~ current_account.L(1) + world_gdp,
+    manufacturing ~ manufacturing.L(1) + world_gdp,
+    service ~ service.L(1) + population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
+
+  exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
+
+  sys_eq <- system_of_equations(equations, exogenous_variables)
+
+  ts_data <- lapply(simulated_data$ts_data, as.ts)
+
+  # mock response NO with n,
+  # set series type to level and method to percentage
+  expect_error(
+    testthat::with_mocked_bindings(
+      {
+        withr::with_seed(
+          7,
+          estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+        )
+      },
+      readline = local({
+        responses <- c("y", "level", "percentage")
+        i <- 0
+        function(...) {
+          i <<- i + 1
+          responses[i]
+        }
+      }),
+      .package = "base"
+    ), NA
+  )
 })
 
 test_that("summary when texreg not installed", {
