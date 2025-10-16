@@ -36,8 +36,7 @@
 #' @keywords internal
 draw_parameters_j <- function(y_matrix, x_matrix, character_gamma_matrix,
                               character_beta_matrix, jx, gibbs_sampler) {
-
-out <- list()
+  out <- list()
   out$beta_jw <- vector("list", gibbs_sampler$nsave)
   out$theta_jw <- vector("list", gibbs_sampler$nsave)
   out$gamma_jw <- vector("list", gibbs_sampler$nsave)

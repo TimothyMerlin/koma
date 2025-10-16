@@ -101,4 +101,3 @@ safe_draw_parameters <- purrr::safely(function(eq_jx) {
     )
   }
 }, quiet = FALSE)
-

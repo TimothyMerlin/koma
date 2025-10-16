@@ -37,10 +37,8 @@
 #' @keywords internal
 draw_parameters_j_informative <- function(y_matrix, x_matrix,
                                           character_gamma_matrix,
-                                          character_beta_matrix, jx, 
+                                          character_beta_matrix, jx,
                                           gibbs_sampler, priors) {
-  gibbs_sampler <- get_gibbs_settings(equation = colnames(character_gamma_matrix)[jx])
-
   priors_j <- construct_priors_j(
     priors, character_gamma_matrix, character_beta_matrix, jx
   )
