@@ -48,7 +48,6 @@ jobs:
             - name: Install dependencies (Windows)
               if: runner.os == 'Windows'
               run: |
-              run: |
                   Rscript -e "install.packages('rcmdcheck', repos='https://cloud.r-project.org')"
                   Rscript -e "deps <- tools::package_dependencies('.', recursive=TRUE)$.; install.packages(unique(deps), repos='https://cloud.r-project.org')"
 
