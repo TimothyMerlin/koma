@@ -1117,3 +1117,26 @@ test_that("summary.estimate, change bounds", {
     regex = NULL # there should be output but not testing for specific
   )
 })
+
+test_that("print.koma_estimate filters variables", {
+  out_estimation <- structure(
+    list(
+      estimates = simulated_data$estimates,
+      sys_eq = simulated_data$sys_eq
+    ),
+    class = "koma_estimate"
+  )
+
+  output <- testthat::capture_output(
+    print(out_estimation, variables = c("consumption", "investment"))
+  )
+
+  expect_match(output, "consumption", fixed = TRUE)
+  expect_match(output, "investment", fixed = TRUE)
+  expect_no_match(output, "service")
+
+  expect_error(
+    print(out_estimation, variables = "does_not_exist"),
+    "not part of this estimate"
+  )
+})

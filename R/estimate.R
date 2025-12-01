@@ -28,6 +28,12 @@
 #'
 #' @inheritSection get_default_gibbs_spec Gibbs Sampler Specifications
 #'
+#' @details
+#' After estimation, use \code{\link[=summary.koma_estimate]{summary}} for a
+#' full table of posterior summaries (with optional credible intervals and
+#' texreg output) and \code{\link[=print.koma_estimate]{print}} for a concise
+#' console-friendly overview of the estimated system.
+#'
 #' @return An object of class `koma_estimate`.
 #'
 #' An object of class `koma_estimate`is a list containing the following
@@ -288,23 +294,26 @@ validate_acceptance_prob <- function(x, acceptance_prob) {
 }
 
 #' @export
-print.koma_estimate <- function(x,
-                                ...,
-                                central_tendency = "mean",
-                                ci_low = 5,
-                                ci_up = 95,
-                                digits = 2) {
-  format(x, ..., central_tendency, ci_low, ci_up, digits)
-}
-
-#' @export
 format.koma_estimate <- function(x,
                                  ...,
+                                 variables = NULL,
                                  central_tendency = "mean",
                                  ci_low = 5,
                                  ci_up = 95,
                                  digits = 2) {
   parsed_eq <- lapply(x$sys_eq$equations, split_eq)
+
+  if (!is.null(variables)) {
+    stopifnot(is.character(variables))
+    lhs_names <- vapply(parsed_eq, function(eq) eq$lhs, character(1))
+    missing <- setdiff(variables, lhs_names)
+    if (length(missing)) {
+      cli::cli_abort(
+        "The following variables are not part of this estimate: {.val {missing}}"
+      )
+    }
+    parsed_eq <- Filter(function(eq) eq$lhs %in% variables, parsed_eq)
+  }
 
   out <- c()
   for (equation in parsed_eq) {
@@ -358,15 +367,41 @@ format.koma_estimate <- function(x,
   format.koma_seq(list(equations = out))
 }
 
+#' Print method for koma_estimate objects
+#'
+#' Provides a concise, console-friendly overview of the estimated system.
+#'
+#' @param x A `koma_estimate` object.
+#' @param ... Additional arguments forwarded to formatting internals.
+#' @param variables Optional character vector of endogenous variables to print.
+#'   Defaults to all variables.
+#' @param central_tendency Central tendency used when summarizing estimates
+#'   (e.g., "mean", "median"). Defaults to "mean".
+#' @param ci_low Lower bound (percent) for credible intervals. Defaults to 5.
+#' @param ci_up Upper bound (percent) for credible intervals. Defaults to 95.
+#' @param digits Number of digits to print for numeric values. Defaults to 2.
+#'
+#' @return Invisibly returns `x` after printing.
+#' @seealso \code{\link[=summary.koma_estimate]{summary.koma_estimate}} for
+#'   detailed posterior summaries.
 #' @export
 print.koma_estimate <- function(x,
                                 ...,
+                                variables = NULL,
                                 central_tendency = "mean",
                                 ci_low = 5,
                                 ci_up = 95,
                                 digits = 2) {
   cli::cli_h1("Estimates")
-  formatted_equations <- format(x, ...)
+  formatted_equations <- format(
+    x,
+    ...,
+    variables = variables,
+    central_tendency = central_tendency,
+    ci_low = ci_low,
+    ci_up = ci_up,
+    digits = digits
+  )
   cat(paste(formatted_equations, collapse = "\n"), "\n")
 }
 

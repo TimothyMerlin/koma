@@ -38,10 +38,9 @@
 #' forecasts are generated. If `FALSE`, quantile forecasts are generated and
 #' included in the `quantiles` list.
 #'
-#' Use the \code{\link{summary}} function to print a summary of the forecast
-#' results.
-#' The \code{\link{plot}} function can be used to visualize the forecasts and
-#' prediction intervals.
+#' Use the \code{\link[=print.koma_forecast]{print}} method to print a
+#' the forecast results, use the \code{\link[=plot.koma_forecast]{plot}} method,
+#' to visualize the forecasts and prediction intervals.
 #'
 #' @seealso
 #' - For a comprehensive example of using `forecast`, see

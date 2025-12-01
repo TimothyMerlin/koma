@@ -68,6 +68,12 @@ Estimate a system of simultaneous equations model (SEM) using a Bayesian
 approach. This function incorporates Gibbs sampling and allows for
 both density and point forecasts.
 }
+\details{
+After estimation, use \code{\link[=summary.koma_estimate]{summary}} for a
+full table of posterior summaries (with optional credible intervals and
+texreg output) and \code{\link[=print.koma_estimate]{print}} for a concise
+console-friendly overview of the estimated system.
+}
 \section{Parallel}{
 
 This function provides the option for parallel computing through
