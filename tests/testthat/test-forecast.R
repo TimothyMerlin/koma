@@ -374,6 +374,59 @@ test_that("forecast with one equation", {
   expect_equal(names(out$mean), c("manufacturing", "world_gdp"))
 })
 
+test_that("forecast with one AR equation", {
+  dates <- list(
+    estimation = list(
+      start = c(1977, 1),
+      end = c(2019, 4)
+    ),
+    forecast = list(
+      start = c(2023, 2),
+      end = c(2025, 4)
+    ),
+    dynamic_weights = list(
+      start = c(1992, 1),
+      end = c(2022, 4)
+    )
+  )
+
+  equations <- "manufacturing ~ 0 + manufacturing.L(1)"
+  exogenous_variables <- c()
+
+  sys_eq <- system_of_equations(equations, exogenous_variables)
+
+  ts_data <- simulated_data$ts_data
+  dates_current <- c(2023, 1)
+  # shorten endogenous data to end before forecast start
+  ts_data[sys_eq$endogenous_variables] <-
+    lapply(sys_eq$endogenous_variables, function(x) {
+      stats::window(ts_data[[x]], end = dates_current)
+    })
+
+  est <- withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+  )
+
+  out <- forecast(est, dates)
+
+  # Extract mean AR(1) coefficient (beta_jw has only the lag coef here)
+  coef_mean <- quantiles_from_estimates(
+    est$estimates$manufacturing$beta_jw,
+    include_mean = TRUE
+  )$q_mean
+
+  phi_hat <- unname(coef_mean)
+
+  y_end <- c(utils::tail(ts_data$manufacturing, 1))
+
+  expect_equal(names(out$mean), c("manufacturing"))
+  # First forecast should equal phi * last observed value
+  expect_equal(out$mean$manufacturing[1], phi_hat * y_end, tolerance = 1e-8)
+  # Second forecast propagates once more: phi^2 * last observed value
+  expect_equal(out$mean$manufacturing[2], (phi_hat^2) * y_end, tolerance = 1e-8)
+})
+
 test_that("forecast without lags and with restrictions", {
   dates <- list(
     estimation = list(
