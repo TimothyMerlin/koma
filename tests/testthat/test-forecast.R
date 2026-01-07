@@ -428,6 +428,7 @@ test_that("forecast with one AR equation", {
 })
 
 test_that("forecast without lags and with restrictions", {
+  # no-lag restrictions do not propagate to later horizons #
   dates <- list(
     estimation = list(
       start = c(1977, 1),
@@ -464,11 +465,22 @@ test_that("forecast without lags and with restrictions", {
   )
 
   restrictions <- list(manufacturing = list(value = 0.5, horizon = 1))
+  # Without restrictions
+  base <- withr::with_seed(7, forecast(est, dates))
+
   # When forecasting without lags Phi matrix will be empty
-  out <- forecast(est, dates, restrictions = restrictions)
+  out <- withr::with_seed(7, forecast(est, dates, restrictions = restrictions))
 
   # first horizon of manufacturing should equal restriction
+  # Restriction hit at h=1
   expect_equal(out$mean$manufacturing[1], 0.5)
+
+  # No propagation to h=2 if there are no lags
+  expect_equal(
+    out$mean$manufacturing[2],
+    base$mean$manufacturing[2],
+    tolerance = 1e-12
+  )
 })
 
 test_that("forecast with restrictions for variables that are not in SEM", {

@@ -221,8 +221,9 @@ compute_forecast_values <- function(companion_matrix, reduced_form, y_matrix,
       as.matrix(y_matrix[number_of_observations - x, ])
     })))
   } else {
-    # Case where there is only one equation or no lagged variables
-    j_matrix <- companion_theta <- diag(dim(companion_d)[2])
+    # Case where there are no lagged variables
+    companion_theta <- matrix(0, n, n) # no persitence when p = 1
+    j_matrix <- diag(n) # select current y_t from state
     y_t_lag <- matrix(0, nrow = 1, ncol = n)
   }
   temp <-
