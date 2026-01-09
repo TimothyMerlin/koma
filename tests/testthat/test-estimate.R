@@ -1113,6 +1113,20 @@ test_that("summary.estimate, change bounds", {
     ),
     regex = NULL # there should be output but not testing for specific
   )
+
+  expect_true(
+    identical(
+      capture.output(summary(out_estimation, ci_low = 0.5, ci_high = 0.95)),
+      capture.output(summary(out_estimation))
+    )
+  )
+
+  expect_false(
+    identical(
+      capture.output(summary(out_estimation, ci_low = 1, ci_high = 90)),
+      capture.output(summary(out_estimation))
+    )
+  )
 })
 
 test_that("print.koma_estimate filters variables", {
