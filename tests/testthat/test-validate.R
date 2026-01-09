@@ -92,6 +92,28 @@ test_that("validate_completeness throws error on undeclared exogenous", {
   )
 })
 
+test_that("validate_completeness throws error on redundantly specified exogenous", {
+  equations <- c(
+    "consumption~constant+gdp+consumption.L(1)+42*consumption.L(2)",
+    "investment~constant+gdp+investment.L(1)-real_interest_rate",
+    "current_account~constant+current_account.L(1)+world_gdp",
+    "manufacturing~constant+manufacturing.L(1)+world_gdp",
+    "service~constant+service.L(1)+population+gdp",
+    "gdp==manufacturing+service",
+    "real_interest_rate==1*nominal_interest_rate-1*inflation_rate"
+  )
+  exogenous_variables <- c(
+    "world_gdp", "nominal_interest_rate", "population", "inflation_rate",
+    "not_in_system"
+  )
+
+  # undeclared exogenous: "population", "inflation_rate"
+  expect_error(
+    validate_completeness(equations, exogenous_variables),
+    "Redundant exogenous"
+  )
+})
+
 test_that("validate_system_of_equations does not throw error with correctly
 defined weights", {
   equations <- c(

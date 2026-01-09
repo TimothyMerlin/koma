@@ -63,7 +63,7 @@ test_that("model_identification throws error for unidentified structure", {
     service ~ manufacturing + gdp,
     gdp == 0.5*manufacturing + 0.5*service "
 
-  exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
+  exogenous_variables <- c("real_interest_rate", "world_gdp")
 
   sys_eq <- system_of_equations(raw_equations, exogenous_variables)
 

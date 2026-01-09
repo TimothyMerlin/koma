@@ -43,8 +43,7 @@ is_ets(x)
 
 \item{ts.eps}{time series comparison tolerance.  Frequencies are
     considered equal if their absolute difference is less than
-    \code{ts.eps}.  It is also used to check consistency of \code{end - start},
-    \code{frequency}, and the length of the time-series.}
+    \code{ts.eps}.}
 
 \item{...}{Additional attributes.}
 

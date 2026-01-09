@@ -263,7 +263,7 @@ test_that("estimate throws error if model is unidentified", {
     service ~ manufacturing + gdp,
     gdp == 0.5*manufacturing + 0.5*service "
 
-  exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
+  exogenous_variables <- c("real_interest_rate", "world_gdp")
 
   sys_eq <- system_of_equations(equations, exogenous_variables)
 
@@ -427,10 +427,7 @@ test_that("print", {
     gdp == (nom_consumption/nom_gdp)*consumption - (nom_service/nom_gdp)*service"
 
   # Vector of exogenous variables
-  exogenous_variables <- c(
-    "real_interest_rate", "inflation_rate",
-    "world_gdp", "population"
-  )
+  exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
 
   sys_eq <- system_of_equations(equations, exogenous_variables)
   sys_eq$identities$gdp$weights$theta6_1 <- 1
@@ -481,7 +478,7 @@ test_that("estimate correctly reestimates model", {
     service ~ service.L(1) + population + gdp,
     gdp == 0.5*manufacturing + 0.5*service"
 
-  exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
+  exogenous_variables <- c("world_gdp", "population")
 
   sys_eq <- system_of_equations(equations, exogenous_variables)
 

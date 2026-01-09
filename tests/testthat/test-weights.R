@@ -304,7 +304,7 @@ test_that("update_identity_weights", {
   # Vector of exogenous variables
   exogenous_variables <- c(
     "nominal_interest_rate", "inflation_rate",
-    "world_gdp", "population", "imports", "exports", "inventory"
+    "world_gdp", "population", "inventory"
   )
 
   sys_eq <- system_of_equations(equations, exogenous_variables)
@@ -315,7 +315,7 @@ test_that("update_identity_weights", {
 
   expect_identical(result$gdp$weights$theta6_4, manufacturing_weight)
   expect_identical(result$gdp$weights$theta6_5, service_weight)
-  expect_identical(result$gdp$weights$theta6_14, 1)
+  expect_identical(result$gdp$weights$theta6_12, 1)
 })
 
 test_that("update_identity_weights throws error when NA", {

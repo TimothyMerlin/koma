@@ -241,6 +241,19 @@ validate_completeness <- function(equations, exogenous_variables) {
       stats::setNames(missing_variables, rep("x", length(missing_variables)))
     ))
   }
+
+  # Check if there are redundant exogenous variables
+  redundant <- setdiff(
+    exogenous_variables,
+    variables
+  )
+
+  if (length(redundant) != 0) {
+    cli::cli_abort(c(
+      "Redundant exogenous variables detected:",
+      stats::setNames(redundant, rep("x", length(redundant)))
+    ))
+  }
 }
 
 validate_priors <- function(equation) {
