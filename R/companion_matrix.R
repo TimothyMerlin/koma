@@ -18,7 +18,7 @@ construct_companion_matrix <- function(posterior, exogenous_variables) {
     which(rownames(beta_matrix) %in% exogenous_variables)
   # Case: e.g. AR(p)
   if (length(indices_exogenous_variables) != 0) {
-    beta_tilde_matrix <- beta_matrix[indices_exogenous_variables, ]
+    beta_tilde_matrix <- beta_matrix[indices_exogenous_variables, , drop = FALSE]
   }
   constant <- beta_matrix[1, ]
 

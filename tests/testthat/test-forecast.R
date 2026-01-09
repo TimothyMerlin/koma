@@ -374,6 +374,48 @@ test_that("forecast with one equation", {
   expect_equal(names(out$mean), c("manufacturing", "world_gdp"))
 })
 
+
+test_that("forecast with one exogenous", {
+  dates <- list(
+    estimation = list(
+      start = c(1977, 1),
+      end = c(2019, 4)
+    ),
+    forecast = list(
+      start = c(2023, 2),
+      end = c(2025, 4)
+    ),
+    dynamic_weights = list(
+      start = c(1992, 1),
+      end = c(2022, 4)
+    )
+  )
+
+  equations <- "manufacturing ~ world_gdp + manufacturing.L(1),
+                service ~ service.L(1) + gdp,
+                gdp == 0.5*manufacturing + 0.5*service"
+  exogenous_variables <- c("world_gdp")
+
+  sys_eq <- system_of_equations(equations, exogenous_variables)
+
+  ts_data <- simulated_data$ts_data
+  dates_current <- c(2023, 1)
+  # shorten endogenous data to end before forecast start
+  ts_data[sys_eq$endogenous_variables] <-
+    lapply(sys_eq$endogenous_variables, function(x) {
+      stats::window(ts_data[[x]], end = dates_current)
+    })
+
+  est <- withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+  )
+
+  out <- forecast(est, dates)
+
+  expect_equal(names(out$mean), c("manufacturing", "service", "gdp", "world_gdp"))
+})
+
 test_that("forecast with one AR equation", {
   dates <- list(
     estimation = list(
