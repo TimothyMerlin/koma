@@ -1129,6 +1129,36 @@ test_that("summary.estimate, change bounds", {
   )
 })
 
+test_that("summary.koma_estimate, respects digits", {
+  out_estimation <- structure(
+    list(
+      estimates = simulated_data$estimates,
+      sys_eq = simulated_data$sys_eq
+    ),
+    class = "koma_estimate"
+  )
+
+  out2 <- testthat::capture_output(
+    testthat::with_mocked_bindings(
+      summary(out_estimation, variables = "consumption", digits = 2),
+      check_texreg_installed = function() FALSE,
+      .env = environment(summary.koma_estimate)
+    )
+  )
+
+  out4 <- testthat::capture_output(
+    testthat::with_mocked_bindings(
+      summary(out_estimation, variables = "consumption", digits = 4),
+      check_texreg_installed = function() FALSE,
+      .env = environment(summary.koma_estimate)
+    )
+  )
+
+  expect_match(out2, "1.84", fixed = TRUE)
+  expect_match(out4, "1.8361", fixed = TRUE)
+  expect_false(identical(out2, out4))
+})
+
 test_that("print.koma_estimate filters variables", {
   out_estimation <- structure(
     list(
@@ -1150,4 +1180,26 @@ test_that("print.koma_estimate filters variables", {
     print(out_estimation, variables = "does_not_exist"),
     "not part of this estimate"
   )
+})
+
+test_that("print.koma_estimate, respects digits", {
+  out_estimation <- structure(
+    list(
+      estimates = simulated_data$estimates,
+      sys_eq = simulated_data$sys_eq
+    ),
+    class = "koma_estimate"
+  )
+
+  out2 <- testthat::capture_output(
+    print(out_estimation, variables = "consumption", digits = 2)
+  )
+
+  out4 <- testthat::capture_output(
+    print(out_estimation, variables = "consumption", digits = 4)
+  )
+
+  expect_match(out2, "0.36", fixed = TRUE)
+  expect_match(out4, "0.3562", fixed = TRUE)
+  expect_false(identical(out2, out4))
 })
