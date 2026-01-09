@@ -1094,7 +1094,7 @@ test_that("summary when texreg not installed", {
   )
 })
 
-test_that("summary.estimate, change bounds", {
+test_that("summary.koma_estimate, change bounds", {
   out_estimation <- structure(
     list(
       estimates = simulated_data$estimates,
@@ -1106,7 +1106,7 @@ test_that("summary.estimate, change bounds", {
   expect_output(
     testthat::with_mocked_bindings(
       {
-        summary(out_estimation, ci_low = 0.1, ci_high = 0.9)
+        summary(out_estimation, ci_low = 1, ci_high = 90)
       },
       check_texreg_installed = function() FALSE,
       .env = environment(summary.koma_estimate)
@@ -1114,9 +1114,10 @@ test_that("summary.estimate, change bounds", {
     regex = NULL # there should be output but not testing for specific
   )
 
+  # default should match
   expect_true(
     identical(
-      capture.output(summary(out_estimation, ci_low = 0.5, ci_high = 0.95)),
+      capture.output(summary(out_estimation, ci_low = 5, ci_high = 95)),
       capture.output(summary(out_estimation))
     )
   )
