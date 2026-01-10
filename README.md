@@ -46,8 +46,6 @@ planned to be released on CRAN.
 ## Documentation
 
 - **Getting started** → [Getting started with
-  koma](articles/koma-getting-started.html).
-- **Getting started** → [Getting started with
   koma](articles/koma-getting-started.html)
 - **Equation syntax** → [Equation syntax
   reference](articles/koma-equations.html)

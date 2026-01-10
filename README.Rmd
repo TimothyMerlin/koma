@@ -44,8 +44,6 @@ Once the package is more mature and has been peer-reviewed, it is planned to be 
 
 ## Documentation
 
- - **Getting started**
-  → [Getting started with koma](articles/koma-getting-started.html).
  - **Getting started** 
   → [Getting started with koma](articles/koma-getting-started.html)
  - **Equation syntax** 
