@@ -190,6 +190,7 @@ is_valid_var <- function(name) {
 #'
 #' @return Logical. Returns `TRUE` if the equation is valid.
 #' Throws an error with a specific message if any checks fail.
+#' @keywords internal
 validate_completeness <- function(equations, exogenous_variables) {
   # Check if all exogenous variables have been declared
   variables <- get_variables(equations)

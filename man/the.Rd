@@ -13,4 +13,4 @@ the
 \description{
 Define the internal environment of the package
 }
-\keyword{datasets}
+\keyword{internal}

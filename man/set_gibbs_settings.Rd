@@ -16,3 +16,4 @@ set_gibbs_settings(settings, equation_settings, envir = the)
 \description{
 Set Gibbs Settings
 }
+\keyword{internal}

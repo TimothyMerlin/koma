@@ -31,3 +31,4 @@ theme provided.
 \references{
 \url{https://plotly.com/r/reference/#Layout_and_layout_style_objects}
 }
+\keyword{internal}

@@ -203,6 +203,7 @@ gamma_vectorization <- function(character_gamma_matrix, identity_weights) {
 #' identity rules.
 #' @return The adjusted constant vector in numeric form with modified values
 #' based on the identity weights.
+#' @keywords internal
 adjust_constant_vector <- function(constant_vector, identity_weights) {
   # Iterate through indices in identity_weights
   for (idx in seq_along(identity_weights)) {

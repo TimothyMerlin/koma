@@ -1,3 +1,105 @@
-url: ~
+url: "https://timothymerlin.github.io/koma/"
 template:
   bootstrap: 5
+
+home:
+  title: "koma"
+  description: " Large Scale Macroeconomic Model"
+
+navbar:
+  structure:
+    left: [home, reference, articles, changelog]
+    right: [github]
+  components:
+    home:
+      text: Home
+      href: index.html
+    reference:
+      text: Reference
+      href: reference/index.html
+    articles:
+      text: Articles
+      href: articles/index.html
+    changelog:
+      text: Changelog
+      href: news/index.html
+    github:
+      icon: fab fa-github
+      aria-label: "koma on GitHub"
+      href: https://github.com/timothymerlin/koma
+
+reference:
+  - title: Package overview
+    contents:
+      - koma
+    
+  - title: Core workflow
+    contents:
+      - system_of_equations
+      - is_system_of_equations
+      - estimate
+      - forecast
+      - model_identification
+
+  - title: Extended timeseries
+    contents:
+      - ets
+      - as_ets
+      - as_list
+      - as_mets
+      - is_ets
+      - concat
+      - rate
+      - level
+      - rebase
+      - type
+  
+  - title: Datasets
+    contents:
+      - small_open_economy
+      - klein
+
+  - title: Utilities
+    contents:
+      - summary.koma_estimate
+      - print.koma_estimate
+      - plot.koma_forecast
+      - print.koma_forecast
+      - init_koma_theme
+      - generate_sample_data
+      - format.koma_seq
+      - print.koma_seq
+      - model_evaluation
+
+articles:
+  - title: "Getting started"
+    contents: 
+      - koma-getting-started
+
+  - title: "Equation Syntax"
+    contents: 
+      - koma-equations
+
+  - title: "Extended Time Series"
+    contents:
+      - koma-extended-timeseries
+  
+  - title: "Parallelization"
+    contents:
+      - koma-parallel
+  
+  - title: "Example: Klein Model"
+    contents:
+      - koma-klein
+
+  - title: "Example: Small Macro Model"
+    contents:
+      - koma-small-macro-model
+      
+
+authors:
+  - Samad Sarferaz:
+    href: https://sites.google.com/site/samadsarferaz/home
+
+  - Merlin Scherer:
+    href: https://github.com/TimothyMerlin

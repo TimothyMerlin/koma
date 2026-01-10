@@ -214,7 +214,7 @@ run_model_iteration <- function(param, point_forecast,
 #' endogenous variable for which the forecast error(s) should be calculated.
 #'
 #' @return List of errors
-
+#' @keywords internal
 calculate_error <- function(forecasts, realized, variables) {
   realized <- realized[, variables]
   forecasts <- forecasts[, variables]

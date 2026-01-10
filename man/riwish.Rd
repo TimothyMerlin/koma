@@ -26,3 +26,4 @@ distribution is commonly used as a prior for covariance matrices.
 Martin, R., Quinn, K., & Park, J. (2011). MCMCpack: Markov
 Chain Monte Carlo in R. \emph{Journal of Statistical Software, 42}(9), 1-21.
 }
+\keyword{internal}

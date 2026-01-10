@@ -10,6 +10,7 @@
 #'
 #' @references Martin, R., Quinn, K., & Park, J. (2011). MCMCpack: Markov
 #' Chain Monte Carlo in R. \emph{Journal of Statistical Software, 42}(9), 1-21.
+#' @keywords internal
 rwish <- function(v, S) {
   if (!is.matrix(S)) S <- matrix(S)
   if (nrow(S) != ncol(S)) stop("S must be square in rwish()")
@@ -43,6 +44,7 @@ rwish <- function(v, S) {
 #'
 #' @references Martin, R., Quinn, K., & Park, J. (2011). MCMCpack: Markov
 #' Chain Monte Carlo in R. \emph{Journal of Statistical Software, 42}(9), 1-21.
+#' @keywords internal
 riwish <- function(v, S) {
   solve(rwish(v, solve(S)))
 }

@@ -270,6 +270,7 @@ parse_equation <- function(equation) {
 #'
 #' @return A list of character vectors, where each vector contains the variables
 #' from a single equation.
+#' @keywords internal
 get_variables <- function(equations) {
   variables <- lapply(equations, function(equation) {
     # remove all whitespace

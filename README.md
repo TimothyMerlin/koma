@@ -5,7 +5,12 @@ KOMA - Large Macroeconomic Model
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![codecov](https://codecov.io/gh/TimothyMerlin/koma/branch/main/graph/badge.svg?token=8X0PR1F6TP)](https://codecov.io/gh/TimothyMerlin/koma)
 
-> **⚠️ Beta Release**: This package is in active development. Core
+**koma** is an R package for Bayesian estimation of simultaneous
+equation models (SEMs) using Metropolis-within-Gibbs Markov Chain Monte
+Carlo (MCMC) methods.
+
+> **⚠️ Beta Release**: `koma` is under active development. The
+> user-facing API may still change before the first CRAN release. Core
 > features are working but exported functions may change and bugs are
 > possible. Please report issues on GitHub.
 
@@ -19,6 +24,9 @@ devtools::install_github("timothymerlin/koma@latest")
 
 # Or using renv
 renv::install("github::timothymerlin/koma@latest", rebuild = TRUE)
+
+# Or using remotes
+remotes::install_github("timothymerlin/koma@latest")
 ```
 
 To install the latest **development version** of the KOMA package from
@@ -31,6 +39,18 @@ devtools::install_github("timothymerlin/koma")
 # Or using renv
 renv::install("github::timothymerlin/koma", rebuild = TRUE)
 ```
+
+Once the package is more mature and has been peer-reviewed, it is
+planned to be released on CRAN.
+
+## Documentation
+
+- **Getting started** → [Getting started with koma](articles/koma-getting-started.html)
+- **Equation syntax** → [Equation syntax reference](articles/koma-equations.html)
+- **Extended time series** → [Extended time series (ets)](articles/koma-extended-timeseries.html)
+- **Parallelization** → [Executing koma in parallel](articles/koma-parallel.html)
+- **Example: Klein model** → [Estimating Klein's Model I](articles/koma-klein.html)
+- **Example: small macro model** → [Estimating small macro model for Switzerland](articles/koma-small-macro-model.html)
 
 ## Development
 
@@ -63,11 +83,11 @@ git tag x.x.x
 git tag -f latest
 ```
 
-  - `x.x.x` is the new semantic version (e.g. `0.1.0`).
-  - Protected tags (like `x.x.x`) are immutable to ensure release
-    integrity.
-  - `latest` is an uprotected tag that can be moved to point to the
-    newest release.
+- `x.x.x` is the new semantic version (e.g. `0.1.0`).
+- Protected tags (like `x.x.x`) are immutable to ensure release
+  integrity.
+- `latest` is an uprotected tag that can be moved to point to the newest
+  release.
 
 #### Push branch and tags
 

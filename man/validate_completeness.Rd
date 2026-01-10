@@ -19,3 +19,4 @@ Throws an error with a specific message if any checks fail.
 \description{
 The function checks if all exogenous variables are declared.
 }
+\keyword{internal}

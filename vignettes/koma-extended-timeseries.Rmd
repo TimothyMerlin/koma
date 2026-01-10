@@ -1,0 +1,113 @@
+---
+title: "Extended Time Series (ets)"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{koma-extended-timeseries}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(koma)
+```
+
+## Overview
+
+`ets` objects are `stats::ts` series with extra metadata. The extra attributes
+(`series_type`, `value_type`, and `method`) tell `koma` how to move between
+levels and rates while keeping those attributes through common operations.
+
+## Create an ets
+
+```{r create-ets}
+x <- ets(
+  data = 1:10,
+  start = c(2019, 1),
+  frequency = 4,
+  series_type = "level",
+  value_type = "real",
+  method = "diff_log"
+)
+x
+
+ts_obj <- stats::ts(1:10, start = c(2019, 1), frequency = 4)
+y <- as_ets(
+  ts_obj,
+  series_type = "level",
+  value_type = "real",
+  method = "diff_log"
+)
+attr(y, "ets_attributes")
+```
+
+## Windowing and extending
+
+`stats::window` preserves `koma` attributes, and `extend = TRUE` allows
+leading or trailing `NA` values for future merges.
+
+```{r window-extend}
+stats::window(x, start = c(2019, 4))
+
+stats::window(x, start = 2018, extend = TRUE)
+
+stats::na.omit(stats::window(x, start = 2018, extend = TRUE))
+```
+
+## Rates, levels, and anchors
+
+`rate()` converts a level series to growth rates. When it does, it stores an
+`anker` attribute used by `level()` to rebuild a level series later.
+
+```{r rates-levels}
+x_rate <- rate(x)
+x_rate
+attr(x_rate, "anker")
+
+rate_window <- stats::window(x_rate, start = c(2019, 4))
+level(rate_window)
+```
+
+`lag()` updates the anchor automatically for rate series.
+
+```{r rate-lag}
+x_rate_lag <- lag(x_rate, k = -1)
+x_rate_lag
+attr(x_rate_lag, "anker")
+```
+
+## Rebasing and aggregation
+
+Rebase a series to a base period with `rebase()`.
+
+```{r rebase}
+rebase(x, start = c(2020, 1), end = c(2020, 1))
+rebase(x, start = c(2020, 1), end = c(2020, 4))
+```
+
+If you have `tempdisagg` installed, you can aggregate with `ta()`.
+
+```{r temporal-aggregation}
+if (requireNamespace("tempdisagg", quietly = TRUE)) {
+  tempdisagg::ta(x, conversion = "sum", to = "annual")
+}
+```
+
+## Arithmetic and subsetting
+
+Common transformations preserve attributes, so you can keep working in
+`koma` without losing metadata.
+
+```{r arithmetic-indexing}
+log(x)
+diff(x)
+x * 10
+x[1:2]
+x / x
+```

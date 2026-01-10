@@ -22,3 +22,4 @@ Adapted from \code{MCMCpack::rwish} (Martin et al., 2011) under GPL-3.
 Martin, R., Quinn, K., & Park, J. (2011). MCMCpack: Markov
 Chain Monte Carlo in R. \emph{Journal of Statistical Software, 42}(9), 1-21.
 }
+\keyword{internal}

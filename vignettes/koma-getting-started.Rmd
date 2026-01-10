@@ -1,0 +1,132 @@
+---
+title: "Estimating and Forecasting with the koma Package"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{koma}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{R, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>"
+)
+```
+
+```{R setup}
+library(koma)
+```
+
+# Overview
+
+This vignette walks through a minimal end-to-end workflow:
+define a small system, prepare data, estimate, and forecast.
+For full syntax details, see the [equation reference](../equations.html),
+and for time series handling see the [ets vignette](../koma-extended-timeseries.html).
+
+# Define a small system
+
+We start with four stochastic equations and two identities that mirror a small
+open economy. The interest rate, world GDP, and the exchange rate are treated
+as exogenous in this example.
+
+```{R}
+equations <- "consumption ~ gdp + consumption.L(1) + interest_rate,
+investment ~ gdp + investment.L(1) + interest_rate,
+exports ~ world_gdp + exchange_rate + exports.L(1),
+imports ~ gdp + exchange_rate + imports.L(1),
+gdp == (consumption/gdp)*consumption + (investment/gdp)*investment + (exports/gdp)*exports - (imports/gdp)*imports"
+
+exogenous_variables <- c("interest_rate", "world_gdp", "exchange_rate")
+```
+
+# Build the system
+
+```{R}
+sys_eq <- system_of_equations(
+    equations = equations,
+    exogenous_variables = exogenous_variables
+)
+
+print(sys_eq)
+```
+
+# Pick estimation and forecast ranges
+
+We use the last year of the dataset as a short out-of-sample forecast period.
+The identity weights are computed from level shares over the estimation window.
+
+```{R}
+dates <- list(
+    estimation = list(start = c(1996, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 1), end = c(2023, 4)),
+    dynamic_weights = list(start = c(1996, 1), end = c(2019, 4))
+)
+```
+
+# Prepare the data
+
+We convert the raw `ts` series to `ets` objects and trim endogenous series to
+the estimation window, leaving exogenous data available for the forecast.
+
+```{R}
+series_level <- c(
+    "consumption",
+    "investment",
+    "exports",
+    "imports",
+    "domestic_demand",
+    "gdp",
+    "world_gdp",
+    "exchange_rate"
+)
+
+ts_data <- lapply(series_level, function(x) {
+    as_ets(small_open_economy[[x]],
+        series_type = "level",
+        method = "diff_log"
+    )
+})
+names(ts_data) <- series_level
+
+ts_data$interest_rate <- as_ets(
+    small_open_economy$interest_rate,
+    series_type = "rate",
+    method = "none"
+)
+
+ts_data[sys_eq$endogenous_variables] <-
+    lapply(sys_eq$endogenous_variables, function(x) {
+        stats::window(ts_data[[x]], end = dates$estimation$end)
+    })
+```
+
+# Estimate the model
+
+```{R}
+estimates <- estimate(
+    ts_data,
+    sys_eq,
+    dates
+)
+
+print(estimates)
+summary(estimates)
+```
+
+# Forecast and inspect
+
+```{R}
+forecasts <- forecast(estimates, dates)
+print(forecasts)
+
+rate(forecasts$mean$gdp)
+level(forecasts$mean$gdp)
+```
+
+```{R, eval=FALSE}
+if (requireNamespace("plotly", quietly = TRUE)) {
+    plot(forecasts, variables = c("gdp", "consumption"))
+}
+```

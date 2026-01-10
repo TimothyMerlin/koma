@@ -21,3 +21,4 @@ text and extremas.
 \description{
 Find Optimal Ticks for y Axis
 }
+\keyword{internal}

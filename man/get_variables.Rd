@@ -20,3 +20,4 @@ equations. It removes whitespace and splits the equations by common
 operators such as \code{~}, \code{==}, \code{+}, \code{*}, and \code{-}. It filters out components
 that represent numeric values, only returning variable names.
 }
+\keyword{internal}

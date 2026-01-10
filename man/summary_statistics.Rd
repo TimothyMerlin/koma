@@ -40,3 +40,4 @@ Computes summary statistics for a specified endogenous variable
 within a system of equations. It returns the coefficients and standard
 errors of the equation's variables.
 }
+\keyword{internal}

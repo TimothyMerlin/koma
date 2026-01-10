@@ -18,6 +18,7 @@
 #'   Default is 95.
 #'
 #' @return A list of summary statistics for each endogenous variable.
+#' @keywords internal
 summary_statistics <- function(endogenous_variables, estimates, sys_eq,
                                central_tendency = "mean",
                                ci_low = 5,

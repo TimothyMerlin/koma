@@ -94,7 +94,7 @@ validate_integerish <- function(x, name) {
 #' @param settings List with system-wide/global settings.
 #' @param equation_settings List with equation specific settings.
 #' @param envir Environment to create the gibbs_sampler in. Defaults to "the".
-#'
+#' @keywords internal
 set_gibbs_settings <- function(settings, equation_settings, envir = the) {
   default <- get_default_gibbs_spec()
 

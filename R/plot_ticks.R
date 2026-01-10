@@ -263,6 +263,7 @@ find_extremas <- function(df_long) {
 #'
 #' @return A list with y1 (growth) values and text, y2 (level)
 #' text and extremas.
+#' @keywords internal
 get_optimal_ticks <- function(df_long, x_range) {
   optimal_num_ticks_for_both_axes <- function(min_val1, max_val1,
                                               min_val2, max_val2) {

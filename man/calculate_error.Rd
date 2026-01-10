@@ -21,3 +21,4 @@ List of errors
 This function calculates the the desired forecast errors for the
 desired variables given the true values and the forecasts
 }
+\keyword{internal}

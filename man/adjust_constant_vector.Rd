@@ -22,3 +22,4 @@ Adjusts a given constant vector based on a list of identity weights.
 The identity weights are used to replace specific elements in the
 constant vector with corresponding numeric values.
 }
+\keyword{internal}

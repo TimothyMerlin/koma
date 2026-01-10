@@ -1,5 +1,6 @@
 #' Define the internal environment of the package
 #'
+#' @keywords internal
 the <- new.env(parent = emptyenv())
 
 ## Maximum lag of variables
