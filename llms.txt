@@ -1,0 +1,209 @@
+# KOMA - Large Macroeconomic Model
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![codecov](https://codecov.io/gh/TimothyMerlin/koma/branch/main/graph/badge.svg?token=8X0PR1F6TP)](https://codecov.io/gh/TimothyMerlin/koma)
+
+**koma** is an R package for Bayesian estimation of simultaneous
+equation models (SEMs) using Metropolis-within-Gibbs Markov Chain Monte
+Carlo (MCMC) methods.
+
+> **⚠️ Beta Release**: `koma` is under active development. The
+> user-facing API may still change before the first CRAN release. Core
+> features are working but exported functions may change and bugs are
+> possible. Please report issues on GitHub.
+
+## Installation
+
+To install the latest **release** of the KOMA package from GitHub:
+
+``` r
+# Install from GitHub
+devtools::install_github("timothymerlin/koma@latest")
+
+# Or using renv
+renv::install("github::timothymerlin/koma@latest", rebuild = TRUE)
+
+# Or using remotes
+remotes::install_github("timothymerlin/koma@latest")
+```
+
+To install the latest **development version** of the KOMA package from
+GitHub:
+
+``` r
+# Install from GitHub
+devtools::install_github("timothymerlin/koma")
+
+# Or using renv
+renv::install("github::timothymerlin/koma", rebuild = TRUE)
+```
+
+Once the package is more mature and has been peer-reviewed, it is
+planned to be released on CRAN.
+
+## Documentation
+
+- **Getting started** → [Getting started with
+  koma](https://timothymerlin.github.io/koma/articles/koma-getting-started.md)
+- **Equation syntax** → [Equation syntax
+  reference](https://timothymerlin.github.io/koma/articles/koma-equations.md)
+- **Extended time series** → [Extended time series
+  (ets)](https://timothymerlin.github.io/koma/articles/koma-extended-timeseries.md)
+- **Parallelization** → [Executing koma in
+  parallel](https://timothymerlin.github.io/koma/articles/koma-parallel.md)
+- **Example: Klein model** → [Estimating Klein’s Model
+  I](https://timothymerlin.github.io/koma/articles/koma-klein.md)
+- **Example: small macro model** → [Estimating small macro model for
+  Switzerland](https://timothymerlin.github.io/koma/articles/koma-small-macro-model.md)
+
+## Development
+
+### Creating a new Version
+
+Increment the package version using `usethis`:
+
+``` r
+# Increment the version number (patch/minor/major)
+usethis::use_version()
+```
+
+This updates the `DESCRIPTION` file.
+
+#### Commit changes and tag the release
+
+After updating the version:
+
+``` bash
+# Stage all changes
+git add .
+
+# Commit with a clear message
+git commit -m "Incrementing version to x.x.x"
+
+# Tag the release (protected)
+git tag x.x.x
+
+# Tag the latest release (unprotected, movable)
+git tag -f latest
+```
+
+- `x.x.x` is the new semantic version (e.g. `0.1.0`).
+- Protected tags (like `x.x.x`) are immutable to ensure release
+  integrity.
+- `latest` is an uprotected tag that can be moved to point to the newest
+  release.
+
+#### Push branch and tags
+
+``` bash
+# Push commits
+git push
+
+# Push both tags
+git push origin --tags
+```
+
+# Package index
+
+## Package overview
+
+- [`koma`](https://timothymerlin.github.io/koma/reference/koma.md)
+  [`koma-package`](https://timothymerlin.github.io/koma/reference/koma.md)
+  : koma: Large Scale Macroeconomic Model
+
+## Core workflow
+
+- [`system_of_equations()`](https://timothymerlin.github.io/koma/reference/system_of_equations.md)
+  : System of Equations Class
+- [`is_system_of_equations()`](https://timothymerlin.github.io/koma/reference/is_system_of_equations.md)
+  : Check if Object is a System of Equations
+- [`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md)
+  : Estimate the Simultaneous Equations Model (SEM)
+- [`forecast()`](https://timothymerlin.github.io/koma/reference/forecast.md)
+  : Forecast the Simultaneous Equations Model (SEM)
+- [`model_identification()`](https://timothymerlin.github.io/koma/reference/model_identification.md)
+  : Identify Model Parameters from Character Matrices
+
+## Extended timeseries
+
+- [`ets()`](https://timothymerlin.github.io/koma/reference/koma_ts.md)
+  [`as_ets()`](https://timothymerlin.github.io/koma/reference/koma_ts.md)
+  [`is_ets()`](https://timothymerlin.github.io/koma/reference/koma_ts.md)
+  : Extended Time-Series Object
+- [`as_list()`](https://timothymerlin.github.io/koma/reference/as_list.md)
+  : Convert an mets koma_ts object to a list
+- [`as_mets()`](https://timothymerlin.github.io/koma/reference/as_mets.md)
+  : Convert a list object with ets koma_ts objects to a koma_ts
+  multivariate time series (mets)
+- [`concat()`](https://timothymerlin.github.io/koma/reference/concat.md)
+  : Concatenate two time series
+- [`rate()`](https://timothymerlin.github.io/koma/reference/rate.md) :
+  Compute the rate of change for a time series
+- [`level()`](https://timothymerlin.github.io/koma/reference/level.md) :
+  Compute the level for a time series
+- [`rebase()`](https://timothymerlin.github.io/koma/reference/rebase.md)
+  : Rebase Time Series Data Relative to a Base Period
+- [`type()`](https://timothymerlin.github.io/koma/reference/type.md) :
+  Get the type of a koma_ts object
+
+## Datasets
+
+- [`small_open_economy`](https://timothymerlin.github.io/koma/reference/small_open_economy.md)
+  : Quarterly time series of key macro variables for a small open
+  economy (Switzerland)
+- [`klein`](https://timothymerlin.github.io/koma/reference/klein.md) :
+  Klein macroeconomic time series (1970 Q1 onward)
+
+## Utilities
+
+- [`summary(`*`<koma_estimate>`*`)`](https://timothymerlin.github.io/koma/reference/summary.koma_estimate.md)
+  : Summary method for koma_estimate objects
+- [`print(`*`<koma_estimate>`*`)`](https://timothymerlin.github.io/koma/reference/print.koma_estimate.md)
+  : Print method for koma_estimate objects
+- [`plot(`*`<koma_forecast>`*`)`](https://timothymerlin.github.io/koma/reference/plot.koma_forecast.md)
+  : Plot koma Forecasts
+- [`print(`*`<koma_forecast>`*`)`](https://timothymerlin.github.io/koma/reference/print.koma_forecast.md)
+  : Print Method for koma_forecast Objects
+- [`init_koma_theme()`](https://timothymerlin.github.io/koma/reference/init_koma_theme.md)
+  : Initiate Default Theme
+- [`generate_sample_data()`](https://timothymerlin.github.io/koma/reference/generate_sample_data.md)
+  : Generate Data for the Simultaneous Equations Model
+- [`format(`*`<koma_seq>`*`)`](https://timothymerlin.github.io/koma/reference/format.koma_seq.md)
+  : Format System of Equations
+- [`print(`*`<koma_seq>`*`)`](https://timothymerlin.github.io/koma/reference/print.koma_seq.md)
+  : Print System of Equations
+- [`model_evaluation()`](https://timothymerlin.github.io/koma/reference/model_evaluation.md)
+  : Calculate Out-of-Sample RMSE for a Specified Horizon
+
+# Articles
+
+### Getting started
+
+- [Estimating and Forecasting with the koma
+  Package](https://timothymerlin.github.io/koma/articles/koma-getting-started.md):
+
+### Equation Syntax
+
+- [Equation Syntax
+  Reference](https://timothymerlin.github.io/koma/articles/koma-equations.md):
+
+### Extended Time Series
+
+- [Extended Time Series
+  (ets)](https://timothymerlin.github.io/koma/articles/koma-extended-timeseries.md):
+
+### Parallelization
+
+- [Executing \`koma\` in
+  Parallel](https://timothymerlin.github.io/koma/articles/koma-parallel.md):
+
+### Example: Klein Model
+
+- [Estimating Klein's Model
+  I](https://timothymerlin.github.io/koma/articles/koma-klein.md):
+
+### Example: Small Macro Model
+
+- [Estimating Small Macro Model for
+  Switzerland](https://timothymerlin.github.io/koma/articles/koma-small-macro-model.md):

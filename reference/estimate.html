@@ -19,18 +19,11 @@ both density and point forecasts."></head><body>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/koma.html">Get started</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/equations.html">Equation Syntax Reference</a></li>
-    <li><a class="dropdown-item" href="../articles/klein.html">Estimating Klein's Model I</a></li>
-    <li><a class="dropdown-item" href="../articles/parallel.html">Executing `koma` in Parallel</a></li>
-    <li><a class="dropdown-item" href="../articles/small_macro_model.html">Estimating Small Macro Model for Switzerland</a></li>
-  </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
-      </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
- <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
+      </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://github.com/timothymerlin/koma" aria-label="koma on GitHub"><span class="fa fab fa-github"></span></a></li>
       </ul></div>
 
 
@@ -138,13 +131,20 @@ sampling.</p></dd>
 
 </dl></div>
     <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>After estimation, use <code><a href="summary.koma_estimate.html">summary</a></code> for a
+full table of posterior summaries (with optional credible intervals and
+texreg output) and <code><a href="print.koma_estimate.html">print</a></code> for a concise
+console-friendly overview of the estimated system.</p>
+    </div>
+    <div class="section level2">
     <h2 id="parallel">Parallel<a class="anchor" aria-label="anchor" href="#parallel"></a></h2>
 
 
 <p>This function provides the option for parallel computing through
 the <code><a href="https://future.futureverse.org/reference/plan.html" class="external-link">future::plan()</a></code> function.
 For a detailed example on executing <code>estimate</code> in parallel, see the vignette:
-<code><a href="../articles/parallel.html">vignette("parallel")</a></code>.
+<code>vignette("parallel")</code>.
 For more details, see the <a href="https://cran.r-project.org/web/packages/future/future.pdf" class="external-link">future package documentation</a>.</p>
     </div>
     <div class="section level2">
@@ -164,7 +164,7 @@ Default is 1.1.</p></li>
     <div class="dont-index">
 <ul><li><p>To create a <code>koma_seq</code> object see <code><a href="system_of_equations.html">system_of_equations</a></code>.</p></li>
 <li><p>For a comprehensive example of using <code>estimate</code>, see
-<code><a href="../articles/koma.html">vignette("koma")</a></code>.</p></li>
+<code>vignette("koma")</code>.</p></li>
 <li><p>Related functions within the package that may be of interest:
 <code><a href="forecast.html">forecast</a></code>.</p></li>
 </ul></div>
@@ -179,7 +179,7 @@ Default is 1.1.</p></li>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

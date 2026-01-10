@@ -5,14 +5,14 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>A Large Scale Macroeconomic Model • koma</title>
+<title>koma • koma</title>
 <script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="A Large Scale Macroeconomic Model">
-<meta name="description" content="A Bayesian Simultaneous Equations Model for Forecasting.">
-<meta property="og:description" content="A Bayesian Simultaneous Equations Model for Forecasting.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="koma">
+<meta name="description" content=" Large Scale Macroeconomic Model">
+<meta property="og:description" content=" Large Scale Macroeconomic Model">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -31,23 +31,13 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
-<li class="nav-item"><a class="nav-link" href="articles/koma.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="index.html">Home</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles">
-<li><a class="dropdown-item" href="articles/equations.html">Equation Syntax Reference</a></li>
-    <li><a class="dropdown-item" href="articles/klein.html">Estimating Klein's Model I</a></li>
-    <li><a class="dropdown-item" href="articles/parallel.html">Executing `koma` in Parallel</a></li>
-    <li><a class="dropdown-item" href="articles/small_macro_model.html">Estimating Small Macro Model for Switzerland</a></li>
-  </ul>
-</li>
+<li class="nav-item"><a class="nav-link" href="articles/index.html">Articles</a></li>
 <li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul>
 <ul class="navbar-nav">
-<li class="nav-item"><form class="form-inline" role="search">
- <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
-</form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/timothymerlin/koma" aria-label="koma on GitHub"><span class="fa fab fa-github"></span></a></li>
       </ul>
 </div>
 
@@ -58,22 +48,103 @@
   <main id="main" class="col-md-9"><div class="section level1">
 <div class="page-header"><h1 id="koma---large-macroeconomic-model">KOMA - Large Macroeconomic Model<a class="anchor" aria-label="anchor" href="#koma---large-macroeconomic-model"></a>
 </h1></div>
-<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></p>
+<p><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a> <a href="https://codecov.io/gh/TimothyMerlin/koma" class="external-link"><img src="https://codecov.io/gh/TimothyMerlin/koma/branch/main/graph/badge.svg?token=8X0PR1F6TP" alt="codecov"></a></p>
+<p><strong>koma</strong> is an R package for Bayesian estimation of simultaneous equation models (SEMs) using Metropolis-within-Gibbs Markov Chain Monte Carlo (MCMC) methods.</p>
 <blockquote>
-<p><strong>⚠️ Beta Release</strong>: This package is in active development (v0.1.0). Core features are working but exported functions may change and bugs are possible. Please report issues on GitHub.</p>
+<p><strong>⚠️ Beta Release</strong>: <code>koma</code> is under active development. The user-facing API may still change before the first CRAN release. Core features are working but exported functions may change and bugs are possible. Please report issues on GitHub.</p>
 </blockquote>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
-<p>To install the latest version of the KOMA package from GitHub: ```R # Install from GitHub devtools::install_github(“timothymerlin/koma”)</p>
+<p>To install the latest <strong>release</strong> of the KOMA package from GitHub:</p>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"timothymerlin/koma@latest"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Or using renv</span></span>
+<span><span class="fu">renv</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/renv/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"github::timothymerlin/koma@latest"</span>, rebuild <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Or using remotes</span></span>
+<span><span class="fu">remotes</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"timothymerlin/koma@latest"</span><span class="op">)</span></span></code></pre></div>
+<p>To install the latest <strong>development version</strong> of the KOMA package from GitHub:</p>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Install from GitHub</span></span>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu"><a href="https://remotes.r-lib.org/reference/install_github.html" class="external-link">install_github</a></span><span class="op">(</span><span class="st">"timothymerlin/koma"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Or using renv</span></span>
+<span><span class="fu">renv</span><span class="fu">::</span><span class="fu"><a href="https://rstudio.github.io/renv/reference/install.html" class="external-link">install</a></span><span class="op">(</span><span class="st">"github::timothymerlin/koma"</span>, rebuild <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
+<p>Once the package is more mature and has been peer-reviewed, it is planned to be released on CRAN.</p>
+</div>
+<div class="section level2">
+<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
+</h2>
+<ul>
+<li>
+<strong>Getting started</strong> → <a href="articles/koma-getting-started.html">Getting started with koma</a>
+</li>
+<li>
+<strong>Equation syntax</strong> → <a href="articles/koma-equations.html">Equation syntax reference</a>
+</li>
+<li>
+<strong>Extended time series</strong> → <a href="articles/koma-extended-timeseries.html">Extended time series (ets)</a>
+</li>
+<li>
+<strong>Parallelization</strong> → <a href="articles/koma-parallel.html">Executing koma in parallel</a>
+</li>
+<li>
+<strong>Example: Klein model</strong> → <a href="articles/koma-klein.html">Estimating Klein’s Model I</a>
+</li>
+<li>
+<strong>Example: small macro model</strong> → <a href="articles/koma-small-macro-model.html">Estimating small macro model for Switzerland</a>
+</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="development">Development<a class="anchor" aria-label="anchor" href="#development"></a>
+</h2>
+<div class="section level3">
+<h3 id="creating-a-new-version">Creating a new Version<a class="anchor" aria-label="anchor" href="#creating-a-new-version"></a>
+</h3>
+<p>Increment the package version using <code>usethis</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Increment the version number (patch/minor/major)</span></span>
+<span><span class="fu">usethis</span><span class="fu">::</span><span class="fu"><a href="https://usethis.r-lib.org/reference/use_version.html" class="external-link">use_version</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
+<p>This updates the <code>DESCRIPTION</code> file.</p>
+<div class="section level4">
+<h4 id="commit-changes-and-tag-the-release">Commit changes and tag the release<a class="anchor" aria-label="anchor" href="#commit-changes-and-tag-the-release"></a>
+</h4>
+<p>After updating the version:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Stage all changes</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a><span class="fu">git</span> add .</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a></span>
+<span id="cb4-4"><a href="#cb4-4" tabindex="-1"></a><span class="co"># Commit with a clear message</span></span>
+<span id="cb4-5"><a href="#cb4-5" tabindex="-1"></a><span class="fu">git</span> commit <span class="at">-m</span> <span class="st">"Incrementing version to x.x.x"</span></span>
+<span id="cb4-6"><a href="#cb4-6" tabindex="-1"></a></span>
+<span id="cb4-7"><a href="#cb4-7" tabindex="-1"></a><span class="co"># Tag the release (protected)</span></span>
+<span id="cb4-8"><a href="#cb4-8" tabindex="-1"></a><span class="fu">git</span> tag x.x.x</span>
+<span id="cb4-9"><a href="#cb4-9" tabindex="-1"></a></span>
+<span id="cb4-10"><a href="#cb4-10" tabindex="-1"></a><span class="co"># Tag the latest release (unprotected, movable)</span></span>
+<span id="cb4-11"><a href="#cb4-11" tabindex="-1"></a><span class="fu">git</span> tag <span class="at">-f</span> latest</span></code></pre></div>
+<ul>
+<li>
+<code>x.x.x</code> is the new semantic version (e.g. <code>0.1.0</code>).</li>
+<li>Protected tags (like <code>x.x.x</code>) are immutable to ensure release integrity.</li>
+<li>
+<code>latest</code> is an uprotected tag that can be moved to point to the newest release.</li>
+</ul>
+</div>
+<div class="section level4">
+<h4 id="push-branch-and-tags">Push branch and tags<a class="anchor" aria-label="anchor" href="#push-branch-and-tags"></a>
+</h4>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># Push commits</span></span>
+<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a><span class="fu">git</span> push</span>
+<span id="cb5-3"><a href="#cb5-3" tabindex="-1"></a></span>
+<span id="cb5-4"><a href="#cb5-4" tabindex="-1"></a><span class="co"># Push both tags</span></span>
+<span id="cb5-5"><a href="#cb5-5" tabindex="-1"></a><span class="fu">git</span> push origin <span class="at">--tags</span></span></code></pre></div>
 </div>
 </div>
-<div class="section level1">
-<h1 id="or-using-renv">Or using renv<a class="anchor" aria-label="anchor" href="#or-using-renv"></a>
-</h1>
-<p>renv::install(“github::timothymerlin/koma”, rebuild = TRUE)</p>
 </div>
-
+</div>
   </main><aside class="col-md-3"><div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
@@ -110,7 +181,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer>

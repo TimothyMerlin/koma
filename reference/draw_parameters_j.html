@@ -21,18 +21,11 @@ procedure."></head><body>
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/koma.html">Get started</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/equations.html">Equation Syntax Reference</a></li>
-    <li><a class="dropdown-item" href="../articles/klein.html">Estimating Klein's Model I</a></li>
-    <li><a class="dropdown-item" href="../articles/parallel.html">Executing `koma` in Parallel</a></li>
-    <li><a class="dropdown-item" href="../articles/small_macro_model.html">Estimating Small Macro Model for Switzerland</a></li>
-  </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
-      </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
- <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
+      </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://github.com/timothymerlin/koma" aria-label="koma on GitHub"><span class="fa fab fa-github"></span></a></li>
       </ul></div>
 
 
@@ -60,7 +53,8 @@ procedure.</p>
 <span>  <span class="va">x_matrix</span>,</span>
 <span>  <span class="va">character_gamma_matrix</span>,</span>
 <span>  <span class="va">character_beta_matrix</span>,</span>
-<span>  <span class="va">jx</span></span>
+<span>  <span class="va">jx</span>,</span>
+<span>  <span class="va">gibbs_sampler</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -96,6 +90,11 @@ exogenous variables and \(n\) the number of equations.</p></dd>
 <dt id="arg-jx">jx<a class="anchor" aria-label="anchor" href="#arg-jx"></a></dt>
 <dd><p>The index of equation \(j\).</p></dd>
 
+
+<dt id="arg-gibbs-sampler">gibbs_sampler<a class="anchor" aria-label="anchor" href="#arg-gibbs-sampler"></a></dt>
+<dd><p>An object of class <code>gibbs_sampler</code> that holds an
+equations gibbs settings.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -122,7 +121,7 @@ additional diagnostic information.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

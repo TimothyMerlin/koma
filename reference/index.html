@@ -15,18 +15,11 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/koma.html">Get started</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../index.html">Home</a></li>
 <li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
-<li class="nav-item dropdown">
-  <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="../articles/equations.html">Equation Syntax Reference</a></li>
-    <li><a class="dropdown-item" href="../articles/klein.html">Estimating Klein's Model I</a></li>
-    <li><a class="dropdown-item" href="../articles/parallel.html">Executing `koma` in Parallel</a></li>
-    <li><a class="dropdown-item" href="../articles/small_macro_model.html">Estimating Small Macro Model for Switzerland</a></li>
-  </ul></li>
+<li class="nav-item"><a class="nav-link" href="../articles/index.html">Articles</a></li>
 <li class="nav-item"><a class="nav-link" href="../news/index.html">Changelog</a></li>
-      </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
- <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
+      </ul><ul class="navbar-nav"><li class="nav-item"><a class="external-link nav-link" href="https://github.com/timothymerlin/koma" aria-label="koma on GitHub"><span class="fa fab fa-github"></span></a></li>
       </ul></div>
 
 
@@ -39,210 +32,228 @@
     </div>
 
     <div class="section level2">
-      <h2 id="all-functions">All functions<a class="anchor" aria-label="anchor" href="#all-functions"></a></h2>
+      <h2 id="package-overview">Package overview<a class="anchor" aria-label="anchor" href="#package-overview"></a></h2>
 
 
 
-
-    </div><div class="section level2">
+      <dl></dl></div><div class="section level2">
 
 
 
 
       <dl><dt>
 
-          <code><a href="adjust_constant_vector.html">adjust_constant_vector()</a></code>
+          <code><a href="koma.html">koma</a></code> <code><a href="koma.html">koma-package</a></code>
 
         </dt>
-        <dd>Adjust Constant Vector Using Identity Weights</dd>
-      </dl><dl><dt>
+        <dd>koma: Large Scale Macroeconomic Model</dd>
+      </dl></div><div class="section level2">
+      <h2 id="core-workflow">Core workflow<a class="anchor" aria-label="anchor" href="#core-workflow"></a></h2>
 
-          <code><a href="as_list.html">as_list()</a></code>
 
-        </dt>
-        <dd>Convert an mets koma_ts object to a list</dd>
-      </dl><dl><dt>
 
-          <code><a href="as_mets.html">as_mets()</a></code>
+      <dl></dl></div><div class="section level2">
 
-        </dt>
-        <dd>Convert a list object with ets koma_ts objects to a koma_ts multivariate time series (mets)</dd>
-      </dl><dl><dt>
 
-          <code><a href="calculate_error.html">calculate_error()</a></code>
 
-        </dt>
-        <dd>Calculate the Forecast Error</dd>
-      </dl><dl><dt>
 
-          <code><a href="concat.html">concat()</a></code>
-
-        </dt>
-        <dd>Concatenate two time series</dd>
-      </dl><dl><dt>
-
-          <code><a href="estimate.html">estimate()</a></code>
-
-        </dt>
-        <dd>Estimate the Simultaneous Equations Model (SEM)</dd>
-      </dl><dl><dt>
-
-          <code><a href="forecast.html">forecast()</a></code>
-
-        </dt>
-        <dd>Forecast the Simultaneous Equations Model (SEM)</dd>
-      </dl><dl><dt>
-
-          <code><a href="format.koma_seq.html">format(<i>&lt;koma_seq&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Format System of Equations</dd>
-      </dl><dl><dt>
-
-          <code><a href="generate_sample_data.html">generate_sample_data()</a></code>
-
-        </dt>
-        <dd>Generate Data for the Simultaneous Equations Model</dd>
-      </dl><dl><dt>
-
-          <code><a href="get_optimal_ticks.html">get_optimal_ticks()</a></code>
-
-        </dt>
-        <dd>Find Optimal Ticks for y Axis</dd>
-      </dl><dl><dt>
-
-          <code><a href="get_variables.html">get_variables()</a></code>
-
-        </dt>
-        <dd>Extract Variables from a System of Equations</dd>
-      </dl><dl><dt>
-
-          <code><a href="init_koma_theme.html">init_koma_theme()</a></code>
-
-        </dt>
-        <dd>Initiate Default Theme</dd>
-      </dl><dl><dt>
-
-          <code><a href="is_system_of_equations.html">is_system_of_equations()</a></code>
-
-        </dt>
-        <dd>Check if Object is a System of Equations</dd>
-      </dl><dl><dt>
-
-          <code><a href="klein.html">klein</a></code>
-
-        </dt>
-        <dd>Klein macroeconomic time series (1970 Q1 onward)</dd>
-      </dl><dl><dt>
-
-          <code><a href="koma_ts.html">ets()</a></code> <code><a href="koma_ts.html">as_ets()</a></code> <code><a href="koma_ts.html">is_ets()</a></code>
-
-        </dt>
-        <dd>Extended Time-Series Object</dd>
-      </dl><dl><dt>
-
-          <code><a href="level.html">level()</a></code>
-
-        </dt>
-        <dd>Compute the level for a time series</dd>
-      </dl><dl><dt>
-
-          <code><a href="model_evaluation.html">model_evaluation()</a></code>
-
-        </dt>
-        <dd>Calculate Out-of-Sample RMSE for a Specified Horizon</dd>
-      </dl><dl><dt>
-
-          <code><a href="model_identification.html">model_identification()</a></code>
-
-        </dt>
-        <dd>Identify Model Parameters from Character Matrices</dd>
-      </dl><dl><dt>
-
-          <code><a href="plot.koma_forecast.html">plot(<i>&lt;koma_forecast&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Plot koma Forecasts</dd>
-      </dl><dl><dt>
-
-          <code><a href="plotli.html">plotli()</a></code>
-
-        </dt>
-        <dd>Plotting Function</dd>
-      </dl><dl><dt>
-
-          <code><a href="print.koma_forecast.html">print(<i>&lt;koma_forecast&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Print Method for koma_forecast Objects</dd>
-      </dl><dl><dt>
-
-          <code><a href="print.koma_seq.html">print(<i>&lt;koma_seq&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Print System of Equations</dd>
-      </dl><dl><dt>
-
-          <code><a href="rate.html">rate()</a></code>
-
-        </dt>
-        <dd>Compute the rate of change for a time series</dd>
-      </dl><dl><dt>
-
-          <code><a href="rebase.html">rebase()</a></code>
-
-        </dt>
-        <dd>Rebase Time Series Data Relative to a Base Period</dd>
-      </dl><dl><dt>
-
-          <code><a href="set_gibbs_settings.html">set_gibbs_settings()</a></code>
-
-        </dt>
-        <dd>Set Gibbs Settings</dd>
-      </dl><dl><dt>
-
-          <code><a href="small_open_economy.html">small_open_economy</a></code>
-
-        </dt>
-        <dd>Quarterly time series of key macro variables for a small open economy (Switzerland)</dd>
-      </dl><dl><dt>
-
-          <code><a href="summary.koma_estimate.html">summary(<i>&lt;koma_estimate&gt;</i>)</a></code>
-
-        </dt>
-        <dd>Summary method for koma_estimate objects</dd>
-      </dl><dl><dt>
-
-          <code><a href="summary_statistics.html">summary_statistics()</a></code>
-
-        </dt>
-        <dd>Calculate Summary Statistics for Estimates</dd>
-      </dl><dl><dt>
+      <dl><dt>
 
           <code><a href="system_of_equations.html">system_of_equations()</a></code>
 
         </dt>
         <dd>System of Equations Class</dd>
-      </dl><dl><dt>
 
-          <code><a href="the.html">the</a></code>
+        <dt>
+
+          <code><a href="is_system_of_equations.html">is_system_of_equations()</a></code>
 
         </dt>
-        <dd>Define the internal environment of the package</dd>
-      </dl><dl><dt>
+        <dd>Check if Object is a System of Equations</dd>
+
+        <dt>
+
+          <code><a href="estimate.html">estimate()</a></code>
+
+        </dt>
+        <dd>Estimate the Simultaneous Equations Model (SEM)</dd>
+
+        <dt>
+
+          <code><a href="forecast.html">forecast()</a></code>
+
+        </dt>
+        <dd>Forecast the Simultaneous Equations Model (SEM)</dd>
+
+        <dt>
+
+          <code><a href="model_identification.html">model_identification()</a></code>
+
+        </dt>
+        <dd>Identify Model Parameters from Character Matrices</dd>
+      </dl></div><div class="section level2">
+      <h2 id="extended-timeseries">Extended timeseries<a class="anchor" aria-label="anchor" href="#extended-timeseries"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="koma_ts.html">ets()</a></code> <code><a href="koma_ts.html">as_ets()</a></code> <code><a href="koma_ts.html">is_ets()</a></code>
+
+        </dt>
+        <dd>Extended Time-Series Object</dd>
+
+        <dt>
+
+          <code><a href="as_list.html">as_list()</a></code>
+
+        </dt>
+        <dd>Convert an mets koma_ts object to a list</dd>
+
+        <dt>
+
+          <code><a href="as_mets.html">as_mets()</a></code>
+
+        </dt>
+        <dd>Convert a list object with ets koma_ts objects to a koma_ts multivariate time series (mets)</dd>
+
+        <dt>
+
+          <code><a href="concat.html">concat()</a></code>
+
+        </dt>
+        <dd>Concatenate two time series</dd>
+
+        <dt>
+
+          <code><a href="rate.html">rate()</a></code>
+
+        </dt>
+        <dd>Compute the rate of change for a time series</dd>
+
+        <dt>
+
+          <code><a href="level.html">level()</a></code>
+
+        </dt>
+        <dd>Compute the level for a time series</dd>
+
+        <dt>
+
+          <code><a href="rebase.html">rebase()</a></code>
+
+        </dt>
+        <dd>Rebase Time Series Data Relative to a Base Period</dd>
+
+        <dt>
 
           <code><a href="type.html">type()</a></code>
 
         </dt>
         <dd>Get the type of a koma_ts object</dd>
-      </dl><dl><dt>
+      </dl></div><div class="section level2">
+      <h2 id="datasets">Datasets<a class="anchor" aria-label="anchor" href="#datasets"></a></h2>
 
-          <code><a href="validate_completeness.html">validate_completeness()</a></code>
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="small_open_economy.html">small_open_economy</a></code>
 
         </dt>
-        <dd>Validate Completeness</dd>
+        <dd>Quarterly time series of key macro variables for a small open economy (Switzerland)</dd>
+
+        <dt>
+
+          <code><a href="klein.html">klein</a></code>
+
+        </dt>
+        <dd>Klein macroeconomic time series (1970 Q1 onward)</dd>
+      </dl></div><div class="section level2">
+      <h2 id="utilities">Utilities<a class="anchor" aria-label="anchor" href="#utilities"></a></h2>
+
+
+
+      <dl></dl></div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="summary.koma_estimate.html">summary(<i>&lt;koma_estimate&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Summary method for koma_estimate objects</dd>
+
+        <dt>
+
+          <code><a href="print.koma_estimate.html">print(<i>&lt;koma_estimate&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print method for koma_estimate objects</dd>
+
+        <dt>
+
+          <code><a href="plot.koma_forecast.html">plot(<i>&lt;koma_forecast&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Plot koma Forecasts</dd>
+
+        <dt>
+
+          <code><a href="print.koma_forecast.html">print(<i>&lt;koma_forecast&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print Method for koma_forecast Objects</dd>
+
+        <dt>
+
+          <code><a href="init_koma_theme.html">init_koma_theme()</a></code>
+
+        </dt>
+        <dd>Initiate Default Theme</dd>
+
+        <dt>
+
+          <code><a href="generate_sample_data.html">generate_sample_data()</a></code>
+
+        </dt>
+        <dd>Generate Data for the Simultaneous Equations Model</dd>
+
+        <dt>
+
+          <code><a href="format.koma_seq.html">format(<i>&lt;koma_seq&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Format System of Equations</dd>
+
+        <dt>
+
+          <code><a href="print.koma_seq.html">print(<i>&lt;koma_seq&gt;</i>)</a></code>
+
+        </dt>
+        <dd>Print System of Equations</dd>
+
+        <dt>
+
+          <code><a href="model_evaluation.html">model_evaluation()</a></code>
+
+        </dt>
+        <dd>Calculate Out-of-Sample RMSE for a Specified Horizon</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
@@ -250,7 +261,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
     </footer></div>

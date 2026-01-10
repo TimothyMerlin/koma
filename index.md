@@ -1,0 +1,105 @@
+# KOMA - Large Macroeconomic Model
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![codecov](https://codecov.io/gh/TimothyMerlin/koma/branch/main/graph/badge.svg?token=8X0PR1F6TP)](https://codecov.io/gh/TimothyMerlin/koma)
+
+**koma** is an R package for Bayesian estimation of simultaneous
+equation models (SEMs) using Metropolis-within-Gibbs Markov Chain Monte
+Carlo (MCMC) methods.
+
+> **⚠️ Beta Release**: `koma` is under active development. The
+> user-facing API may still change before the first CRAN release. Core
+> features are working but exported functions may change and bugs are
+> possible. Please report issues on GitHub.
+
+## Installation
+
+To install the latest **release** of the KOMA package from GitHub:
+
+``` r
+# Install from GitHub
+devtools::install_github("timothymerlin/koma@latest")
+
+# Or using renv
+renv::install("github::timothymerlin/koma@latest", rebuild = TRUE)
+
+# Or using remotes
+remotes::install_github("timothymerlin/koma@latest")
+```
+
+To install the latest **development version** of the KOMA package from
+GitHub:
+
+``` r
+# Install from GitHub
+devtools::install_github("timothymerlin/koma")
+
+# Or using renv
+renv::install("github::timothymerlin/koma", rebuild = TRUE)
+```
+
+Once the package is more mature and has been peer-reviewed, it is
+planned to be released on CRAN.
+
+## Documentation
+
+- **Getting started** → [Getting started with
+  koma](https://timothymerlin.github.io/koma/articles/koma-getting-started.md)
+- **Equation syntax** → [Equation syntax
+  reference](https://timothymerlin.github.io/koma/articles/koma-equations.md)
+- **Extended time series** → [Extended time series
+  (ets)](https://timothymerlin.github.io/koma/articles/koma-extended-timeseries.md)
+- **Parallelization** → [Executing koma in
+  parallel](https://timothymerlin.github.io/koma/articles/koma-parallel.md)
+- **Example: Klein model** → [Estimating Klein’s Model
+  I](https://timothymerlin.github.io/koma/articles/koma-klein.md)
+- **Example: small macro model** → [Estimating small macro model for
+  Switzerland](https://timothymerlin.github.io/koma/articles/koma-small-macro-model.md)
+
+## Development
+
+### Creating a new Version
+
+Increment the package version using `usethis`:
+
+``` r
+# Increment the version number (patch/minor/major)
+usethis::use_version()
+```
+
+This updates the `DESCRIPTION` file.
+
+#### Commit changes and tag the release
+
+After updating the version:
+
+``` bash
+# Stage all changes
+git add .
+
+# Commit with a clear message
+git commit -m "Incrementing version to x.x.x"
+
+# Tag the release (protected)
+git tag x.x.x
+
+# Tag the latest release (unprotected, movable)
+git tag -f latest
+```
+
+- `x.x.x` is the new semantic version (e.g. `0.1.0`).
+- Protected tags (like `x.x.x`) are immutable to ensure release
+  integrity.
+- `latest` is an uprotected tag that can be moved to point to the newest
+  release.
+
+#### Push branch and tags
+
+``` bash
+# Push commits
+git push
+
+# Push both tags
+git push origin --tags
+```
