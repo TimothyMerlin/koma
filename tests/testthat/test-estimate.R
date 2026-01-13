@@ -14,6 +14,37 @@ test_that("new_prepare_estimation", {
   expect_length(out, 4)
 })
 
+test_that("validate_estimation_dates stops when estimation dates are missing", {
+  dates <- list()
+
+  expect_error(
+    koma:::validate_estimation_dates(dates),
+    "dates\\$estimation"
+  )
+})
+
+test_that("validate_estimation_dates stops when start is after end", {
+  dates <- list(
+    estimation = list(start = c(2020, 2), end = c(2019, 4))
+  )
+
+  expect_error(
+    koma:::validate_estimation_dates(dates),
+    "start.*before.*end"
+  )
+})
+
+test_that("validate_estimation_dates stops on invalid estimation date format", {
+  dates <- list(
+    estimation = list(start = c(2020, 5), end = c(2021, 1))
+  )
+
+  expect_error(
+    koma:::validate_estimation_dates(dates),
+    "period must be between 1 and 4"
+  )
+})
+
 test_that("estimate correctly estimates model", {
   dates <- list(estimation = list(
     start = c(1977, 1),

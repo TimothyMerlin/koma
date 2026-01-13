@@ -244,19 +244,8 @@ new_prepare_estimation <- function(ts_data, sys_eq, dates, point_forecast) {
     point_forecast <- utils::modifyList(default_point_forecast, point_forecast)
   }
 
+  validate_estimation_dates(dates)
   dates <- dates_to_num(dates, frequency = 4)
-
-  if (is.null(dates$estimation) ||
-    is.null(dates$estimation$start) ||
-    is.null(dates$estimation$end) ||
-    !is.numeric(dates$estimation$start) ||
-    !is.numeric(dates$estimation$end)
-  ) {
-    cli::cli_abort(c(
-      "!" = "Invalid {.field dates$estimation}:",
-      "x" = "{.field start} and {.field end} must be numeric and provided"
-    ))
-  }
 
   # only keep data needed for system
   ts_data <- ts_data[c(
@@ -302,6 +291,77 @@ new_prepare_estimation <- function(ts_data, sys_eq, dates, point_forecast) {
       x_matrix = balanced_data$x_matrix
     )
   )
+}
+
+validate_estimation_dates <- function(dates, frequency = 4) {
+  if (is.null(dates$estimation) ||
+    is.null(dates$estimation$start) ||
+    is.null(dates$estimation$end) ||
+    length(dates$estimation$start) == 0L ||
+    length(dates$estimation$end) == 0L
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$estimation}:",
+      "x" = "{.field start} and {.field end} must be provided"
+    ))
+  }
+  if (!is.numeric(dates$estimation$start) || !is.numeric(dates$estimation$end)) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$estimation}:",
+      "x" = "{.field start} and {.field end} must be numeric"
+    ))
+  }
+  if (!length(dates$estimation$start) %in% c(1L, 2L) ||
+    !length(dates$estimation$end) %in% c(1L, 2L)
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$estimation}:",
+      "x" = "{.field start} and {.field end} must be length 1 or 2"
+    ))
+  }
+  if (anyNA(dates$estimation$start) ||
+    anyNA(dates$estimation$end) ||
+    any(!is.finite(dates$estimation$start), na.rm = TRUE) ||
+    any(!is.finite(dates$estimation$end), na.rm = TRUE)
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$estimation}:",
+      "x" = "{.field start} and {.field end} must be finite"
+    ))
+  }
+  if (length(dates$estimation$start) == 2L &&
+    (dates$estimation$start[2] < 1L || dates$estimation$start[2] > frequency)
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$estimation}:",
+      "x" = "{.field start} period must be between 1 and {frequency}"
+    ))
+  }
+  if (length(dates$estimation$end) == 2L &&
+    (dates$estimation$end[2] < 1L || dates$estimation$end[2] > frequency)
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$estimation}:",
+      "x" = "{.field end} period must be between 1 and {frequency}"
+    ))
+  }
+
+  estimation_start <- dates_to_num(dates$estimation$start, frequency = frequency)
+  estimation_end <- dates_to_num(dates$estimation$end, frequency = frequency)
+  if (length(estimation_start) != 1L || length(estimation_end) != 1L) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$estimation}:",
+      "x" = "{.field start} and {.field end} must be scalar dates"
+    ))
+  }
+  if (estimation_start > estimation_end) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$estimation}:",
+      "x" = "{.field start} must be before {.field end}"
+    ))
+  }
+
+  invisible(NULL)
 }
 
 new_estimate <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
