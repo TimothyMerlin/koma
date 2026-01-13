@@ -62,8 +62,8 @@ forecast.koma_estimate <- function(estimates, dates, ...,
                                    restrictions = NULL, point_forecast = NULL) {
   stopifnot(inherits(estimates, "koma_estimate"))
 
-  dates$current <- iterate_n_periods(dates$forecast$start, -1, 4)
   validate_forecast_input(estimates, dates)
+  dates$current <- iterate_n_periods(dates$forecast$start, -1, 4)
   fo <- new_forecast(estimates, dates, restrictions, point_forecast)
   validate_forecast_output(fo)
 }
@@ -216,6 +216,75 @@ new_forecast <- function(estimates, dates, restrictions, point_forecast) {
 }
 
 validate_forecast_input <- function(estimates, dates, ...) {
+  if (is.null(dates$forecast) ||
+    is.null(dates$forecast$start) ||
+    is.null(dates$forecast$end) ||
+    length(dates$forecast$start) == 0L ||
+    length(dates$forecast$end) == 0L
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$forecast}:",
+      "x" = "{.field start} and {.field end} must be provided"
+    ))
+  }
+  if (!is.numeric(dates$forecast$start) || !is.numeric(dates$forecast$end)) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$forecast}:",
+      "x" = "{.field start} and {.field end} must be numeric"
+    ))
+  }
+  if (!length(dates$forecast$start) %in% c(1L, 2L) ||
+    !length(dates$forecast$end) %in% c(1L, 2L)
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$forecast}:",
+      "x" = "{.field start} and {.field end} must be length 1 or 2"
+    ))
+  }
+  if (anyNA(dates$forecast$start) ||
+    anyNA(dates$forecast$end) ||
+    any(!is.finite(dates$forecast$start), na.rm = TRUE) ||
+    any(!is.finite(dates$forecast$end), na.rm = TRUE)
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$forecast}:",
+      "x" = "{.field start} and {.field end} must be finite"
+    ))
+  }
+  if (length(dates$forecast$start) == 2L &&
+    (dates$forecast$start[2] < 1L || dates$forecast$start[2] > 4L)
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$forecast}:",
+      "x" = "{.field start} period must be between 1 and 4"
+    ))
+  }
+  if (length(dates$forecast$end) == 2L &&
+    (dates$forecast$end[2] < 1L || dates$forecast$end[2] > 4L)
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$forecast}:",
+      "x" = "{.field end} period must be between 1 and 4"
+    ))
+  }
+
+  forecast_start <- dates_to_num(dates$forecast$start, frequency = 4)
+  forecast_end <- dates_to_num(dates$forecast$end, frequency = 4)
+  if (length(forecast_start) != 1L || length(forecast_end) != 1L) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$forecast}:",
+      "x" = "{.field start} and {.field end} must be scalar dates"
+    ))
+  }
+  if (forecast_start > forecast_end) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$forecast}:",
+      "x" = "{.field start} must be before {.field end}"
+    ))
+  }
+
+  current_date <- iterate_n_periods(dates$forecast$start, -1, 4)
+
   # Check if exogenous data extends to forecast start date
   # If exogenous data is shorter then forecast end date the forecast horizon
   # will later be automatically shortened.
@@ -239,7 +308,7 @@ validate_forecast_input <- function(estimates, dates, ...) {
   # Check if data longer than current quarter
   data_too_long <- list()
   for (x in estimates$sys_eq$endogenous_variables) {
-    if (stats::tsp(estimates$ts_data[[x]])[2] > dates_to_num(dates$current, frequency = 4)) {
+    if (stats::tsp(estimates$ts_data[[x]])[2] > dates_to_num(current_date, frequency = 4)) {
       data_too_long <- c(data_too_long, x)
     }
   }
@@ -254,6 +323,8 @@ validate_forecast_input <- function(estimates, dates, ...) {
       call = rlang::caller_env()
     )
   }
+
+  invisible(NULL)
 }
 
 validate_forecast_output <- function(x, ...) {

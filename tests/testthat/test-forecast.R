@@ -216,6 +216,66 @@ test_that("forecast conditionally fills ragged edge", {
   expect_identical(stats::time(result$mean[[1]]), expected_time)
 })
 
+test_that("validate_forecast_input stops when forecast dates are missing", {
+  estimates <- list(
+    sys_eq = list(exogenous_variables = NULL, endogenous_variables = NULL),
+    ts_data = list()
+  )
+  dates <- list(
+    estimation = list(start = c(1977, 1), end = c(2019, 4))
+  )
+
+  expect_error(
+    koma:::validate_forecast_input(estimates, dates),
+    "dates\\$forecast"
+  )
+})
+
+test_that("validate_forecast_input stops when forecast start is after end", {
+  estimates <- list(
+    sys_eq = list(exogenous_variables = NULL, endogenous_variables = NULL),
+    ts_data = list()
+  )
+  dates <- list(
+    forecast = list(start = c(2020, 1), end = c(2019, 2))
+  )
+
+  expect_error(
+    koma:::validate_forecast_input(estimates, dates),
+    "start.*before.*end"
+  )
+})
+
+test_that("validate_forecast_input stops on invalid forecast date format", {
+  estimates <- list(
+    sys_eq = list(exogenous_variables = NULL, endogenous_variables = NULL),
+    ts_data = list()
+  )
+  dates <- list(
+    forecast = list(start = c(2020, 5), end = c(2021, 1))
+  )
+
+  expect_error(
+    koma:::validate_forecast_input(estimates, dates),
+    "period must be between 1 and 4"
+  )
+})
+
+test_that("validate_forecast_input stops on non-numeric forecast dates", {
+  estimates <- list(
+    sys_eq = list(exogenous_variables = NULL, endogenous_variables = NULL),
+    ts_data = list()
+  )
+  dates <- list(
+    forecast = list(start = "2020 Q1", end = "2021 Q1")
+  )
+
+  expect_error(
+    koma:::validate_forecast_input(estimates, dates),
+    "must be numeric"
+  )
+})
+
 test_that("forecast stops when endogenous series longer than forecast start", {
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2018, 4)),
