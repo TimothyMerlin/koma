@@ -46,17 +46,17 @@ planned to be released on CRAN.
 ## Documentation
 
 - **Getting started** → [Getting started with
-  koma](articles/koma-getting-started.html)
+  koma](https://timothymerlin.github.io/koma/articles/koma-getting-started.html)
 - **Equation syntax** → [Equation syntax
-  reference](articles/koma-equations.html)
+  reference](https://timothymerlin.github.io/koma/articles/koma-equations.html)
 - **Extended time series** → [Extended time series
-  (ets)](articles/koma-extended-timeseries.html)
+  (ets)](https://timothymerlin.github.io/koma/articles/koma-extended-timeseries.html)
 - **Parallelization** → [Executing koma in
-  parallel](articles/koma-parallel.html)
+  parallel](https://timothymerlin.github.io/koma/articles/koma-parallel.html)
 - **Example: Klein model** → [Estimating Klein’s Model
-  I](articles/koma-klein.html)
+  I](https://timothymerlin.github.io/koma/articles/koma-klein.html)
 - **Example: small macro model** → [Estimating small macro model for
-  Switzerland](articles/koma-small-macro-model.html)
+  Switzerland](https://timothymerlin.github.io/koma/articles/koma-small-macro-model.html)
 
 ## Development
 

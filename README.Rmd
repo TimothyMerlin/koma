@@ -45,17 +45,17 @@ Once the package is more mature and has been peer-reviewed, it is planned to be 
 ## Documentation
 
  - **Getting started** 
-  → [Getting started with koma](articles/koma-getting-started.html)
+  → [Getting started with koma](https://timothymerlin.github.io/koma/articles/koma-getting-started.html)
  - **Equation syntax** 
-  → [Equation syntax reference](articles/koma-equations.html)
+  → [Equation syntax reference](https://timothymerlin.github.io/koma/articles/koma-equations.html)
  - **Extended time series** 
-  → [Extended time series (ets)](articles/koma-extended-timeseries.html)
+  → [Extended time series (ets)](https://timothymerlin.github.io/koma/articles/koma-extended-timeseries.html)
  - **Parallelization** 
-  → [Executing koma in parallel](articles/koma-parallel.html)
+  → [Executing koma in parallel](https://timothymerlin.github.io/koma/articles/koma-parallel.html)
  - **Example: Klein model** 
-  → [Estimating Klein's Model I](articles/koma-klein.html)
+  → [Estimating Klein's Model I](https://timothymerlin.github.io/koma/articles/koma-klein.html)
  - **Example: small macro model** 
-  → [Estimating small macro model for Switzerland](articles/koma-small-macro-model.html)
+  → [Estimating small macro model for Switzerland](https://timothymerlin.github.io/koma/articles/koma-small-macro-model.html)
 
 
 ## Development
