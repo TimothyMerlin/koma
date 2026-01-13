@@ -1269,3 +1269,32 @@ test_that("print.koma_estimate, respects digits", {
   expect_match(out4, "0.3562", fixed = TRUE)
   expect_false(identical(out2, out4))
 })
+
+test_that("format.koma_estimate avoids substring replacement", {
+  equations <- "y ~ world_gdp + y.L(1) + world_gdp_level.L(1),
+  world_gdp_level == 1*world_gdp + 1*world_gdp_level.L(1)"
+  sys_eq <- system_of_equations(equations, exogenous_variables = "world_gdp")
+
+  beta_draws <- replicate(5, c(1.1, 0.5, 0.3, 2.0), simplify = FALSE)
+  gamma_draws <- replicate(5, NA_real_, simplify = FALSE)
+
+  estimates <- list(
+    y = list(beta_jw = beta_draws, gamma_jw = gamma_draws)
+  )
+
+  est <- structure(
+    list(estimates = estimates, sys_eq = sys_eq),
+    class = "koma_estimate"
+  )
+
+  formatted <- cli::ansi_strip(paste(format(est), collapse = "\n"))
+
+  expect_match(
+    formatted,
+    "0\\.3\\s*\\*\\s*world_gdp_level\\.L\\(1\\)"
+  )
+  expect_false(grepl(
+    "0\\.3\\s*\\*\\s*2\\s*\\*\\s*world_gdp_level\\.L\\(1\\)",
+    formatted
+  ))
+})

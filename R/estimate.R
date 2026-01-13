@@ -419,6 +419,17 @@ format.koma_estimate <- function(x,
                                  ci_low = 5,
                                  ci_up = 95,
                                  digits = 2) {
+  # Ensure coefficient substitution only matches whole variable tokens.
+  escape_regex <- function(x) {
+    gsub("([][{}()+*^$|\\\\.?])", "\\\\\\1", x)
+  }
+
+  replace_var <- function(text, var, value) {
+    escaped <- escape_regex(var)
+    pattern <- paste0("(?<![A-Za-z0-9_\\.])", escaped, "(?![A-Za-z0-9_\\.])")
+    gsub(pattern, value, text, perl = TRUE)
+  }
+
   parsed_eq <- lapply(x$sys_eq$equations, split_eq)
 
   if (!is.null(variables)) {
@@ -447,13 +458,21 @@ format.koma_estimate <- function(x,
         central_tendency, ci_low, ci_up
       )
 
-      rhs <- gsub("constant", round(est[[1]]$coef["constant"], digits), rhs)
+      rhs <- replace_var(
+        rhs,
+        "constant",
+        round(est[[1]]$coef["constant"], digits)
+      )
 
       # add coefficients in front of variables
       for (var in names(est[[1]]$coef)) {
         coef_value <- round(est[[1]]$coef[[var]], digits)
         if (var != "constant") {
-          rhs <- gsub(var, paste0(coef_value, "*", var), rhs, fixed = TRUE)
+          rhs <- replace_var(
+            rhs,
+            var,
+            paste0(coef_value, "*", var)
+          )
         }
       }
     }
