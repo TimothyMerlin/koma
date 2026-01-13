@@ -26,22 +26,13 @@ get_seq_weights <- function(ts_data, identities, dates) {
     is_na <- is.na(suppressWarnings(as.numeric(identities[ix][[1]]$weights)))
 
     if (any(is_na)) {
-      if (is.null(dates$dynamic_weights$start) ||
-        is.null(dates$dynamic_weights$start) ||
-        is.null(dates$dynamic_weights$end) ||
-        !is.numeric(dates$dynamic_weights$start) ||
-        !is.numeric(dates$dynamic_weights$end)
-      ) {
-        cli::cli_abort(c(
-          "!" = "Invalid {.field dates$dynamic_weights}:",
-          "x" = "{.field start} and {.field end} must be numeric and provided"
-        ))
-      }
-
+      validate_dynamic_weights_dates(dates)
+      dynamic_start <- dates_to_num(dates$dynamic_weights$start, frequency = 4)
+      dynamic_end <- dates_to_num(dates$dynamic_weights$end, frequency = 4)
       out <- calculate_eq_weights(
         ts_data, identities[ix],
-        dates$dynamic_weights$start,
-        dates$dynamic_weights$end
+        dynamic_start,
+        dynamic_end
       )
       weights <- c(weights, out)
     }
@@ -49,6 +40,81 @@ get_seq_weights <- function(ts_data, identities, dates) {
 
   # Update identities with dynamic weights
   update_identity_weights(weights, identities)
+}
+
+validate_dynamic_weights_dates <- function(dates, frequency = 4) {
+  if (is.null(dates$dynamic_weights) ||
+    is.null(dates$dynamic_weights$start) ||
+    is.null(dates$dynamic_weights$end) ||
+    length(dates$dynamic_weights$start) == 0L ||
+    length(dates$dynamic_weights$end) == 0L
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$dynamic_weights}:",
+      "x" = "{.field start} and {.field end} must be provided"
+    ))
+  }
+  if (!is.numeric(dates$dynamic_weights$start) ||
+    !is.numeric(dates$dynamic_weights$end)
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$dynamic_weights}:",
+      "x" = "{.field start} and {.field end} must be numeric"
+    ))
+  }
+  if (!length(dates$dynamic_weights$start) %in% c(1L, 2L) ||
+    !length(dates$dynamic_weights$end) %in% c(1L, 2L)
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$dynamic_weights}:",
+      "x" = "{.field start} and {.field end} must be length 1 or 2"
+    ))
+  }
+  if (anyNA(dates$dynamic_weights$start) ||
+    anyNA(dates$dynamic_weights$end) ||
+    any(!is.finite(dates$dynamic_weights$start), na.rm = TRUE) ||
+    any(!is.finite(dates$dynamic_weights$end), na.rm = TRUE)
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$dynamic_weights}:",
+      "x" = "{.field start} and {.field end} must be finite"
+    ))
+  }
+  if (length(dates$dynamic_weights$start) == 2L &&
+    (dates$dynamic_weights$start[2] < 1L ||
+      dates$dynamic_weights$start[2] > frequency)
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$dynamic_weights}:",
+      "x" = "{.field start} period must be between 1 and {frequency}"
+    ))
+  }
+  if (length(dates$dynamic_weights$end) == 2L &&
+    (dates$dynamic_weights$end[2] < 1L ||
+      dates$dynamic_weights$end[2] > frequency)
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$dynamic_weights}:",
+      "x" = "{.field end} period must be between 1 and {frequency}"
+    ))
+  }
+
+  dynamic_start <- dates_to_num(dates$dynamic_weights$start, frequency = frequency)
+  dynamic_end <- dates_to_num(dates$dynamic_weights$end, frequency = frequency)
+  if (length(dynamic_start) != 1L || length(dynamic_end) != 1L) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$dynamic_weights}:",
+      "x" = "{.field start} and {.field end} must be scalar dates"
+    ))
+  }
+  if (dynamic_start > dynamic_end) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$dynamic_weights}:",
+      "x" = "{.field start} must be before {.field end}"
+    ))
+  }
+
+  invisible(NULL)
 }
 
 #' Calculate Dynamic Weights for Identity Equations
@@ -144,7 +210,7 @@ calculate_eq_weights <- function(ts_data, iden, start, end) {
     components, evaluate_component, annualized_ts
   )
 
-  return(ts_weights)
+  ts_weights
 }
 
 #' Update Identity Weights
@@ -189,5 +255,5 @@ update_identity_weights <- function(weights, identities) {
     }
   }
 
-  return(identities)
+  identities
 }

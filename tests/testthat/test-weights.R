@@ -39,6 +39,48 @@ test_that("get_seq_weights", {
   expect_equal(seq_weights$gdp$weights$theta6_5, weight_service)
 })
 
+test_that("validate_dynamic_weights_dates stops when dates are missing", {
+  dates <- list()
+
+  expect_error(
+    koma:::validate_dynamic_weights_dates(dates),
+    "dates\\$dynamic_weights"
+  )
+})
+
+test_that("validate_dynamic_weights_dates stops when start is after end", {
+  dates <- list(
+    dynamic_weights = list(start = c(2020, 2), end = c(2019, 4))
+  )
+
+  expect_error(
+    koma:::validate_dynamic_weights_dates(dates),
+    "start.*before.*end"
+  )
+})
+
+test_that("validate_dynamic_weights_dates stops on invalid date format", {
+  dates <- list(
+    dynamic_weights = list(start = c(2020, 5), end = c(2021, 1))
+  )
+
+  expect_error(
+    koma:::validate_dynamic_weights_dates(dates),
+    "period must be between 1 and 4"
+  )
+})
+
+test_that("validate_dynamic_weights_dates stops on non-numeric dates", {
+  dates <- list(
+    dynamic_weights = list(start = "2020 Q1", end = "2021 Q1")
+  )
+
+  expect_error(
+    koma:::validate_dynamic_weights_dates(dates),
+    "must be numeric"
+  )
+})
+
 test_that("calculate_eq_weights computes fixed weights correctly", {
   weight_manufacturing <- 0.7
   weight_service <- 1 - weight_manufacturing
