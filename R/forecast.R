@@ -107,6 +107,32 @@ new_forecast <- function(estimates, dates, restrictions, point_forecast) {
 
   ##### Conditional fill of ragged edge up to and including forecast start
   if (edge$date != dates$current) {
+    missing_flags <- vapply(
+      estimates$sys_eq$endogenous_variables,
+      function(var) stats::tsp(rate(ts_data[[var]]))[2] < dates$current,
+      logical(1)
+    )
+    missing_vars <- estimates$sys_eq$endogenous_variables[missing_flags]
+    if (!length(missing_vars)) {
+      missing_vars <- edge$variable_names
+    }
+
+    edge_date <- dates_to_str(num_to_dates(edge$date, 4), 4)
+    current_date <- dates_to_str(num_to_dates(dates$current, 4), 4)
+    cli::cli_text("")
+    cli::cli_text("Conditional fill detected after {.val {edge_date}}.")
+    cli::cli_text("Missing observations for: {.val {missing_vars}}")
+    cli::cli_text("Missing values will be conditionally filled up to {.val {current_date}} before forecasting.")
+
+    should_prompt <- interactive() &&
+      (!rlang::is_installed("testthat") || !testthat::is_testing())
+    if (should_prompt) {
+      response <- readline(prompt = "Continue with conditional fill? (y/n): ")
+      if (tolower(response) != "y") {
+        cli::cli_abort("Conditional fill aborted by user.")
+      }
+    }
+
     ts_data <- conditional_fill(
       rate(ts_data), estimates$sys_eq, dates, estimates$estimates,
       point_forecast
