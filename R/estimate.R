@@ -85,34 +85,7 @@ estimate.list <- function(ts_data, sys_eq, dates,
     cli::cli_abort("`ts_data` must be a list. You provided a {class(ts_data)}.")
   }
   if (!all(sapply(ts_data, function(x) inherits(x, "koma_ts")))) {
-    # defaults
-    series_type <- "level"
-    method <- "percentage"
-
-    cli::cli_text(
-      "Some of the time series in `ts_data` are not `ets`.",
-      "They will be automatically converted with `as_ets` using the defaults:"
-    )
-    cli::cli_h2("Default settings")
-    cli::cli_text("series_type = {series_type}")
-    cli::cli_text("method = {method}")
-
-    user_input <- readline("Are these correct? (y/n): ")
-    if (tolower(user_input) != "y") {
-      series_type <- readline("Enter series_type: ")
-      method <- readline("Enter method: ")
-    }
-
-    # Convert ts -> koma_ts if needed
-    ts_data <- lapply(ts_data, function(x) {
-      if (inherits(x, "ts") && !inherits(x, "koma_ts")) {
-        x <- as_ets(x, series_type = series_type, method = method)
-      }
-      if (!inherits(x, "koma_ts")) {
-        cli::cli_abort("All elements must be koma_ts after conversion")
-      }
-      x
-    })
+    ts_data <- convert_ts_data_to_ets(ts_data)
   }
   if (!all(sapply(ts_data, function(x) inherits(x, "koma_ts")))) {
     cli::cli_abort("Each element in `ts_data` must be of class 'koma_ts'.")
@@ -174,6 +147,91 @@ estimate.list <- function(ts_data, sys_eq, dates,
     ),
     class = "koma_estimate"
   )
+}
+
+convert_ts_data_to_ets <- function(ts_data) {
+  series_type <- "level"
+  method <- "percentage"
+
+  cli::cli_text(
+    "Some of the time series in `ts_data` are not `ets`.",
+    "They will be automatically converted with `as_ets` using the defaults:"
+  )
+  cli::cli_h2("Default settings")
+  cli::cli_text("series_type: {series_type}")
+  cli::cli_text("method: {method}")
+
+  user_input <- readline("Are these correct? (y/n): ")
+  if (tolower(user_input) != "y") {
+    series_type <- readline("Enter series_type: ")
+    method <- readline("Enter method: ")
+  }
+
+  non_koma_names <- names(ts_data)[sapply(
+    ts_data,
+    function(x) inherits(x, "ts") && !inherits(x, "koma_ts")
+  )]
+  exceptions <- list()
+  if (length(non_koma_names) > 0) {
+    repeat {
+      add_exception <- readline("Specify exception to default settings? (y/n): ")
+      if (tolower(add_exception) != "y") {
+        break
+      }
+      series_name <- readline("Enter series name: ")
+      if (!nzchar(series_name) || !(series_name %in% non_koma_names)) {
+        cli::cli_alert_warning(
+          "Unknown series: {series_name}. Expected one of: {toString(non_koma_names)}."
+        )
+        next
+      }
+      series_prompt <- paste0(
+        "Enter series_type for ", series_name, " (default ", series_type, "): "
+      )
+      method_prompt <- paste0(
+        "Enter method for ", series_name, " (default ", method, "): "
+      )
+      series_type_input <- readline(series_prompt)
+      method_input <- readline(method_prompt)
+
+      if (!nzchar(series_type_input)) {
+        series_type_input <- series_type
+      }
+      if (!nzchar(method_input)) {
+        method_input <- method
+      }
+
+      exceptions[[series_name]] <- list(
+        series_type = series_type_input,
+        method = method_input
+      )
+    }
+  }
+
+  ts_names <- names(ts_data)
+  ts_data <- lapply(seq_along(ts_data), function(ix) {
+    name <- ts_names[ix]
+    x <- ts_data[[ix]]
+    if (inherits(x, "ts") && !inherits(x, "koma_ts")) {
+      settings <- exceptions[[name]]
+      if (is.null(settings)) {
+        x <- as_ets(x, series_type = series_type, method = method)
+      } else {
+        x <- as_ets(
+          x,
+          series_type = settings$series_type,
+          method = settings$method
+        )
+      }
+    }
+    if (!inherits(x, "koma_ts")) {
+      cli::cli_abort("All elements must be koma_ts after conversion")
+    }
+    x
+  })
+  names(ts_data) <- ts_names
+
+  ts_data
 }
 
 new_prepare_estimation <- function(ts_data, sys_eq, dates, point_forecast) {

@@ -1024,7 +1024,14 @@ test_that("estimate, ts provided instead of ets", {
           estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
         )
       },
-      readline = function(...) "y",
+      readline = local({
+        responses <- c("y", "n")
+        i <- 0
+        function(...) {
+          i <<- i + 1
+          responses[i]
+        }
+      }),
       .package = "base"
     ), NA
   )
@@ -1061,7 +1068,7 @@ test_that("estimate, ts provided instead of ets", {
         )
       },
       readline = local({
-        responses <- c("y", "level", "percentage")
+        responses <- c("n", "level", "percentage", "n")
         i <- 0
         function(...) {
           i <<- i + 1
@@ -1071,6 +1078,33 @@ test_that("estimate, ts provided instead of ets", {
       .package = "base"
     ), NA
   )
+})
+
+test_that("convert_ts_data_to_ets applies defaults and exceptions", {
+  ts_data <- lapply(simulated_data$ts_data[c("consumption", "manufacturing", "service")], as.ts)
+
+  result <- testthat::with_mocked_bindings(
+    {
+      koma:::convert_ts_data_to_ets(ts_data)
+    },
+    readline = local({
+      responses <- c("n", "level", "diff_log", "y", "manufacturing", "rate", "none", "y", "service", "level", "percentage", "n")
+      i <- 0
+      function(...) {
+        i <<- i + 1
+        responses[i]
+      }
+    }),
+    .package = "base"
+  )
+
+  expect_true(all(sapply(result, inherits, "koma_ts")))
+  expect_identical(attr(result$consumption, "series_type"), "level")
+  expect_identical(attr(result$consumption, "method"), "diff_log")
+  expect_identical(attr(result$manufacturing, "series_type"), "rate")
+  expect_identical(attr(result$manufacturing, "method"), "none")
+  expect_identical(attr(result$service, "series_type"), "level")
+  expect_identical(attr(result$service, "method"), "percentage")
 })
 
 test_that("summary when texreg not installed", {
