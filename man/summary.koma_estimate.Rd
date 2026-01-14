@@ -26,8 +26,9 @@ Default is 2.}
 }}
 }
 \value{
-Depending on the value of texreg_object, returns either a list of
-texreg objects or prints an ASCII table.
+If \code{texreg_object} is TRUE, returns a list of texreg objects.
+Otherwise prints a summary table and invisibly returns a list of summary
+statistics for each variable.
 }
 \description{
 This function provides a summary for koma_estimate objects.

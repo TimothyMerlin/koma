@@ -87,26 +87,12 @@ test_that("estimate correctly estimates model", {
   format(out)
   print(out)
 
-  ## Default - Returns results as an ASCI table.
+  ## Default - Returns summary statistics.
   result_summary <- summary(out, variables = "consumption")
-  expected_result <- structure(paste0(
-    "\n==============================\n",
-    "                  consumption   \n",
-    "--------------------------------\n",
-    "constant            1.27        \n",
-    "                  [ 0.79;  1.76]\n",
-    "consumption.L(1)    0.46        \n",
-    "                  [ 0.36;  0.59]\n",
-    "consumption.L(2)    0.23        \n",
-    "                  [ 0.11;  0.34]\n",
-    "gdp                -0.44        \n",
-    "                  [-0.67; -0.22]\n",
-    "================================\n\n"
-  ), class = c(
-    "character",
-    "texregTable"
-  ))
-  expect_true(inherits(result_summary, c("character", "texregTable")))
+  expected_summary <- koma:::summary_statistics(
+    "consumption", out$estimates, out$sys_eq
+  )
+  expect_equal(result_summary, expected_summary)
 
   expected_result <- list(
     consumption = new(
@@ -315,10 +301,13 @@ test_that("summary works correctly", {
     class = "koma_estimate"
   )
 
-  # nolint start
-  expected_summary <- structure("\n====================================================================================================\n                      consumption     investment      current_account  manufacturing  service       \n----------------------------------------------------------------------------------------------------\nconstant                1.30            2.36            1.54             0.61           0.01        \n                      [ 0.76;  1.84]  [ 1.96;  2.79]  [ 1.47;  1.60]   [ 0.51; 0.72]  [-0.14;  0.17]\nconsumption.L(1)        0.49                                                                        \n                      [ 0.38;  0.61]                                                                \nconsumption.L(2)        0.20                                                                        \n                      [ 0.09;  0.31]                                                                \ngdp                    -0.36           -1.31                                           -0.80        \n                      [-0.66; -0.08]  [-1.73; -0.91]                                  [-1.06; -0.56]\ninvestment.L(1)                         0.43                                                        \n                                      [ 0.35;  0.50]                                                \nreal_interest_rate                      0.36                                                        \n                                      [ 0.24;  0.47]                                                \ncurrent_account.L(1)                                   -0.52                                        \n                                                      [-0.57; -0.46]                                \nworld_gdp                                               0.52             0.33                       \n                                                      [ 0.49;  0.55]   [ 0.25; 0.41]                \nmanufacturing.L(1)                                                       0.02                       \n                                                                       [-0.09; 0.14]                \nservice.L(1)                                                                            0.14        \n                                                                                      [ 0.06;  0.23]\npopulation                                                                              0.08        \n                                                                                      [ 0.01;  0.15]\n====================================================================================================\nPosterior mean (90% credible interval: [5.0%,  95.0%])\n", class = c("character", "texregTable"))
-  # nolint end
-  expect_equal(summary(out_estimation), expected_summary)
+  result_summary <- summary(out_estimation)
+  expected_summary <- koma:::summary_statistics(
+    names(simulated_data$estimates),
+    simulated_data$estimates,
+    simulated_data$sys_eq
+  )
+  expect_equal(result_summary, expected_summary)
 })
 
 test_that("estimate throws error", {
@@ -1147,16 +1136,24 @@ test_that("summary when texreg not installed", {
     class = "koma_estimate"
   )
 
+  result_summary <- NULL
   expect_output(
-    testthat::with_mocked_bindings(
-      {
-        summary(out_estimation)
-      },
-      check_texreg_installed = function() FALSE,
-      .env = environment(summary.koma_estimate)
-    ),
+    {
+      result_summary <- testthat::with_mocked_bindings(
+        summary(out_estimation),
+        check_texreg_installed = function() FALSE,
+        .env = environment(summary.koma_estimate)
+      )
+    },
     regex = NULL # there should be output but not testing for specific
   )
+
+  expected_summary <- koma:::summary_statistics(
+    names(simulated_data$estimates),
+    simulated_data$estimates,
+    simulated_data$sys_eq
+  )
+  expect_equal(result_summary, expected_summary)
 })
 
 test_that("summary.koma_estimate, change bounds", {

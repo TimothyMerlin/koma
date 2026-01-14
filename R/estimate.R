@@ -563,8 +563,9 @@ print.koma_estimate <- function(x,
 #'     \item{digits}{Optional. Number of digits to round numeric values.
 #'     Default is 2.}
 #'   }
-#' @return Depending on the value of texreg_object, returns either a list of
-#' texreg objects or prints an ASCII table.
+#' @return If `texreg_object` is TRUE, returns a list of texreg objects.
+#'   Otherwise prints a summary table and invisibly returns a list of summary
+#'   statistics for each variable.
 #' @export
 summary.koma_estimate <- function(object, ...) {
   is_texreg_installed <- check_texreg_installed()
@@ -589,11 +590,13 @@ summary.koma_estimate <- function(object, ...) {
 
   if (is.null(variables)) variables <- names(object$estimates)
   all_tr <- list()
+  stats_out <- list()
   for (endogenous_variable in variables) {
     est <- summary_statistics(
       endogenous_variable, object$estimates, object$sys_eq,
       central_tendency, ci_low, ci_up
     )
+    stats_out[[endogenous_variable]] <- est[[1]]
     if (is_texreg_installed) {
       tr <- texreg::createTexreg(
         coef.names = est[[1]]$coef.names,
@@ -623,7 +626,7 @@ summary.koma_estimate <- function(object, ...) {
   }
 
   if (texreg_object) {
-    return(all_tr)
+    all_tr
   } else {
     if (is_texreg_installed) {
       ci_level <- ci_up - ci_low
@@ -654,6 +657,7 @@ summary.koma_estimate <- function(object, ...) {
         cli::cat_line("")
       }
     }
+    invisible(stats_out)
   }
 }
 
