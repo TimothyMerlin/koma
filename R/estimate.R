@@ -662,9 +662,24 @@ summary.koma_estimate <- function(object, ...) {
   if (is.null(central_tendency)) central_tendency <- "mean"
   if (is.null(ci_low)) ci_low <- 5
   if (is.null(ci_up)) ci_up <- 95
-  if (is.null(use_texreg)) use_texreg <- is_texreg_installed
-  if (!is_texreg_installed) use_texreg <- FALSE
   if (is.null(digits)) digits <- 2
+
+  if (is.null(use_texreg)) {
+    use_texreg <- is_texreg_installed
+  } else if (isTRUE(use_texreg) && !is_texreg_installed) {
+    cli::cli_abort(c(
+      "Package {.pkg texreg} is required when {.arg use_texreg = TRUE}.",
+      "i" = "Install it or set {.arg use_texreg = FALSE}."
+    ))
+  }
+
+  if (!is_texreg_installed) {
+    cli::cli_warn(c(
+      "Package {.pkg texreg} is not installed.",
+      "i" = "Falling back to non-texreg summary output."
+    ))
+    use_texreg <- FALSE
+  }
 
   if (use_texreg) {
     ci_level <- ci_up - ci_low

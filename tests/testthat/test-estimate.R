@@ -1165,7 +1165,7 @@ test_that("extract.koma_estimate returns texreg objects", {
   expect_equal(extracted_one@coef, expected$coef, tolerance = tol)
 })
 
-test_that("summary when texreg not installed", {
+test_that("summary errors when texreg missing and use_texreg TRUE", {
   out_estimation <- structure(
     list(
       estimates = simulated_data$estimates,
@@ -1174,11 +1174,40 @@ test_that("summary when texreg not installed", {
     class = "koma_estimate"
   )
 
-  result_summary <- testthat::with_mocked_bindings(
-    summary(out_estimation, use_texreg = TRUE),
-    check_texreg_installed = function() FALSE,
-    .env = environment(summary.koma_estimate)
+  expect_error(
+    testthat::with_mocked_bindings(
+      summary(out_estimation, use_texreg = TRUE),
+      check_texreg_installed = function() FALSE,
+      .env = environment(summary.koma_estimate)
+    ),
+    "texreg"
   )
+})
+
+test_that("summary falls back to non-texreg output when texreg missing", {
+  out_estimation <- structure(
+    list(
+      estimates = simulated_data$estimates,
+      sys_eq = simulated_data$sys_eq
+    ),
+    class = "koma_estimate"
+  )
+
+  expect_warning(
+    testthat::with_mocked_bindings(
+      summary(out_estimation),
+      check_texreg_installed = function() FALSE,
+      .env = environment(summary.koma_estimate)
+    ),
+    "texreg"
+  )
+
+  result_summary <-
+    testthat::with_mocked_bindings(
+      suppressWarnings(summary(out_estimation)),
+      check_texreg_installed = function() FALSE,
+      .env = environment(summary.koma_estimate)
+    )
 
   expected_summary <- koma:::summary_statistics(
     names(simulated_data$estimates),
@@ -1200,10 +1229,12 @@ test_that("summary.koma_estimate, change bounds", {
 
   capture_summary <- function(...) {
     testthat::capture_output(
-      testthat::with_mocked_bindings(
-        print(summary(out_estimation, ...)),
-        check_texreg_installed = function() FALSE,
-        .env = environment(summary.koma_estimate)
+      suppressWarnings(
+        testthat::with_mocked_bindings(
+          print(summary(out_estimation, ...)),
+          check_texreg_installed = function() FALSE,
+          .env = environment(summary.koma_estimate)
+        )
       )
     )
   }
@@ -1228,10 +1259,12 @@ test_that("summary.koma_estimate, respects digits", {
 
   capture_summary <- function(...) {
     testthat::capture_output(
-      testthat::with_mocked_bindings(
-        print(summary(out_estimation, ...)),
-        check_texreg_installed = function() FALSE,
-        .env = environment(summary.koma_estimate)
+      suppressWarnings(
+        testthat::with_mocked_bindings(
+          print(summary(out_estimation, ...)),
+          check_texreg_installed = function() FALSE,
+          .env = environment(summary.koma_estimate)
+        )
       )
     )
   }
@@ -1242,14 +1275,23 @@ test_that("summary.koma_estimate, respects digits", {
   expect_match(out2, "1.84", fixed = TRUE)
   expect_match(out4, "1.8361", fixed = TRUE)
   expect_false(identical(out2, out4))
+})
+
+test_that("summary.koma_estimate respects digits in texreg output", {
+  out_estimation <- structure(
+    list(
+      estimates = simulated_data$estimates,
+      sys_eq = simulated_data$sys_eq
+    ),
+    class = "koma_estimate"
+  )
 
   if (requireNamespace("texreg", quietly = TRUE)) {
     out_texreg <- testthat::capture_output(
       print(summary(
         out_estimation,
         variables = "consumption",
-        digits = 5,
-        use_texreg = TRUE
+        digits = 5
       ))
     )
     expect_match(out_texreg, "1.83612", fixed = TRUE)
