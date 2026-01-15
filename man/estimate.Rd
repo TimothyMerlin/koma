@@ -61,6 +61,7 @@ the estimation process.}
 the estimation process.}
 \item{gibbs_specifications}{The specifications used for the Gibbs
 sampling.}
+\item{dates}{The date ranges used during estimation.}
 }
 }
 \description{

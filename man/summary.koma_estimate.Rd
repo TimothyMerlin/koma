@@ -24,7 +24,9 @@ available. Defaults to TRUE when texreg is installed, otherwise
 FALSE.}
 \item{digits}{Optional. Number of digits to round numeric values.
 Default is 2.}
-}}
+}
+Additional arguments are forwarded to texreg output helpers (for example,
+arguments accepted by \code{texreg::screenreg()}) when \code{use_texreg = TRUE}.}
 }
 \value{
 Returns a list of summary statistics for each variable (invisibly)

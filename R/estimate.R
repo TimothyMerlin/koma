@@ -51,6 +51,7 @@
 #'   the estimation process.}
 #'   \item{gibbs_specifications}{The specifications used for the Gibbs
 #'   sampling.}
+#'   \item{dates}{The date ranges used during estimation.}
 #' }
 #'
 #' @seealso
@@ -143,7 +144,8 @@ estimate.list <- function(ts_data, sys_eq, dates,
       ts_data = pre$ts_data,
       y_matrix = pre$y_matrix,
       x_matrix = pre$x_matrix,
-      gibbs_specifications = get_gibbs_settings()
+      gibbs_specifications = get_gibbs_settings(),
+      dates = dates
     ),
     class = "koma_estimate"
   )
@@ -641,6 +643,8 @@ extract.koma_estimate <- function(model,
 #'     \item{digits}{Optional. Number of digits to round numeric values.
 #'     Default is 2.}
 #'   }
+#'   Additional arguments are forwarded to texreg output helpers (for example,
+#'   arguments accepted by `texreg::screenreg()`) when `use_texreg = TRUE`.
 #' @return Returns a list of summary statistics for each variable (invisibly)
 #'   when `use_texreg` is FALSE. When `use_texreg` is TRUE and texreg is
 #'   installed, returns a texreg extract object that prints via
@@ -650,6 +654,18 @@ summary.koma_estimate <- function(object, ...) {
   is_texreg_installed <- check_texreg_installed()
 
   args <- list(...)
+  known_args <- c(
+    "variables",
+    "central_tendency",
+    "ci_low",
+    "ci_up",
+    "use_texreg",
+    "digits"
+  )
+  texreg_args <- args[setdiff(names(args), known_args)]
+  if (length(texreg_args) && any(names(texreg_args) == "")) {
+    texreg_args <- texreg_args[nzchar(names(texreg_args))]
+  }
   variables <- args$variables
   central_tendency <- args$central_tendency
   ci_low <- args$ci_low
@@ -687,6 +703,16 @@ summary.koma_estimate <- function(object, ...) {
       "Posterior %s (%.0f%% credible interval: [%.1f%%, %.1f%%])",
       central_tendency, ci_level, ci_low, ci_up
     )
+    if (!is.null(object$dates$estimation$start) && !is.null(object$dates$estimation$end)) {
+      start <- dates_to_str(object$dates$estimation$start, frequency = 4)
+      end <- dates_to_str(object$dates$estimation$end, frequency = 4)
+      custom_note <- paste0(
+        custom_note, "; Estimation period: ", start, " - ", end
+      )
+    }
+    if (length(custom_note) > 1L) {
+      custom_note <- paste(custom_note, collapse = "\n")
+    }
 
     tr <- extract.koma_estimate(
       object,
@@ -704,6 +730,9 @@ summary.koma_estimate <- function(object, ...) {
       }
     }
 
+    if (length(texreg_args)) {
+      attr(tr, "koma_texreg_args") <- texreg_args
+    }
     attr(tr, "koma_custom_note") <- custom_note
     attr(tr, "koma_digits") <- digits
     class(tr) <- c("koma_texreg", class(tr))
@@ -741,13 +770,30 @@ print.koma_texreg <- function(x, ...) {
   custom_note <- attr(x, "koma_custom_note")
   digits <- attr(x, "koma_digits")
   if (is.null(digits)) digits <- 2
+  texreg_args <- attr(x, "koma_texreg_args")
+  if (is.null(texreg_args)) texreg_args <- list()
+  extra_args <- list(...)
+  if (length(extra_args)) {
+    texreg_args <- c(texreg_args, extra_args)
+  }
+
+  base_args <- list(
+    unclass(x),
+    ci.test = NA,
+    digits = digits,
+    custom.note = custom_note
+  )
+  if (length(texreg_args)) {
+    override_names <- intersect(names(base_args), names(texreg_args))
+    if (length(override_names)) {
+      base_args[override_names] <- NULL
+    }
+  }
 
   print(
-    texreg::screenreg(
-      unclass(x),
-      ci.test = NA,
-      digits = digits,
-      custom.note = custom_note
+    do.call(
+      texreg::screenreg,
+      c(base_args, texreg_args)
     )
   )
 

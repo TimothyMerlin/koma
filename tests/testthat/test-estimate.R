@@ -71,7 +71,7 @@ test_that("estimate correctly estimates model", {
     estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
   )
 
-  expect_length(out, 6)
+  expect_length(out, 7)
   expect_identical(
     names(out$estimates),
     c(
@@ -179,7 +179,7 @@ test_that("estimate correctly returns when parallel", {
     estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
   )
 
-  expect_length(out, 6)
+  expect_length(out, 7)
   expect_identical(
     names(out$estimates),
     c(
@@ -617,7 +617,7 @@ test_that("estimate correctly estimates model with informative priors", {
     estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
   )
 
-  expect_length(out, 6)
+  expect_length(out, 7)
   expect_identical(
     names(out$estimates),
     c(
@@ -662,7 +662,7 @@ test_that("estimate with informative priors, that are too far from true value", 
     estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
   )
 
-  expect_length(out, 6)
+  expect_length(out, 7)
   expect_identical(
     names(out$estimates),
     c(
@@ -697,7 +697,7 @@ test_that("estimate with no gamma parameters", {
     estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
   )
 
-  expect_length(out, 6)
+  expect_length(out, 7)
   expect_identical(
     names(out$estimates),
     c("manufacturing", "service")
@@ -728,7 +728,7 @@ test_that("estimate with only one exogenous variable", {
     estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
   )
 
-  expect_length(out, 6)
+  expect_length(out, 7)
   expect_identical(
     names(out$estimates),
     c("manufacturing", "service")
@@ -750,7 +750,7 @@ test_that("estimate with only one exogenous variable", {
     estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
   )
 
-  expect_length(out, 6)
+  expect_length(out, 7)
   expect_identical(
     names(out$estimates),
     c("manufacturing", "service")
@@ -779,7 +779,7 @@ test_that("estimate with only one equation", {
     estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
   )
 
-  expect_length(out, 6)
+  expect_length(out, 7)
   expect_identical(names(out$estimates), c("manufacturing"))
   expect_true(inherits(out, "koma_estimate"))
   expect_length(out$estimates$manufacturing[["beta_jw"]], 100)
@@ -794,7 +794,7 @@ test_that("estimate with only one equation", {
     estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
   )
 
-  expect_length(out, 6)
+  expect_length(out, 7)
   expect_identical(names(out$estimates), c("manufacturing"))
   expect_true(inherits(out, "koma_estimate"))
   expect_length(out$estimates$manufacturing[["beta_jw"]], 100)
@@ -1296,6 +1296,33 @@ test_that("summary.koma_estimate respects digits in texreg output", {
     )
     expect_match(out_texreg, "1.83612", fixed = TRUE)
   }
+})
+
+test_that("summary.koma_estimate forwards texreg args", {
+  skip_if_not_installed("texreg")
+
+  out_estimation <- structure(
+    list(
+      estimates = simulated_data$estimates,
+      sys_eq = simulated_data$sys_eq
+    ),
+    class = "koma_estimate"
+  )
+
+  out_texreg <- testthat::with_mocked_bindings(
+    summary(
+      out_estimation,
+      variables = "consumption",
+      use_texreg = TRUE,
+      omit.coef = "constant"
+    ),
+    check_texreg_installed = function() TRUE,
+    .env = environment(summary.koma_estimate)
+  )
+  expect_s3_class(out_texreg, "koma_texreg")
+  expect_equal(attr(out_texreg, "koma_texreg_args")$omit.coef, "constant")
+  # print omits constant coef
+  expect_false(any(grepl("constant", capture.output(out_texreg))))
 })
 
 test_that("print.koma_estimate filters variables", {
