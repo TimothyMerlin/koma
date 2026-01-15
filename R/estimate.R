@@ -543,6 +543,25 @@ print.koma_estimate <- function(x,
   invisible(x)
 }
 
+#' Extract a texreg summary from a koma_estimate
+#'
+#' Builds one or more \pkg{texreg} objects from a `koma_estimate`, so results
+#' can be rendered with `texreg::screenreg()` or similar helpers.
+#'
+#' @param model A `koma_estimate` object.
+#' @param variables Optional character vector of endogenous variables to
+#'   include. Defaults to all variables in `model$estimates`.
+#' @param central_tendency Central tendency used when summarizing estimates
+#'   (e.g., "mean", "median"). Defaults to "mean".
+#' @param ci_low Lower bound (percent) for credible intervals. Defaults to 5.
+#' @param ci_up Upper bound (percent) for credible intervals. Defaults to 95.
+#' @param digits Number of digits to round numeric values. Defaults to 2.
+#' @param ... Unused. Included for `texreg::extract()` compatibility.
+#'
+#' @return A `texreg` object when one variable is requested, otherwise a named
+#'   list of `texreg` objects.
+#' @seealso \code{\link[=summary.koma_estimate]{summary.koma_estimate}} for
+#'   summary output with optional \pkg{texreg} formatting.
 #' @export
 extract.koma_estimate <- function(model,
                                   variables = NULL,
