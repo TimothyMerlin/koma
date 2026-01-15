@@ -540,6 +540,64 @@ print.koma_estimate <- function(x,
     digits = digits
   )
   cat(paste(formatted_equations, collapse = "\n"), "\n")
+  invisible(x)
+}
+
+#' @export
+extract.koma_estimate <- function(model,
+                                  variables = NULL,
+                                  central_tendency = "mean",
+                                  ci_low = 5,
+                                  ci_up = 95,
+                                  digits = 2,
+                                  ...) {
+  if (!requireNamespace("texreg", quietly = TRUE)) {
+    stop("Package 'texreg' must be installed to use extract().")
+  }
+
+  if (is.null(variables)) {
+    variables <- names(model$estimates)
+  }
+
+  tr <- vector("list", length(variables))
+  names(tr) <- variables
+
+  for (v in variables) {
+    est <- summary_statistics(
+      endogenous_variables = v,
+      estimates = model$estimates,
+      sys_eq = model$sys_eq,
+      central_tendency = central_tendency,
+      ci_low = ci_low,
+      ci_up = ci_up
+    )[[1]]
+
+    n_coef <- length(est$coef)
+    pvals <- est$pvalues
+    if (is.null(pvals) || length(pvals) == 0L) {
+      pvals <- rep(NA_real_, n_coef)
+    } else {
+      pvals <- as.numeric(pvals)
+      if (length(pvals) != n_coef) {
+        pvals <- rep(NA_real_, n_coef)
+      }
+    }
+
+    tr[[v]] <- texreg::createTexreg(
+      coef.names = est$coef.names,
+      coef = est$coef,
+      pvalues = pvals,
+      ci.low = est$ci.low,
+      ci.up = est$ci.up,
+      model.name = "KOMA"
+    )
+  }
+
+  if (length(tr) == 1L) {
+    return(tr[[1]])
+  }
+
+  tr
 }
 
 #' Summary method for koma_estimate objects
@@ -558,14 +616,16 @@ print.koma_estimate <- function(x,
 #'          is 5.}
 #'     \item{ci_up}{Optional. Upper bound of the confidence interval. Default is
 #'          95.}
-#'     \item{texreg_object}{Optional. If TRUE, returns a texreg object. Default
-#'          is FALSE, which returns an ASCII table.}
+#'     \item{use_texreg}{Optional. If TRUE, prints a texreg summary when
+#'          available. Defaults to TRUE when texreg is installed, otherwise
+#'          FALSE.}
 #'     \item{digits}{Optional. Number of digits to round numeric values.
 #'     Default is 2.}
 #'   }
-#' @return If `texreg_object` is TRUE, returns a list of texreg objects.
-#'   Otherwise prints a summary table and invisibly returns a list of summary
-#'   statistics for each variable.
+#' @return Returns a list of summary statistics for each variable (invisibly)
+#'   when `use_texreg` is FALSE. When `use_texreg` is TRUE and texreg is
+#'   installed, returns a texreg extract object that prints via
+#'   `screenreg()` when printed.
 #' @export
 summary.koma_estimate <- function(object, ...) {
   is_texreg_installed <- check_texreg_installed()
@@ -575,7 +635,7 @@ summary.koma_estimate <- function(object, ...) {
   central_tendency <- args$central_tendency
   ci_low <- args$ci_low
   ci_up <- args$ci_up
-  texreg_object <- args$texreg_object
+  use_texreg <- args$use_texreg
   digits <- args$digits
 
   # Set default values if not provided
@@ -583,82 +643,120 @@ summary.koma_estimate <- function(object, ...) {
   if (is.null(central_tendency)) central_tendency <- "mean"
   if (is.null(ci_low)) ci_low <- 5
   if (is.null(ci_up)) ci_up <- 95
-  if (is.null(texreg_object) || !is_texreg_installed) {
-    texreg_object <- FALSE
-  }
+  if (is.null(use_texreg)) use_texreg <- is_texreg_installed
+  if (!is_texreg_installed) use_texreg <- FALSE
   if (is.null(digits)) digits <- 2
 
-  if (is.null(variables)) variables <- names(object$estimates)
-  all_tr <- list()
-  stats_out <- list()
+  if (use_texreg) {
+    ci_level <- ci_up - ci_low
+    custom_note <- sprintf(
+      "Posterior %s (%.0f%% credible interval: [%.1f%%, %.1f%%])",
+      central_tendency, ci_level, ci_low, ci_up
+    )
+
+    tr <- extract.koma_estimate(
+      object,
+      variables = variables,
+      central_tendency = central_tendency,
+      ci_low = ci_low,
+      ci_up = ci_up,
+      digits = digits
+    )
+
+    if (inherits(tr, "texreg")) {
+      tr <- list(tr)
+      if (length(variables) == 1L) {
+        names(tr) <- variables
+      }
+    }
+
+    attr(tr, "koma_custom_note") <- custom_note
+    attr(tr, "koma_digits") <- digits
+    class(tr) <- c("koma_texreg", class(tr))
+    return(tr)
+  }
+
+  out <- list()
+
   for (endogenous_variable in variables) {
     est <- summary_statistics(
       endogenous_variable, object$estimates, object$sys_eq,
       central_tendency, ci_low, ci_up
     )
-    stats_out[[endogenous_variable]] <- est[[1]]
-    if (is_texreg_installed) {
-      tr <- texreg::createTexreg(
-        coef.names = est[[1]]$coef.names,
-        coef = est[[1]]$coef,
-        ci.low = est[[1]]$ci.low,
-        ci.up = est[[1]]$ci.up,
-        pvalues = est[[1]]$pvalues
-      )
-    } else {
-      n <- length(est[[1]]$coef)
-      tr <- vector("character", 2 * n)
-      ind_coef <- seq(1, 2 * n, 2)
-      ind_ci <- seq(2, 2 * n, 2)
-
-      # Fill coefficient elements
-      tr[ind_coef] <- round(est[[1]]$coef, digits)
-      names(tr)[ind_coef] <- est[[1]]$coef.names
-
-      # Fill CI elements and assign empty names
-      tr[ind_ci] <- paste0(
-        "[", round(est[[1]]$ci.low, digits), "; ",
-        round(est[[1]]$ci.up, digits), "]"
-      )
-      names(tr)[ind_ci] <- ""
-    }
-    all_tr[[endogenous_variable]] <- tr
+    out[[endogenous_variable]] <- est[[1]]
   }
 
-  if (texreg_object) {
-    all_tr
-  } else {
-    if (is_texreg_installed) {
-      ci_level <- ci_up - ci_low
-      custom_note <- sprintf(
-        "Posterior %s (%.0f%% credible interval: [%.1f%%,  %.1f%%])",
-        central_tendency, ci_level, ci_low, ci_up
-      )
+  structure(
+    list(
+      stats = out,
+      variables = variables,
+      central_tendency = central_tendency,
+      ci_low = ci_low,
+      ci_up = ci_up,
+      digits = digits
+    ),
+    class = "koma_summary"
+  )
+}
 
-      texreg::screenreg(
-        all_tr,
-        ci.test = NA,
-        digits = digits,
-        custom.note = custom_note
-      )
-    } else {
-      for (var in names(all_tr)) {
-        tr <- all_tr[[var]]
-
-        lines <- glue::glue("{fr(cli::style_bold(names(tr)))} {fl(tr)}")
-        # minus 8 for the invisible styling
-        max_width <- max(nchar(lines)) - 8
-
-        cli::cat_line(strrep("=", max_width))
-        cli::cli_text("{cli::style_bold(var)}")
-        cli::cat_line(strrep("-", max_width))
-        cat(lines, sep = "\n")
-        cli::cat_line(strrep("=", max_width))
-        cli::cat_line("")
-      }
-    }
-    invisible(stats_out)
+#' @export
+print.koma_texreg <- function(x, ...) {
+  if (!requireNamespace("texreg", quietly = TRUE)) {
+    return(invisible(x))
   }
+  custom_note <- attr(x, "koma_custom_note")
+  digits <- attr(x, "koma_digits")
+  if (is.null(digits)) digits <- 2
+
+  print(
+    texreg::screenreg(
+      unclass(x),
+      ci.test = NA,
+      digits = digits,
+      custom.note = custom_note
+    )
+  )
+
+  invisible(x)
+}
+
+#' @export
+print.koma_summary <- function(x, ...) {
+  stats <- x$stats
+  digits <- x$digits
+  variables <- x$variables
+
+  for (endogenous_variable in variables) {
+    est <- stats[[endogenous_variable]]
+
+    n <- length(est$coef)
+    tr <- vector("character", 2 * n)
+    ind_coef <- seq(1, 2 * n, 2)
+    ind_ci <- seq(2, 2 * n, 2)
+
+    tr[ind_coef] <- round(est$coef, digits)
+    names(tr)[ind_coef] <- est$coef.names
+
+    tr[ind_ci] <- paste0(
+      "[", round(est$ci.low, digits), "; ",
+      round(est$ci.up, digits), "]"
+    )
+    names(tr)[ind_ci] <- ""
+
+    lines <- glue::glue("{fr(cli::style_bold(names(tr)))} {fl(tr)}")
+
+    plain <- cli::ansi_strip(lines)
+    max_width <- max(nchar(plain))
+
+    cli::cat_line(strrep("=", max_width))
+    cli::cli_text("{cli::style_bold(endogenous_variable)}")
+    cli::cat_line(strrep("-", max_width))
+    cat(lines, sep = "\n")
+    cli::cat_line(strrep("=", max_width))
+    cli::cat_line("")
+  }
+
+  invisible(x)
 }
 
 check_texreg_installed <- function() rlang::is_installed("texreg")

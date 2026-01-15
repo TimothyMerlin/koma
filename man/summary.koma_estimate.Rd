@@ -19,16 +19,18 @@ central tendency ("mean", "median"). Default is "mean".}
 is 5.}
 \item{ci_up}{Optional. Upper bound of the confidence interval. Default is
 95.}
-\item{texreg_object}{Optional. If TRUE, returns a texreg object. Default
-is FALSE, which returns an ASCII table.}
+\item{use_texreg}{Optional. If TRUE, prints a texreg summary when
+available. Defaults to TRUE when texreg is installed, otherwise
+FALSE.}
 \item{digits}{Optional. Number of digits to round numeric values.
 Default is 2.}
 }}
 }
 \value{
-If \code{texreg_object} is TRUE, returns a list of texreg objects.
-Otherwise prints a summary table and invisibly returns a list of summary
-statistics for each variable.
+Returns a list of summary statistics for each variable (invisibly)
+when \code{use_texreg} is FALSE. When \code{use_texreg} is TRUE and texreg is
+installed, returns a texreg extract object that prints via
+\code{screenreg()} when printed.
 }
 \description{
 This function provides a summary for koma_estimate objects.

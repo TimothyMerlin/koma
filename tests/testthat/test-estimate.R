@@ -88,54 +88,54 @@ test_that("estimate correctly estimates model", {
   print(out)
 
   ## Default - Returns summary statistics.
-  result_summary <- summary(out, variables = "consumption")
+  result_summary <- summary(out, variables = "consumption", use_texreg = FALSE)
   expected_summary <- koma:::summary_statistics(
     "consumption", out$estimates, out$sys_eq
   )
-  expect_equal(result_summary, expected_summary)
+  expect_s3_class(result_summary, "koma_summary")
+  expect_equal(result_summary$stats, expected_summary)
+  expect_identical(result_summary$variables, "consumption")
 
-  expected_result <- list(
-    consumption = new(
-      "texreg",
-      coef.names = c(
-        "constant", "consumption.L(1)",
-        "consumption.L(2)", "gdp"
-      ),
-      coef = c(
-        constant = 1.26671485340881,
-        `consumption.L(1)` = 0.457909164672068,
-        `consumption.L(2)` = 0.228932720892736,
-        gdp = -0.443458877366965
-      ),
-      se = numeric(0),
-      pvalues = numeric(0),
-      ci.low = c(
-        0.789805400553373,
-        0.359820012599984,
-        0.1089684682135,
-        `5%` = -0.665058502364945
-      ),
-      ci.up = c(
-        1.75762488301099,
-        0.586034559559853,
-        0.335849424362515,
-        `95%` = -0.216048572322976
-      ),
-      gof.names = character(0),
-      gof = numeric(0),
-      gof.decimal = logical(0),
-      model.name = character(0)
+  if (requireNamespace("texreg", quietly = TRUE)) {
+    result_summary <- summary(
+      out,
+      variables = "consumption",
+      use_texreg = TRUE
     )
-  )
 
-  result_summary <- summary(out,
-    variables = "consumption", texreg_object = TRUE
-  )
+    expected_texreg <- koma:::summary_statistics(
+      "consumption", out$estimates, out$sys_eq
+    )$consumption
 
-  tol <- if (Sys.getenv("CI") == "true") 1e-1 else 1e-9
-  expect_equal(result_summary, expected_result,
-    tolerance = tol
-  )
+    tol <- if (Sys.getenv("CI") == "true") 1e-1 else 1e-9
+    expect_s3_class(result_summary, "koma_texreg")
+    expect_equal(attr(result_summary, "koma_digits"), 2)
+    expect_match(attr(result_summary, "koma_custom_note"), "Posterior mean")
+    expect_equal(
+      result_summary$consumption@coef.names,
+      expected_texreg$coef.names
+    )
+    expect_equal(
+      result_summary$consumption@coef,
+      expected_texreg$coef,
+      tolerance = tol
+    )
+    expect_equal(
+      result_summary$consumption@ci.low,
+      expected_texreg$ci.low,
+      tolerance = tol
+    )
+    expect_equal(
+      result_summary$consumption@ci.up,
+      expected_texreg$ci.up,
+      tolerance = tol
+    )
+    expect_equal(result_summary$consumption@model.name, "KOMA")
+    expect_equal(
+      length(result_summary$consumption@pvalues),
+      length(expected_texreg$coef)
+    )
+  }
 })
 
 test_that("estimate correctly returns when parallel", {
@@ -301,13 +301,15 @@ test_that("summary works correctly", {
     class = "koma_estimate"
   )
 
-  result_summary <- summary(out_estimation)
+  result_summary <- summary(out_estimation, use_texreg = FALSE)
   expected_summary <- koma:::summary_statistics(
     names(simulated_data$estimates),
     simulated_data$estimates,
     simulated_data$sys_eq
   )
-  expect_equal(result_summary, expected_summary)
+  expect_s3_class(result_summary, "koma_summary")
+  expect_equal(result_summary$stats, expected_summary)
+  expect_identical(result_summary$variables, names(simulated_data$estimates))
 })
 
 test_that("estimate throws error", {
@@ -461,7 +463,9 @@ test_that("print", {
     class = "koma_estimate"
   )
 
-  expect_output(print(x), "consumption")
+  output <- testthat::capture_output(result <- print(x))
+  expect_match(output, "consumption", fixed = TRUE)
+  expect_true(inherits(result, "koma_estimate"))
 })
 
 test_that("estimate correctly reestimates model", {
@@ -622,14 +626,13 @@ test_that("estimate correctly estimates model with informative priors", {
     )
   )
 
-  result_summary <- summary(out,
-    variables = "consumption", texreg_object = TRUE
-  )
+  result_summary <- summary(out, variables = "consumption", use_texreg = FALSE)
+  coef <- result_summary$stats$consumption$coef
 
   # gdp coefficient expected at 4
-  expect_equal(result_summary$consumption@coef[[4]], 4, tolerance = 0.5)
+  expect_equal(coef[["gdp"]], 4, tolerance = 0.5)
   # consumption.L(1) coefficient expected at 9 with smaller variance
-  expect_equal(result_summary$consumption@coef[[2]], 9, tolerance = 0.2)
+  expect_equal(coef[["consumption.L(1)"]], 9, tolerance = 0.2)
 })
 
 test_that("estimate with informative priors, that are too far from true value", {
@@ -1127,6 +1130,41 @@ test_that("convert_ts_data_to_ets applies defaults and exceptions", {
   expect_identical(attr(result$service, "method"), "percentage")
 })
 
+test_that("extract.koma_estimate returns texreg objects", {
+  skip_if_not_installed("texreg")
+
+  out_estimation <- structure(
+    list(
+      estimates = simulated_data$estimates,
+      sys_eq = simulated_data$sys_eq
+    ),
+    class = "koma_estimate"
+  )
+
+  extracted <- texreg::extract(out_estimation)
+  expect_type(extracted, "list")
+  expect_true(all(names(simulated_data$estimates) %in% names(extracted)))
+  expect_true(inherits(extracted$consumption, "texreg"))
+
+  expected <- koma:::summary_statistics(
+    "consumption",
+    simulated_data$estimates,
+    simulated_data$sys_eq
+  )$consumption
+
+  tol <- if (Sys.getenv("CI") == "true") 1e-1 else 1e-9
+  expect_equal(extracted$consumption@coef.names, expected$coef.names)
+  expect_equal(extracted$consumption@coef, expected$coef, tolerance = tol)
+  expect_equal(extracted$consumption@ci.low, expected$ci.low, tolerance = tol)
+  expect_equal(extracted$consumption@ci.up, expected$ci.up, tolerance = tol)
+  expect_equal(length(extracted$consumption@pvalues), length(expected$coef))
+  expect_equal(extracted$consumption@model.name, "KOMA")
+
+  extracted_one <- texreg::extract(out_estimation, variables = "consumption")
+  expect_true(inherits(extracted_one, "texreg"))
+  expect_equal(extracted_one@coef, expected$coef, tolerance = tol)
+})
+
 test_that("summary when texreg not installed", {
   out_estimation <- structure(
     list(
@@ -1136,16 +1174,10 @@ test_that("summary when texreg not installed", {
     class = "koma_estimate"
   )
 
-  result_summary <- NULL
-  expect_output(
-    {
-      result_summary <- testthat::with_mocked_bindings(
-        summary(out_estimation),
-        check_texreg_installed = function() FALSE,
-        .env = environment(summary.koma_estimate)
-      )
-    },
-    regex = NULL # there should be output but not testing for specific
+  result_summary <- testthat::with_mocked_bindings(
+    summary(out_estimation, use_texreg = TRUE),
+    check_texreg_installed = function() FALSE,
+    .env = environment(summary.koma_estimate)
   )
 
   expected_summary <- koma:::summary_statistics(
@@ -1153,7 +1185,8 @@ test_that("summary when texreg not installed", {
     simulated_data$estimates,
     simulated_data$sys_eq
   )
-  expect_equal(result_summary, expected_summary)
+  expect_s3_class(result_summary, "koma_summary")
+  expect_equal(result_summary$stats, expected_summary)
 })
 
 test_that("summary.koma_estimate, change bounds", {
@@ -1165,31 +1198,23 @@ test_that("summary.koma_estimate, change bounds", {
     class = "koma_estimate"
   )
 
-  expect_output(
-    testthat::with_mocked_bindings(
-      {
-        summary(out_estimation, ci_low = 1, ci_high = 90)
-      },
-      check_texreg_installed = function() FALSE,
-      .env = environment(summary.koma_estimate)
-    ),
-    regex = NULL # there should be output but not testing for specific
-  )
+  capture_summary <- function(...) {
+    testthat::capture_output(
+      testthat::with_mocked_bindings(
+        print(summary(out_estimation, ...)),
+        check_texreg_installed = function() FALSE,
+        .env = environment(summary.koma_estimate)
+      )
+    )
+  }
 
   # default should match
-  expect_true(
-    identical(
-      capture.output(summary(out_estimation, ci_low = 5, ci_high = 95)),
-      capture.output(summary(out_estimation))
-    )
-  )
+  out_default <- capture_summary()
+  out_default_explicit <- capture_summary(ci_low = 5, ci_up = 95)
+  out_changed <- capture_summary(ci_low = 1, ci_up = 90)
 
-  expect_false(
-    identical(
-      capture.output(summary(out_estimation, ci_low = 1, ci_high = 90)),
-      capture.output(summary(out_estimation))
-    )
-  )
+  expect_true(identical(out_default, out_default_explicit))
+  expect_false(identical(out_default, out_changed))
 })
 
 test_that("summary.koma_estimate, respects digits", {
@@ -1201,25 +1226,34 @@ test_that("summary.koma_estimate, respects digits", {
     class = "koma_estimate"
   )
 
-  out2 <- testthat::capture_output(
-    testthat::with_mocked_bindings(
-      summary(out_estimation, variables = "consumption", digits = 2),
-      check_texreg_installed = function() FALSE,
-      .env = environment(summary.koma_estimate)
+  capture_summary <- function(...) {
+    testthat::capture_output(
+      testthat::with_mocked_bindings(
+        print(summary(out_estimation, ...)),
+        check_texreg_installed = function() FALSE,
+        .env = environment(summary.koma_estimate)
+      )
     )
-  )
+  }
 
-  out4 <- testthat::capture_output(
-    testthat::with_mocked_bindings(
-      summary(out_estimation, variables = "consumption", digits = 4),
-      check_texreg_installed = function() FALSE,
-      .env = environment(summary.koma_estimate)
-    )
-  )
+  out2 <- capture_summary(variables = "consumption", digits = 2)
+  out4 <- capture_summary(variables = "consumption", digits = 4)
 
   expect_match(out2, "1.84", fixed = TRUE)
   expect_match(out4, "1.8361", fixed = TRUE)
   expect_false(identical(out2, out4))
+
+  if (requireNamespace("texreg", quietly = TRUE)) {
+    out_texreg <- testthat::capture_output(
+      print(summary(
+        out_estimation,
+        variables = "consumption",
+        digits = 5,
+        use_texreg = TRUE
+      ))
+    )
+    expect_match(out_texreg, "1.83612", fixed = TRUE)
+  }
 })
 
 test_that("print.koma_estimate filters variables", {
