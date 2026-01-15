@@ -95,6 +95,10 @@ articles:
   - title: "Example: Small Macro Model"
     contents:
       - koma-small-macro-model
+
+  - title: "Example: Error Correction"
+    contents:
+      - koma-error-correction
       
 
 authors:

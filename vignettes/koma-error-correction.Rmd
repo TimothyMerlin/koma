@@ -1,0 +1,229 @@
+---
+title: "Error Correction in a Small Open Economy Model"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{koma-error-correction}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{R, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>"
+)
+```
+
+```{R}
+library(koma)
+```
+
+# Overview
+
+When a set of variables is cointegrated—meaning they share a common long-run stochastic trend—short-run dynamics can be represented using an error-correction model (ECM).
+An ECM decomposes movements into short-run adjustments and a long-run equilibrium relationship, with deviations from the equilibrium feeding back into short-run growth through an error-correction term.
+For background, see <https://en.wikipedia.org/wiki/Error_correction_model>.
+
+In this vignette, we specify a small structural system that includes an ECM for exports. We then construct the required level variables, prepare the data, and estimate the model.
+
+## Export ECM Intuition
+
+We omit contemporaneous exchange-rate growth in the short-run dynamics, assuming
+exports do not respond to very short-run exchange-rate movements in this vignette.
+
+The export equation is motivated by a standard export-demand relationship.
+In the long run, export volumes depend on foreign demand, proxied by world GDP, and on relative prices or international competitiveness, proxied by the exchange rate. 
+If exports, world GDP, and the exchange rate are cointegrated, their long-run relationship can be written in levels.
+
+Short-run export growth is then modeled as a function of current changes in foreign demand, together with an error-correction term that captures the deviation from the long-run equilibrium in the previous period. 
+The coefficient on this term measures the speed at which exports adjust back toward the long-run relationship following a shock.
+
+If exports \(x_t\), world GDP \(y_t\), and the exchange rate \(q_t\) are cointegrated, the long-run equilibrium relationship can be written as
+\[
+x_t = \alpha + \beta_y y_t + \beta_q q_t + u_t .
+\]
+
+The deviation from this equilibrium in the previous period defines the error-correction term,
+\[
+\mathrm{ECT}_{t-1}
+= x_{t-1} - \alpha - \beta_y y_{t-1} - \beta_q q_{t-1} .
+\]
+
+A minimal one-lag ECM for export growth is then
+\[
+\Delta x_t
+= \gamma
++ \phi\,\Delta x_{t-1}
++ \theta\,\Delta y_t
++ \lambda\,\mathrm{ECT}_{t-1}
++ \varepsilon_t .
+\]
+
+Substituting the error-correction term into the ECM and expanding yields
+\[
+\begin{aligned}
+\Delta x_t
+&= \gamma
++ \phi\,\Delta x_{t-1}
++ \theta\,\Delta y_t \\
+&\quad
++ \lambda x_{t-1}
+- \lambda\alpha
+- \lambda\beta_y y_{t-1}
+- \lambda\beta_q q_{t-1}
++ \varepsilon_t .
+\end{aligned}
+\]
+
+This is the form estimated in the model, where lagged levels enter directly.
+The coefficient \(\lambda\) is the speed of adjustment toward the long-run
+equilibrium.
+
+The long-run coefficients are recovered as
+\[
+\beta_y = -\frac{\text{coef}(y_{t-1})}{\lambda},
+\qquad
+\beta_q = -\frac{\text{coef}(q_{t-1})}{\lambda}.
+\]
+
+# Define the SEM
+
+We now translate the error-correction representation into a structural system that can be estimated directly. 
+Rather than including the error-correction term explicitly, the model is written with lagged level variables. 
+This formulation is algebraically equivalent to the ECM expansion above and allows the speed-of-adjustment and long-run relationships to be recovered from the estimated coefficients.
+
+```{R}
+equations <- "consumption ~ gdp + consumption.L(1),
+investment ~ investment.L(1),
+exports ~ world_gdp + exports.L(1) + exports_level.L(1) + world_gdp_level.L(1) + exchange_rate_level.L(1),
+imports ~ exports + consumption + investment + imports.L(1),
+gdp == 0.6*consumption + 0.6*domestic_demand + 0.5*exports - 0.4*imports,
+domestic_demand == 0.6*consumption + 0.4*investment,
+exports_level == 1*exports + 1*exports_level.L(1),
+world_gdp_level == 1*world_gdp + 1*world_gdp_level.L(1),
+exchange_rate_level == 1*exchange_rate + 1*exchange_rate_level.L(1)"
+
+exogenous_variables <- c("world_gdp", "exchange_rate")
+```
+
+# Create the SEM
+
+```{R, collapse=TRUE}
+sys_eq <- system_of_equations(
+    equations = equations,
+    exogenous_variables = exogenous_variables
+)
+
+print(sys_eq)
+```
+
+# Preparing the Data
+
+`koma` is estimated in growth rates, so error correction terms need to enter in
+levels. We create level terms as `series_type = "level"` with `method = "none"`
+so `rate()` leaves them unchanged during estimation.
+
+We use `small_open_economy`, which provides the needed series in levels.
+
+```{R}
+?small_open_economy
+```
+
+Convert the base series to `ets` objects first, then add the level terms for error correction. Adding the level terms after the base conversion avoids overwriting them when the list is rebuilt.
+
+We take logs to make the long-run relationship linear in levels and to match the `diff_log` transformation used for growth rates. Multiplying by 100 keeps the level terms on the same scale as `diff_log`, which also returns percent changes.
+
+```{R}
+ts_data <- small_open_economy[c(
+    "consumption", "investment", "exports", "imports",
+    "gdp", "domestic_demand", "world_gdp", "exchange_rate"
+)]
+
+series <- names(ts_data)
+ts_data <- lapply(series, function(x) {
+    as_ets(ts_data[[x]],
+        series_type = "level", method = "diff_log"
+    )
+})
+names(ts_data) <- series
+
+ts_data$exports_level <- as_ets(log(ts_data$exports) * 100,
+    series_type = "level", method = "none"
+)
+ts_data$world_gdp_level <- as_ets(log(ts_data$world_gdp) * 100,
+    series_type = "level", method = "none"
+)
+ts_data$exchange_rate_level <- as_ets(log(ts_data$exchange_rate) * 100,
+    series_type = "level", method = "none"
+)
+```
+
+# Estimation and Forecast Dates
+
+With the data prepared, define the estimation and forecast windows.
+
+```{R}
+dates <- list(
+    estimation = list(start = c(1996, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 1), end = c(2024, 4))
+)
+```
+
+# Estimating the Model
+
+```{R, collapse=TRUE}
+estimates <- estimate(
+    sys_eq,
+    ts_data = ts_data,
+    dates = dates
+)
+print(estimates)
+```
+
+```{R, collapse=TRUE}
+summary(estimates, variables = "exports")
+```
+
+```{R}
+ecm_stats <- summary(estimates, variables = "exports")
+ecm_coef <- ecm_stats[["exports"]]@coef
+adjustment_speed <- ecm_coef["exports_level.L(1)"]
+long_run_world_gdp <- -ecm_coef["world_gdp_level.L(1)"] / adjustment_speed
+long_run_exchange_rate <- -ecm_coef["exchange_rate_level.L(1)"] / adjustment_speed
+
+sprintf(
+    "Adjustment speed: %.3f, Long-run world GDP: %.3f, Exchange rate: %.3f",
+    adjustment_speed,
+    long_run_world_gdp,
+    long_run_exchange_rate
+)
+```
+
+The adjustment speed is `r round(adjustment_speed, 2)`, which is negative and
+implies about `r round(abs(adjustment_speed) * 100)`% of the gap closes each
+period. The long-run elasticities imply that a 1% rise in world GDP is
+associated with roughly `r round(long_run_world_gdp, 2)`% higher exports in the
+long run, while a 1% increase in the exchange-rate index implies
+`r round(long_run_exchange_rate, 2)`% higher exports if higher values indicate
+depreciation (here the exchange rate is CHF/EUR, so higher values mean
+depreciation; flip the sign if the index is defined the other way).
+
+# Forecasting
+
+```{R, collapse=TRUE}
+estimates$ts_data[sys_eq$endogenous_variables] <-
+    lapply(sys_eq$endogenous_variables, function(x) {
+        stats::window(estimates$ts_data[[x]], end = c(2022, 4))
+    })
+
+forecasts <- forecast(
+    estimates,
+    dates = dates
+)
+print(forecasts)
+```
+
+```{R}
+rate(forecasts$mean$exports)
+level(forecasts$mean$exports)
+```
