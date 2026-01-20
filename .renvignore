@@ -9,3 +9,5 @@ vignettes/koma-extended-timeseries.Rmd
 vignettes/koma-parallel.Rmd
 vignettes/koma-error-correction.Rmd
 tests/testthat.R
+tests/testthat/
+README.Rmd
