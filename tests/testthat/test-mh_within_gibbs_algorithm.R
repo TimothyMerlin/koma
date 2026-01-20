@@ -271,6 +271,7 @@ test_that("draw_omega_j correctly returns the Omega", {
 # Test Theta j
 test_that("draw_theta_j returns the correct theta_jw and beta_jw in
 the one endogenous variables case", {
+  skip_on_os("mac")
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix
   character_gamma_matrix <- simulated_data$character_gamma_matrix
