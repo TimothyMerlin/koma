@@ -310,7 +310,7 @@ compute_forecast_values <- function(posterior, companion_matrix, reduced_form,
       cli::cli_abort(c(
         "x" = "A = R %*% Omega %*% t(R) is singular (rank {rank_A} < {nrow(A)}).",
         ">" = "Cannot compute solve(A, r).",
-        ">" = "Likely causes: redundant/incompatible restrictions or singular Omega.",
+        ">" = "Likely causes: redundant/incompatible restrictions.",
         ">" = "Variables: {paste(vars, collapse = ', ')}."
       ))
     }
@@ -337,7 +337,6 @@ compute_forecast_values <- function(posterior, companion_matrix, reduced_form,
       forecast_x_matrix[1, , drop = FALSE] %*% companion_pi +
       y_t_lag %*% companion_theta +
       t(vc[, 1, drop = FALSE]) %*% j_matrix
-
 
     conditional_forecast[1, ] <- temp %*% t(j_matrix)
 
