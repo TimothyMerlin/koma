@@ -1,15 +1,26 @@
 #' Construct Posterior Matrices from LIBA Estimates
 #'
-#' This function constructs the posterior matrices using the LIBA estimates.
-#' It primarily focuses on the posterior median.
+#' This function constructs posterior system matrices from LIBA estimates.
+#' It produces the structural coefficient matrices \eqn{\Gamma} and \eqn{B},
+#' the implied reduced-form coefficient matrix \eqn{\Phi}, the structural shock
+#' covariance matrix \eqn{\Sigma}, and the reduced-form innovation covariance
+#' matrix \eqn{\Omega = (\Gamma^{-1})'\Sigma\Gamma^{-1}}.
 #'
-#' @param sys_eq A list containing detailed components of the
-#' system of equations such as `equations`, `endogenous_variables`,
-#' `identities`, `character_gamma_matrix`, and `character_beta_matrix`.
+#' Identity equations are incorporated via `update_estimates_with_weights()`.
+#' Structural shocks for identities are assumed to have zero variance, implying
+#' corresponding zero rows and columns in \eqn{\Sigma}.
+#'
 #' @param estimate A draw that contains beta, gamma and omega tilde estimates.
+#' @inheritParams forecast_single_draw
 #'
-#' @return A list containing gamma_matrix, beta_matrix, sigma_matrix and
-#' phi_matrix derived from the LIBA estimates.
+#' @return A list containing posterior system matrices:
+#'   * `gamma_matrix`: Posterior \eqn{\Gamma} (n x n) structural coefficient matrix.
+#'   * `beta_matrix`: Posterior \eqn{B} (k x n) exogenous coefficient matrix.
+#'   * `phi_matrix`: List of lagged endogenous coefficient matrices (n x n).
+#'   * `sigma_matrix`: Structural shock covariance matrix \eqn{\Sigma} (n x n).
+#'   * `omega_matrix`: Reduced-form innovation covariance matrix
+#'     \eqn{\Omega = (\Gamma^{-1})'\Sigma\Gamma^{-1}} (n x n).
+#'
 #' @keywords internal
 construct_posterior <- function(sys_eq, estimate) {
   call <- rlang::caller_env()
@@ -66,26 +77,68 @@ construct_posterior <- function(sys_eq, estimate) {
 
   phi_matrix <- construct_phi(sys_eq, posterior$beta_matrix)
 
-  return(list(
+  sigma_matrix <- estimate$sigma_matrix
+  dimnames(sigma_matrix) <- dimnames(posterior$gamma_matrix)
+  gamma_matrix_inv <- solve(posterior$gamma_matrix)
+  omega_matrix <- t(gamma_matrix_inv) %*% sigma_matrix %*% gamma_matrix_inv
+
+  # Validate Sigma matrix
+  if (!is.matrix(sigma_matrix)) {
+    cli::cli_abort(
+      "{.arg sigma_matrix} must be a matrix."
+    )
+  }
+
+  if (nrow(sigma_matrix) != ncol(sigma_matrix)) {
+    cli::cli_abort(
+      "{.arg sigma_matrix} must be square. Found {nrow(sigma_matrix)} x
+     {ncol(sigma_matrix)}."
+    )
+  }
+
+  if (nrow(sigma_matrix) != nrow(posterior$gamma_matrix)) {
+    cli::cli_abort(
+      "{.arg sigma_matrix} and {.arg gamma_matrix} have incompatible dimensions:
+     Sigma is {nrow(sigma_matrix)} x {ncol(sigma_matrix)}, while Gamma is
+     {nrow(posterior$gamma_matrix)} x {ncol(posterior$gamma_matrix)}."
+    )
+  }
+
+
+  id_idx <- match(names(sys_eq$identities),
+    colnames(sigma_matrix),
+    nomatch = 0
+  )
+
+  if (any(id_idx > 0) && any(diag(sigma_matrix)[id_idx] != 0)) {
+    cli::cli_abort(
+      "Identity equations must have zero variance in {.arg sigma_matrix}."
+    )
+  }
+
+  list(
     gamma_matrix = posterior$gamma_matrix,
     beta_matrix = posterior$beta_matrix,
-    sigma_matrix = estimate$sigma_matrix,
-    phi_matrix = phi_matrix
-  ))
+    phi_matrix = phi_matrix,
+    sigma_matrix = sigma_matrix,
+    omega_matrix = omega_matrix
+  )
 }
 
 #' Update Gamma and Beta Matrices with Identity Weights
 #'
-#' The function takes in the identities and initial matrices for gamma and beta,
-#' and updates the values in the matrices based on the identity weights.
+#' This function injects identity weights into the structural coefficient
+#' matrices. For each identity component, it finds the target entry encoded in
+#' the theta name (e.g., "theta6_4") and replaces the corresponding value in
+#' \eqn{\Gamma} or \eqn{B}.
 #'
 #' @param identities A list of identity equations.
-#' @param gamma_matrix Initial gamma matrix derived from median estimates.
-#' @param beta_matrix Initial beta matrix derived from median estimates.
+#' @param gamma_matrix Initial \eqn{\Gamma} matrix (structural coefficients).
+#' @param beta_matrix Initial \eqn{B} matrix (exogenous coefficients).
 #'
 #' @return A list containing:
-#'   - `gamma_matrix`: Gamma matrix updated with identity weights.
-#'   - `beta_matrix`: Beta matrix updated with identity weights.
+#'   - `gamma_matrix`: \eqn{\Gamma} updated with identity weights.
+#'   - `beta_matrix`: \eqn{B} updated with identity weights.
 #'
 #' @seealso
 #' \code{\link{construct_posterior}} for a function that uses this function's
@@ -150,10 +203,12 @@ update_estimates_with_weights <- function(identities, gamma_matrix, beta_matrix)
 
 #' Construct a Dynamic SEM (Structural Equation Model) Phi Matrix
 #'
-#' This function constructs the Phi matrix from the given system of equations
-#' and beta matrix. It processes the equations to find lagged endogenous
-#' variables and uses them to build the Phi matrix, as used in dynamic SEM:
-#' Y * Gamma = X_tilde B_tilde + Y(-1) * Phi(1) + ... + Y(-p) * Phi(L) + U.
+#' This function constructs the list of lagged endogenous coefficient matrices
+#' \eqn{\Phi(1), \ldots, \Phi(L)} from the system of equations and the beta
+#' matrix. It identifies lagged endogenous regressors in each equation and maps
+#' their coefficients into the corresponding \eqn{\Phi(\ell)} matrix in the
+#' dynamic SEM:
+#' \eqn{Y\Gamma = \tilde{X}\tilde{B} + Y_{t-1}\Phi(1) + \cdots + Y_{t-p}\Phi(L) + U.}
 #'
 #' @param sys_eq A list containing the system of equations. Must
 #' include `$equations` with the equations of the system,
@@ -162,8 +217,10 @@ update_estimates_with_weights <- function(identities, gamma_matrix, beta_matrix)
 #' @param beta_matrix A numeric matrix of beta coefficients corresponding to the
 #' exogenous variables in the system of equations.
 #'
-#' @return A list of matrices representing the Phi(L) matrix for the given
-#' system of equations.
+#' @return A named list of \eqn{n \times n} matrices, one per lag \eqn{\ell},
+#' where each matrix \eqn{\Phi(\ell)} contains the coefficients on the
+#' \eqn{\ell}-lagged endogenous variables. The list names correspond to lag
+#' orders (as character strings).
 #' @keywords internal
 construct_phi <- function(sys_eq, beta_matrix) { # nolint: cyclomatic_complexity_linter
   # Use the following system
@@ -211,5 +268,5 @@ construct_phi <- function(sys_eq, beta_matrix) { # nolint: cyclomatic_complexity
     phi_matrix[[lx]] <- matf
   }
 
-  return(phi_matrix)
+  phi_matrix
 }

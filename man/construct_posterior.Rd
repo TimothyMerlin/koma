@@ -7,18 +7,32 @@
 construct_posterior(sys_eq, estimate)
 }
 \arguments{
-\item{sys_eq}{A list containing detailed components of the
-system of equations such as \code{equations}, \code{endogenous_variables},
-\code{identities}, \code{character_gamma_matrix}, and \code{character_beta_matrix}.}
+\item{sys_eq}{A \code{koma_seq} object (\link{system_of_equations}) containing details
+about the system of equations used in the model.}
 
 \item{estimate}{A draw that contains beta, gamma and omega tilde estimates.}
 }
 \value{
-A list containing gamma_matrix, beta_matrix, sigma_matrix and
-phi_matrix derived from the LIBA estimates.
+A list containing posterior system matrices:
+\itemize{
+\item \code{gamma_matrix}: Posterior \eqn{\Gamma} (n x n) structural coefficient matrix.
+\item \code{beta_matrix}: Posterior \eqn{B} (k x n) exogenous coefficient matrix.
+\item \code{phi_matrix}: List of lagged endogenous coefficient matrices (n x n).
+\item \code{sigma_matrix}: Structural shock covariance matrix \eqn{\Sigma} (n x n).
+\item \code{omega_matrix}: Reduced-form innovation covariance matrix
+\eqn{\Omega = (\Gamma^{-1})'\Sigma\Gamma^{-1}} (n x n).
+}
 }
 \description{
-This function constructs the posterior matrices using the LIBA estimates.
-It primarily focuses on the posterior median.
+This function constructs posterior system matrices from LIBA estimates.
+It produces the structural coefficient matrices \eqn{\Gamma} and \eqn{B},
+the implied reduced-form coefficient matrix \eqn{\Phi}, the structural shock
+covariance matrix \eqn{\Sigma}, and the reduced-form innovation covariance
+matrix \eqn{\Omega = (\Gamma^{-1})'\Sigma\Gamma^{-1}}.
+}
+\details{
+Identity equations are incorporated via \code{update_estimates_with_weights()}.
+Structural shocks for identities are assumed to have zero variance, implying
+corresponding zero rows and columns in \eqn{\Sigma}.
 }
 \keyword{internal}

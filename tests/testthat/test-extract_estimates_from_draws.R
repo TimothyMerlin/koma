@@ -77,13 +77,15 @@ test_that("extract_estimates_... returns median or mean estimates", {
     )
   )
 
-  expected_sigma_matrix <- structure(
-    c(
-      0.593903535536046, 1.08156143798434, 0.0867852365774461,
-      0.449002137976062, 0.338599060353756, 0
-    ),
-    dim = c(1L, 6L)
-  )
+  expected_sigma_matrix <- diag(c(
+    structure(
+      c(
+        0.593903535536046, 1.08156143798434, 0.0867852365774461,
+        0.449002137976062, 0.338599060353756, 0
+      ),
+      dim = c(1L, 6L)
+    )
+  ))
 
   expect_equal(result$gamma_matrix, expected_gamma_matrix)
   expect_equal(result$beta_matrix, expected_beta_matrix)
@@ -137,13 +139,13 @@ test_that("extract_estimates_... returns median or mean estimates", {
     )
   )
 
-  expected_sigma_matrix <- structure(
+  expected_sigma_matrix <- diag(c(structure(
     c(
       0.588795874201523, 1.06672034759151, 0.0862706544652745,
       0.446339836441364, 0.330434206917935, 0
     ),
     dim = c(1L, 6L)
-  )
+  )))
 
   expect_equal(result$gamma_matrix, expected_gamma_matrix)
   expect_equal(result$beta_matrix, expected_beta_matrix)
@@ -256,5 +258,5 @@ test_that("extract_estimates_... returns estimates for draw jx", {
 
   expect_identical(result$gamma_matrix, expected_gamma_matrix)
   expect_identical(result$beta_matrix, expected_beta_matrix)
-  expect_identical(diag(c(result$sigma_matrix)), expected_sigma_matrix)
+  expect_identical(result$sigma_matrix, expected_sigma_matrix)
 })

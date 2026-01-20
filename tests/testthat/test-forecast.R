@@ -104,47 +104,42 @@ test_that("forecast works correctly for density forecasts", {
 })
 
 test_that("forecast conditionally fills ragged edge", {
-  dates <- list(
-    estimation = list(
-      start = c(1977, 1),
-      end = c(2018, 4)
-    ),
-    forecast = list(
-      start = c(2023, 2),
-      end = c(2025, 4)
-    ),
-    dynamic_weights = list(
-      start = c(1992, 1),
-      end = c(2022, 4)
-    )
-  )
-  equations <-
-    "consumption ~ gdp + consumption.L(1) + consumption.L(2),
-    investment ~ gdp + investment.L(1) + real_interest_rate,
-    current_account ~ current_account.L(1) + world_gdp,
-    manufacturing ~ manufacturing.L(1) + world_gdp,
-    service ~ service.L(1) + population + gdp,
-    gdp == 0.5*manufacturing + 0.5*service"
+  dates <- list(estimation = list(), forecast = list(), current = NULL)
+  dates$current <- c(2023, 2)
+  dates$estimation$start <- c(1996, 1)
+  dates$estimation$end <- c(2019, 4)
+  # Begin of forecasts
+  dates$forecast$start <- c(2023, 3)
+  # Last quarter of forecast
+  dates$forecast$end <- c(2024, 4)
 
-  exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
+  equations <- "consumption ~ gdp + consumption.L(1) + interest_rate,
+investment ~ gdp + investment.L(1) + interest_rate,
+exports ~ world_gdp + exchange_rate + exports.L(1),
+imports ~ gdp + exchange_rate + imports.L(1),
+gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
 
+  exogenous_variables <- c("interest_rate", "world_gdp", "exchange_rate")
   sys_eq <- system_of_equations(equations, exogenous_variables)
 
-  ts_data <- simulated_data$ts_data
-
-  # truncate current account data at 2021Q4 and add to ts_data
-  ts_data_current_account <- stats::window(ts_data$current_account,
-    end = c(2021, 4)
+  series <- unique(c(sys_eq$endogenous_variables, sys_eq$exogenous_variables))
+  ts_data <- small_open_economy[series]
+  ts_data <- lapply(ts_data, function(x) {
+    as_ets(x, series_type = "level", method = "diff_log")
+  })
+  ts_data$interest_rate <- as_ets(
+    ts_data$interest_rate,
+    series_type = "rate",
+    method = "none"
   )
-  ts_data$current_account <- ts_data_current_account
 
-  # truncate investment data at 2022Q1 and add to ts_data
+  # truncate data and add to ts_data
   ts_data_investment <- stats::window(ts_data$investment,
-    end = c(2022, 1)
+    end = c(2022, 4)
   )
   ts_data$investment <- ts_data_investment
 
-  dates_current <- c(2023, 1)
+  dates_current <- c(2023, 2)
 
   ts_data[sys_eq$endogenous_variables] <-
     lapply(sys_eq$endogenous_variables, function(x) {
@@ -159,25 +154,12 @@ test_that("forecast conditionally fills ragged edge", {
     )
   )
 
-  # We expect the current account and investment series to equal what we
+  # We expect the investment series to equal what we
   # inputed in the estimate_sem function. This is because the ragged edge is
   # between the estimation$end and forecast$start dates.
-  exp_current_acc <- ts_data$current_account
-  attr(exp_current_acc, "anker") <- c(100, 1975.75)
-  attr(exp_current_acc, "ets_attributes") <- c(
-    attr(exp_current_acc, "ets_attributes"), "anker"
-  )
-  expect_equal(
-    est$ts_data$current_account,
-    exp_current_acc
-  )
   exp_invest <- ts_data$investment
-  attr(exp_invest, "anker") <- c(100, 1975.75)
-  attr(exp_invest, "ets_attributes") <- c(
-    attr(exp_invest, "ets_attributes"), "anker"
-  )
   expect_equal(
-    est$ts_data$investment,
+    level(est$ts_data$investment),
     exp_invest
   )
 
@@ -186,15 +168,15 @@ test_that("forecast conditionally fills ragged edge", {
 
   # y matrix should range from estimation start date to one quarter before
   # forecast start date
-  expected_time <- stats::ts(seq(from = 1977.00, to = 2023.00, by = 0.25),
-    start = 1977.00, frequency = 4
+  expected_time <- stats::ts(seq(from = 1996.00, to = 2023.25, by = 0.25),
+    start = 1996.00, frequency = 4
   )
   expect_identical(stats::time(result$y_matrix), expected_time)
 
   # investment ts should be uncut at start and range up to one quarter before
   # forecast start date
-  expected_time <- stats::ts(seq(from = 1976.00, to = 2023.00, by = 0.25),
-    start = 1976.00, frequency = 4
+  expected_time <- stats::ts(seq(from = 1980.25, to = 2023.25, by = 0.25),
+    start = 1980.25, frequency = 4
   )
   expect_identical(stats::time(result$ts_data$investment), expected_time)
 
@@ -207,10 +189,10 @@ test_that("forecast conditionally fills ragged edge", {
   )
 
   expected_time <- structure(c(
-    2023.25, 2023.5, 2023.75, 2024, 2024.25, 2024.5,
-    2024.75, 2025, 2025.25, 2025.5, 2025.75
+    2023.5, 2023.75, 2024, 2024.25, 2024.5,
+    2024.75
   ), tsp = c(
-    2023.25, 2025.75,
+    2023.5, 2024.75,
     4
   ), class = "ts")
   expect_identical(stats::time(result$mean[[1]]), expected_time)
@@ -585,6 +567,109 @@ test_that("forecast without lags and with restrictions", {
   )
 })
 
+test_that("restricting aggregate alone keeps identity intact (currently fails)", {
+  dates <- list(
+    estimation = list(start = c(1977, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4)),
+    dynamic_weights = list(start = c(1992, 1), end = c(2022, 4))
+  )
+
+  equations <- "manufacturing ~ world_gdp + manufacturing.L(1) + manufacturing.L(2),
+      service ~ population + gdp,
+      gdp == 0.5*manufacturing + 0.5*service"
+  exogenous_variables <- c("world_gdp", "population")
+  sys_eq <- system_of_equations(equations, exogenous_variables)
+
+  ts_data <- simulated_data$ts_data
+  dates_current <- c(2023, 1)
+  ts_data[sys_eq$endogenous_variables] <- lapply(
+    sys_eq$endogenous_variables,
+    function(x) stats::window(ts_data[[x]], end = dates_current)
+  )
+
+  est <- withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+  )
+
+  base <- withr::with_seed(7, forecast(est, dates))
+  target <- base$mean$gdp[1] + 1 # feasible: adjust component shocks
+
+  restrictions <- list(
+    gdp = list(value = c(target, 0.5), horizon = c(1, 3)),
+    manufacturing = list(value = base$mean$manufacturing[2], horizon = 2)
+  )
+  out <- withr::with_seed(7, forecast(est, dates, restrictions = restrictions))
+
+  # Restriction is met
+  expect_equal(out$mean$gdp[1], target)
+
+  # Identity should still hold — this is where current code breaks
+  expect_equal(
+    out$mean$gdp[1],
+    0.5 * out$mean$manufacturing[1] + 0.5 * out$mean$service[1],
+    tolerance = 1e-12
+  )
+
+  expect_equal(out$mean$gdp[3], 0.5)
+
+  # manufacturing restriction should be met
+  expect_equal(
+    out$mean$manufacturing[2],
+    base$mean$manufacturing[2]
+  )
+})
+
+
+test_that("conflicting restrictions on identity error", {
+  dates <- list(
+    estimation = list(
+      start = c(1977, 1),
+      end = c(2019, 4)
+    ),
+    forecast = list(
+      start = c(2023, 2),
+      end = c(2025, 4)
+    ),
+    dynamic_weights = list(
+      start = c(1992, 1),
+      end = c(2022, 4)
+    )
+  )
+
+  equations <- "manufacturing ~ world_gdp,
+    service ~ population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
+  exogenous_variables <- c("world_gdp", "population")
+
+  sys_eq <- system_of_equations(equations, exogenous_variables)
+
+  ts_data <- simulated_data$ts_data
+  dates_current <- c(2023, 1)
+  ts_data[sys_eq$endogenous_variables] <-
+    lapply(sys_eq$endogenous_variables, function(x) {
+      stats::window(ts_data[[x]], end = dates_current)
+    })
+
+  est <- withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+  )
+
+  base <- withr::with_seed(7, forecast(est, dates))
+
+  restrictions <- list(
+    manufacturing = list(value = base$mean$manufacturing[1], horizon = 1),
+    service = list(value = base$mean$service[1], horizon = 1),
+    gdp = list(value = base$mean$gdp[1] + 1, horizon = 1)
+  )
+
+  expect_error(
+    withr::with_seed(7, forecast(est, dates, restrictions = restrictions)),
+    "singular"
+  )
+})
+
 test_that("forecast with restrictions for variables that are not in SEM", {
   dates <- list(
     estimation = list(
@@ -632,7 +717,6 @@ test_that("forecast with restrictions for variables that are not in SEM", {
   # first horizon of manufacturing should equal restriction
   expect_equal(out$mean$manufacturing[1], 0.5)
 })
-
 
 
 test_that("estimate an AR(1) model", {

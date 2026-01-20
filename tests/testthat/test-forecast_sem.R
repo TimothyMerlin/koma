@@ -118,3 +118,98 @@ test_that("forecast_sem", {
 
   expect_equal(result$quantiles, expected_result)
 })
+
+test_that("check_identities_add_up warns when components are missing", {
+  mat <- matrix(
+    c(
+      1, 1,
+      2, 2
+    ),
+    ncol = 2,
+    byrow = TRUE
+  )
+  colnames(mat) <- c("agg", "c1")
+  ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
+
+  expect_warning(
+    check_identities_add_up(ts_out, identities = list(
+      agg = list(
+        components = list(c1 = "w1", c2 = "w2"),
+        weights = list(w1 = 0.5, w2 = 0.5)
+      )
+    )),
+    "could not be checked"
+  )
+})
+
+test_that("check_identities_add_up warns when weights are non-numeric", {
+  mat <- matrix(
+    c(
+      1, 1, 1,
+      2, 2, 2
+    ),
+    ncol = 3,
+    byrow = TRUE
+  )
+  colnames(mat) <- c("agg", "c1", "c2")
+  ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
+
+  expect_warning(
+    check_identities_add_up(ts_out, identities = list(
+      agg = list(
+        components = list(c1 = "w1", c2 = "w2"),
+        weights = list(w1 = 0.5, w2 = "theta")
+      )
+    )),
+    "could not be checked"
+  )
+})
+
+
+test_that("check_identities_add_up warns on deviations", {
+  # Construct a simple ts_out with one identity variable and two components
+  mat <- matrix(
+    c(
+      1, 2, 2, # identity too low
+      2, 2, 2 # identity matches
+    ),
+    ncol = 3,
+    byrow = TRUE
+  )
+  colnames(mat) <- c("agg", "c1", "c2")
+  ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
+
+  expect_warning(
+    check_identities_add_up(ts_out,
+      identities = list(
+        agg = list(
+          components = list(c1 = "w1", c2 = "w2"),
+          weights = list(w1 = 0.5, w2 = 0.5)
+        )
+      )
+    ),
+    "Identity"
+  )
+})
+
+test_that("check_identities_add_up is quiet when identities match", {
+  mat <- matrix(
+    c(
+      1, 1, 1,
+      2, 2, 2
+    ),
+    ncol = 3,
+    byrow = TRUE
+  )
+  colnames(mat) <- c("agg", "c1", "c2")
+  ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
+
+  expect_silent(
+    check_identities_add_up(ts_out, identities = list(
+      agg = list(
+        components = list(c1 = "w1", c2 = "w2"),
+        weights = list(w1 = 0.5, w2 = 0.5)
+      )
+    ))
+  )
+})

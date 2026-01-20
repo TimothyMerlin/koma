@@ -44,7 +44,7 @@ forecast_sem <- function(sys_eq, estimates,
     `%dofuture%` <- doFuture::`%dofuture%` # load dofuture
 
     # Added to circumvent Note:
-    #  estimate: no visible binding for global variable ‘draw_jx’
+    #  estimate: no visible binding for global variable draw_jx
     #  Undefined global functions or variables:
     # draw_jx
     draw_jx <- NULL
@@ -170,9 +170,9 @@ forecast_single_draw <- function(sys_eq, estimates, jx,
   }
 
   compute_forecast_values(
-    companion_matrix, reduced_form, y_matrix, forecast_x_matrix,
+    posterior, companion_matrix, reduced_form, y_matrix, forecast_x_matrix,
     horizon, freq, forecast_dates$start, sys_eq$endogenous_variables,
-    restrictions
+    restrictions, sys_eq$identities
   )
 }
 
@@ -181,6 +181,8 @@ forecast_single_draw <- function(sys_eq, estimates, jx,
 #' This function calculates the forecast for a given set of parameters and data.
 #' It computes baseline forecasts and applies certain restrictions if specified.
 #'
+#' @param posterior A list of posterior system matrices from
+#' `construct_posterior()` (e.g., `gamma_matrix`, `sigma_matrix`).
 #' @param companion_matrix A list containing components of the companion matrix.
 #' @param reduced_form A list containing the reduced form components.
 #' @param start_forecast A vector of format `c(YEAR, QUARTER)` representing
@@ -192,10 +194,10 @@ forecast_single_draw <- function(sys_eq, estimates, jx,
 #' @return A matrix with the base forecast of Y.
 #'
 #' @keywords internal
-compute_forecast_values <- function(companion_matrix, reduced_form, y_matrix,
-                                    forecast_x_matrix, horizon, freq,
+compute_forecast_values <- function(posterior, companion_matrix, reduced_form,
+                                    y_matrix, forecast_x_matrix, horizon, freq,
                                     start_forecast, endogenous_variables,
-                                    restrictions) {
+                                    restrictions, identities) {
   companion_gamma_matrix <- companion_matrix$gamma_matrix
   companion_pi <- reduced_form$companion_pi
   companion_theta <- reduced_form$companion_theta
@@ -216,7 +218,8 @@ compute_forecast_values <- function(companion_matrix, reduced_form, y_matrix,
   base_forecast <- matrix(0, horizon, n)
 
   if (!is.null(companion_theta)) {
-    j_matrix <- t(cbind(diag(n), matrix(0, n, n * (p - 1))))
+    # selection matrix J
+    j_matrix <- cbind(diag(n), matrix(0, n, n * (p - 1)))
     y_t_lag <- t(do.call(rbind, lapply(0:(p - 1), function(x) {
       as.matrix(y_matrix[number_of_observations - x, ])
     })))
@@ -231,15 +234,15 @@ compute_forecast_values <- function(companion_matrix, reduced_form, y_matrix,
     forecast_x_matrix[1, , drop = FALSE] %*% companion_pi +
     y_t_lag %*% companion_theta
 
-  base_forecast[1, ] <- temp %*% j_matrix
+  base_forecast[1, ] <- temp %*% t(j_matrix)
 
   if (horizon > 1) {
-    for (ix in seq(2, horizon)) {
+    for (h in seq(2, horizon)) {
       temp <-
         companion_d +
-        forecast_x_matrix[ix, , drop = FALSE] %*% companion_pi +
+        forecast_x_matrix[h, , drop = FALSE] %*% companion_pi +
         temp %*% companion_theta
-      base_forecast[ix, ] <- temp %*% j_matrix
+      base_forecast[h, ] <- temp %*% t(j_matrix)
     }
   }
 
@@ -249,52 +252,103 @@ compute_forecast_values <- function(companion_matrix, reduced_form, y_matrix,
   if (length(names(restrictions)) == 0) {
     out <- base_forecast
   } else {
-    theta_powers <- powers(companion_theta, horizon)
-    psi_s <- lapply(theta_powers, function(thetax) {
-      t(solve(companion_gamma_matrix) %*% thetax)
-    })
+    stopifnot(
+      j_matrix %*% companion_gamma_matrix %*% t(j_matrix) ==
+        unname(posterior$gamma_matrix)
+    )
 
-    R <- list()
-    r <- list()
+    psi <- vector("list", horizon)
+    a_pow <- diag(n * p)
+
+    for (j in seq_len(horizon)) {
+      psi[[j]] <- j_matrix %*% t(a_pow) %*% t(j_matrix) # Psi_{j-1}^0
+      a_pow <- a_pow %*% companion_theta # next power
+    }
+    stopifnot(all(dim(j_matrix) == c(n, n * p))) # q x n * p
+    stopifnot(max(abs(psi[[1]] - diag(n))) < 1e-12) # Psi_0 = I
+
+    # number of restrictions: q
+    number_restrictions <- sum(vapply(restrictions, function(x) length(x[["horizon"]]), 1L))
+    R <- matrix(0, nrow = number_restrictions, ncol = n * horizon)
+    r <- matrix(0, nrow = number_restrictions, ncol = 1)
+
+    rr <- 1L
     for (ix in names(restrictions)) {
-      for (nx in seq_along(restrictions[[ix]][["horizon"]])) {
-        hx <- restrictions[[ix]][["horizon"]][nx]
-        R[[ix]][[nx]] <- cbind(
-          t(do.call(cbind, psi_s[hx:1])[which(endogenous_variables %in% ix), ]),
-          matrix(0, 1, (horizon * n * p - hx * n * p))
-        )
-        r[[ix]][[nx]] <-
-          restrictions[[ix]][["value"]][nx] - base_forecast[hx, ix]
+      hx_vec <- restrictions[[ix]][["horizon"]]
+      val_vec <- restrictions[[ix]][["value"]]
+
+      row_idx <- which(endogenous_variables == ix)
+      for (nx in seq_along(hx_vec)) {
+        hx <- hx_vec[nx]
+
+        if (hx < 1 || hx > horizon) stop("hx must be in 1..horizon")
+
+        blocks <- do.call(cbind, psi[hx:1]) # n x (n*hx)
+        # selects the row corresponding to the restricted equation.
+        core <- blocks[row_idx, , drop = FALSE] # 1 x (n*hx)
+
+        R[rr, 1:(hx * n)] <- core
+        r[rr, 1] <- val_vec[nx] - base_forecast[hx, ix]
+
+        rr <- rr + 1L
       }
-      R[[ix]] <- do.call(rbind, R[[ix]])
-      r[[ix]] <- do.call(rbind, r[[ix]])
+    }
+    stopifnot(rr - 1L == number_restrictions)
+    stopifnot(ncol(R) == n * horizon)
+
+    inv_gamma <- solve(posterior$gamma_matrix)
+    omega_matrix <- t(inv_gamma) %*% posterior$sigma_matrix %*% inv_gamma
+    omega_matrix_h <- kronecker(diag(horizon), omega_matrix)
+    #    mvc <- sigma_v %*% t(R) %*% solve(R %*% sigma_v %*% t(R)) %*% r
+    A <- R %*% omega_matrix_h %*% t(R)
+
+    # Rank check with explicit tolerance
+    tol <- max(1e-12, sqrt(.Machine$double.eps))
+    rank_A <- qr(A, tol = tol)$rank
+    if (rank_A < nrow(A)) {
+      vars <- unique(names(restrictions))
+      cli::cli_abort(c(
+        "x" = "A = R %*% Omega %*% t(R) is singular (rank {rank_A} < {nrow(A)}).",
+        ">" = "Cannot compute solve(A, r).",
+        ">" = "Likely causes: redundant/incompatible restrictions or singular Omega.",
+        ">" = "Variables: {paste(vars, collapse = ', ')}."
+      ))
     }
 
-    R <- do.call(rbind, R)
-    r <- do.call(rbind, r)
+    # Ill-conditioning check (warn, don't abort)
+    cond_A <- kappa(A, exact = TRUE)
+    if (!is.finite(cond_A) || cond_A > 1e12) {
+      vars <- unique(names(restrictions))
+      cli::cli_warn(c(
+        "!" = "A is ill-conditioned (kappa {signif(cond_A, 3)}).",
+        ">" = "solve(A, r) may be numerically unstable.",
+        ">" = "Variables: {paste(vars, collapse = ', ')}."
+      ))
+    }
 
-    muc <- t(R) %*% solve(R %*% t(R)) %*% r
-
-    # Just use conditional mean (without density forecasts)
-    uc <- matrix(muc, n * p, horizon)
+    mvc <- omega_matrix_h %*% t(R) %*% solve(A, r)
+    vc <- matrix(mvc, n, horizon)
 
     # Compute conditional forecasts
     conditional_forecast <- matrix(0, horizon, n)
+
     temp <-
       companion_d +
-      forecast_x_matrix[1, ] %*% companion_pi +
+      forecast_x_matrix[1, , drop = FALSE] %*% companion_pi +
       y_t_lag %*% companion_theta +
-      t(uc[, 1]) %*% solve(companion_gamma_matrix)
+      t(vc[, 1, drop = FALSE]) %*% j_matrix
 
-    conditional_forecast[1, ] <- temp %*% j_matrix
+
+    conditional_forecast[1, ] <- temp %*% t(j_matrix)
 
     if (horizon > 1) {
-      for (ix in seq(2, horizon)) {
-        temp <- companion_d +
-          forecast_x_matrix[ix, ] %*% companion_pi +
+      for (h in seq(2, horizon)) {
+        temp <-
+          companion_d +
+          forecast_x_matrix[h, , drop = FALSE] %*% companion_pi +
           temp %*% companion_theta +
-          t(uc[, ix]) %*% solve(companion_gamma_matrix)
-        conditional_forecast[ix, ] <- temp %*% j_matrix
+          t(vc[, h, drop = FALSE]) %*% j_matrix
+        conditional_forecast[h, ] <- temp %*% t(j_matrix)
       }
     }
     colnames(conditional_forecast) <- endogenous_variables
@@ -302,16 +356,78 @@ compute_forecast_values <- function(companion_matrix, reduced_form, y_matrix,
     out <- conditional_forecast
   }
 
-  stats::ts(out, start = start_forecast, frequency = freq)
+  ts_out <- stats::ts(out, start = start_forecast, frequency = freq)
+
+  check_identities_add_up(ts_out, identities)
+
+  ts_out
 }
 
-# Precompute powers of companion_theta up to horizon-1
-powers <- function(mat, n) {
-  mats <- vector("list", n)
-  mats[[1]] <- diag(nrow(mat)) # mat^0
-  if (n > 1) mats[[2]] <- mat # mat^1
-  if (n > 2) {
-    for (i in 3:n) mats[[i]] <- mats[[i - 1]] %*% mat
+#' Check Identity Equations in Forecast Output
+#'
+#' Recomputes each identity from its component series and weights, then warns if
+#' deviations exceed `tol`. Intended as a safeguard against identity drift.
+#'
+#' @param ts_out A forecast output time-series matrix.
+#' @param identities A named list of identity definitions produced by
+#'   [get_identities()] and updated by [get_seq_weights()].
+#' @param tol Numeric tolerance for deviations between the identity and its
+#'   reconstructed value.
+#'
+#' @return Invisibly returns `NULL`.
+#' @keywords internal
+check_identities_add_up <- function(ts_out, identities, tol = 1e-8) {
+  if (is.null(identities) || !length(identities)) {
+    return(invisible(NULL))
   }
-  mats
+
+  for (lhs in names(identities)) {
+    iden <- identities[[lhs]]
+    if (!lhs %in% colnames(ts_out)) next
+    comps <- names(iden$components)
+    if (!length(comps)) next
+
+    weights <- vapply(comps, function(comp) {
+      weight_name <- iden$components[[comp]]
+      wt <- iden$weights[[weight_name]]
+      suppressWarnings(as.numeric(wt))
+    }, numeric(1))
+
+    missing_components <- setdiff(comps, colnames(ts_out))
+    missing_weights <- comps[is.na(weights)]
+    if (length(missing_components) || length(missing_weights)) {
+      warn <- c(
+        "!" = "Identity {.val {lhs}} could not be checked."
+      )
+      if (length(missing_components)) {
+        warn <- c(
+          warn,
+          ">" = "Missing components in forecast output: {.val {missing_components}}."
+        )
+      }
+      if (length(missing_weights)) {
+        warn <- c(
+          warn,
+          ">" = "Weights missing or non-numeric for components: {.val {missing_weights}}."
+        )
+      }
+      cli::cli_warn(warn)
+      next
+    }
+
+
+    X <- ts_out[, comps, drop = FALSE]
+    rhs <- as.numeric(X %*% weights)
+
+    lhs_series <- ts_out[, lhs]
+    diff <- abs(lhs_series - rhs)
+    if (any(diff > tol, na.rm = TRUE)) {
+      where <- which(diff > tol)
+      cli::cli_warn(c(
+        "!" = "Identity {.val {lhs}} not satisfied at horizon {.val {paste(where, collapse = ', ')}}."
+      ))
+    }
+  }
+
+  invisible(NULL)
 }

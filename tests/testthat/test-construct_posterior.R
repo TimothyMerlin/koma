@@ -39,13 +39,14 @@ test_that("construct_posterior constructs median estimate matrices correctly", {
   expect_type(result, "list")
   expect_named(
     result,
-    c("gamma_matrix", "beta_matrix", "sigma_matrix", "phi_matrix")
+    c("gamma_matrix", "beta_matrix", "phi_matrix", "sigma_matrix", "omega_matrix")
   )
 
   expect_equal(dim(result$gamma_matrix), c(6, 6))
   expect_equal(dim(result$beta_matrix), c(10, 6))
-  expect_equal(dim(result$sigma_matrix), c(1, 6))
   expect_equal(dim(result$phi_matrix[[1]]), c(6, 6))
+  expect_equal(dim(result$sigma_matrix), c(6, 6))
+  expect_equal(dim(result$omega_matrix), c(6, 6))
 
   # check if identity weights are correctly set
   expect_equal(result$gamma_matrix[4, 6], -0.5)
@@ -223,7 +224,7 @@ test_that("construct_posterior returns estimates for draw jx", {
 
   expect_identical(result$gamma_matrix, expected_gamma_matrix)
   expect_identical(result$beta_matrix, expected_beta_matrix)
-  expect_identical(diag(c(result$sigma_matrix)), expected_sigma_matrix)
+  expect_identical(unname(result$sigma_matrix), expected_sigma_matrix)
   expect_identical(result$phi_matrix, expected_phi_matrix)
 })
 

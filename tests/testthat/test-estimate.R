@@ -191,49 +191,43 @@ test_that("estimate correctly returns when parallel", {
 })
 
 test_that("estimate works for ragged edge", {
-  skip_if_not_installed(c("parallelly", "future"))
-
   # mock readline function always return "y"
   testthat::local_mocked_bindings(readline = function(...) "y", .package = "base")
 
-  dates <- list(estimation = list(
-    start = c(1976, 1),
-    end = c(2023, 1)
-  ))
+  dates <- list(estimation = list(), forecast = list(), current = NULL)
+  dates$current <- c(2023, 2)
+  dates$estimation$start <- c(1996, 1)
+  dates$estimation$end <- c(2019, 4)
 
-  equations <-
-    "consumption ~ gdp + consumption.L(1) + consumption.L(2),
-    investment ~ gdp + investment.L(1) + real_interest_rate,
-    current_account ~ current_account.L(1) + world_gdp,
-    manufacturing ~ manufacturing.L(1) + world_gdp,
-    service ~ service.L(1) + population + gdp,
-    gdp == 0.5*manufacturing + 0.5*service"
+  equations <- "consumption ~ gdp + consumption.L(1) + interest_rate,
+investment ~ gdp + investment.L(1) + interest_rate,
+exports ~ world_gdp + exchange_rate + exports.L(1),
+imports ~ gdp + exchange_rate + imports.L(1),
+gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
 
-  exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
-
+  exogenous_variables <- c("interest_rate", "world_gdp", "exchange_rate")
   sys_eq <- system_of_equations(equations, exogenous_variables)
 
-  ts_data <- simulated_data$ts_data
-
-  # truncate current account data at 2021Q4 and add to ts_data
-  ts_data_current_account <- stats::window(ts_data$current_account,
-    end = c(2021, 4)
+  series <- unique(c(sys_eq$endogenous_variables, sys_eq$exogenous_variables))
+  ts_data <- small_open_economy[series]
+  ts_data <- lapply(ts_data, function(x) {
+    as_ets(x, series_type = "level", method = "diff_log")
+  })
+  ts_data$interest_rate <- as_ets(
+    ts_data$interest_rate,
+    series_type = "rate",
+    method = "none"
   )
-  ts_data$current_account <- ts_data_current_account
 
-  # truncate investment data at 2022Q1 and add to ts_data
+  # truncate data and add to ts_data
   ts_data_investment <- stats::window(ts_data$investment,
-    end = c(2022, 1)
+    end = c(2019, 3)
   )
   ts_data$investment <- ts_data_investment
-
-  # use future::plan for parallel execution
-  workers <- parallelly::availableCores(omit = 1)
-
-  # Windows: Since Windows does not support forking, multisession
-  # will spawn new R sessions for each parallel worker.
-  # Testing here if all global variables are exported correctly for mutlisession.
-  future::plan(future::multisession, workers = workers)
+  ts_data_gdp <- stats::window(ts_data$gdp,
+    end = c(2019, 2)
+  )
+  ts_data$gdp <- ts_data_gdp
 
   suppressWarnings(
     result <- withr::with_seed(
@@ -247,22 +241,23 @@ test_that("estimate works for ragged edge", {
 
   # y and x matrices and current account and investment time series should
   # range from estimation start date to one quarter before forecast start date
-  expected_time <- stats::ts(seq(from = 1976.50, to = 2023.00, by = 0.25),
-    start = 1976.50, frequency = 4
+  expected_time <- stats::ts(seq(from = 1996.00, to = 2019.75, by = 0.25),
+    start = 1996.00, frequency = 4
   )
   expect_identical(stats::time(result$y_matrix), expected_time)
   expect_identical(stats::time(result$x_matrix), expected_time)
 
-  expected_time <- stats::ts(seq(from = 1976.00, to = 2023.00, by = 0.25),
-    start = 1976.00, frequency = 4
-  )
   expect_identical(
-    stats::time(result$ts_data$current_account),
-    expected_time
+    stats::time(result$ts_data$gdp),
+    stats::ts(seq(from = 1990.50, to = 2019.75, by = 0.25),
+      start = 1990.50, frequency = 4
+    )
   )
   expect_identical(
     stats::time(result$ts_data$investment),
-    expected_time
+    stats::ts(seq(from = 1980.25, to = 2019.75, by = 0.25),
+      start = 1980.25, frequency = 4
+    )
   )
 })
 

@@ -9,20 +9,22 @@ update_estimates_with_weights(identities, gamma_matrix, beta_matrix)
 \arguments{
 \item{identities}{A list of identity equations.}
 
-\item{gamma_matrix}{Initial gamma matrix derived from median estimates.}
+\item{gamma_matrix}{Initial \eqn{\Gamma} matrix (structural coefficients).}
 
-\item{beta_matrix}{Initial beta matrix derived from median estimates.}
+\item{beta_matrix}{Initial \eqn{B} matrix (exogenous coefficients).}
 }
 \value{
 A list containing:
 \itemize{
-\item \code{gamma_matrix}: Gamma matrix updated with identity weights.
-\item \code{beta_matrix}: Beta matrix updated with identity weights.
+\item \code{gamma_matrix}: \eqn{\Gamma} updated with identity weights.
+\item \code{beta_matrix}: \eqn{B} updated with identity weights.
 }
 }
 \description{
-The function takes in the identities and initial matrices for gamma and beta,
-and updates the values in the matrices based on the identity weights.
+This function injects identity weights into the structural coefficient
+matrices. For each identity component, it finds the target entry encoded in
+the theta name (e.g., "theta6_4") and replaces the corresponding value in
+\eqn{\Gamma} or \eqn{B}.
 }
 \seealso{
 \code{\link{construct_posterior}} for a function that uses this function's

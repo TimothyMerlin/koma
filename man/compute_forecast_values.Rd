@@ -5,6 +5,7 @@
 \title{Compute Forecast Based on Companion Matrix and Reduced Form}
 \usage{
 compute_forecast_values(
+  posterior,
   companion_matrix,
   reduced_form,
   y_matrix,
@@ -13,10 +14,14 @@ compute_forecast_values(
   freq,
   start_forecast,
   endogenous_variables,
-  restrictions
+  restrictions,
+  identities
 )
 }
 \arguments{
+\item{posterior}{A list of posterior system matrices from
+\code{construct_posterior()} (e.g., \code{gamma_matrix}, \code{sigma_matrix}).}
+
 \item{companion_matrix}{A list containing components of the companion matrix.}
 
 \item{reduced_form}{A list containing the reduced form components.}

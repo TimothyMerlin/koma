@@ -135,18 +135,3 @@ endogenous variable case", {
   )
   expect_equal(result, expected_output)
 })
-
-test_that("matrix powers are computed correctly", {
-  mat <- matrix(c(1, 2, 3, 4), 2, 2)
-  horizon <- 5
-
-  # Using custom function
-  mat_powers <- powers(mat, horizon)
-
-  # Compare with explicit multiplication (manual check)
-  expect_equal(mat_powers[[1]], diag(2)) # mat^0
-  expect_equal(mat_powers[[2]], mat) # mat^1
-  expect_equal(mat_powers[[3]], mat %*% mat) # mat^2
-  expect_equal(mat_powers[[4]], mat %*% mat %*% mat) # mat^3
-  expect_equal(mat_powers[[5]], mat %*% mat %*% mat %*% mat) # mat^4
-})

@@ -59,14 +59,16 @@ extract_estimates_from_draws <- function(sys_eq, estimates,
   beta_matrix <- matrix(0, number_of_total_exogenous, number_of_endogenous,
     dimnames = list(total_exogenous_variables, endogenous_variables)
   )
-  sigma_matrix <- matrix(0, 1, number_of_endogenous)
-
-  ix <- which(endogenous_variables %in% names(identities))
-  if (length(ix) > 0) {
-    endogenous_variables <- endogenous_variables[-ix]
-  }
+  sigma_vec <- matrix(0, 1, number_of_endogenous)
 
   for (kx in seq_along(endogenous_variables)) {
+    varname <- endogenous_variables[kx]
+
+    if (varname %in% names(identities)) {
+      sigma_vec[kx] <- 0
+      next
+    }
+
     estimates_var <- estimates[[kx]]
 
     beta_estimate <- extract_estimate(
@@ -79,12 +81,15 @@ extract_estimates_from_draws <- function(sys_eq, estimates,
       estimates_var, jx, central_tendency, "omega_tilde_jw"
     )
     # Populate matrices
-    # beta_matrix[, kx] <- beta_estimate
     beta_matrix[which(sys_eq$character_beta_matrix[, kx] != 0), kx] <- beta_estimate
     gamma_matrix[grep("gamma", character_gamma_matrix[, kx]), kx] <-
       -gamma_estimate
-    sigma_matrix[kx] <- omega_estimate[1]
+    sigma_vec[kx] <- omega_estimate[1]
   }
+
+  sigma_matrix <- diag(c(sigma_vec),
+    nrow = number_of_endogenous, ncol = number_of_endogenous
+  )
 
   return(list(
     gamma_matrix = gamma_matrix,

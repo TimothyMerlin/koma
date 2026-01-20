@@ -16,13 +16,17 @@ include \verb{$equations} with the equations of the system,
 exogenous variables in the system of equations.}
 }
 \value{
-A list of matrices representing the Phi(L) matrix for the given
-system of equations.
+A named list of \eqn{n \times n} matrices, one per lag \eqn{\ell},
+where each matrix \eqn{\Phi(\ell)} contains the coefficients on the
+\eqn{\ell}-lagged endogenous variables. The list names correspond to lag
+orders (as character strings).
 }
 \description{
-This function constructs the Phi matrix from the given system of equations
-and beta matrix. It processes the equations to find lagged endogenous
-variables and uses them to build the Phi matrix, as used in dynamic SEM:
-Y * Gamma = X_tilde B_tilde + Y(-1) * Phi(1) + ... + Y(-p) * Phi(L) + U.
+This function constructs the list of lagged endogenous coefficient matrices
+\eqn{\Phi(1), \ldots, \Phi(L)} from the system of equations and the beta
+matrix. It identifies lagged endogenous regressors in each equation and maps
+their coefficients into the corresponding \eqn{\Phi(\ell)} matrix in the
+dynamic SEM:
+\eqn{Y\Gamma = \tilde{X}\tilde{B} + Y_{t-1}\Phi(1) + \cdots + Y_{t-p}\Phi(L) + U.}
 }
 \keyword{internal}
