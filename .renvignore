@@ -1,3 +1,11 @@
 # ignore all files in scripts folder (only used for dev)
 scripts/
 data-raw/
+vignettes/koma-getting-started.Rmd
+vignettes/koma-small-macro-model.Rmd
+vignettes/koma-klein.Rmd
+vignettes/koma-equations.Rmd
+vignettes/koma-extended-timeseries.Rmd
+vignettes/koma-parallel.Rmd
+vignettes/koma-error-correction.Rmd
+tests/testthat.R
