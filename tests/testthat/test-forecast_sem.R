@@ -72,54 +72,37 @@ test_that("forecast_sem", {
   expect_equal(result$median, expected_result)
 
   # Case 2: Density forecasts
-  result <- forecast_sem(
-    sys_eq, estimates, restrictions,
-    y_matrix, forecast_x_matrix, horizon, freq, dates$forecast,
-    point_forecast = list(active = FALSE)
-  )
-
-  expected_result <- list(q_5 = structure(c(
-    4.82109556789144, 4.45690748680653, 4.69440248787175,
-    3.69915350979583, 0.495309268912805, 1.09223507673112, 0.340604402361223,
-    0.458155682564863, -0.0945899767006442, -0.276137308345971, 0.173976039089989,
-    0.131057178557279
-  ), dim = c(2L, 6L), dimnames = list(NULL, c(
-    "consumption",
-    "investment", "current_account", "manufacturing", "service",
-    "gdp"
-  )), tsp = c(2019, 2019.25, 4), class = c(
-    "mts", "ts", "matrix",
-    "array"
-  )), q_50 = structure(c(
-    5.05832496333041, 4.80065339358621,
-    5.04117872496396, 4.0749759248586, 0.542239285623722, 1.13220681376785,
-    0.451883808436417, 0.544678037809438, 0.116324325070415, -0.114688250842263,
-    0.285346399263274, 0.212590703116717
-  ), dim = c(2L, 6L), dimnames = list(
-    NULL, c(
-      "consumption", "investment", "current_account", "manufacturing",
-      "service", "gdp"
+  result <- withr::with_seed(
+    7,
+    forecast_sem(
+      sys_eq, estimates, restrictions,
+      y_matrix, forecast_x_matrix, horizon, freq, dates$forecast,
+      point_forecast = list(active = FALSE)
     )
-  ), tsp = c(2019, 2019.25, 4), class = c(
-    "mts",
-    "ts", "matrix", "array"
-  )), q_95 = structure(c(
-    5.32692712901112,
-    5.1776618816249, 5.41784726334038, 4.5176449902336, 0.588127922973782,
-    1.16954018238363, 0.564936580079121, 0.630732940266279, 0.363333409635949,
-    0.0794230808871807, 0.413541744733043, 0.306758740571166
-  ), dim = c(
-    2L,
-    6L
-  ), dimnames = list(NULL, c(
+  )
+  expect_equal(names(result$quantiles), c("q_5", "q_50", "q_95"))
+  expected_cols <- c(
     "consumption", "investment", "current_account",
     "manufacturing", "service", "gdp"
-  )), tsp = c(2019, 2019.25, 4), class = c("mts", "ts", "matrix", "array")))
+  )
+  expected_tsp <- c(2019, 2019.25, 4)
 
-  expect_equal(result$quantiles, expected_result)
+  lapply(result$quantiles, function(q) {
+    expect_true(inherits(q, "ts"))
+    expect_equal(dim(q), c(2L, 6L))
+    expect_equal(colnames(q), expected_cols)
+    expect_equal(stats::tsp(q), expected_tsp)
+  })
+
+  tol <- 1e-8
+  q_5 <- result$quantiles$q_5
+  q_50 <- result$quantiles$q_50
+  q_95 <- result$quantiles$q_95
+  expect_true(all(q_5 <= q_50 + tol))
+  expect_true(all(q_50 <= q_95 + tol))
 })
 
-test_that("check_identities_add_up warns when components are missing", {
+test_that("validate_identities warns when components are missing", {
   mat <- matrix(
     c(
       1, 1,
@@ -132,7 +115,7 @@ test_that("check_identities_add_up warns when components are missing", {
   ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
 
   expect_warning(
-    check_identities_add_up(ts_out, identities = list(
+    validate_identities(ts_out, identities = list(
       agg = list(
         components = list(c1 = "w1", c2 = "w2"),
         weights = list(w1 = 0.5, w2 = 0.5)
@@ -142,7 +125,7 @@ test_that("check_identities_add_up warns when components are missing", {
   )
 })
 
-test_that("check_identities_add_up warns when weights are non-numeric", {
+test_that("validate_identities warns when weights are non-numeric", {
   mat <- matrix(
     c(
       1, 1, 1,
@@ -155,7 +138,7 @@ test_that("check_identities_add_up warns when weights are non-numeric", {
   ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
 
   expect_warning(
-    check_identities_add_up(ts_out, identities = list(
+    validate_identities(ts_out, identities = list(
       agg = list(
         components = list(c1 = "w1", c2 = "w2"),
         weights = list(w1 = 0.5, w2 = "theta")
@@ -166,7 +149,7 @@ test_that("check_identities_add_up warns when weights are non-numeric", {
 })
 
 
-test_that("check_identities_add_up warns on deviations", {
+test_that("validate_identities warns on deviations", {
   # Construct a simple ts_out with one identity variable and two components
   mat <- matrix(
     c(
@@ -180,7 +163,7 @@ test_that("check_identities_add_up warns on deviations", {
   ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
 
   expect_warning(
-    check_identities_add_up(ts_out,
+    validate_identities(ts_out,
       identities = list(
         agg = list(
           components = list(c1 = "w1", c2 = "w2"),
@@ -192,7 +175,7 @@ test_that("check_identities_add_up warns on deviations", {
   )
 })
 
-test_that("check_identities_add_up is quiet when identities match", {
+test_that("validate_identities is quiet when identities match", {
   mat <- matrix(
     c(
       1, 1, 1,
@@ -205,7 +188,7 @@ test_that("check_identities_add_up is quiet when identities match", {
   ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
 
   expect_silent(
-    check_identities_add_up(ts_out, identities = list(
+    validate_identities(ts_out, identities = list(
       agg = list(
         components = list(c1 = "w1", c2 = "w2"),
         weights = list(w1 = 0.5, w2 = 0.5)

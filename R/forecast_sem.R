@@ -25,13 +25,13 @@ forecast_sem <- function(sys_eq, estimates,
 
   out <- list()
   # Take median or mean point forecast
-  out$mean <- forecast_single_draw(
+  out$mean <- forecast_draw(
     sys_eq, estimates, NULL,
     y_matrix, forecast_x_matrix, horizon, freq, forecast_dates, restrictions,
     state,
     central_tendency = "mean"
   )
-  out$median <- forecast_single_draw(
+  out$median <- forecast_draw(
     sys_eq, estimates, NULL,
     y_matrix, forecast_x_matrix, horizon, freq, forecast_dates, restrictions,
     state,
@@ -53,7 +53,7 @@ forecast_sem <- function(sys_eq, estimates,
     p <- progressr::progressor(steps = nsave)
 
     safe_draw_forecasts <- purrr::safely(function(draw_jx) {
-      forecast_single_draw(
+      forecast_draw(
         sys_eq, estimates, draw_jx,
         y_matrix, forecast_x_matrix, horizon, freq, forecast_dates,
         restrictions, state
@@ -68,7 +68,7 @@ forecast_sem <- function(sys_eq, estimates,
           packages = c("koma"),
           globals = c(
             "p", # Export the progressor function
-            "safe_draw_forecasts" # Export the forecast_single_draw function
+            "safe_draw_forecasts" # Export the forecast_draw function
           ),
           seed = TRUE # Enable future seed
         )
@@ -113,10 +113,10 @@ forecast_sem <- function(sys_eq, estimates,
 #'
 #' @inheritParams forecast_sem
 #' @keywords internal
-forecast_single_draw <- function(sys_eq, estimates, jx,
-                                 y_matrix, forecast_x_matrix,
-                                 horizon, freq, forecast_dates,
-                                 restrictions, state, central_tendency = NULL) {
+forecast_draw <- function(sys_eq, estimates, jx,
+                          y_matrix, forecast_x_matrix,
+                          horizon, freq, forecast_dates,
+                          restrictions, state, central_tendency = NULL) {
   if (is.null(jx)) {
     # Case point forecast with option to extract mean or median estimates
     estimates <- extract_estimates_from_draws(
@@ -169,10 +169,11 @@ forecast_single_draw <- function(sys_eq, estimates, jx,
       restrictions[names(restrictions) %in% endogenous_variables]
   }
 
-  compute_forecast_values(
+  forecast_values(
     posterior, companion_matrix, reduced_form, y_matrix, forecast_x_matrix,
     horizon, freq, forecast_dates$start, sys_eq$endogenous_variables,
-    restrictions, sys_eq$identities
+    restrictions, sys_eq$identities,
+    stochastic = is.null(central_tendency)
   )
 }
 
@@ -189,15 +190,16 @@ forecast_single_draw <- function(sys_eq, estimates, jx,
 #' the start date of the forecast.
 #' @param endogenous_variables A character vector containing the names of
 #' endogenous variables.
+#' @param stochastic Logical; when `TRUE`, returns a stochastic forecast draw.
 #' @inheritParams forecast_sem
 #'
 #' @return A matrix with the base forecast of Y.
 #'
 #' @keywords internal
-compute_forecast_values <- function(posterior, companion_matrix, reduced_form,
-                                    y_matrix, forecast_x_matrix, horizon, freq,
-                                    start_forecast, endogenous_variables,
-                                    restrictions, identities) {
+forecast_values <- function(posterior, companion_matrix, reduced_form,
+                            y_matrix, forecast_x_matrix, horizon, freq,
+                            start_forecast, endogenous_variables,
+                            restrictions, identities, stochastic = FALSE) {
   companion_gamma_matrix <- companion_matrix$gamma_matrix
   companion_pi <- reduced_form$companion_pi
   companion_theta <- reduced_form$companion_theta
@@ -214,61 +216,89 @@ compute_forecast_values <- function(posterior, companion_matrix, reduced_form,
     companion_pi <- matrix(0, n, n * p)
   }
 
-  #### Compute baseline forecasts
-  base_forecast <- matrix(0, horizon, n)
-
   if (!is.null(companion_theta)) {
     # selection matrix J
     j_matrix <- cbind(diag(n), matrix(0, n, n * (p - 1)))
-    y_t_lag <- t(do.call(rbind, lapply(0:(p - 1), function(x) {
+    y0 <- t(do.call(rbind, lapply(0:(p - 1), function(x) {
       as.matrix(y_matrix[number_of_observations - x, ])
     })))
   } else {
     # Case where there are no lagged variables
     companion_theta <- matrix(0, n, n) # no persitence when p = 1
     j_matrix <- diag(n) # select current y_t from state
-    y_t_lag <- matrix(0, nrow = 1, ncol = n)
-  }
-  temp <-
-    companion_d +
-    forecast_x_matrix[1, , drop = FALSE] %*% companion_pi +
-    y_t_lag %*% companion_theta
-
-  base_forecast[1, ] <- temp %*% t(j_matrix)
-
-  if (horizon > 1) {
-    for (h in seq(2, horizon)) {
-      temp <-
-        companion_d +
-        forecast_x_matrix[h, , drop = FALSE] %*% companion_pi +
-        temp %*% companion_theta
-      base_forecast[h, ] <- temp %*% t(j_matrix)
-    }
+    y0 <- matrix(0, nrow = 1, ncol = n)
   }
 
-  colnames(base_forecast) <- endogenous_variables
+  # Omega = (Gamma^{-1})' Sigma Gamma^{-1}
+  # omega_matrix <- t(inv_gamma) %*% posterior$sigma_matrix %*% inv_gamma
+  # numerically more stable:
+  # Compute A = (Gamma^{-1})' Sigma:
+  a_matrix <- solve(t(posterior$gamma_matrix), posterior$sigma_matrix)
+  omega_matrix <- t(solve(t(posterior$gamma_matrix), t(a_matrix)))
+  # Enforce symmetry of the reduced-form covariance matrix
+  # (theoretically symmetric; numerical operations may introduce asymmetry)
+  omega_matrix <- 0.5 * (omega_matrix + t(omega_matrix))
+  # isTRUE(all.equal(omega_matrix, t(omega_matrix)))
+  omega_matrix_h <- kronecker(diag(horizon), omega_matrix)
+
+  # structural shocks
+  # TODO: kann es sein dass sigma kleiner 0 ist aufgrund von numerischen Umständen?
+  # idee: pmax setzt negative Werte durch 0
+  sd <- sqrt(pmax(diag(posterior$sigma_matrix), 0))
+  z_matrix <- matrix(rnorm(horizon * n), nrow = n, ncol = horizon)
+  u_matrix <- z_matrix * sd
+  # reduced-form innovations
+  v_matrix <- solve(t(posterior$gamma_matrix), u_matrix) # = t(inv_gamma) %*% u_matrix
+
+  deterministic_uncond <- forecast_companion(
+    horizon,
+    y0,
+    companion_d,
+    forecast_x_matrix,
+    companion_pi,
+    companion_theta,
+    j_matrix,
+    vc = NULL
+  )
+
+  stochastic_uncond <- forecast_companion(
+    horizon,
+    y0,
+    companion_d,
+    forecast_x_matrix,
+    companion_pi,
+    companion_theta,
+    j_matrix,
+    vc = v_matrix
+  )
 
   #### Compute restrictions matrix and draw from u conditional on restrictions
   if (length(names(restrictions)) == 0) {
-    out <- base_forecast
+    out <- if (stochastic) {
+      stochastic_uncond$forecast
+    } else {
+      deterministic_uncond$forecast
+    }
   } else {
     stopifnot(
       j_matrix %*% companion_gamma_matrix %*% t(j_matrix) ==
         unname(posterior$gamma_matrix)
     )
 
-    psi <- vector("list", horizon)
+    psi_transpose <- vector("list", horizon)
     a_pow <- diag(n * p)
 
     for (j in seq_len(horizon)) {
-      psi[[j]] <- j_matrix %*% t(a_pow) %*% t(j_matrix) # Psi_{j-1}^0
+      psi_transpose[[j]] <- j_matrix %*% t(a_pow) %*% t(j_matrix) # Psi_{j-1}^0
       a_pow <- a_pow %*% companion_theta # next power
     }
     stopifnot(all(dim(j_matrix) == c(n, n * p))) # q x n * p
-    stopifnot(max(abs(psi[[1]] - diag(n))) < 1e-12) # Psi_0 = I
+    stopifnot(max(abs(psi_transpose[[1]] - diag(n))) < 1e-12) # Psi_0 = I
 
     # number of restrictions: q
-    number_restrictions <- sum(vapply(restrictions, function(x) length(x[["horizon"]]), 1L))
+    number_restrictions <- sum(
+      vapply(restrictions, function(x) length(x[["horizon"]]), 1L)
+    )
     R <- matrix(0, nrow = number_restrictions, ncol = n * horizon)
     r <- matrix(0, nrow = number_restrictions, ncol = 1)
 
@@ -283,12 +313,13 @@ compute_forecast_values <- function(posterior, companion_matrix, reduced_form,
 
         if (hx < 1 || hx > horizon) stop("hx must be in 1..horizon")
 
-        blocks <- do.call(cbind, psi[hx:1]) # n x (n*hx)
+        blocks <- do.call(cbind, psi_transpose[hx:1]) # n x (n*hx)
         # selects the row corresponding to the restricted equation.
         core <- blocks[row_idx, , drop = FALSE] # 1 x (n*hx)
 
         R[rr, 1:(hx * n)] <- core
-        r[rr, 1] <- val_vec[nx] - base_forecast[hx, ix]
+        # use deterministic base forecast (expectation)
+        r[rr, 1] <- val_vec[nx] - deterministic_uncond$forecast[hx, row_idx]
 
         rr <- rr + 1L
       }
@@ -296,9 +327,6 @@ compute_forecast_values <- function(posterior, companion_matrix, reduced_form,
     stopifnot(rr - 1L == number_restrictions)
     stopifnot(ncol(R) == n * horizon)
 
-    inv_gamma <- solve(posterior$gamma_matrix)
-    omega_matrix <- t(inv_gamma) %*% posterior$sigma_matrix %*% inv_gamma
-    omega_matrix_h <- kronecker(diag(horizon), omega_matrix)
     #    mvc <- sigma_v %*% t(R) %*% solve(R %*% sigma_v %*% t(R)) %*% r
     A <- R %*% omega_matrix_h %*% t(R)
 
@@ -326,40 +354,89 @@ compute_forecast_values <- function(posterior, companion_matrix, reduced_form,
       ))
     }
 
-    mvc <- omega_matrix_h %*% t(R) %*% solve(A, r)
-    vc <- matrix(mvc, n, horizon)
+    # conditional mean
+    v_cond_mean_vec <- omega_matrix_h %*% t(R) %*% solve(A, r)
+    v_cond_mean <- matrix(v_cond_mean_vec, nrow = n, ncol = horizon)
 
-    # Compute conditional forecasts
-    conditional_forecast <- matrix(0, horizon, n)
+    deterministic_cond <- forecast_companion(
+      horizon,
+      y0,
+      companion_d,
+      forecast_x_matrix,
+      companion_pi,
+      companion_theta,
+      j_matrix,
+      vc = v_cond_mean
+    )
 
-    temp <-
-      companion_d +
-      forecast_x_matrix[1, , drop = FALSE] %*% companion_pi +
-      y_t_lag %*% companion_theta +
-      t(vc[, 1, drop = FALSE]) %*% j_matrix
+    # conditional variance
+    v_cond_draw_vec <- as.vector(v_matrix) +
+      omega_matrix_h %*% t(R) %*%
+      solve(A, r - R %*% as.vector(v_matrix))
+    v_cond_draw <- matrix(v_cond_draw_vec, nrow = n, ncol = horizon)
 
-    conditional_forecast[1, ] <- temp %*% t(j_matrix)
+    stochastic_cond <- forecast_companion(
+      horizon,
+      y0,
+      companion_d,
+      forecast_x_matrix,
+      companion_pi,
+      companion_theta,
+      j_matrix,
+      vc = v_cond_draw
+    )
 
-    if (horizon > 1) {
-      for (h in seq(2, horizon)) {
-        temp <-
-          companion_d +
-          forecast_x_matrix[h, , drop = FALSE] %*% companion_pi +
-          temp %*% companion_theta +
-          t(vc[, h, drop = FALSE]) %*% j_matrix
-        conditional_forecast[h, ] <- temp %*% t(j_matrix)
-      }
+    out <- if (stochastic) {
+      stochastic_cond$forecast
+    } else {
+      deterministic_cond$forecast
     }
-    colnames(conditional_forecast) <- endogenous_variables
-
-    out <- conditional_forecast
   }
 
+  colnames(out) <- endogenous_variables
   ts_out <- stats::ts(out, start = start_forecast, frequency = freq)
 
-  check_identities_add_up(ts_out, identities)
+  validate_identities(ts_out, identities)
 
   ts_out
+}
+
+forecast_companion <- function(horizon,
+                               y0,
+                               companion_d,
+                               forecast_x_matrix,
+                               companion_pi,
+                               companion_theta,
+                               j_matrix,
+                               vc = NULL) {
+  if (is.null(vc)) {
+    vc <- matrix(0, nrow = nrow(j_matrix), ncol = horizon)
+  }
+
+  state <- matrix(NA_real_, nrow = horizon, ncol = ncol(y0))
+
+  temp <-
+    companion_d +
+    forecast_x_matrix[1, , drop = FALSE] %*% companion_pi +
+    y0 %*% companion_theta +
+    t(vc[, 1, drop = FALSE]) %*% j_matrix
+
+  state[1, ] <- temp
+
+  if (horizon > 1) {
+    for (h in 2:horizon) {
+      temp <-
+        companion_d +
+        forecast_x_matrix[h, , drop = FALSE] %*% companion_pi +
+        temp %*% companion_theta +
+        t(vc[, h, drop = FALSE]) %*% j_matrix
+
+      state[h, ] <- temp
+    }
+  }
+
+  forecast <- state %*% t(j_matrix)
+  list(state = state, forecast = forecast)
 }
 
 #' Check Identity Equations in Forecast Output
@@ -375,7 +452,7 @@ compute_forecast_values <- function(posterior, companion_matrix, reduced_form,
 #'
 #' @return Invisibly returns `NULL`.
 #' @keywords internal
-check_identities_add_up <- function(ts_out, identities, tol = 1e-8) {
+validate_identities <- function(ts_out, identities, tol = 1e-8) {
   if (is.null(identities) || !length(identities)) {
     return(invisible(NULL))
   }

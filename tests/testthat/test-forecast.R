@@ -70,6 +70,12 @@ test_that("forecast works correctly for density forecasts", {
     c("q_5", "q_50", "q_95")
   )
 
+  expected_vars <- names(result$quantiles$q_50)
+  lapply(result$quantiles, function(q) {
+    expect_identical(names(q), expected_vars)
+    expect_true(all(vapply(q, is_ets, logical(1))))
+  })
+
   expected_time <- structure(c(
     2023.25, 2023.5, 2023.75, 2024, 2024.25, 2024.5,
     2024.75, 2025, 2025.25, 2025.5, 2025.75
@@ -96,6 +102,12 @@ test_that("forecast works correctly for density forecasts", {
     attributes(result$quantiles$q_50$consumption),
     expected_attr_cons
   )
+
+  tol <- 1e-8
+  for (var in expected_vars) {
+    expect_true(all(result$quantiles$q_5[[var]] <= result$quantiles$q_50[[var]] + tol))
+    expect_true(all(result$quantiles$q_50[[var]] <= result$quantiles$q_95[[var]] + tol))
+  }
 
   # arguments in ... must be used
   expect_warning(
@@ -567,7 +579,7 @@ test_that("forecast without lags and with restrictions", {
   )
 })
 
-test_that("restricting aggregate alone keeps identity intact (currently fails)", {
+test_that("restricting aggregate alone keeps identity intact", {
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2019, 4)),
     forecast = list(start = c(2023, 2), end = c(2025, 4)),
@@ -604,7 +616,7 @@ test_that("restricting aggregate alone keeps identity intact (currently fails)",
   # Restriction is met
   expect_equal(out$mean$gdp[1], target)
 
-  # Identity should still hold — this is where current code breaks
+  # Identity should still hold
   expect_equal(
     out$mean$gdp[1],
     0.5 * out$mean$manufacturing[1] + 0.5 * out$mean$service[1],
@@ -619,7 +631,6 @@ test_that("restricting aggregate alone keeps identity intact (currently fails)",
     base$mean$manufacturing[2]
   )
 })
-
 
 test_that("conflicting restrictions on identity error", {
   dates <- list(
@@ -673,7 +684,7 @@ test_that("conflicting restrictions on identity error", {
 test_that("forecast with restrictions for variables that are not in SEM", {
   dates <- list(
     estimation = list(
-      start = c(1975, 1),
+      start = c(1976, 1),
       end = c(2019, 4)
     ),
     forecast = list(
@@ -712,7 +723,7 @@ test_that("forecast with restrictions for variables that are not in SEM", {
   )
 
   # When forecasting without lags Phi matrix will be empty
-  out <- forecast(est, dates, restrictions = restrictions)
+  out <- suppressWarnings(forecast(est, dates, restrictions = restrictions))
 
   # first horizon of manufacturing should equal restriction
   expect_equal(out$mean$manufacturing[1], 0.5)

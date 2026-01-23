@@ -6,7 +6,7 @@
 #' to include in x matrix.
 #' @param start Start date for truncation.
 #' @param end End date for truncation.
-#' @inheritParams forecast_single_draw
+#' @inheritParams forecast_draw
 #'
 #' @return A list containing the truncated time series data, y_matrix, x_matrix
 #' the number of observations, the date of last observation and the frequency.

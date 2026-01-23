@@ -11,7 +11,7 @@
 #' corresponding zero rows and columns in \eqn{\Sigma}.
 #'
 #' @param estimate A draw that contains beta, gamma and omega tilde estimates.
-#' @inheritParams forecast_single_draw
+#' @inheritParams forecast_draw
 #'
 #' @return A list containing posterior system matrices:
 #'   * `gamma_matrix`: Posterior \eqn{\Gamma} (n x n) structural coefficient matrix.
