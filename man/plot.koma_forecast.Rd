@@ -16,6 +16,10 @@
 \item{variables}{A vector of variable names to plot.}
 \item{fig}{Optional. A Plotly figure object. Default is NULL.}
 \item{theme}{Optional. A theme for the plot. Default is NULL.}
+\item{fan}{Optional. Logical. If TRUE, add a fan chart from quantiles.}
+\item{fan_quantiles}{Optional. Numeric probabilities in (0, 1] (or
+percentages in \code{[0, 100]}) to define fan-chart bands. Default uses the
+available quantiles.}
 \item{central_tendency}{Optional. A string specifying the type of
 forecast to print. Can be "mean", "median", or a quantile name like
 "q_5", "q_50", "q_95". Default is "mean" if available, otherwise

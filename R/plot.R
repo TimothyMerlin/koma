@@ -9,6 +9,10 @@
 #'     \item{variables}{A vector of variable names to plot.}
 #'     \item{fig}{Optional. A Plotly figure object. Default is NULL.}
 #'     \item{theme}{Optional. A theme for the plot. Default is NULL.}
+#'     \item{fan}{Optional. Logical. If TRUE, add a fan chart from quantiles.}
+#'     \item{fan_quantiles}{Optional. Numeric probabilities in (0, 1] (or
+#'     percentages in \code{[0, 100]}) to define fan-chart bands. Default uses the
+#'     available quantiles.}
 #'     \item{central_tendency}{Optional. A string specifying the type of
 #'     forecast to print. Can be "mean", "median", or a quantile name like
 #'     "q_5", "q_50", "q_95". Default is "mean" if available, otherwise
@@ -31,6 +35,8 @@ new_plot <- function(x, ...) {
   fig <- args$fig
   theme <- args$theme
   central_tendency <- args$central_tendency
+  fan <- isTRUE(args$fan)
+  fan_quantiles <- args$fan_quantiles
 
   if (is.null(theme)) {
     theme <- init_koma_theme()
@@ -83,6 +89,17 @@ new_plot <- function(x, ...) {
   )
   out <- as_mets(concat(tsl, out))
 
+  fan_data <- NULL
+  if (fan) {
+    fan_data <- build_fan_data(
+      x,
+      tsl,
+      forecast_start,
+      variables,
+      fan_quantiles
+    )
+  }
+
   # Index level data at dates if start and end dates provided
   if (!any(is.null(theme$index$start), is.null(theme$index$end))) {
     out <- rebase(out, theme$index$start, theme$index$end)
@@ -104,5 +121,5 @@ new_plot <- function(x, ...) {
   # Only keep the variable(s) that we want to plot
   df_long <- subset(df_long, df_long$variable %in% variables)
 
-  plotli(df_long, fig = fig, theme = theme, args)
+  plotli(df_long, fig = fig, theme = theme, fan_data = fan_data, args)
 }

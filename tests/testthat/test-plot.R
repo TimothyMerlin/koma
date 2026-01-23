@@ -95,6 +95,13 @@ test_that("plot density forecasts", {
 
   expected_x_axis_tickvals <- 1977:2025
   expect_equal(x_axis_tickvals, expected_x_axis_tickvals)
+
+  out <- plot(x, variables = "gdp", fan = TRUE)
+  built <- plotly::plotly_build(out)
+  fan_traces <- vapply(built$x$data, function(tr) {
+    identical(tr$legendgroup, "fan")
+  }, logical(1))
+  expect_true(any(fan_traces))
 })
 
 test_that("plot.koma_forecast() errors cleanly when plotly is missing", {

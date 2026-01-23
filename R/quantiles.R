@@ -125,3 +125,63 @@ quantiles_from_forecasts <- function(forecasts, freq, probs = NULL) {
 
   out
 }
+
+#' Parse Quantile Names into Probabilities
+#'
+#' @param name A quantile name like "q_5" or a numeric string.
+#'
+#' @return A probability in (0, 1] or `NA_real_` on failure.
+#' @keywords internal
+parse_quantile_name <- function(name) {
+  if (!grepl("^q_", name)) {
+    value <- suppressWarnings(as.numeric(name))
+    if (is.na(value)) {
+      return(NA_real_)
+    }
+    return(if (value > 1) value / 100 else value)
+  }
+  value <- suppressWarnings(as.numeric(sub("^q_", "", name)))
+  if (is.na(value)) {
+    return(NA_real_)
+  }
+  if (value > 1) value / 100 else value
+}
+
+#' Normalize Quantile Probabilities
+#'
+#' @param fan_quantiles Numeric probabilities in (0, 1] or percentages in
+#'   \code{[0, 100]}.
+#'
+#' @return A numeric vector of probabilities in (0, 1].
+#' @keywords internal
+normalize_quantile_probs <- function(fan_quantiles) {
+  if (is.null(fan_quantiles)) {
+    return(NULL)
+  }
+  if (!is.numeric(fan_quantiles)) {
+    cli::cli_abort("fan_quantiles must be numeric probabilities.")
+  }
+  probs <- as.numeric(fan_quantiles)
+  probs <- probs[!is.na(probs)]
+  if (!length(probs)) {
+    return(NULL)
+  }
+  if (any(probs > 1)) {
+    if (any(probs > 100)) {
+      cli::cli_abort("fan_quantiles must be in (0, 1] or [0, 100].")
+    }
+    cli::cli_warn("Interpreting fan_quantiles > 1 as percent values.")
+    probs[probs > 1] <- probs[probs > 1] / 100
+  }
+  probs
+}
+
+#' Build Quantile Names from Probabilities
+#'
+#' @param probs Numeric probabilities.
+#'
+#' @return A character vector of quantile names.
+#' @keywords internal
+quantile_names_from_probs <- function(probs) {
+  paste0("q_", 100 * probs)
+}

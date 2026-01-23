@@ -19,7 +19,7 @@
 #' @references
 #' \url{https://plotly.com/r/reference/#Layout_and_layout_style_objects}
 #' @keywords internal
-plotli <- function(df_long, fig = NULL, theme = NULL, ...) {
+plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL, ...) {
   if (is.null(theme)) {
     theme <- init_koma_theme()
   }
@@ -148,6 +148,13 @@ plotli <- function(df_long, fig = NULL, theme = NULL, ...) {
       offsetgroup = bar_off_set_group
     )
 
+  if (!is.null(fan_data)) {
+    fan_data <- subset(fan_data, fan_data$data_type == "level")
+    if (nrow(fan_data) > 0) {
+      fig <- add_fan_chart(fig, fan_data, theme$color$marker$forecast)
+    }
+  }
+
   # add level scatter for in sample data
   fig <-
     plotly::add_trace(
@@ -263,4 +270,59 @@ plotli <- function(df_long, fig = NULL, theme = NULL, ...) {
     )
 
   return(fig)
+}
+
+add_fan_chart <- function(fig, fan_data, base_color) {
+  band_ids <- unique(fan_data$band)
+  band_orders <- sapply(band_ids, function(band) {
+    min(fan_data$band_order[fan_data$band == band])
+  })
+  band_ids <- band_ids[order(band_orders)]
+  band_alphas <- seq(0.25, 0.08, length.out = length(band_ids))
+
+  for (band_idx in seq_along(band_ids)) {
+    band <- band_ids[band_idx]
+    alpha <- band_alphas[band_idx]
+    fill_color <- set_alpha(base_color, alpha)
+
+    band_data <- fan_data[fan_data$band == band, , drop = FALSE]
+    vars <- unique(band_data$variable)
+
+    for (var in vars) {
+      df_band <- band_data[band_data$variable == var, , drop = FALSE]
+      df_band <- df_band[order(df_band$dates), , drop = FALSE]
+
+      fig <- plotly::add_trace(
+        fig,
+        data = df_band,
+        x = ~dates,
+        y = ~lower,
+        type = "scatter",
+        mode = "lines",
+        legendgroup = "fan",
+        line = list(color = fill_color, width = 0),
+        hoverinfo = "skip",
+        showlegend = FALSE,
+        yaxis = "y2"
+      )
+
+      fig <- plotly::add_trace(
+        fig,
+        data = df_band,
+        x = ~dates,
+        y = ~upper,
+        type = "scatter",
+        mode = "lines",
+        legendgroup = "fan",
+        line = list(color = fill_color, width = 0),
+        fill = "tonexty",
+        fillcolor = fill_color,
+        hoverinfo = "skip",
+        showlegend = FALSE,
+        yaxis = "y2"
+      )
+    }
+  }
+
+  fig
 }
