@@ -1273,6 +1273,7 @@ test_that("summary.koma_estimate, respects digits", {
 })
 
 test_that("summary.koma_estimate respects digits in texreg output", {
+  skip_if_not_installed("texreg")
   out_estimation <- structure(
     list(
       estimates = simulated_data$estimates,
@@ -1281,16 +1282,45 @@ test_that("summary.koma_estimate respects digits in texreg output", {
     class = "koma_estimate"
   )
 
-  if (requireNamespace("texreg", quietly = TRUE)) {
-    out_texreg <- testthat::capture_output(
+  out_texreg <- expect_no_warning(
+    testthat::capture_output(
+      testthat::with_mocked_bindings(
+        print(summary(
+          out_estimation,
+          variables = "consumption",
+          digits = 5,
+          use_texreg = TRUE
+        )),
+        check_texreg_installed = function() TRUE,
+        .env = environment(summary.koma_estimate)
+      )
+    )
+  )
+  expect_match(out_texreg, "1.83612", fixed = TRUE)
+})
+
+test_that("summary.koma_estimate errors when texreg missing", {
+  out_estimation <- structure(
+    list(
+      estimates = simulated_data$estimates,
+      sys_eq = simulated_data$sys_eq
+    ),
+    class = "koma_estimate"
+  )
+
+  expect_error(
+    testthat::with_mocked_bindings(
       print(summary(
         out_estimation,
         variables = "consumption",
-        digits = 5
-      ))
-    )
-    expect_match(out_texreg, "1.83612", fixed = TRUE)
-  }
+        digits = 5,
+        use_texreg = TRUE
+      )),
+      check_texreg_installed = function() FALSE,
+      .env = environment(summary.koma_estimate)
+    ),
+    "texreg"
+  )
 })
 
 test_that("summary.koma_estimate forwards texreg args", {
