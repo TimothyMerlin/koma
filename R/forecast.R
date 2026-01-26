@@ -34,7 +34,7 @@
 #'   \item{median}{Median point forecasts as a list of time series of class
 #'   `koma_ts`.}
 #'   \item{quantiles}{A list of quantiles, where each element is named
-#'   according to the quantile (e.g., "5", "50", "95"), and contains the
+#'   according to the quantile (e.g., "q_5", "q_50", "q_95"), and contains the
 #'   forecasts for that quantile. This element is NULL if `quantiles = FALSE`.}
 #'   \item{ts_data}{Time-series data set used in forecasting.}
 #'   \item{y_matrix}{The Y matrix constructed from the balanced data up to the
@@ -406,27 +406,45 @@ validate_forecast_output <- function(x, ...) {
 print.koma_forecast <- function(x, ..., variables = NULL,
                                 central_tendency = NULL) {
   stopifnot(inherits(x, "koma_forecast"))
+  print(format(
+    x,
+    ...,
+    variables = variables,
+    central_tendency = central_tendency
+  ))
+  invisible(x)
+}
+
+#' @export
+format.koma_forecast <- function(x, ...,
+                                 variables = NULL,
+                                 central_tendency = NULL) {
+  stopifnot(inherits(x, "koma_forecast"))
 
   if (is.null(central_tendency)) {
-    out <- x[["mean"]]
+    if (!is.null(x[["mean"]])) {
+      out <- x[["mean"]]
+    } else if (!is.null(x[["median"]])) {
+      out <- x[["median"]]
+    } else if (!is.null(x$quantiles) && length(x$quantiles) > 0) {
+      out <- x$quantiles[[1]]
+    } else {
+      stop("No forecasts available to format.")
+    }
   } else if (central_tendency %in% c("mean", "median")) {
     out <- x[[central_tendency]]
-  } else if (central_tendency %in% names(x$quantiles)) {
+  } else if (!is.null(x$quantiles) && central_tendency %in% names(x$quantiles)) {
     out <- x$quantiles[[central_tendency]]
   } else {
     stop("Please provide a valid `central_tendency`.")
   }
 
   if (!is.null(variables)) {
-    stopifnot(any(is.character(variables), is.vector(variables)))
+    stopifnot(is.character(variables))
     out <- out[variables]
   }
-  print(as_mets(out))
-}
 
-#' @export
-format.koma_forecast <- function(x, ...) {
-  NextMethod("print")
+  as_mets(out)
 }
 
 #' @keywords internal

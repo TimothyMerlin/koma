@@ -48,7 +48,7 @@ elements:
 \item{median}{Median point forecasts as a list of time series of class
 \code{koma_ts}.}
 \item{quantiles}{A list of quantiles, where each element is named
-according to the quantile (e.g., "5", "50", "95"), and contains the
+according to the quantile (e.g., "q_5", "q_50", "q_95"), and contains the
 forecasts for that quantile. This element is NULL if \code{quantiles = FALSE}.}
 \item{ts_data}{Time-series data set used in forecasting.}
 \item{y_matrix}{The Y matrix constructed from the balanced data up to the
