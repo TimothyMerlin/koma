@@ -1,17 +1,7 @@
 test_that("forecast works correctly for density forecasts", {
   dates <- list(
-    estimation = list(
-      start = c(1977, 1),
-      end = c(2018, 4)
-    ),
-    forecast = list(
-      start = c(2023, 2),
-      end = c(2025, 4)
-    ),
-    dynamic_weights = list(
-      start = c(1992, 1),
-      end = c(2022, 4)
-    )
+    estimation = list(start = c(1977, 1), end = c(2018, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
   )
 
   equations <-
@@ -39,15 +29,14 @@ test_that("forecast works correctly for density forecasts", {
   estimates <- withr::with_seed(
     7,
     estimate(ts_data, sys_eq, dates,
-      options = list(ndraws = 200), # fewer draws for speed
-      point_forecast = list(active = FALSE)
+      options = list(gibbs = list(ndraws = 200)) # fewer draws for speed
     )
   )
   result <- withr::with_seed(
     7,
     forecast(
       estimates, dates,
-      point_forecast = list(active = FALSE)
+      options = list(probs = get_quantiles())
     )
   )
 
@@ -116,7 +105,7 @@ test_that("forecast works correctly for density forecasts", {
 })
 
 test_that("forecast conditionally fills ragged edge", {
-  dates <- list(estimation = list(), forecast = list(), current = NULL)
+  dates <- list(estimation = list(), forecast = list())
   dates$current <- c(2023, 2)
   dates$estimation$start <- c(1996, 1)
   dates$estimation$end <- c(2019, 4)
@@ -161,8 +150,10 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
   est <- withr::with_seed(
     7,
     estimate(ts_data, sys_eq, dates,
-      options = list(ndraws = 200), # fewer draws for speed
-      point_forecast = list(active = FALSE, central_tendency = "mean")
+      options = list(
+        gibbs = list(ndraws = 200), # fewer draws for speed
+        fill = list(method = "mean")
+      )
     )
   )
 
@@ -284,7 +275,7 @@ test_that("forecast stops when endogenous series longer than forecast start", {
 
   est <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 20))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 20)))
   )
 
   # series extend beyond the forecast start date
@@ -315,7 +306,7 @@ test_that("forecast stops when exogenous series don't extend to forecast end", {
 
   estimates <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 20))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 20)))
   )
 
   # series extend beyond the forecast start date
@@ -334,7 +325,7 @@ test_that("forecast stops when exogenous series don't extend to forecast end", {
       7,
       forecast(
         estimates, dates,
-        point_forecast = list(active = FALSE)
+        options = list(probs = get_quantiles())
       )
     ),
     "Forecast horizon shortened to 7."
@@ -345,7 +336,7 @@ test_that("forecast stops when exogenous series don't extend to forecast end", {
       7,
       forecast(
         estimates, dates,
-        point_forecast = list(active = TRUE)
+        options = list(approximate = TRUE)
       )
     )
   )
@@ -391,18 +382,8 @@ test_that("update_anker", {
 
 test_that("forecast with one equation", {
   dates <- list(
-    estimation = list(
-      start = c(1977, 1),
-      end = c(2019, 4)
-    ),
-    forecast = list(
-      start = c(2023, 2),
-      end = c(2025, 4)
-    ),
-    dynamic_weights = list(
-      start = c(1992, 1),
-      end = c(2022, 4)
-    )
+    estimation = list(start = c(1977, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
   )
 
   equations <- "manufacturing ~ world_gdp"
@@ -420,7 +401,7 @@ test_that("forecast with one equation", {
 
   est <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   out <- forecast(est, dates)
@@ -428,21 +409,10 @@ test_that("forecast with one equation", {
   expect_equal(names(out$mean), c("manufacturing", "world_gdp"))
 })
 
-
 test_that("forecast with one exogenous", {
   dates <- list(
-    estimation = list(
-      start = c(1977, 1),
-      end = c(2019, 4)
-    ),
-    forecast = list(
-      start = c(2023, 2),
-      end = c(2025, 4)
-    ),
-    dynamic_weights = list(
-      start = c(1992, 1),
-      end = c(2022, 4)
-    )
+    estimation = list(start = c(1977, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
   )
 
   equations <- "manufacturing ~ world_gdp + manufacturing.L(1),
@@ -462,28 +432,18 @@ test_that("forecast with one exogenous", {
 
   est <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  out <- forecast(est, dates)
+  out <- forecast(est, dates, options = list(approximate = FALSE))
 
   expect_equal(names(out$mean), c("manufacturing", "service", "gdp", "world_gdp"))
 })
 
 test_that("forecast with one AR equation", {
   dates <- list(
-    estimation = list(
-      start = c(1977, 1),
-      end = c(2019, 4)
-    ),
-    forecast = list(
-      start = c(2023, 2),
-      end = c(2025, 4)
-    ),
-    dynamic_weights = list(
-      start = c(1992, 1),
-      end = c(2022, 4)
-    )
+    estimation = list(start = c(1977, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
   )
 
   equations <- "manufacturing ~ 0 + manufacturing.L(1)"
@@ -501,10 +461,10 @@ test_that("forecast with one AR equation", {
 
   est <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  out <- forecast(est, dates)
+  out <- forecast(est, dates, options = list(approximate = TRUE))
 
   # Extract mean AR(1) coefficient (beta_jw has only the lag coef here)
   coef_mean <- quantiles_from_estimates(
@@ -526,18 +486,8 @@ test_that("forecast with one AR equation", {
 test_that("forecast without lags and with restrictions", {
   # no-lag restrictions do not propagate to later horizons #
   dates <- list(
-    estimation = list(
-      start = c(1977, 1),
-      end = c(2019, 4)
-    ),
-    forecast = list(
-      start = c(2023, 2),
-      end = c(2025, 4)
-    ),
-    dynamic_weights = list(
-      start = c(1992, 1),
-      end = c(2022, 4)
-    )
+    estimation = list(start = c(1977, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
   )
 
   equations <- "manufacturing ~ world_gdp,
@@ -557,7 +507,7 @@ test_that("forecast without lags and with restrictions", {
 
   est <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   restrictions <- list(manufacturing = list(value = 0.5, horizon = 1))
@@ -582,8 +532,7 @@ test_that("forecast without lags and with restrictions", {
 test_that("restricting aggregate alone keeps identity intact", {
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2019, 4)),
-    forecast = list(start = c(2023, 2), end = c(2025, 4)),
-    dynamic_weights = list(start = c(1992, 1), end = c(2022, 4))
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
   )
 
   equations <- "manufacturing ~ world_gdp + manufacturing.L(1) + manufacturing.L(2),
@@ -601,7 +550,7 @@ test_that("restricting aggregate alone keeps identity intact", {
 
   est <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   base <- withr::with_seed(7, forecast(est, dates))
@@ -634,18 +583,8 @@ test_that("restricting aggregate alone keeps identity intact", {
 
 test_that("conflicting restrictions on identity error", {
   dates <- list(
-    estimation = list(
-      start = c(1977, 1),
-      end = c(2019, 4)
-    ),
-    forecast = list(
-      start = c(2023, 2),
-      end = c(2025, 4)
-    ),
-    dynamic_weights = list(
-      start = c(1992, 1),
-      end = c(2022, 4)
-    )
+    estimation = list(start = c(1977, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
   )
 
   equations <- "manufacturing ~ world_gdp,
@@ -664,7 +603,7 @@ test_that("conflicting restrictions on identity error", {
 
   est <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   base <- withr::with_seed(7, forecast(est, dates))
@@ -676,25 +615,22 @@ test_that("conflicting restrictions on identity error", {
   )
 
   expect_error(
-    withr::with_seed(7, forecast(est, dates, restrictions = restrictions)),
+    withr::with_seed(7, forecast(est, dates,
+      restrictions = restrictions,
+      options = list(approximate = TRUE)
+    )),
     "singular"
+  )
+  expect_error(
+    withr::with_seed(7, forecast(est, dates, restrictions = restrictions)),
+    "All forecast draws failed"
   )
 })
 
 test_that("forecast with restrictions for variables that are not in SEM", {
   dates <- list(
-    estimation = list(
-      start = c(1976, 1),
-      end = c(2019, 4)
-    ),
-    forecast = list(
-      start = c(2023, 2),
-      end = c(2025, 4)
-    ),
-    dynamic_weights = list(
-      start = c(1992, 1),
-      end = c(2022, 4)
-    )
+    estimation = list(start = c(1976, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
   )
 
   equations <- "manufacturing ~ world_gdp,
@@ -714,7 +650,7 @@ test_that("forecast with restrictions for variables that are not in SEM", {
 
   est <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   restrictions <- list(
@@ -722,6 +658,12 @@ test_that("forecast with restrictions for variables that are not in SEM", {
     consumption = list(value = 0.5, horizon = 1)
   )
 
+  expect_warning(
+    forecast(est, dates,
+      restrictions = restrictions, options = list(approximate = TRUE)
+    ),
+    "Restriction\\(s\\)"
+  )
   # When forecasting without lags Phi matrix will be empty
   out <- suppressWarnings(forecast(est, dates, restrictions = restrictions))
 
@@ -772,14 +714,8 @@ test_that("estimate an AR(1) model", {
   )
 
   dates <- list(
-    estimation = list(
-      start = c(1971, 1),
-      end = c(2019, 4)
-    ),
-    forecast = list(
-      start = c(2020, 1),
-      end = c(2025, 4)
-    )
+    estimation = list(start = c(1971, 1), end = c(2019, 4)),
+    forecast = list(start = c(2020, 1), end = c(2025, 4))
   )
 
   est <- withr::with_seed(
@@ -800,20 +736,17 @@ test_that("estimate an AR(1) model", {
   )
 
   restrictions <- list(manufacturing = list(value = 0.5, horizon = 2))
-  out <- forecast(est, dates, restrictions = restrictions)
+  out <- forecast(est, dates,
+    restrictions = restrictions, options = list(approximate = TRUE)
+  )
 
   expect_equal(out$mean$manufacturing[2], 0.5)
 })
 
 test_that("forecast dates incomplete", {
   dates <- list(
-    estimation = list(
-      start = c(1977, 1),
-      end = c(2018, 4)
-    ),
-    forecast = list(
-      start = c(2023, 2)
-    )
+    estimation = list(start = c(1977, 1), end = c(2018, 4)),
+    forecast = list(start = c(2023, 2))
   )
 
   equations <-
@@ -841,14 +774,8 @@ test_that("forecast dates incomplete", {
   estimates <- withr::with_seed(
     7,
     estimate(ts_data, sys_eq, dates,
-      options = list(ndraws = 200), # fewer draws for speed
-      point_forecast = list(active = FALSE)
+      options = list(gibbs = list(ndraws = 200)) # fewer draws for speed
     )
   )
-  expect_error(
-    forecast(
-      estimates, dates,
-      point_forecast = list(active = FALSE)
-    ), "Invalid"
-  )
+  expect_error(forecast(estimates, dates), "Invalid")
 })

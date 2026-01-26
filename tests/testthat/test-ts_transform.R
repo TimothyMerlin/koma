@@ -17,15 +17,14 @@ test_that("prepare_data_to_plot", {
   estimates <- withr::with_seed(
     7,
     estimate(ts_data, sys_eq, dates,
-      options = list(ndraws = 200), # fewer draws for speed
-      point_forecast = list(active = FALSE)
+      options = list(gibbs = list(ndraws = 200)) # fewer draws for speed
     )
   )
 
   forecasts <- forecast(
     estimates,
     dates,
-    point_forecast = list(active = TRUE, central_tendency = "mean")
+    options = list(approximate = TRUE)
   )
 
   start <- stats::tsp(forecasts$mean[[1]])[1]

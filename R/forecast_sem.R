@@ -18,29 +18,32 @@
 #' @keywords internal
 forecast_sem <- function(sys_eq, estimates,
                          restrictions, y_matrix, forecast_x_matrix, horizon,
-                         freq, forecast_dates, point_forecast) {
+                         freq, forecast_dates, approximate, probs) {
   state <- new.env()
   state$warning_issued <- FALSE
   state$warning_issued_restrictions <- FALSE
 
   out <- list()
-  # Take median or mean point forecast
-  out$mean <- forecast_draw(
-    sys_eq, estimates, NULL,
-    y_matrix, forecast_x_matrix, horizon, freq, forecast_dates, restrictions,
-    state,
-    central_tendency = "mean"
-  )
-  out$median <- forecast_draw(
-    sys_eq, estimates, NULL,
-    y_matrix, forecast_x_matrix, horizon, freq, forecast_dates, restrictions,
-    state,
-    central_tendency = "median"
-  )
 
   set_progress_handler(operation = "forecasting")
 
-  if (!point_forecast$active) {
+  if (approximate) {
+    out$mean <- forecast_draw(
+      sys_eq, estimates, NULL,
+      y_matrix, forecast_x_matrix, horizon, freq, forecast_dates, restrictions,
+      state,
+      central_tendency = "mean"
+    )
+    out$median <- forecast_draw(
+      sys_eq, estimates, NULL,
+      y_matrix, forecast_x_matrix, horizon, freq, forecast_dates, restrictions,
+      state,
+      central_tendency = "median"
+    )
+    out$quantiles <- NULL
+    out$forecasts <- NULL
+    cli::cli_alert_success("Forecasting completed.")
+  } else {
     `%dofuture%` <- doFuture::`%dofuture%` # load dofuture
 
     # Added to circumvent Note:
@@ -91,10 +94,40 @@ forecast_sem <- function(sys_eq, estimates,
 
     forecasts <- purrr::map(forecasts, "result")
 
-    out$quantiles <- quantiles_from_forecasts(forecasts, freq)
+    valid_forecasts <- !vapply(forecasts, is.null, logical(1))
+    if (!any(valid_forecasts)) {
+      cli::cli_abort(c(
+        "x" = "All forecast draws failed.",
+        ">" = "Likely causes: redundant/incompatible restrictions."
+      ))
+    }
+    if (!all(valid_forecasts)) {
+      cli::cli_warn(c(
+        "i" = "Some forecast draws failed and were dropped.",
+        ">" = "Proceeding with {sum(valid_forecasts)} of {length(forecasts)} draws."
+      ))
+      forecasts <- forecasts[valid_forecasts]
+    }
+
+    probs_for_summary <- if (is.null(probs)) 0.5 else unique(c(probs, 0.5))
+    summary <- quantiles_from_forecasts(
+      forecasts,
+      freq,
+      probs = probs_for_summary,
+      include_mean = TRUE
+    )
+    out$mean <- summary$q_mean
+    out$median <- summary$q_50
+    if (is.null(probs)) {
+      out$quantiles <- NULL
+    } else {
+      out$quantiles <- summary
+      out$quantiles$q_mean <- NULL
+      if (!0.5 %in% probs) {
+        out$quantiles$q_50 <- NULL
+      }
+    }
     out$forecasts <- forecasts
-  } else {
-    cli::cli_alert_success("Forecasting completed.")
   }
 
   out

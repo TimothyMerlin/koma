@@ -9,8 +9,7 @@ estimate(
   sys_eq,
   dates,
   ...,
-  options = list(),
-  point_forecast = NULL,
+  options = list(gibbs = list(), fill = list(method = "mean")),
   estimates = NULL
 )
 }
@@ -24,19 +23,15 @@ about the system of equations used in the model.}
 
 \item{...}{Additional parameters.}
 
-\item{options}{Optional settings for modifying the Gibbs sampler
-specifications for all equations.
-See \link[=get_default_gibbs_spec]{Gibbs Sampler Specifications}.}
-
-\item{point_forecast}{A list that contains the following elements:
+\item{options}{Optional settings for estimation. Use
+\code{list(gibbs = list(), fill = list(method = "mean"))}. Elements:
 \itemize{
-\item \code{active}: Determines the type of forecast generated.
-If TRUE, a point forecast is created. If FALSE, a density forecast is
-returned. Default is TRUE.
-\item \code{central_tendency}: A character string indicating which
-central tendency measure ("mean" or "median") to use for summary statistics.
-Default is "mean".
-}}
+\item \code{gibbs}: Gibbs sampler settings (see
+\link[=get_default_gibbs_spec]{Gibbs Sampler Specifications}).
+\item \code{fill$method}: "mean" or "median" used to fill ragged edges
+during estimation.
+}
+See \link[=get_default_gibbs_spec]{Gibbs Sampler Specifications}.}
 
 \item{estimates}{Optional. A \code{koma_estimate} object
 (see \code{\link{estimate}}) containing the estimates of the previously

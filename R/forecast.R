@@ -9,7 +9,18 @@
 #' @inheritParams estimate
 #' @param ... Additional parameters.
 #' @param restrictions List of model constraints. Default is empty.
-#' @inheritParams fill_ragged_edge
+#' @param options Optional settings for forecasting. Use
+#' \code{list(approximate = FALSE, probs = NULL, fill = list(method = "mean"))}.
+#' Elements:
+#' \itemize{
+#'   \item \code{approximate}: Logical. If FALSE (default), compute point
+#'   forecasts from predictive draws. If TRUE, compute point forecasts from the
+#'   mean/median of coefficient draws (fast approximation).
+#'   \item \code{probs}: Numeric vector of quantile probabilities. If NULL, no
+#'   quantiles are returned.
+#'   \item \code{fill$method}: "mean" or "median" used for conditional fill
+#'   before forecasting.
+#' }
 #'
 #' @inheritSection estimate Parallel
 #'
@@ -33,10 +44,11 @@
 #'
 #' @details
 #' The `forecast` function for SEM uses the estimates from the `koma_estimate`
-#' object to produce point forecasts or quantile forecasts based on the
-#' `point_forecast` parameter. If `point_forecast$active` is `TRUE`, only point
-#' forecasts are generated. If `FALSE`, quantile forecasts are generated and
-#' included in the `quantiles` list.
+#' object to produce point forecasts and, optionally, quantile forecasts.
+#' When \code{options$approximate} is FALSE (default), point forecasts are
+#' computed from the predictive draws (with quantiles controlled by
+#' \code{options$probs}). When TRUE, point forecasts are computed from the mean
+#' and median of the coefficient draws for faster, approximate results.
 #'
 #' Use the \code{\link[=print.koma_forecast]{print}} method to print a
 #' the forecast results, use the \code{\link[=plot.koma_forecast]{plot}} method,
@@ -49,7 +61,12 @@
 #' \code{\link{estimate}}.
 #' @export
 forecast <- function(estimates, dates, ...,
-                     restrictions = NULL, point_forecast = NULL) {
+                     restrictions = NULL,
+                     options = list(
+                       approximate = FALSE,
+                       probs = NULL,
+                       fill = list(method = "mean")
+                     )) {
   check_dots_used(...)
   setup_global_progress_handler()
 
@@ -59,29 +76,56 @@ forecast <- function(estimates, dates, ...,
 
 #' @export
 forecast.koma_estimate <- function(estimates, dates, ...,
-                                   restrictions = NULL, point_forecast = NULL) {
+                                   restrictions = NULL,
+                                   options = list(
+                                     approximate = FALSE,
+                                     probs = NULL,
+                                     fill = list(method = "mean")
+                                   )) {
   stopifnot(inherits(estimates, "koma_estimate"))
 
   validate_forecast_input(estimates, dates)
   dates$current <- iterate_n_periods(dates$forecast$start, -1, 4)
-  fo <- new_forecast(estimates, dates, restrictions, point_forecast)
+  fo <- new_forecast(estimates, dates, restrictions, options)
   validate_forecast_output(fo)
 }
 
-new_forecast <- function(estimates, dates, restrictions, point_forecast) {
+new_forecast <- function(estimates, dates, restrictions, options) {
   ts_data <- estimates$ts_data
   stopifnot(inherits(ts_data, "list"))
   stopifnot(sapply(ts_data, function(x) inherits(x, "koma_ts")))
   stopifnot(is_system_of_equations(estimates$sys_eq))
 
-  # Define default options
-  default_point_forecast <- list(active = TRUE, central_tendency = "mean")
-  # Merge user-provided options with default options
-  if (is.null(point_forecast)) {
-    point_forecast <- default_point_forecast
-  } else {
-    point_forecast <- utils::modifyList(default_point_forecast, point_forecast)
+  if (is.null(options)) {
+    options <- list()
   }
+  if (!is.list(options)) {
+    cli::cli_abort("`options` must be a list.")
+  }
+  approximate <- options$approximate
+  if (is.null(approximate)) {
+    approximate <- FALSE
+  }
+  if (!is.logical(approximate) || length(approximate) != 1L || is.na(approximate)) {
+    cli::cli_abort("`options$approximate` must be a single logical value.")
+  }
+  probs <- options$probs
+  if (!is.null(probs)) {
+    if (!is.numeric(probs) || length(probs) == 0L || anyNA(probs)) {
+      cli::cli_abort("`options$probs` must be a numeric vector with at least one value.")
+    }
+    if (any(probs < 0 | probs > 1)) {
+      cli::cli_abort("`options$probs` must be between 0 and 1.")
+    }
+    if (approximate) {
+      cli::cli_abort("`options$approximate = TRUE` cannot be used with `options$probs`.")
+    }
+  }
+  fill_method <- options$fill$method
+  if (is.null(fill_method)) {
+    fill_method <- "mean"
+  }
+  fill_method <- match.arg(fill_method, c("mean", "median"))
 
   dates <- dates_to_num(dates, frequency = 4)
 
@@ -135,7 +179,7 @@ new_forecast <- function(estimates, dates, restrictions, point_forecast) {
 
     ts_data <- conditional_fill(
       rate(ts_data), estimates$sys_eq, dates, estimates$estimates,
-      point_forecast
+      fill_method
     )
   }
 
@@ -170,7 +214,7 @@ new_forecast <- function(estimates, dates, restrictions, point_forecast) {
   ##### Forecast model
   forecasts <- forecast_sem(
     estimates$sys_eq, estimates$estimates, restrictions, y_matrix, x_matrix,
-    horizon, balanced_data$freq, dates$forecast, point_forecast
+    horizon, balanced_data$freq, dates$forecast, approximate, probs
   )
 
   exogenous_ts_data <- rate(estimates$ts_data[estimates$sys_eq$exogenous_variables])

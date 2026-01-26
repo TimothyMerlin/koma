@@ -1,14 +1,13 @@
 test_that("new_prepare_estimation", {
   ts_data <- simulated_data$ts_data
   sys_eq <- simulated_data$sys_eq
-  point_forecast <- list(active = TRUE, central_tendency = "median")
   dates <- list(estimation = list(
     start = c(1977, 1),
     end = c(2019, 4)
   ))
 
   out <- new_prepare_estimation(ts_data, sys_eq, dates,
-    point_forecast = point_forecast
+    fill_method = "median"
   )
 
   expect_length(out, 4)
@@ -68,7 +67,7 @@ test_that("estimate correctly estimates model", {
   # Test 1: Case estimates the SEM (with only 200 draws per equation)
   out <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   expect_length(out, 7)
@@ -176,7 +175,7 @@ test_that("estimate correctly returns when parallel", {
 
   out <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   expect_length(out, 7)
@@ -192,7 +191,15 @@ test_that("estimate correctly returns when parallel", {
 
 test_that("estimate works for ragged edge", {
   # mock readline function always return "y"
-  testthat::local_mocked_bindings(readline = function(...) "y", .package = "base")
+  responses <- c("y", "median")
+  response_ix <- 0
+  testthat::local_mocked_bindings(
+    readline = function(...) {
+      response_ix <<- response_ix + 1
+      responses[[((response_ix - 1) %% length(responses)) + 1]]
+    },
+    .package = "base"
+  )
 
   dates <- list(estimation = list(), forecast = list(), current = NULL)
   dates$current <- c(2023, 2)
@@ -233,8 +240,10 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
     result <- withr::with_seed(
       7,
       estimate(ts_data, sys_eq, dates,
-        options = list(ndraws = 200),
-        point_forecast = list(active = TRUE, central_tendency = "median")
+        options = list(
+          gibbs = list(ndraws = 200),
+          fill = list(method = "median")
+        )
       )
     )
   )
@@ -331,7 +340,7 @@ test_that("estimate throws error", {
   expect_warning(
     estimate(ts_data, sys_eq, dates,
       unused = TRUE, unused2 = 1,
-      options = list(ndraws = 20)
+      options = list(gibbs = list(ndraws = 20))
     )
   )
 
@@ -484,7 +493,7 @@ test_that("estimate correctly reestimates model", {
 
   estimates <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
   expect_equal(length(estimates$estimates$manufacturing$beta_jw[[1]]), 3)
   expect_true(!"current_account" %in% names(estimates$estimates))
@@ -504,7 +513,7 @@ test_that("estimate correctly reestimates model", {
   reestimates <- withr::with_seed(
     7,
     estimate(ts_data, sys_eq, dates,
-      options = list(ndraws = 200),
+      options = list(gibbs = list(ndraws = 200)),
       estimates = estimates
     )
   )
@@ -529,7 +538,7 @@ test_that("estimate correctly reestimates model", {
   out <- withr::with_seed(
     7,
     estimate(ts_data, sys_eq, dates,
-      options = list(ndraws = 200),
+      options = list(gibbs = list(ndraws = 200)),
       estimates = reestimates
     )
   )
@@ -537,7 +546,7 @@ test_that("estimate correctly reestimates model", {
 
   out <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   # seeds are equivalent
@@ -609,7 +618,7 @@ test_that("estimate correctly estimates model with informative priors", {
   # Test 1: Case estimates the SEM (with only 200 draws per equation)
   out <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   expect_length(out, 7)
@@ -654,7 +663,7 @@ test_that("estimate with informative priors, that are too far from true value", 
   # Test 1: Case estimates the SEM (with only 200 draws per equation)
   out <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   expect_length(out, 7)
@@ -689,7 +698,7 @@ test_that("estimate with no gamma parameters", {
   # Test 1: Case estimates the SEM (with only 200 draws per equation)
   out <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   expect_length(out, 7)
@@ -720,7 +729,7 @@ test_that("estimate with only one exogenous variable", {
   # Test 1: Case estimates the SEM (with only 200 draws per equation)
   out <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   expect_length(out, 7)
@@ -742,7 +751,7 @@ test_that("estimate with only one exogenous variable", {
 
   out <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   expect_length(out, 7)
@@ -771,7 +780,7 @@ test_that("estimate with only one equation", {
   # Test 1: Case estimates the SEM (with only 200 draws per equation)
   out <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   expect_length(out, 7)
@@ -786,7 +795,7 @@ test_that("estimate with only one equation", {
   sys_eq <- system_of_equations(equations, exogenous_variables)
   out <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
   expect_length(out, 7)
@@ -901,7 +910,7 @@ test_that("estimate with equation specific tau", {
   estimates_1 <- withr::with_seed(
     7,
     estimate(ts_data, sys_eq, dates,
-      options = list(ndraws = 2000)
+      options = list(gibbs = list(ndraws = 2000))
     )
   )
 
@@ -925,7 +934,7 @@ test_that("estimate with equation specific tau", {
   estimates_2 <- withr::with_seed(
     7,
     estimate(ts_data, sys_eq, dates,
-      options = list(ndraws = 200)
+      options = list(gibbs = list(ndraws = 200))
     )
   )
 
@@ -956,7 +965,7 @@ test_that("estimate with equation specific gibbs options", {
   estimates <- withr::with_seed(
     7,
     estimate(ts_data, sys_eq, dates,
-      options = list(ndraws = 200)
+      options = list(gibbs = list(ndraws = 200))
     )
   )
 
@@ -999,7 +1008,7 @@ test_that("estimate, accpetance probability", {
   estimates <- withr::with_seed(
     7,
     estimate(ts_data, sys_eq, dates,
-      options = list(ndraws = 500)
+      options = list(gibbs = list(ndraws = 500))
     )
   )
 
@@ -1039,7 +1048,7 @@ test_that("estimate, ts provided instead of ets", {
       {
         withr::with_seed(
           7,
-          estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+          estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
         )
       },
       readline = local({
@@ -1082,7 +1091,7 @@ test_that("estimate, ts provided instead of ets", {
       {
         withr::with_seed(
           7,
-          estimate(ts_data, sys_eq, dates, options = list(ndraws = 200))
+          estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
         )
       },
       readline = local({

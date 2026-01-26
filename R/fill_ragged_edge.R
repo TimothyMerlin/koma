@@ -5,20 +5,16 @@
 #' model, and fills the unobserved series using a one-step ahead conditional
 #' forecast until the time series is balanced.
 #'
-#' @param point_forecast A list that contains the following elements:
-#'   - `active`: Determines the type of forecast generated.
-#' If TRUE, a point forecast is created. If FALSE, a density forecast is
-#' returned. Default is TRUE.
-#'   - `central_tendency`: A character string indicating which
-#' central tendency measure ("mean" or "median") to use for summary statistics.
-#' Default is "mean".
+#' @param fill_method Character string indicating which central tendency measure
+#' ("mean" or "median") to use when filling ragged edges.
 #' @inheritParams estimate
 #' @inheritParams system_of_equations
 #'
 #' @return A list containing the updated time series data.
 #' @keywords internal
 fill_ragged_edge <- function(ts_data, sys_eq,
-                             exogenous_variables, dates, point_forecast) {
+                             exogenous_variables, dates, fill_method) {
+  fill_method <- match.arg(fill_method, c("mean", "median"))
   endogenous_variables <- sys_eq$endogenous_variables
   total_exogenous_variables <- sys_eq$total_exogenous_variables
 
@@ -49,6 +45,22 @@ fill_ragged_edge <- function(ts_data, sys_eq,
     if (tolower(response) != "y") {
       cli::cli_text("{.alert-warning Ragged edge filling aborted by user.}")
       return(ts_data)
+    }
+
+    prompt <- paste0(
+      "Choose fill method (mean/median) [", fill_method, "]: "
+    )
+    response <- readline(prompt = prompt)
+    response <- tolower(trimws(response))
+    if (nzchar(response)) {
+      if (response %in% c("mean", "median")) {
+        fill_method <- response
+      } else {
+        cli::cli_warn(c(
+          "x" = "Invalid fill method {.val {response}}.",
+          "i" = "Using {.val {fill_method}}."
+        ))
+      }
     }
 
     y_matrix <- balanced_data$y_matrix
@@ -87,11 +99,11 @@ fill_ragged_edge <- function(ts_data, sys_eq,
     forecasts <- forecast_sem(
       sys_eq, estimates, restrictions,
       y_matrix, forecast_x_matrix, horizon, balanced_data$freq, forecast_dates,
-      point_forecast
+      approximate = TRUE, probs = NULL
     )
 
     # Take mean or median forecast
-    forecasts <- forecasts[[point_forecast$central_tendency]]
+    forecasts <- forecasts[[fill_method]]
 
     ts_data <- extend_ts_with_forecast(ts_data, forecasts)
 
@@ -122,14 +134,8 @@ fill_ragged_edge <- function(ts_data, sys_eq,
 #' up to and including the current quarter. The function conditionally forecasts
 #' based on the estimates and realized observations.
 #'
-#' @param point_forecast A list of options used when ragged edge is filled
-#' that contains:
-#'   - active: Determines the type of forecast generated.
-#' If TRUE, a density forecast is created. If FALSE, a point forecast is
-#' returned. Default is TRUE.
-#'   - central_tendency A character string indicating which central tendency
-#' measure ("mean" or "median") to use when point_forecast$active is TRUE.
-#' Default is "mean".
+#' @param fill_method Character string indicating which central tendency measure
+#' ("mean" or "median") to use when filling ragged edges.
 #' @inheritParams estimate
 #' @inheritParams system_of_equations
 #'
@@ -137,7 +143,8 @@ fill_ragged_edge <- function(ts_data, sys_eq,
 #' time series up to the current quarter.
 #' @keywords internal
 conditional_fill <- function(ts_data, sys_eq, dates,
-                             estimates, point_forecast) {
+                             estimates, fill_method) {
+  fill_method <- match.arg(fill_method, c("mean", "median"))
   endogenous_variables <- sys_eq$endogenous_variables
 
   edge <- detect_edge(
@@ -191,11 +198,11 @@ conditional_fill <- function(ts_data, sys_eq, dates,
   forecasts <- forecast_sem(
     sys_eq, estimates, restrictions,
     y_matrix, forecast_x_matrix, horizon, balanced_data$freq, forecast_dates,
-    point_forecast
+    approximate = TRUE, probs = NULL
   )
 
   # Take mean or median forecast
-  forecasts <- forecasts[[point_forecast$central_tendency]]
+  forecasts <- forecasts[[fill_method]]
 
   # remove lagged variables
   ts_data <- ts_data[c(sys_eq$endogenous_variables, sys_eq$exogenous_variables)]

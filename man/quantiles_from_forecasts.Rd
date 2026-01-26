@@ -4,7 +4,7 @@
 \alias{quantiles_from_forecasts}
 \title{Calculate Quantiles from Multiple Forecast Matrices}
 \usage{
-quantiles_from_forecasts(forecasts, freq, probs = NULL)
+quantiles_from_forecasts(forecasts, freq, probs = NULL, include_mean = FALSE)
 }
 \arguments{
 \item{forecasts}{A list of matrices. Each matrix should represent a forecasts
@@ -14,6 +14,9 @@ with the same dimensions (rows and columns) for comparison.}
 
 \item{probs}{A numeric vector specifying which quantiles to compute.
 Default is c(0.25, 0.5, 0.75, 1).}
+
+\item{include_mean}{Logical. If TRUE, the mean of the forecasts will also be
+computed and returned along with the quantiles. Default is FALSE.}
 }
 \value{
 A named list of matrices, where each matrix corresponds to an

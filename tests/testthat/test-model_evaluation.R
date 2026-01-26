@@ -35,8 +35,7 @@ test_that("model_evaluation", {
   result <- withr::with_seed(7, model_evaluation(
     sys_eq, variables, horizon, ts_data, dates,
     evaluate_on_levels = TRUE,
-    options = list(ndraws = 20),
-    point_forecast = NULL,
+    options = list(gibbs = list(ndraws = 20), summary = "mean"),
     restrictions = NULL
   ))
 
@@ -46,8 +45,7 @@ test_that("model_evaluation", {
   result <- withr::with_seed(7, model_evaluation(
     sys_eq, variables, horizon, ts_data, dates,
     evaluate_on_levels = FALSE,
-    options = list(ndraws = 20),
-    point_forecast = NULL,
+    options = list(gibbs = list(ndraws = 20), summary = "mean"),
     restrictions = NULL
   ))
 
@@ -59,8 +57,7 @@ test_that("model_evaluation", {
     model_evaluation(
       sys_eq, variables, horizon, ts_data, dates,
       unused = TRUE,
-      options = list(ndraws = 20),
-      point_forecast = NULL,
+      options = list(gibbs = list(ndraws = 20), summary = "mean"),
       restrictions = NULL
     )
   )
@@ -71,8 +68,7 @@ test_that("model_evaluation", {
     model_evaluation(
       sys_eq, variables, horizon, ts_data, dates,
       evaluate_on_levels = TRUE,
-      options = list(ndraws = 20),
-      point_forecast = NULL,
+      options = list(gibbs = list(ndraws = 20), summary = "mean"),
       restrictions = NULL
     ), "gdpp"
   )
@@ -81,7 +77,8 @@ test_that("model_evaluation", {
 test_that("run_model_iteration", {
   horizon <- 4
   # global variables
-  point_forecast <- list(active = TRUE, central_tendency = "mean")
+  summary <- "mean"
+  approximate <- FALSE
   variables <- c("consumption", "investment")
   restrictions <- NULL
   sys_eq <- simulated_data$sys_eq
@@ -124,7 +121,7 @@ test_that("run_model_iteration", {
   result <- withr::with_seed(
     7,
     run_model_iteration(
-      i_params, point_forecast, variables, restrictions, sys_eq,
+      i_params, summary, approximate, variables, restrictions, sys_eq,
       evaluate_on_levels, realized,
       estimates = NULL
     )

@@ -49,10 +49,11 @@ test_that("forecast_sem", {
     sys_eq, estimates, restrictions,
     y_matrix, forecast_x_matrix, horizon, freq,
     forecast_dates = dates$forecast,
-    point_forecast = list(active = TRUE, central_tendency = "median")
+    approximate = TRUE,
+    probs = NULL
   )
 
-  expect_equal(names(result), c("mean", "median"))
+  expect_true(all(c("mean", "median") %in% names(result)))
 
   expected_result <- structure(
     c(
@@ -72,15 +73,13 @@ test_that("forecast_sem", {
   expect_equal(result$median, expected_result)
 
   # Case 2: Density forecasts
-  result <- withr::with_seed(
-    7,
-    forecast_sem(
-      sys_eq, estimates, restrictions,
-      y_matrix, forecast_x_matrix, horizon, freq, dates$forecast,
-      point_forecast = list(active = FALSE)
-    )
+  result <- forecast_sem(
+    sys_eq, estimates, restrictions,
+    y_matrix, forecast_x_matrix, horizon, freq, dates$forecast,
+    approximate = FALSE,
+    probs = get_quantiles()
   )
-  expect_equal(names(result$quantiles), c("q_5", "q_50", "q_95"))
+
   expected_cols <- c(
     "consumption", "investment", "current_account",
     "manufacturing", "service", "gdp"

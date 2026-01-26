@@ -68,12 +68,15 @@ quantiles_from_estimates <- function(data, include_mean = FALSE,
 #' @param freq The frequency of the data.
 #' @param probs A numeric vector specifying which quantiles to compute.
 #' Default is c(0.25, 0.5, 0.75, 1).
+#' @param include_mean Logical. If TRUE, the mean of the forecasts will also be
+#' computed and returned along with the quantiles. Default is FALSE.
 #' @return A named list of matrices, where each matrix corresponds to an
 #' original matrix in `forecasts`. Each output matrix has an additional
 #' dimension corresponding to the computed quantiles, with dimnames
 #' indicating the quantile levels (e.g., "q_25" for the 25th percentile).
 #' @keywords internal
-quantiles_from_forecasts <- function(forecasts, freq, probs = NULL) {
+quantiles_from_forecasts <- function(forecasts, freq, probs = NULL,
+                                     include_mean = FALSE) {
   if (is.null(probs)) probs <- get_quantiles()
 
   names_quantiles <- paste0("q_", 100 * probs)
@@ -114,13 +117,42 @@ quantiles_from_forecasts <- function(forecasts, freq, probs = NULL) {
 
   # Loop through the 3D matrix to create time series for each 2D slice
   for (i in seq_len(dim(quantile_matrix)[3])) {
-    slice <- quantile_matrix[, , i]
+    slice <- matrix(
+      quantile_matrix[, , i],
+      nrow = dim(quantile_matrix)[1],
+      ncol = dim(quantile_matrix)[2],
+      dimnames = list(
+        rownames(forecasts[[1]]),
+        colnames(forecasts[[1]])
+      )
+    )
     slice_ts <- stats::ts(
       slice,
       start = start_forecast, frequency = freq
     )
     quantile_name <- dimnames(quantile_matrix)[[3]][i]
     out[[quantile_name]] <- slice_ts
+  }
+
+  if (include_mean) {
+    mean_matrix <- matrix(
+      NA_real_,
+      nrow = nrow(forecasts[[1]]),
+      ncol = ncol(forecasts[[1]]),
+      dimnames = list(
+        rownames(forecasts[[1]]),
+        colnames(forecasts[[1]])
+      )
+    )
+    for (h in seq_len(nrow(forecasts[[1]]))) {
+      for (variable in seq_len(ncol(forecasts[[1]]))) {
+        forecasts_for_mean <- sapply(forecasts, function(x) x[h, variable])
+        if (!any(is.na(forecasts_for_mean))) {
+          mean_matrix[h, variable] <- mean(forecasts_for_mean)
+        }
+      }
+    }
+    out$q_mean <- stats::ts(mean_matrix, start = start_forecast, frequency = freq)
   }
 
   out

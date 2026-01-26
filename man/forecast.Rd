@@ -4,7 +4,13 @@
 \alias{forecast}
 \title{Forecast the Simultaneous Equations Model (SEM)}
 \usage{
-forecast(estimates, dates, ..., restrictions = NULL, point_forecast = NULL)
+forecast(
+  estimates,
+  dates,
+  ...,
+  restrictions = NULL,
+  options = list(approximate = FALSE, probs = NULL, fill = list(method = "mean"))
+)
 }
 \arguments{
 \item{estimates}{A \code{koma_estimate} object (\code{\link{estimate}}) containing
@@ -18,14 +24,17 @@ used in the estimation.}
 
 \item{restrictions}{List of model constraints. Default is empty.}
 
-\item{point_forecast}{A list that contains the following elements:
+\item{options}{Optional settings for forecasting. Use
+\code{list(approximate = FALSE, probs = NULL, fill = list(method = "mean"))}.
+Elements:
 \itemize{
-\item \code{active}: Determines the type of forecast generated.
-If TRUE, a point forecast is created. If FALSE, a density forecast is
-returned. Default is TRUE.
-\item \code{central_tendency}: A character string indicating which
-central tendency measure ("mean" or "median") to use for summary statistics.
-Default is "mean".
+\item \code{approximate}: Logical. If FALSE (default), compute point
+forecasts from predictive draws. If TRUE, compute point forecasts from the
+mean/median of coefficient draws (fast approximation).
+\item \code{probs}: Numeric vector of quantile probabilities. If NULL, no
+quantiles are returned.
+\item \code{fill$method}: "mean" or "median" used for conditional fill
+before forecasting.
 }}
 }
 \value{
@@ -52,10 +61,11 @@ This function produces forecasts for the SEM.
 }
 \details{
 The \code{forecast} function for SEM uses the estimates from the \code{koma_estimate}
-object to produce point forecasts or quantile forecasts based on the
-\code{point_forecast} parameter. If \code{point_forecast$active} is \code{TRUE}, only point
-forecasts are generated. If \code{FALSE}, quantile forecasts are generated and
-included in the \code{quantiles} list.
+object to produce point forecasts and, optionally, quantile forecasts.
+When \code{options$approximate} is FALSE (default), point forecasts are
+computed from the predictive draws (with quantiles controlled by
+\code{options$probs}). When TRUE, point forecasts are computed from the mean
+and median of the coefficient draws for faster, approximate results.
 
 Use the \code{\link[=print.koma_forecast]{print}} method to print a
 the forecast results, use the \code{\link[=plot.koma_forecast]{plot}} method,
