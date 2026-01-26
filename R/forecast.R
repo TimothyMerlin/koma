@@ -50,6 +50,10 @@
 #' \code{options$probs}). When TRUE, point forecasts are computed from the mean
 #' and median of the coefficient draws for faster, approximate results.
 #'
+#' The returned `koma_forecast` object keeps forecasts as named lists of
+#' `koma_ts` (for `mean`, `median`, and `quantiles`) alongside the input data
+#' and matrices used to produce them.
+#'
 #' Use the \code{\link[=print.koma_forecast]{print}} method to print a
 #' the forecast results, use the \code{\link[=plot.koma_forecast]{plot}} method,
 #' to visualize the forecasts and prediction intervals.
@@ -401,6 +405,9 @@ validate_forecast_output <- function(x, ...) {
 #' If `central_tendency` is not specified, the function defaults to printing the
 #' mean forecast if available, otherwise the median forecast, or a specified
 #' quantile.
+#'
+#' Printing converts the selected forecast list to an `mts` for readability; the
+#' underlying `koma_forecast` object remains a list of `koma_ts`.
 #'
 #' @export
 print.koma_forecast <- function(x, ..., variables = NULL,

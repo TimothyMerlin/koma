@@ -67,6 +67,10 @@ computed from the predictive draws (with quantiles controlled by
 \code{options$probs}). When TRUE, point forecasts are computed from the mean
 and median of the coefficient draws for faster, approximate results.
 
+The returned \code{koma_forecast} object keeps forecasts as named lists of
+\code{koma_ts} (for \code{mean}, \code{median}, and \code{quantiles}) alongside the input data
+and matrices used to produce them.
+
 Use the \code{\link[=print.koma_forecast]{print}} method to print a
 the forecast results, use the \code{\link[=plot.koma_forecast]{plot}} method,
 to visualize the forecasts and prediction intervals.

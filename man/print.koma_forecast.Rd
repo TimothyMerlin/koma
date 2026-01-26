@@ -35,4 +35,7 @@ printed.
 If \code{central_tendency} is not specified, the function defaults to printing the
 mean forecast if available, otherwise the median forecast, or a specified
 quantile.
+
+Printing converts the selected forecast list to an \code{mts} for readability; the
+underlying \code{koma_forecast} object remains a list of \code{koma_ts}.
 }
