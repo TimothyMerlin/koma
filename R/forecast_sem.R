@@ -429,7 +429,7 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
   colnames(out) <- endogenous_variables
   ts_out <- stats::ts(out, start = start_forecast, frequency = freq)
 
-  validate_identities(ts_out, identities)
+  validate_identities(ts_out, identities, x_matrix = forecast_x_matrix)
 
   ts_out
 }
@@ -482,12 +482,30 @@ forecast_companion <- function(horizon,
 #'   [get_identities()] and updated by [get_seq_weights()].
 #' @param tol Numeric tolerance for deviations between the identity and its
 #'   reconstructed value.
+#' @param x_matrix Optional matrix of exogenous variables to include when
+#'   checking identities.
 #'
 #' @return Invisibly returns `NULL`.
 #' @keywords internal
-validate_identities <- function(ts_out, identities, tol = 1e-8) {
+validate_identities <- function(ts_out, identities, tol = 1e-8,
+                                x_matrix = NULL) {
   if (is.null(identities) || !length(identities)) {
     return(invisible(NULL))
+  }
+
+  if (!is.null(x_matrix)) {
+    x_matrix <- as.matrix(x_matrix)
+    if (is.null(colnames(x_matrix))) {
+      colnames(x_matrix) <- paste0("x", seq_len(ncol(x_matrix)))
+    }
+    ts_x <- stats::ts(x_matrix,
+      start = stats::start(ts_out),
+      frequency = stats::frequency(ts_out)
+    )
+    new_cols <- setdiff(colnames(ts_x), colnames(ts_out))
+    if (length(new_cols)) {
+      ts_out <- cbind(ts_out, ts_x[, new_cols, drop = FALSE])
+    }
   }
 
   for (lhs in names(identities)) {

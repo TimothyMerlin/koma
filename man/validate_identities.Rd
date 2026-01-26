@@ -4,7 +4,7 @@
 \alias{validate_identities}
 \title{Check Identity Equations in Forecast Output}
 \usage{
-validate_identities(ts_out, identities, tol = 1e-08)
+validate_identities(ts_out, identities, tol = 1e-08, x_matrix = NULL)
 }
 \arguments{
 \item{ts_out}{A forecast output time-series matrix.}
@@ -14,6 +14,9 @@ validate_identities(ts_out, identities, tol = 1e-08)
 
 \item{tol}{Numeric tolerance for deviations between the identity and its
 reconstructed value.}
+
+\item{x_matrix}{Optional matrix of exogenous variables to include when
+checking identities.}
 }
 \value{
 Invisibly returns \code{NULL}.

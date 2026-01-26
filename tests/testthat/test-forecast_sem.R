@@ -195,3 +195,31 @@ test_that("validate_identities is quiet when identities match", {
     ))
   )
 })
+
+test_that("validate_identities can use exogenous x_matrix", {
+  mat <- matrix(
+    c(
+      3, 1,
+      5, 2
+    ),
+    ncol = 2,
+    byrow = TRUE
+  )
+  colnames(mat) <- c("agg", "c1")
+  ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
+
+  x_matrix <- matrix(c(2, 3), ncol = 1)
+  colnames(x_matrix) <- "x1"
+
+  expect_silent(
+    validate_identities(ts_out,
+      identities = list(
+        agg = list(
+          components = list(c1 = "w1", x1 = "w2"),
+          weights = list(w1 = 1, w2 = 1)
+        )
+      ),
+      x_matrix = x_matrix
+    )
+  )
+})
