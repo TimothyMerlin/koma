@@ -18,7 +18,8 @@
 #' @keywords internal
 forecast_sem <- function(sys_eq, estimates,
                          restrictions, y_matrix, forecast_x_matrix, horizon,
-                         freq, forecast_dates, approximate, probs) {
+                         freq, forecast_dates, approximate, probs,
+                         conditional_innov_method = "projection") {
   state <- new.env()
   state$warning_issued <- FALSE
   state$warning_issued_restrictions <- FALSE
@@ -31,13 +32,13 @@ forecast_sem <- function(sys_eq, estimates,
     out$mean <- forecast_draw(
       sys_eq, estimates, NULL,
       y_matrix, forecast_x_matrix, horizon, freq, forecast_dates, restrictions,
-      state,
+      state, conditional_innov_method = conditional_innov_method,
       central_tendency = "mean"
     )
     out$median <- forecast_draw(
       sys_eq, estimates, NULL,
       y_matrix, forecast_x_matrix, horizon, freq, forecast_dates, restrictions,
-      state,
+      state, conditional_innov_method = conditional_innov_method,
       central_tendency = "median"
     )
     out$quantiles <- NULL
@@ -59,7 +60,7 @@ forecast_sem <- function(sys_eq, estimates,
       forecast_draw(
         sys_eq, estimates, draw_jx,
         y_matrix, forecast_x_matrix, horizon, freq, forecast_dates,
-        restrictions, state
+        restrictions, state, conditional_innov_method = conditional_innov_method
       )
     })
 
@@ -149,7 +150,8 @@ forecast_sem <- function(sys_eq, estimates,
 forecast_draw <- function(sys_eq, estimates, jx,
                           y_matrix, forecast_x_matrix,
                           horizon, freq, forecast_dates,
-                          restrictions, state, central_tendency = NULL) {
+                          restrictions, state, conditional_innov_method = "projection",
+                          central_tendency = NULL) {
   if (is.null(jx)) {
     # Case point forecast with option to extract mean or median estimates
     estimates <- extract_estimates_from_draws(
@@ -206,6 +208,7 @@ forecast_draw <- function(sys_eq, estimates, jx,
     posterior, companion_matrix, reduced_form, y_matrix, forecast_x_matrix,
     horizon, freq, forecast_dates$start, sys_eq$endogenous_variables,
     restrictions, sys_eq$identities,
+    conditional_innov_method = conditional_innov_method,
     stochastic = is.null(central_tendency)
   )
 }
@@ -232,7 +235,9 @@ forecast_draw <- function(sys_eq, estimates, jx,
 forecast_values <- function(posterior, companion_matrix, reduced_form,
                             y_matrix, forecast_x_matrix, horizon, freq,
                             start_forecast, endogenous_variables,
-                            restrictions, identities, stochastic = FALSE) {
+                            restrictions, identities,
+                            conditional_innov_method = "projection",
+                            stochastic = FALSE) {
   companion_gamma_matrix <- companion_matrix$gamma_matrix
   companion_pi <- reduced_form$companion_pi
   companion_theta <- reduced_form$companion_theta
@@ -262,21 +267,8 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
     y0 <- matrix(0, nrow = 1, ncol = n)
   }
 
-  # Omega = (Gamma^{-1})' Sigma Gamma^{-1}
-  # omega_matrix <- t(inv_gamma) %*% posterior$sigma_matrix %*% inv_gamma
-  # numerically more stable:
-  # Compute A = (Gamma^{-1})' Sigma:
-  a_matrix <- solve(t(posterior$gamma_matrix), posterior$sigma_matrix)
-  omega_matrix <- t(solve(t(posterior$gamma_matrix), t(a_matrix)))
-  # Enforce symmetry of the reduced-form covariance matrix
-  # (theoretically symmetric; numerical operations may introduce asymmetry)
-  omega_matrix <- 0.5 * (omega_matrix + t(omega_matrix))
-  # isTRUE(all.equal(omega_matrix, t(omega_matrix)))
-  omega_matrix_h <- kronecker(diag(horizon), omega_matrix)
-
   # structural shocks
-  # TODO: kann es sein dass sigma kleiner 0 ist aufgrund von numerischen Umständen?
-  # idee: pmax setzt negative Werte durch 0
+  # Clamp tiny negative variances from numerical noise to zero.
   sd <- sqrt(pmax(diag(posterior$sigma_matrix), 0))
   z_matrix <- matrix(rnorm(horizon * n), nrow = n, ncol = horizon)
   u_matrix <- z_matrix * sd
@@ -360,6 +352,18 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
     stopifnot(rr - 1L == number_restrictions)
     stopifnot(ncol(R) == n * horizon)
 
+    # Omega = (Gamma^{-1})' Sigma Gamma^{-1}
+    # omega_matrix <- t(inv_gamma) %*% posterior$sigma_matrix %*% inv_gamma
+    # numerically more stable:
+    # Compute A = (Gamma^{-1})' Sigma:
+    a_matrix <- solve(t(posterior$gamma_matrix), posterior$sigma_matrix)
+    omega_matrix <- t(solve(t(posterior$gamma_matrix), t(a_matrix)))
+    # Enforce symmetry of the reduced-form covariance matrix
+    # (theoretically symmetric; numerical operations may introduce asymmetry)
+    omega_matrix <- 0.5 * (omega_matrix + t(omega_matrix))
+    # isTRUE(all.equal(omega_matrix, t(omega_matrix)))
+    omega_matrix_h <- kronecker(diag(horizon), omega_matrix)
+
     #    mvc <- sigma_v %*% t(R) %*% solve(R %*% sigma_v %*% t(R)) %*% r
     A <- R %*% omega_matrix_h %*% t(R)
 
@@ -387,8 +391,15 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
       ))
     }
 
-    # conditional mean
-    v_cond_mean_vec <- omega_matrix_h %*% t(R) %*% solve(A, r)
+    v_cond <- draw_conditional_innovations(
+      v_uncond_vec = as.vector(v_matrix),
+      omega_matrix_h = omega_matrix_h,
+      R = R,
+      r = r,
+      A = A,
+      method = conditional_innov_method
+    )
+    v_cond_mean_vec <- v_cond$mean_vec
     v_cond_mean <- matrix(v_cond_mean_vec, nrow = n, ncol = horizon)
 
     deterministic_cond <- forecast_companion(
@@ -402,10 +413,7 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
       vc = v_cond_mean
     )
 
-    # conditional variance
-    v_cond_draw_vec <- as.vector(v_matrix) +
-      omega_matrix_h %*% t(R) %*%
-      solve(A, r - R %*% as.vector(v_matrix))
+    v_cond_draw_vec <- v_cond$draw_vec
     v_cond_draw <- matrix(v_cond_draw_vec, nrow = n, ncol = horizon)
 
     stochastic_cond <- forecast_companion(
@@ -432,6 +440,37 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
   validate_identities(ts_out, identities, x_matrix = forecast_x_matrix)
 
   ts_out
+}
+
+draw_conditional_innovations <- function(v_uncond_vec,
+                                         omega_matrix_h,
+                                         R,
+                                         r,
+                                         A,
+                                         method = c("projection", "eigen"),
+                                         tol = 1e-10) {
+  method <- match.arg(method)
+  mean_vec <- omega_matrix_h %*% t(R) %*% solve(A, r)
+
+  if (method == "projection") {
+    draw_vec <- v_uncond_vec +
+      omega_matrix_h %*% t(R) %*% solve(A, r - R %*% v_uncond_vec)
+    return(list(mean_vec = as.vector(mean_vec), draw_vec = as.vector(draw_vec)))
+  }
+
+  Omega_c <- omega_matrix_h -
+    omega_matrix_h %*% t(R) %*% solve(A) %*% R %*% omega_matrix_h
+  Omega_c <- 0.5 * (Omega_c + t(Omega_c))
+  ev <- eigen(Omega_c, symmetric = TRUE)
+  idx <- ev$values > tol
+  U <- ev$vectors[, idx, drop = FALSE]
+  D <- ev$values[idx]
+  z <- rnorm(length(D))
+  draw_vec <- as.vector(mean_vec) + U %*% (sqrt(D) * z)
+  list(
+    mean_vec = as.vector(mean_vec),
+    draw_vec = as.vector(draw_vec)
+  )
 }
 
 forecast_companion <- function(horizon,

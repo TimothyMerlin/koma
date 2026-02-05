@@ -14,7 +14,8 @@ forecast_sem(
   freq,
   forecast_dates,
   approximate,
-  probs
+  probs,
+  conditional_innov_method = "projection"
 )
 }
 \arguments{

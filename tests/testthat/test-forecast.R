@@ -102,6 +102,102 @@ test_that("forecast works correctly for density forecasts", {
   expect_warning(
     forecast(estimates, dates, unused = TRUE)
   )
+
+  formatted0 <- format(result, digits = 0)
+  expected0 <- round(as_mets(result$mean), digits = 0)
+  expect_equal(formatted0, expected0)
+})
+
+test_that("forecast conditional innovation methods", {
+  # yield approximatively equal distributions
+  dates <- list(estimation = list(), forecast = list())
+  dates$current <- c(2023, 2)
+  dates$estimation$start <- c(1996, 1)
+  dates$estimation$end <- c(2019, 4)
+  dates$forecast$start <- c(2023, 3)
+  dates$forecast$end <- c(2023, 4)
+
+  equations <- "consumption ~ gdp + consumption.L(1) + interest_rate,
+investment ~ gdp + investment.L(1) + interest_rate,
+exports ~ world_gdp + exchange_rate + exports.L(1),
+imports ~ gdp + exchange_rate + imports.L(1),
+gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
+
+  exogenous_variables <- c("interest_rate", "world_gdp", "exchange_rate")
+  sys_eq <- system_of_equations(equations, exogenous_variables)
+
+  series <- unique(c(sys_eq$endogenous_variables, sys_eq$exogenous_variables))
+  ts_data <- small_open_economy[series]
+  ts_data <- lapply(ts_data, function(x) {
+    as_ets(x, series_type = "level", method = "diff_log")
+  })
+  ts_data$interest_rate <- as_ets(
+    ts_data$interest_rate,
+    series_type = "rate",
+    method = "none"
+  )
+
+  ts_data[sys_eq$endogenous_variables] <-
+    lapply(sys_eq$endogenous_variables, function(x) {
+      suppressWarnings(stats::window(ts_data[[x]], end = dates$current))
+    })
+
+  estimates <- withr::with_seed(
+    11,
+    estimate(ts_data, sys_eq, dates,
+      options = list(gibbs = list(ndraws = 200))
+    )
+  )
+
+  restrictions <- list(
+    gdp = list(horizon = 1L, value = 0)
+  )
+
+  res_projection <- withr::with_seed(
+    11,
+    forecast(
+      estimates, dates,
+      restrictions = restrictions,
+      options = list(conditional_innov_method = "projection")
+    )
+  )
+  res_eigen <- withr::with_seed(
+    11,
+    forecast(
+      estimates, dates,
+      restrictions = restrictions,
+      options = list(conditional_innov_method = "eigen")
+    )
+  )
+
+  draws_proj <- vapply(
+    res_projection$forecasts,
+    function(x) x[1, "gdp"],
+    numeric(1)
+  )
+  draws_eig <- vapply(
+    res_eigen$forecasts,
+    function(x) x[1, "gdp"],
+    numeric(1)
+  )
+
+  mean_proj <- mean(draws_proj)
+  mean_eig <- mean(draws_eig)
+  sd_proj <- stats::sd(draws_proj)
+  sd_eig <- stats::sd(draws_eig)
+  n_draws <- length(draws_proj)
+
+  # Compare sample means/SDs with MC-error-based tolerances.
+  # The 4*SE band is a loose (~4-sigma) envelope so two draws from the same
+  # conditional distribution should pass with high probability. The SD check
+  # uses a 10% relative tolerance, but when the conditional variance is tiny
+  # (due to tight restrictions), that relative tolerance can be ~0. The small
+  # absolute floor prevents failures from floating-point noise in that case.
+  se_mean <- sqrt(sd_proj^2 / n_draws + sd_eig^2 / n_draws)
+  tol_mean <- max(4 * se_mean, 1e-12)
+  tol_sd <- max(0.1 * max(sd_proj, sd_eig), 1e-12)
+  expect_lte(abs(mean_proj - mean_eig), tol_mean)
+  expect_lte(abs(sd_proj - sd_eig), tol_sd)
 })
 
 test_that("forecast conditionally fills ragged edge", {

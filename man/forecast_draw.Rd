@@ -15,6 +15,7 @@ forecast_draw(
   forecast_dates,
   restrictions,
   state,
+  conditional_innov_method = "projection",
   central_tendency = NULL
 )
 }

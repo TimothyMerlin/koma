@@ -10,7 +10,8 @@
 #' @param ... Additional parameters.
 #' @param restrictions List of model constraints. Default is empty.
 #' @param options Optional settings for forecasting. Use
-#' \code{list(approximate = FALSE, probs = NULL, fill = list(method = "mean"))}.
+#' \code{list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
+#' conditional_innov_method = "projection")}.
 #' Elements:
 #' \itemize{
 #'   \item \code{approximate}: Logical. If FALSE (default), compute point
@@ -20,6 +21,8 @@
 #'   quantiles are returned.
 #'   \item \code{fill$method}: "mean" or "median" used for conditional fill
 #'   before forecasting.
+#'   \item \code{conditional_innov_method}: Method for drawing conditional
+#'   innovations. One of \code{"projection"} (default) or \code{"eigen"}.
 #' }
 #'
 #' @inheritSection estimate Parallel
@@ -69,7 +72,8 @@ forecast <- function(estimates, dates, ...,
                      options = list(
                        approximate = FALSE,
                        probs = NULL,
-                       fill = list(method = "mean")
+                       fill = list(method = "mean"),
+                       conditional_innov_method = "projection"
                      )) {
   check_dots_used(...)
   setup_global_progress_handler()
@@ -84,7 +88,8 @@ forecast.koma_estimate <- function(estimates, dates, ...,
                                    options = list(
                                      approximate = FALSE,
                                      probs = NULL,
-                                     fill = list(method = "mean")
+                                     fill = list(method = "mean"),
+                                     conditional_innov_method = "projection"
                                    )) {
   stopifnot(inherits(estimates, "koma_estimate"))
 
@@ -130,6 +135,11 @@ new_forecast <- function(estimates, dates, restrictions, options) {
     fill_method <- "mean"
   }
   fill_method <- match.arg(fill_method, c("mean", "median"))
+  conditional_innov_method <- options$conditional_innov_method
+  if (is.null(conditional_innov_method)) {
+    conditional_innov_method <- "projection"
+  }
+  conditional_innov_method <- match.arg(conditional_innov_method, c("projection", "eigen"))
 
   dates <- dates_to_num(dates, frequency = 4)
 
@@ -218,7 +228,8 @@ new_forecast <- function(estimates, dates, restrictions, options) {
   ##### Forecast model
   forecasts <- forecast_sem(
     estimates$sys_eq, estimates$estimates, restrictions, y_matrix, x_matrix,
-    horizon, balanced_data$freq, dates$forecast, approximate, probs
+    horizon, balanced_data$freq, dates$forecast, approximate, probs,
+    conditional_innov_method
   )
 
   exogenous_ts_data <- rate(estimates$ts_data[estimates$sys_eq$exogenous_variables])
@@ -394,6 +405,8 @@ validate_forecast_output <- function(x, ...) {
 #' to print. Can be "mean", "median", or a quantile name like "q_5", "q_50",
 #' "q_95". Default is "mean" if available, otherwise "median", or a specified
 #' quantile.
+#' @param digits Optional. Integer number of decimal digits to round the
+#' printed output. Default is 4.
 #'
 #' @details
 #' This function prints the forecasts contained in a `koma_forecast` object.
@@ -411,13 +424,15 @@ validate_forecast_output <- function(x, ...) {
 #'
 #' @export
 print.koma_forecast <- function(x, ..., variables = NULL,
-                                central_tendency = NULL) {
+                                central_tendency = NULL,
+                                digits = 4) {
   stopifnot(inherits(x, "koma_forecast"))
   print(format(
     x,
     ...,
     variables = variables,
-    central_tendency = central_tendency
+    central_tendency = central_tendency,
+    digits = digits
   ))
   invisible(x)
 }
@@ -425,7 +440,8 @@ print.koma_forecast <- function(x, ..., variables = NULL,
 #' @export
 format.koma_forecast <- function(x, ...,
                                  variables = NULL,
-                                 central_tendency = NULL) {
+                                 central_tendency = NULL,
+                                 digits = 4) {
   stopifnot(inherits(x, "koma_forecast"))
 
   if (is.null(central_tendency)) {
@@ -451,7 +467,11 @@ format.koma_forecast <- function(x, ...,
     out <- out[variables]
   }
 
-  as_mets(out)
+  formatted <- as_mets(out)
+  if (!is.null(digits)) {
+    formatted <- round(formatted, digits = digits)
+  }
+  formatted
 }
 
 #' @keywords internal

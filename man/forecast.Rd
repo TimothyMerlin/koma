@@ -9,7 +9,8 @@ forecast(
   dates,
   ...,
   restrictions = NULL,
-  options = list(approximate = FALSE, probs = NULL, fill = list(method = "mean"))
+  options = list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
+    conditional_innov_method = "projection")
 )
 }
 \arguments{
@@ -25,7 +26,8 @@ used in the estimation.}
 \item{restrictions}{List of model constraints. Default is empty.}
 
 \item{options}{Optional settings for forecasting. Use
-\code{list(approximate = FALSE, probs = NULL, fill = list(method = "mean"))}.
+\code{list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
+conditional_innov_method = "projection")}.
 Elements:
 \itemize{
 \item \code{approximate}: Logical. If FALSE (default), compute point
@@ -35,6 +37,8 @@ mean/median of coefficient draws (fast approximation).
 quantiles are returned.
 \item \code{fill$method}: "mean" or "median" used for conditional fill
 before forecasting.
+\item \code{conditional_innov_method}: Method for drawing conditional
+innovations. One of \code{"projection"} (default) or \code{"eigen"}.
 }}
 }
 \value{

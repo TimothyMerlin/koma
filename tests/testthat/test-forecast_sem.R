@@ -223,3 +223,108 @@ test_that("validate_identities can use exogenous x_matrix", {
     )
   )
 })
+
+test_that("projection and eigen conditional draws match empirically", {
+  set.seed(123)
+
+  n <- 3
+  horizon <- 4
+  d <- n * horizon
+
+  base <- matrix(rnorm(d * d), nrow = d)
+  omega <- crossprod(base) # t(base) %*% base (if base is full rank then positive definite)
+  # forces two zero eigenvalues → singular positive semidefinite
+  zero_idx <- (d - 1):d
+  omega[zero_idx, ] <- 0
+  omega[, zero_idx] <- 0
+
+  R <- matrix(0, nrow = 2, ncol = d)
+  R[1, 1] <- 1
+  R[2, n + 1] <- 1
+  # set restriction values
+  r <- matrix(c(0.2, -0.1), ncol = 1)
+
+  A <- R %*% omega %*% t(R)
+  ev_omega <- eigen(omega, symmetric = TRUE)
+  idx_omega <- ev_omega$values > 0
+  U_omega <- ev_omega$vectors[, idx_omega, drop = FALSE]
+  D_omega <- ev_omega$values[idx_omega]
+
+  n_draws <- 2000
+  proj_draws <- matrix(NA_real_, nrow = d, ncol = n_draws)
+  eig_draws <- matrix(NA_real_, nrow = d, ncol = n_draws)
+
+  for (i in seq_len(n_draws)) {
+    z <- rnorm(length(D_omega))
+    v_uncond <- as.vector(U_omega %*% (sqrt(D_omega) * z))
+
+    proj <- koma:::draw_conditional_innovations(
+      v_uncond_vec = v_uncond,
+      omega_matrix_h = omega,
+      R = R,
+      r = r,
+      A = A,
+      method = "projection"
+    )
+
+    eig <- koma:::draw_conditional_innovations(
+      v_uncond_vec = v_uncond,
+      omega_matrix_h = omega,
+      R = R,
+      r = r,
+      A = A,
+      method = "eigen"
+    )
+
+    proj_draws[, i] <- proj$draw_vec
+    eig_draws[, i] <- eig$draw_vec
+  }
+
+  mean_proj <- rowMeans(proj_draws)
+  mean_eig <- rowMeans(eig_draws)
+
+  # Analytic conditional mean given R v = r.
+  mu <- omega %*% t(R) %*% solve(A, r)
+  Omega_c <- omega - omega %*% t(R) %*% solve(A) %*% R %*% omega
+  Omega_c <- 0.5 * (Omega_c + t(Omega_c))
+
+  # Mean MC error scales with marginal variance and 1/sqrt(n_draws).
+  se_mean <- sqrt(diag(Omega_c) / n_draws)
+  idx_var <- se_mean > 0
+  z_proj <- max(abs((mean_proj[idx_var] - mu[idx_var]) / se_mean[idx_var]))
+  z_eig <- max(abs((mean_eig[idx_var] - mu[idx_var]) / se_mean[idx_var]))
+  alpha <- 1e-3
+  z_thresh <- stats::qnorm(1 - alpha / d)
+  expect_lt(z_proj, z_thresh)
+  expect_lt(z_eig, z_thresh)
+  if (any(!idx_var)) {
+    expect_lt(max(abs(mean_proj[!idx_var] - mu[!idx_var])), 1e-10)
+    expect_lt(max(abs(mean_eig[!idx_var] - mu[!idx_var])), 1e-10)
+  }
+
+  cov_proj <- stats::cov(t(proj_draws))
+  cov_eig <- stats::cov(t(eig_draws))
+
+  rel_frob <- function(S, T) {
+    norm(S - T, "F") / max(norm(T, "F"), 1e-12)
+  }
+  # Covariance MC error from Wishart theory; larger Sigma => larger expected error.
+  cov_rel_tol <- function(Sigma, n, k = 5) {
+    diag_sigma <- diag(Sigma)
+    var_ij <- (Sigma^2 + outer(diag_sigma, diag_sigma)) / (n - 1)
+    se_frob <- sqrt(sum(var_ij))
+    k * se_frob / max(norm(Sigma, "F"), 1e-12)
+  }
+  tol_cov <- cov_rel_tol(Omega_c, n_draws)
+  expect_lt(rel_frob(cov_proj, Omega_c), tol_cov)
+  expect_lt(rel_frob(cov_eig, Omega_c), tol_cov)
+
+  # check if restrictions are fullfilled
+  # computes for every draw: R %*% v - r
+  proj_resid <- sweep(R %*% proj_draws, 1, as.vector(r), "-")
+  eig_resid <- sweep(R %*% eig_draws, 1, as.vector(r), "-")
+  # residuals of Rv - r are not exactly zero due to floating point arithmetics
+  expect_lt(max(abs(proj_resid)), 1e-8)
+  # and due to dropping small eigenvalues (> tol)
+  expect_lt(max(abs(eig_resid)), 1e-6)
+})
