@@ -25,3 +25,4 @@
 ^renv\.lock$
 ^scripts$
 ^stages\.yml$
+^AGENTS\.md$
