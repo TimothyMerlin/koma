@@ -728,7 +728,7 @@ summary.koma_estimate <- function(object, ...) {
       start <- dates_to_str(object$dates$estimation$start, frequency = 4)
       end <- dates_to_str(object$dates$estimation$end, frequency = 4)
       custom_note <- paste0(
-        custom_note, "; Estimation period: ", start, " - ", end
+        custom_note, "\nEstimation period: ", start, " - ", end
       )
     }
     if (length(custom_note) > 1L) {
