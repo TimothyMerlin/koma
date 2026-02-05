@@ -83,6 +83,10 @@ articles:
   - title: "Extended Time Series"
     contents:
       - koma-extended-timeseries
+
+  - title: "HPD Summaries"
+    contents:
+      - koma-hpd
   
   - title: "Parallelization"
     contents:

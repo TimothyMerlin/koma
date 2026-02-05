@@ -161,3 +161,29 @@ iterate_n_periods <- function(x, n, frequency) {
   n <- n / frequency
   x + n
 }
+
+#' Format ts Time Labels
+#'
+#' For quarterly data (frequency = 4), returns "YYYY Qn".
+#' For monthly data (frequency = 12), returns "YYYY-MM".
+#' Otherwise, falls back to the numeric time values.
+#'
+#' @param x A `ts` object.
+#' @return A character vector of formatted time labels.
+#' @keywords internal
+format_ts_time <- function(x) {
+  if (!inherits(x, "ts")) {
+    cli::cli_abort("`x` must be a ts object.")
+  }
+
+  freq <- stats::frequency(x)
+  times <- stats::time(x)
+
+  if (freq == 4L || freq == 12L) {
+    return(vapply(times, function(t) {
+      dates_to_str(num_to_dates(t, freq), freq)
+    }, character(1)))
+  }
+
+  format(times, trim = TRUE)
+}
