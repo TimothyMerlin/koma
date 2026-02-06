@@ -18,7 +18,8 @@
 #'   forecasts from predictive draws. If TRUE, compute point forecasts from the
 #'   mean/median of coefficient draws (fast approximation).
 #'   \item \code{probs}: Numeric vector of quantile probabilities. If NULL, no
-#'   quantiles are returned.
+#'   quantiles are returned. When \code{approximate = FALSE} and \code{probs} is
+#'   NULL, defaults to \code{setdiff(get_quantiles(), 0.5)}.
 #'   \item \code{fill$method}: "mean" or "median" used for conditional fill
 #'   before forecasting.
 #'   \item \code{conditional_innov_method}: Method for drawing conditional
@@ -119,6 +120,9 @@ new_forecast <- function(estimates, dates, restrictions, options) {
     cli::cli_abort("`options$approximate` must be a single logical value.")
   }
   probs <- options$probs
+  if (is.null(probs) && !approximate) {
+    probs <- setdiff(get_quantiles(), 0.5)
+  }
   if (!is.null(probs)) {
     if (!is.numeric(probs) || length(probs) == 0L || anyNA(probs)) {
       cli::cli_abort("`options$probs` must be a numeric vector with at least one value.")
