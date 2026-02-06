@@ -199,6 +199,124 @@ build_fan_data <- function(x, tsl, forecast_start, variables, fan_quantiles) {
   do.call(rbind, out)
 }
 
+#' Build Whisker Data for Growth Rates from Forecast Quantiles
+#'
+#' Constructs a data frame with lower/upper values for growth-rate whiskers.
+#' If requested quantiles are missing, they are computed from forecast draws.
+#'
+#' @param x A `koma_forecast` object.
+#' @param tsl In-sample time series list used to anchor the forecast.
+#' @param forecast_start Forecast start date for windowing.
+#' @param variables Character vector of variables to include.
+#' @param fan_quantiles Numeric probabilities for the whisker bounds.
+#'
+#' @return A data frame with whisker bounds or `NULL` when no bounds can be
+#' constructed.
+#' @keywords internal
+build_whisker_data <- function(x, tsl, forecast_start, variables, fan_quantiles) {
+  quantiles_list <- x$quantiles
+  if (is.null(quantiles_list)) {
+    quantiles_list <- list()
+  }
+
+  if (!is.null(fan_quantiles)) {
+    probs <- normalize_quantile_probs(fan_quantiles)
+    if (length(probs)) {
+      desired_names <- quantile_names_from_probs(probs)
+      missing <- setdiff(desired_names, names(quantiles_list))
+      if (length(missing)) {
+        if (is.null(x$forecasts)) {
+          cli::cli_abort(c(
+            "x" = "Whiskers require forecast draws for the requested quantiles.",
+            "i" = "Run forecast with point_forecast = list(active = FALSE)."
+          ))
+        } else {
+          freq <- stats::frequency(x$forecasts[[1]])
+          missing_probs <- probs[match(missing, desired_names)]
+          computed <- quantiles_from_forecasts(
+            x$forecasts,
+            freq,
+            probs = missing_probs
+          )
+          tsl_rate <- lapply(tsl, rate)
+          computed_list <- as_ets_list(computed, tsl_rate)
+          if (is.list(computed_list) &&
+            length(computed_list) > 0 &&
+            all(vapply(computed_list, is_ets, logical(1)))) {
+            computed_list <- list(computed_list)
+            names(computed_list) <- names(computed)
+          }
+          quantiles_list <- c(quantiles_list, computed_list)
+        }
+      }
+      quantiles_list <- quantiles_list[intersect(desired_names, names(quantiles_list))]
+    }
+  }
+
+  if (!length(quantiles_list)) {
+    return(NULL)
+  }
+
+  pairs <- get_fan_pairs(names(quantiles_list), fan_quantiles)
+  if (!length(pairs)) {
+    cli::cli_warn(c(
+      "!" = "Whiskers requested, but no symmetric quantile pairs found.",
+      "i" = "Provide pairs like 0.1/0.9 or 5/95 (or q_10/q_90)."
+    ))
+    return(NULL)
+  }
+
+  pair <- pairs[[1]]
+
+  quantile_vars <- names(quantiles_list[[pair$lower]])
+  if (is.null(quantile_vars)) {
+    quantile_vars <- names(tsl)
+  }
+  available_vars <- intersect(variables, intersect(names(tsl), quantile_vars))
+  if (!length(available_vars)) {
+    cli::cli_warn("Whiskers requested, but no matching variables found.")
+    return(NULL)
+  }
+
+  lower_list <- quantiles_list[[pair$lower]]
+  upper_list <- quantiles_list[[pair$upper]]
+
+  if (is.null(names(lower_list)) && length(lower_list) == length(tsl)) {
+    names(lower_list) <- names(tsl)
+  }
+  if (is.null(names(upper_list)) && length(upper_list) == length(tsl)) {
+    names(upper_list) <- names(tsl)
+  }
+
+  lower_list <- lower_list[available_vars]
+  upper_list <- upper_list[available_vars]
+
+  out <- list()
+  for (var in available_vars) {
+    lower_ts <- lower_list[[var]]
+    upper_ts <- upper_list[[var]]
+    if (is.null(lower_ts) || is.null(upper_ts)) {
+      next
+    }
+    lower_ts <- stats::window(lower_ts, start = forecast_start)
+    upper_ts <- stats::window(upper_ts, start = forecast_start)
+    dates <- as.numeric(stats::time(lower_ts))
+    out[[length(out) + 1L]] <- data.frame(
+      dates = dates,
+      lower = as.numeric(lower_ts),
+      upper = as.numeric(upper_ts),
+      variable = var,
+      data_type = "growth"
+    )
+  }
+
+  if (!length(out)) {
+    return(NULL)
+  }
+
+  do.call(rbind, out)
+}
+
 #' Match Quantile Names into Symmetric Fan Pairs
 #'
 #' @param quantile_names Character vector of quantile names (e.g., "q_5").

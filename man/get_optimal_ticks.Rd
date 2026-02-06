@@ -4,7 +4,7 @@
 \alias{get_optimal_ticks}
 \title{Find Optimal Ticks for y Axis}
 \usage{
-get_optimal_ticks(df_long, x_range)
+get_optimal_ticks(df_long, x_range, whisker_data = NULL)
 }
 \arguments{
 \item{df_long}{A data frame in long format that includes 'data_type' as a

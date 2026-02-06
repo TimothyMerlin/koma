@@ -4,7 +4,14 @@
 \alias{plotli}
 \title{Plotting Function}
 \usage{
-plotli(df_long, fig = NULL, theme = NULL, fan_data = NULL, ...)
+plotli(
+  df_long,
+  fig = NULL,
+  theme = NULL,
+  fan_data = NULL,
+  whisker_data = NULL,
+  ...
+)
 }
 \arguments{
 \item{df_long}{A data frame in long format, containing the data to be

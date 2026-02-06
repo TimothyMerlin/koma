@@ -90,8 +90,16 @@ new_plot <- function(x, ...) {
   out <- as_mets(concat(tsl, out))
 
   fan_data <- NULL
+  whisker_data <- NULL
   if (fan) {
     fan_data <- build_fan_data(
+      x,
+      tsl,
+      forecast_start,
+      variables,
+      fan_quantiles
+    )
+    whisker_data <- build_whisker_data(
       x,
       tsl,
       forecast_start,
@@ -121,5 +129,12 @@ new_plot <- function(x, ...) {
   # Only keep the variable(s) that we want to plot
   df_long <- subset(df_long, df_long$variable %in% variables)
 
-  plotli(df_long, fig = fig, theme = theme, fan_data = fan_data, args)
+  plotli(
+    df_long,
+    fig = fig,
+    theme = theme,
+    fan_data = fan_data,
+    whisker_data = whisker_data,
+    args
+  )
 }

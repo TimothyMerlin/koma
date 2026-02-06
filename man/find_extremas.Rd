@@ -4,7 +4,7 @@
 \alias{find_extremas}
 \title{Find Extrema Values for Growth Rates and Levels}
 \usage{
-find_extremas(df_long)
+find_extremas(df_long, whisker_data = NULL)
 }
 \arguments{
 \item{df_long}{A data frame in long format that includes 'data_type' as a
