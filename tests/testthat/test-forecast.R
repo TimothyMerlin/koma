@@ -46,6 +46,8 @@ test_that("forecast works correctly for density forecasts", {
   expect_error(print(result, central_tendency = "q"))
   print(result, variables = "gdp")
   print(result, variables = c("gdp", "service"))
+  expect_invisible(summary(result))
+  expect_invisible(summary(result, variables = "gdp", horizon = 2, digits = 2))
 
   expect_identical(
     names(result),

@@ -474,6 +474,174 @@ format.koma_forecast <- function(x, ...,
   formatted
 }
 
+#' Summary for koma_forecast Objects
+#'
+#' Prints a summary table for forecast horizons, including available central
+#' tendencies (mean/median) and quantiles.
+#'
+#' @param object A `koma_forecast` object.
+#' @param ... Unused.
+#' @param variables Optional character vector to filter variables.
+#' @param horizon Optional numeric or character vector selecting forecast horizon.
+#' @param digits Number of digits to round numeric values. Default is 3.
+#'
+#' @return Invisibly returns `object`.
+#' @export
+summary.koma_forecast <- function(object,
+                                  ...,
+                                  variables = NULL,
+                                  horizon = NULL,
+                                  digits = 3) {
+  if (!inherits(object, "koma_forecast")) {
+    cli::cli_abort("`object` must be a koma_forecast.")
+  }
+
+  mean_list <- object$mean
+  median_list <- object$median
+  quantiles_list <- object$quantiles
+
+  normalize_quantiles <- function(quantiles) {
+    if (is.null(quantiles) || !length(quantiles)) {
+      return(list())
+    }
+    if (!is.null(names(quantiles))) {
+      probs <- vapply(names(quantiles), parse_quantile_name, numeric(1))
+      if (any(!is.na(probs))) {
+        return(quantiles)
+      }
+    }
+    is_ts_list <- all(vapply(quantiles, function(x) inherits(x, "ts"), logical(1)))
+    if (is_ts_list) {
+      return(list(quantile = quantiles))
+    }
+    quantiles
+  }
+
+  quantiles_list <- normalize_quantiles(quantiles_list)
+
+  base_list <- if (!is.null(mean_list) && length(mean_list)) {
+    mean_list
+  } else if (!is.null(median_list) && length(median_list)) {
+    median_list
+  } else if (length(quantiles_list)) {
+    quantiles_list[[1]]
+  } else {
+    NULL
+  }
+
+  if (is.null(base_list) || !length(base_list)) {
+    cli::cli_abort("No forecasts available in `object`.")
+  }
+
+  if (is.null(variables)) {
+    variables <- names(base_list)
+  }
+  if (!length(variables)) {
+    cli::cli_abort("`variables` must contain at least one variable name.")
+  }
+  missing_vars <- setdiff(variables, names(base_list))
+  if (length(missing_vars) > 0L) {
+    cli::cli_abort(c(
+      "Variable not found in forecasts:",
+      ">" = missing_vars
+    ))
+  }
+
+  has_mean <- !is.null(mean_list) && length(mean_list)
+  has_median <- !is.null(median_list) && length(median_list)
+
+  quantile_names <- names(quantiles_list)
+  quantile_probs <- vapply(quantile_names, parse_quantile_name, numeric(1))
+  quantile_order <- order(is.na(quantile_probs), quantile_probs, seq_along(quantile_names))
+  quantile_names <- quantile_names[quantile_order]
+  quantile_probs <- quantile_probs[quantile_order]
+  quantile_labels <- vapply(seq_along(quantile_names), function(i) {
+    if (!is.na(quantile_probs[i])) {
+      paste0(format(quantile_probs[i] * 100, trim = TRUE), "%")
+    } else {
+      quantile_names[i]
+    }
+  }, character(1))
+
+  value_at <- function(series, idx) {
+    if (is.null(series) || !inherits(series, "ts")) {
+      return(NA_real_)
+    }
+    if (idx > length(series)) {
+      return(NA_real_)
+    }
+    series[idx]
+  }
+
+  for (i in seq_along(variables)) {
+    variable <- variables[[i]]
+    mean_ts <- if (has_mean) mean_list[[variable]] else NULL
+    median_ts <- if (has_median) median_list[[variable]] else NULL
+    quantile_ts <- if (length(quantiles_list)) {
+      lapply(quantiles_list, function(q) q[[variable]])
+    } else {
+      list()
+    }
+
+    base_ts <- if (!is.null(mean_ts)) {
+      mean_ts
+    } else if (!is.null(median_ts)) {
+      median_ts
+    } else if (length(quantile_ts)) {
+      quantile_ts[[1]]
+    } else {
+      NULL
+    }
+
+    if (is.null(base_ts)) {
+      next
+    }
+
+    raw_labels <- format(stats::time(base_ts), trim = TRUE)
+    display_labels <- format_ts_time(base_ts)
+    idx <- summary_forecast_resolve_horizon(horizon, display_labels, raw_labels)
+
+    rows <- lapply(idx, function(j) {
+      row <- c(display_labels[j])
+      if (has_mean) {
+        row <- c(row, summary_forecast_format_num(value_at(mean_ts, j), digits))
+      }
+      if (has_median) {
+        row <- c(row, summary_forecast_format_num(value_at(median_ts, j), digits))
+      }
+      if (length(quantile_ts)) {
+        quant_vals <- vapply(quantile_names, function(qn) {
+          summary_forecast_format_num(value_at(quantile_ts[[qn]], j), digits)
+        }, character(1))
+        row <- c(row, quant_vals)
+      }
+      row
+    })
+
+    if (!length(rows)) {
+      next
+    }
+    row_mat <- do.call(rbind, rows)
+
+    col_names <- c(variable)
+    if (has_mean) col_names <- c(col_names, "Mean")
+    if (has_median) col_names <- c(col_names, "Median")
+    if (length(quantile_labels)) col_names <- c(col_names, quantile_labels)
+
+    summary_forecast_write_table(col_names, row_mat)
+  }
+
+  note_parts <- character(0)
+  if (has_mean) note_parts <- c(note_parts, "Mean")
+  if (has_median) note_parts <- c(note_parts, "Median")
+  if (length(quantile_labels)) note_parts <- c(note_parts, "Quantiles")
+  if (length(note_parts)) {
+    cat(paste(note_parts, collapse = ", "), "\n")
+  }
+
+  invisible(object)
+}
+
 #' @keywords internal
 as_ets_list <- function(x, ts_data, central_tendency = NULL) {
   ts_list <- list()
