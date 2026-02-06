@@ -34,7 +34,8 @@ Elements:
 forecasts from predictive draws. If TRUE, compute point forecasts from the
 mean/median of coefficient draws (fast approximation).
 \item \code{probs}: Numeric vector of quantile probabilities. If NULL, no
-quantiles are returned.
+quantiles are returned. When \code{approximate = FALSE} and \code{probs} is
+NULL, defaults to \code{setdiff(get_quantiles(), 0.5)}.
 \item \code{fill$method}: "mean" or "median" used for conditional fill
 before forecasting.
 \item \code{conditional_innov_method}: Method for drawing conditional
