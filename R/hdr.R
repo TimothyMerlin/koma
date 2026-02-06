@@ -675,52 +675,18 @@ summary.koma_forecast_hdr <- function(object,
     cli::cli_abort("`object` must be a koma_forecast_hdr.")
   }
 
-  format_num <- function(x) {
-    format(round(x, digits), trim = TRUE)
-  }
-
   format_intervals <- function(mat) {
     if (is.null(mat) || nrow(mat) == 0L) {
       return("")
     }
     pieces <- apply(mat, 1, function(x) {
-      sprintf("[%s; %s]", format_num(x[1]), format_num(x[2]))
+      sprintf(
+        "[%s; %s]",
+        summary_forecast_format_num(x[1], digits),
+        summary_forecast_format_num(x[2], digits)
+      )
     })
     paste(pieces, collapse = "; ")
-  }
-
-  resolve_horizon <- function(display_labels, raw_labels = NULL) {
-    n_h <- length(display_labels)
-    if (is.null(horizon)) {
-      return(seq_len(n_h))
-    }
-    if (is.character(horizon)) {
-      idx <- match(horizon, display_labels)
-      if (anyNA(idx) && !is.null(raw_labels)) {
-        idx2 <- match(horizon, raw_labels)
-        idx[is.na(idx)] <- idx2[is.na(idx)]
-      }
-      if (anyNA(idx)) {
-        cli::cli_abort(c(
-          "Horizon labels not found:",
-          ">" = horizon[is.na(idx)]
-        ))
-      }
-      return(idx)
-    }
-    if (!is.numeric(horizon)) {
-      cli::cli_abort("`horizon` must be numeric or character.")
-    }
-    if (length(horizon) == 1L) {
-      if (is.na(horizon) || horizon < 1) {
-        cli::cli_abort("`horizon` must be a positive integer.")
-      }
-      return(seq_len(min(n_h, floor(horizon))))
-    }
-    if (any(horizon < 1 | horizon > n_h | horizon %% 1 != 0)) {
-      cli::cli_abort("`horizon` must be valid indices within forecast horizon.")
-    }
-    horizon
   }
 
   level_names <- names(object$intervals)
@@ -754,41 +720,21 @@ summary.koma_forecast_hdr <- function(object,
       raw_labels <- format(stats::time(mode_ts), trim = TRUE)
     }
     display_labels <- format_ts_time(mode_ts)
-    idx <- resolve_horizon(display_labels, raw_labels)
+    idx <- summary_forecast_resolve_horizon(horizon, display_labels, raw_labels)
 
     rows <- lapply(idx, function(i) {
       time_label <- display_labels[i]
       intervals <- vapply(level_names, function(lvl) {
         format_intervals(object$intervals[[lvl]][[variable]][[i]])
       }, character(1))
-      c(time_label, format_num(mode_ts[i]), intervals)
+      c(time_label, summary_forecast_format_num(mode_ts[i], digits), intervals)
     })
     if (!length(rows)) {
       next
     }
     row_mat <- do.call(rbind, rows)
     col_names <- c(variable, "Mode", level_labels)
-    col_widths <- pmax(nchar(col_names), apply(nchar(row_mat), 2, max))
-
-    format_row <- function(row, header = FALSE) {
-      pieces <- vapply(seq_along(row), function(i) {
-        if (header || i == 1L) {
-          sprintf("%-*s", col_widths[i], row[i])
-        } else {
-          sprintf("%*s", col_widths[i], row[i])
-        }
-      }, character(1))
-      paste(pieces, collapse = "  ")
-    }
-
-    header <- format_row(col_names, header = TRUE)
-    sep_top <- strrep("=", nchar(header))
-    sep_mid <- strrep("-", nchar(header))
-    cat(sep_top, "\n", header, "\n", sep_mid, "\n", sep = "")
-    cat(paste(vapply(seq_len(nrow(row_mat)), function(i) {
-      format_row(row_mat[i, ])
-    }, character(1)), collapse = "\n"), "\n", sep = "")
-    cat(sep_top, "\n\n", sep = "")
+    summary_forecast_write_table(col_names, row_mat)
   }
 
   note <- "Mode, [HDR]"

@@ -180,3 +180,72 @@ summary_interval_table <- function(object,
 
   invisible(object)
 }
+
+#' Forecast Summary Helpers
+#'
+#' Shared helpers for forecast summary tables.
+#'
+#' @keywords internal
+summary_forecast_format_num <- function(x, digits) {
+  format(round(x, digits), trim = TRUE)
+}
+
+#' @keywords internal
+summary_forecast_resolve_horizon <- function(horizon, display_labels, raw_labels = NULL) {
+  n_h <- length(display_labels)
+  if (is.null(horizon)) {
+    return(seq_len(n_h))
+  }
+  if (is.character(horizon)) {
+    idx <- match(horizon, display_labels)
+    if (anyNA(idx) && !is.null(raw_labels)) {
+      idx2 <- match(horizon, raw_labels)
+      idx[is.na(idx)] <- idx2[is.na(idx)]
+    }
+    if (anyNA(idx)) {
+      cli::cli_abort(c(
+        "Horizon labels not found:",
+        ">" = horizon[is.na(idx)]
+      ))
+    }
+    return(idx)
+  }
+  if (!is.numeric(horizon)) {
+    cli::cli_abort("`horizon` must be numeric or character.")
+  }
+  if (length(horizon) == 1L) {
+    if (is.na(horizon) || horizon < 1) {
+      cli::cli_abort("`horizon` must be a positive integer.")
+    }
+    return(seq_len(min(n_h, floor(horizon))))
+  }
+  if (any(horizon < 1 | horizon > n_h | horizon %% 1 != 0)) {
+    cli::cli_abort("`horizon` must be valid indices within forecast horizon.")
+  }
+  horizon
+}
+
+#' @keywords internal
+summary_forecast_write_table <- function(col_names, row_mat) {
+  col_widths <- pmax(nchar(col_names), apply(nchar(row_mat), 2, max))
+
+  format_row <- function(row, header = FALSE) {
+    pieces <- vapply(seq_along(row), function(i) {
+      if (header || i == 1L) {
+        sprintf("%-*s", col_widths[i], row[i])
+      } else {
+        sprintf("%*s", col_widths[i], row[i])
+      }
+    }, character(1))
+    paste(pieces, collapse = "  ")
+  }
+
+  header <- format_row(col_names, header = TRUE)
+  sep_top <- strrep("=", nchar(header))
+  sep_mid <- strrep("-", nchar(header))
+  cat(sep_top, "\n", header, "\n", sep_mid, "\n", sep = "")
+  cat(paste(vapply(seq_len(nrow(row_mat)), function(i) {
+    format_row(row_mat[i, ])
+  }, character(1)), collapse = "\n"), "\n", sep = "")
+  cat(sep_top, "\n\n", sep = "")
+}
