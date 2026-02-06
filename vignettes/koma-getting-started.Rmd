@@ -142,6 +142,13 @@ rate(forecasts$mean$gdp)
 level(forecasts$mean$gdp)
 ```
 
+You can also summarize forecast horizons with mean/median and quantiles:
+
+```{R}
+summary(forecasts)
+summary(forecasts, variables = "gdp", horizon = 2)
+```
+
 ```{R, eval=FALSE}
 if (requireNamespace("plotly", quietly = TRUE)) {
     plot(forecasts, variables = c("gdp", "consumption"))
