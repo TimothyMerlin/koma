@@ -151,46 +151,24 @@ trace_plot.koma_estimate <- function(x, ...) {
 
   build_draw_df <- function(draws, variable, param_name, coef_names,
                             mat_transform = NULL) {
-    if (is.null(draws) || length(draws) == 0L) {
+    prepared <- prepare_draw_matrix(
+      draws = draws,
+      thin = thin,
+      mat_transform = mat_transform
+    )
+    if (is.null(prepared)) {
       return(NULL)
     }
 
-    n_draws <- length(draws)
-    draw_idx <- seq_len(n_draws)
-    if (thin > 1L) {
-      draw_idx <- draw_idx[seq(1, n_draws, by = thin)]
-    }
+    mat <- prepared$mat
+    draw_idx <- prepared$draw_idx
     if (!is.null(max_draws) && length(draw_idx) > max_draws) {
-      draw_idx <- utils::tail(draw_idx, max_draws)
+      keep_idx <- utils::tail(seq_along(draw_idx), max_draws)
+      draw_idx <- draw_idx[keep_idx]
+      mat <- mat[, keep_idx, drop = FALSE]
     }
 
-    draws <- draws[draw_idx]
-    mat <- draws_to_matrix(draws)
-    if (is.null(mat) || length(mat) == 0L) {
-      return(NULL)
-    }
-    if (!is.null(mat_transform)) {
-      mat <- mat_transform(mat)
-      if (is.null(mat) || length(mat) == 0L) {
-        return(NULL)
-      }
-    }
-    if (is.null(dim(mat))) {
-      mat <- matrix(mat, nrow = 1)
-    }
-
-    if (!length(coef_names)) {
-      coef_names <- paste0("coef_", seq_len(nrow(mat)))
-    }
-    if (length(coef_names) != nrow(mat)) {
-      coef_names <- coef_names[seq_len(min(length(coef_names), nrow(mat)))]
-      if (length(coef_names) < nrow(mat)) {
-        coef_names <- c(
-          coef_names,
-          paste0("coef_", seq_len(nrow(mat) - length(coef_names)))
-        )
-      }
-    }
+    coef_names <- normalize_coef_names(coef_names, nrow(mat))
 
     values <- as.vector(mat)
     keep <- is.finite(values)
@@ -224,23 +202,17 @@ trace_plot.koma_estimate <- function(x, ...) {
 
     estimate_jx <- estimates[[variable]]
 
-    add_draws <- function(param_name, draws, coef_names, mat_transform = NULL) {
-      if (!param_name %in% params) {
-        return(NULL)
-      }
-      build_draw_df(
-        draws,
-        variable,
-        param_name,
-        coef_names,
-        mat_transform = mat_transform
-      )
-    }
-
     idx_beta <- which(sys_eq$character_beta_matrix[, jx] != 0)
     if (length(idx_beta)) {
       beta_names <- sys_eq$total_exogenous_variables[idx_beta]
-      df_beta <- add_draws("beta", estimate_jx$beta_jw, beta_names)
+      df_beta <- add_draws(
+        param_name = "beta",
+        draws = estimate_jx$beta_jw,
+        coef_names = beta_names,
+        params = params,
+        variable = variable,
+        build_draw_df = build_draw_df
+      )
       if (!is.null(df_beta)) {
         df_list[[length(df_list) + 1L]] <- df_beta
       }
@@ -252,16 +224,26 @@ trace_plot.koma_estimate <- function(x, ...) {
     )
     if (length(idx_gamma)) {
       gamma_names <- sys_eq$endogenous_variables[idx_gamma]
-      df_gamma <- add_draws("gamma", estimate_jx$gamma_jw, gamma_names)
+      df_gamma <- add_draws(
+        param_name = "gamma",
+        draws = estimate_jx$gamma_jw,
+        coef_names = gamma_names,
+        params = params,
+        variable = variable,
+        build_draw_df = build_draw_df
+      )
       if (!is.null(df_gamma)) {
         df_list[[length(df_list) + 1L]] <- df_gamma
       }
     }
 
     df_sigma <- add_draws(
-      "sigma",
-      estimate_jx$omega_tilde_jw,
-      "omega",
+      param_name = "sigma",
+      draws = estimate_jx$omega_tilde_jw,
+      coef_names = "omega",
+      params = params,
+      variable = variable,
+      build_draw_df = build_draw_df,
       # Plot only the variance element from each covariance draw.
       mat_transform = function(mat) mat[1, , drop = FALSE]
     )
