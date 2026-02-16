@@ -355,21 +355,6 @@ hdr.koma_estimate <- function(x,
 
   sys_eq <- x$sys_eq
 
-  draws_to_matrix <- function(draws) {
-    if (length(draws) == 0L) {
-      return(NULL)
-    }
-    if (length(draws[[1]]) == 1) {
-      mat <- t(as.matrix(simplify2array(draws)))
-    } else {
-      mat <- simplify2array(draws)
-    }
-    if (length(dim(mat)) == 3) {
-      mat <- mat[, 1, ]
-    }
-    mat
-  }
-
   compute_hdr <- function(draws, variable, param_name, coef_name) {
     draws <- draws[is.finite(draws)]
     if (length(draws) < 2L) {
