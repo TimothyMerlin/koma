@@ -193,6 +193,14 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 }
 ```
 
+You can also inspect running means (cumulative averages) with `running_mean_plot()`.
+
+```{R, eval=FALSE}
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  running_mean_plot(estimates, variables = c("consumption", "investment"))
+}
+```
+
 # Forecasting
 
 To forecast the model, we can use the `forecast` function. This function will generate forecasts for the specified date range.
