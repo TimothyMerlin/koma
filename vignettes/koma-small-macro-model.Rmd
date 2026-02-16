@@ -183,6 +183,16 @@ summary(estimates, variables = "investment")
 
 To see how to run the estimation in parallel, refer to the [parallel estimation vignette](../parallel.html).
 
+# Diagnostics
+
+You can visualize MCMC diagnostics for coefficient draws using `trace_plot()`.
+
+```{R, eval=FALSE}
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  trace_plot(estimates, variables = c("consumption", "investment"))
+}
+```
+
 # Forecasting
 
 To forecast the model, we can use the `forecast` function. This function will generate forecasts for the specified date range.
