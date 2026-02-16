@@ -201,6 +201,14 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 }
 ```
 
+You can inspect autocorrelation diagnostics with `acf_plot()`.
+
+```{R, eval=FALSE}
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  acf_plot(estimates, variables = c("consumption", "investment"))
+}
+```
+
 # Forecasting
 
 To forecast the model, we can use the `forecast` function. This function will generate forecasts for the specified date range.

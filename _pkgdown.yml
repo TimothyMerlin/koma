@@ -76,6 +76,10 @@ articles:
     contents: 
       - koma-getting-started
 
+  - title: "Diagnostics"
+    contents:
+      - koma-diagnostics
+
   - title: "Equation Syntax"
     contents: 
       - koma-equations
