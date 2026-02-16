@@ -9,6 +9,7 @@
 * Reduced/adjusted dependencies (e.g., removed `expm`, `tidyr`, `stringr`; moved `plotly` to Suggests; added standalone Wishart helpers).
 * Improved CI and tooling (GitHub Actions checks, codecov, release/tag workflows, and renv handling).
 * Added `summary()` output for `koma_forecast` with mean/median and quantile columns.
+* Added MCMC trace plots via `trace_plot()` for coefficient diagnostics.
 
 # koma 0.1.0
 
