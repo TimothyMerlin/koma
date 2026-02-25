@@ -147,7 +147,7 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
   estimates <- withr::with_seed(
     11,
     estimate(ts_data, sys_eq, dates,
-      options = list(gibbs = list(ndraws = 200))
+      options = list(gibbs = list(ndraws = 2000))
     )
   )
 
@@ -172,34 +172,51 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
     )
   )
 
-  draws_proj <- vapply(
-    res_projection$forecasts,
-    function(x) x[1, "gdp"],
-    numeric(1)
-  )
-  draws_eig <- vapply(
-    res_eigen$forecasts,
-    function(x) x[1, "gdp"],
-    numeric(1)
-  )
+  get_draws <- function(result, horizon, variable) {
+    vapply(
+      result$forecasts,
+      function(x) x[horizon, variable],
+      numeric(1)
+    )
+  }
 
-  mean_proj <- mean(draws_proj)
-  mean_eig <- mean(draws_eig)
-  sd_proj <- stats::sd(draws_proj)
-  sd_eig <- stats::sd(draws_eig)
-  n_draws <- length(draws_proj)
+  # The restricted cell should be pinned (up to floating-point noise)
+  # regardless of conditional innovation method.
+  draws_proj_gdp_h1 <- get_draws(res_projection, horizon = 1, variable = "gdp")
+  draws_eig_gdp_h1 <- get_draws(res_eigen, horizon = 1, variable = "gdp")
+  expect_lt(max(abs(draws_proj_gdp_h1 - restrictions$gdp$value)), 1e-10)
+  expect_lt(max(abs(draws_eig_gdp_h1 - restrictions$gdp$value)), 1e-10)
 
-  # Compare sample means/SDs with MC-error-based tolerances.
-  # The 4*SE band is a loose (~4-sigma) envelope so two draws from the same
-  # conditional distribution should pass with high probability. The SD check
-  # uses a 10% relative tolerance, but when the conditional variance is tiny
-  # (due to tight restrictions), that relative tolerance can be ~0. The small
-  # absolute floor prevents failures from floating-point noise in that case.
-  se_mean <- sqrt(sd_proj^2 / n_draws + sd_eig^2 / n_draws)
-  tol_mean <- max(4 * se_mean, 1e-12)
-  tol_sd <- max(0.1 * max(sd_proj, sd_eig), 1e-12)
-  expect_lte(abs(mean_proj - mean_eig), tol_mean)
-  expect_lte(abs(sd_proj - sd_eig), tol_sd)
+  compare_draw_moments <- function(draws_proj, draws_eig) {
+    mean_proj <- mean(draws_proj)
+    mean_eig <- mean(draws_eig)
+    sd_proj <- stats::sd(draws_proj)
+    sd_eig <- stats::sd(draws_eig)
+    n_draws <- length(draws_proj)
+
+    # Compare sample means/SDs with MC-error-based tolerances.
+    # The 3*SE band is a loose (~3-sigma) envelope so two draws from the same
+    # conditional distribution should pass with high probability. The SD check
+    # uses a 10% relative tolerance, but when the conditional variance is tiny
+    # that relative tolerance can approach zero. The small absolute floor
+    # prevents failures from floating-point noise in that case.
+    se_mean <- sqrt(sd_proj^2 / n_draws + sd_eig^2 / n_draws)
+    tol_mean <- max(3 * se_mean, 1e-12)
+    tol_sd <- max(0.1 * max(sd_proj, sd_eig), 1e-12)
+    expect_lte(abs(mean_proj - mean_eig), tol_mean)
+    expect_lte(abs(sd_proj - sd_eig), tol_sd)
+  }
+
+  # Compare methods on unrestricted cells where conditional dispersion is
+  # informative.
+  compare_draw_moments(
+    draws_proj = get_draws(res_projection, horizon = 1, variable = "consumption"),
+    draws_eig = get_draws(res_eigen, horizon = 1, variable = "consumption")
+  )
+  compare_draw_moments(
+    draws_proj = get_draws(res_projection, horizon = 2, variable = "gdp"),
+    draws_eig = get_draws(res_eigen, horizon = 2, variable = "gdp")
+  )
 })
 
 test_that("forecast conditionally fills ragged edge", {
