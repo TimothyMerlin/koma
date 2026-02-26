@@ -626,22 +626,82 @@ test_that("forecast without lags and with restrictions", {
   )
 
   restrictions <- list(manufacturing = list(value = 0.5, horizon = 1))
-  # Without restrictions
-  base <- withr::with_seed(7, forecast(est, dates))
+  # Deterministic path: no MC noise, should satisfy no-propagation exactly.
+  base_det <- withr::with_seed(
+    7,
+    forecast(est, dates, options = list(approximate = TRUE))
+  )
+  out_det <- withr::with_seed(
+    7,
+    forecast(est, dates,
+      restrictions = restrictions,
+      options = list(approximate = TRUE, conditional_innov_method = "eigen")
+    )
+  )
+  expect_equal(out_det$mean$manufacturing[1], 0.5)
+  expect_equal(
+    out_det$mean$manufacturing[2],
+    base_det$mean$manufacturing[2],
+    tolerance = 1e-12
+  )
 
-  # When forecasting without lags Phi matrix will be empty
-  out <- withr::with_seed(7, forecast(est, dates, restrictions = restrictions))
+  # For unrestricted forecasts, conditional innovation method is not used.
+  base <- withr::with_seed(
+    7,
+    forecast(est, dates)
+  )
+  out_projection <- withr::with_seed(
+    7,
+    forecast(est, dates,
+      restrictions = restrictions,
+      options = list(conditional_innov_method = "projection")
+    )
+  )
 
-  # first horizon of manufacturing should equal restriction
   # Restriction hit at h=1
-  expect_equal(out$mean$manufacturing[1], 0.5)
+  expect_equal(out_projection$mean$manufacturing[1], 0.5)
 
   # No propagation to h=2 if there are no lags
   expect_equal(
-    out$mean$manufacturing[2],
+    out_projection$mean$manufacturing[2],
     base$mean$manufacturing[2],
     tolerance = 1e-12
   )
+
+  out_eigen <- withr::with_seed(
+    7,
+    forecast(est, dates,
+      restrictions = restrictions,
+      options = list(conditional_innov_method = "eigen")
+    )
+  )
+
+  # Restriction hit at h=1 also with eigen draws.
+  expect_equal(out_eigen$mean$manufacturing[1], 0.5)
+
+  # For eigen draws, conditioning should not change the h=2 distribution
+  # in a no-lag system (same mean and dispersion up to MC error).
+  draws_base_h2 <- vapply(
+    base$forecasts,
+    function(x) x[2, "manufacturing"],
+    numeric(1)
+  )
+  draws_out_h2 <- vapply(
+    out_eigen$forecasts,
+    function(x) x[2, "manufacturing"],
+    numeric(1)
+  )
+
+  n_draws <- length(draws_base_h2)
+  mean_diff <- abs(mean(draws_out_h2) - mean(draws_base_h2))
+  se_mean <- sqrt(
+    stats::var(draws_base_h2) / n_draws + stats::var(draws_out_h2) / n_draws
+  )
+  expect_lte(mean_diff, max(3 * se_mean, 1e-12))
+
+  sd_diff <- abs(stats::sd(draws_out_h2) - stats::sd(draws_base_h2))
+  tol_sd <- max(0.1 * max(stats::sd(draws_base_h2), stats::sd(draws_out_h2)), 1e-12)
+  expect_lte(sd_diff, tol_sd)
 })
 
 test_that("restricting aggregate alone keeps identity intact", {
