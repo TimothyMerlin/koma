@@ -4,7 +4,7 @@
 \alias{fill_ragged_edge}
 \title{Fill Ragged Edges in Time Series Data}
 \usage{
-fill_ragged_edge(ts_data, sys_eq, exogenous_variables, dates, point_forecast)
+fill_ragged_edge(ts_data, sys_eq, exogenous_variables, dates, fill_method)
 }
 \arguments{
 \item{ts_data}{Time-series data set for the estimation.}
@@ -16,15 +16,8 @@ about the system of equations used in the model.}
 
 \item{dates}{Key-value list for date ranges in various model operations.}
 
-\item{point_forecast}{A list that contains the following elements:
-\itemize{
-\item \code{active}: Determines the type of forecast generated.
-If TRUE, a point forecast is created. If FALSE, a density forecast is
-returned. Default is TRUE.
-\item \code{central_tendency}: A character string indicating which
-central tendency measure ("mean" or "median") to use for summary statistics.
-Default is "mean".
-}}
+\item{fill_method}{Character string indicating which central tendency measure
+("mean" or "median") to use when filling ragged edges.}
 }
 \value{
 A list containing the updated time series data.

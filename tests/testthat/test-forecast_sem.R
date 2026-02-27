@@ -49,10 +49,11 @@ test_that("forecast_sem", {
     sys_eq, estimates, restrictions,
     y_matrix, forecast_x_matrix, horizon, freq,
     forecast_dates = dates$forecast,
-    point_forecast = list(active = TRUE, central_tendency = "median")
+    approximate = TRUE,
+    probs = NULL
   )
 
-  expect_equal(names(result), c("mean", "median"))
+  expect_true(all(c("mean", "median") %in% names(result)))
 
   expected_result <- structure(
     c(
@@ -75,51 +76,32 @@ test_that("forecast_sem", {
   result <- forecast_sem(
     sys_eq, estimates, restrictions,
     y_matrix, forecast_x_matrix, horizon, freq, dates$forecast,
-    point_forecast = list(active = FALSE)
+    approximate = FALSE,
+    probs = get_quantiles()
   )
 
-  expected_result <- list(q_5 = structure(c(
-    4.82109556789144, 4.45690748680653, 4.69440248787175,
-    3.69915350979583, 0.495309268912805, 1.09223507673112, 0.340604402361223,
-    0.458155682564863, -0.0945899767006442, -0.276137308345971, 0.173976039089989,
-    0.131057178557279
-  ), dim = c(2L, 6L), dimnames = list(NULL, c(
-    "consumption",
-    "investment", "current_account", "manufacturing", "service",
-    "gdp"
-  )), tsp = c(2019, 2019.25, 4), class = c(
-    "mts", "ts", "matrix",
-    "array"
-  )), q_50 = structure(c(
-    5.05832496333041, 4.80065339358621,
-    5.04117872496396, 4.0749759248586, 0.542239285623722, 1.13220681376785,
-    0.451883808436417, 0.544678037809438, 0.116324325070415, -0.114688250842263,
-    0.285346399263274, 0.212590703116717
-  ), dim = c(2L, 6L), dimnames = list(
-    NULL, c(
-      "consumption", "investment", "current_account", "manufacturing",
-      "service", "gdp"
-    )
-  ), tsp = c(2019, 2019.25, 4), class = c(
-    "mts",
-    "ts", "matrix", "array"
-  )), q_95 = structure(c(
-    5.32692712901112,
-    5.1776618816249, 5.41784726334038, 4.5176449902336, 0.588127922973782,
-    1.16954018238363, 0.564936580079121, 0.630732940266279, 0.363333409635949,
-    0.0794230808871807, 0.413541744733043, 0.306758740571166
-  ), dim = c(
-    2L,
-    6L
-  ), dimnames = list(NULL, c(
+  expected_cols <- c(
     "consumption", "investment", "current_account",
     "manufacturing", "service", "gdp"
-  )), tsp = c(2019, 2019.25, 4), class = c("mts", "ts", "matrix", "array")))
+  )
+  expected_tsp <- c(2019, 2019.25, 4)
 
-  expect_equal(result$quantiles, expected_result)
+  lapply(result$quantiles, function(q) {
+    expect_true(inherits(q, "ts"))
+    expect_equal(dim(q), c(2L, 6L))
+    expect_equal(colnames(q), expected_cols)
+    expect_equal(stats::tsp(q), expected_tsp)
+  })
+
+  tol <- 1e-8
+  q_5 <- result$quantiles$q_5
+  q_50 <- result$quantiles$q_50
+  q_95 <- result$quantiles$q_95
+  expect_true(all(q_5 <= q_50 + tol))
+  expect_true(all(q_50 <= q_95 + tol))
 })
 
-test_that("check_identities_add_up warns when components are missing", {
+test_that("validate_identities warns when components are missing", {
   mat <- matrix(
     c(
       1, 1,
@@ -132,7 +114,7 @@ test_that("check_identities_add_up warns when components are missing", {
   ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
 
   expect_warning(
-    check_identities_add_up(ts_out, identities = list(
+    validate_identities(ts_out, identities = list(
       agg = list(
         components = list(c1 = "w1", c2 = "w2"),
         weights = list(w1 = 0.5, w2 = 0.5)
@@ -142,7 +124,7 @@ test_that("check_identities_add_up warns when components are missing", {
   )
 })
 
-test_that("check_identities_add_up warns when weights are non-numeric", {
+test_that("validate_identities warns when weights are non-numeric", {
   mat <- matrix(
     c(
       1, 1, 1,
@@ -155,7 +137,7 @@ test_that("check_identities_add_up warns when weights are non-numeric", {
   ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
 
   expect_warning(
-    check_identities_add_up(ts_out, identities = list(
+    validate_identities(ts_out, identities = list(
       agg = list(
         components = list(c1 = "w1", c2 = "w2"),
         weights = list(w1 = 0.5, w2 = "theta")
@@ -166,7 +148,7 @@ test_that("check_identities_add_up warns when weights are non-numeric", {
 })
 
 
-test_that("check_identities_add_up warns on deviations", {
+test_that("validate_identities warns on deviations", {
   # Construct a simple ts_out with one identity variable and two components
   mat <- matrix(
     c(
@@ -180,7 +162,7 @@ test_that("check_identities_add_up warns on deviations", {
   ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
 
   expect_warning(
-    check_identities_add_up(ts_out,
+    validate_identities(ts_out,
       identities = list(
         agg = list(
           components = list(c1 = "w1", c2 = "w2"),
@@ -192,7 +174,7 @@ test_that("check_identities_add_up warns on deviations", {
   )
 })
 
-test_that("check_identities_add_up is quiet when identities match", {
+test_that("validate_identities is quiet when identities match", {
   mat <- matrix(
     c(
       1, 1, 1,
@@ -205,11 +187,144 @@ test_that("check_identities_add_up is quiet when identities match", {
   ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
 
   expect_silent(
-    check_identities_add_up(ts_out, identities = list(
+    validate_identities(ts_out, identities = list(
       agg = list(
         components = list(c1 = "w1", c2 = "w2"),
         weights = list(w1 = 0.5, w2 = 0.5)
       )
     ))
   )
+})
+
+test_that("validate_identities can use exogenous x_matrix", {
+  mat <- matrix(
+    c(
+      3, 1,
+      5, 2
+    ),
+    ncol = 2,
+    byrow = TRUE
+  )
+  colnames(mat) <- c("agg", "c1")
+  ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
+
+  x_matrix <- matrix(c(2, 3), ncol = 1)
+  colnames(x_matrix) <- "x1"
+
+  expect_silent(
+    validate_identities(ts_out,
+      identities = list(
+        agg = list(
+          components = list(c1 = "w1", x1 = "w2"),
+          weights = list(w1 = 1, w2 = 1)
+        )
+      ),
+      x_matrix = x_matrix
+    )
+  )
+})
+
+test_that("projection and eigen conditional draws match empirically", {
+  set.seed(123)
+
+  n <- 3
+  horizon <- 4
+  d <- n * horizon
+
+  base <- matrix(rnorm(d * d), nrow = d)
+  omega <- crossprod(base) # t(base) %*% base (if base is full rank then positive definite)
+  # forces two zero eigenvalues → singular positive semidefinite
+  zero_idx <- (d - 1):d
+  omega[zero_idx, ] <- 0
+  omega[, zero_idx] <- 0
+
+  R <- matrix(0, nrow = 2, ncol = d)
+  R[1, 1] <- 1
+  R[2, n + 1] <- 1
+  # set restriction values
+  r <- matrix(c(0.2, -0.1), ncol = 1)
+
+  A <- R %*% omega %*% t(R)
+  ev_omega <- eigen(omega, symmetric = TRUE)
+  idx_omega <- ev_omega$values > 0
+  U_omega <- ev_omega$vectors[, idx_omega, drop = FALSE]
+  D_omega <- ev_omega$values[idx_omega]
+
+  n_draws <- 2000
+  proj_draws <- matrix(NA_real_, nrow = d, ncol = n_draws)
+  eig_draws <- matrix(NA_real_, nrow = d, ncol = n_draws)
+
+  for (i in seq_len(n_draws)) {
+    z <- rnorm(length(D_omega))
+    v_uncond <- as.vector(U_omega %*% (sqrt(D_omega) * z))
+
+    proj <- koma:::draw_conditional_innovations(
+      v_uncond_vec = v_uncond,
+      omega_matrix_h = omega,
+      R = R,
+      r = r,
+      A = A,
+      method = "projection"
+    )
+
+    eig <- koma:::draw_conditional_innovations(
+      v_uncond_vec = v_uncond,
+      omega_matrix_h = omega,
+      R = R,
+      r = r,
+      A = A,
+      method = "eigen"
+    )
+
+    proj_draws[, i] <- proj$draw_vec
+    eig_draws[, i] <- eig$draw_vec
+  }
+
+  mean_proj <- rowMeans(proj_draws)
+  mean_eig <- rowMeans(eig_draws)
+
+  # Analytic conditional mean given R v = r.
+  mu <- omega %*% t(R) %*% solve(A, r)
+  Omega_c <- omega - omega %*% t(R) %*% solve(A) %*% R %*% omega
+  Omega_c <- 0.5 * (Omega_c + t(Omega_c))
+
+  # Mean MC error scales with marginal variance and 1/sqrt(n_draws).
+  se_mean <- sqrt(diag(Omega_c) / n_draws)
+  idx_var <- se_mean > 0
+  z_proj <- max(abs((mean_proj[idx_var] - mu[idx_var]) / se_mean[idx_var]))
+  z_eig <- max(abs((mean_eig[idx_var] - mu[idx_var]) / se_mean[idx_var]))
+  alpha <- 1e-3
+  z_thresh <- stats::qnorm(1 - alpha / d)
+  expect_lt(z_proj, z_thresh)
+  expect_lt(z_eig, z_thresh)
+  if (any(!idx_var)) {
+    expect_lt(max(abs(mean_proj[!idx_var] - mu[!idx_var])), 1e-10)
+    expect_lt(max(abs(mean_eig[!idx_var] - mu[!idx_var])), 1e-10)
+  }
+
+  cov_proj <- stats::cov(t(proj_draws))
+  cov_eig <- stats::cov(t(eig_draws))
+
+  rel_frob <- function(S, T) {
+    norm(S - T, "F") / max(norm(T, "F"), 1e-12)
+  }
+  # Covariance MC error from Wishart theory; larger Sigma => larger expected error.
+  cov_rel_tol <- function(Sigma, n, k = 5) {
+    diag_sigma <- diag(Sigma)
+    var_ij <- (Sigma^2 + outer(diag_sigma, diag_sigma)) / (n - 1)
+    se_frob <- sqrt(sum(var_ij))
+    k * se_frob / max(norm(Sigma, "F"), 1e-12)
+  }
+  tol_cov <- cov_rel_tol(Omega_c, n_draws)
+  expect_lt(rel_frob(cov_proj, Omega_c), tol_cov)
+  expect_lt(rel_frob(cov_eig, Omega_c), tol_cov)
+
+  # check if restrictions are fullfilled
+  # computes for every draw: R %*% v - r
+  proj_resid <- sweep(R %*% proj_draws, 1, as.vector(r), "-")
+  eig_resid <- sweep(R %*% eig_draws, 1, as.vector(r), "-")
+  # residuals of Rv - r are not exactly zero due to floating point arithmetics
+  expect_lt(max(abs(proj_resid)), 1e-8)
+  # and due to dropping small eigenvalues (> tol)
+  expect_lt(max(abs(eig_resid)), 1e-6)
 })

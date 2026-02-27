@@ -9,14 +9,19 @@
 #' about the system of equations used in the model.
 #' @param dates Key-value list for date ranges in various model operations.
 #' @param ... Additional parameters.
-#' @param options Optional settings for modifying the Gibbs sampler
-#' specifications for all equations.
+#' @param options Optional settings for estimation. Use
+#' \code{list(gibbs = list(), fill = list(method = "mean"))}. Elements:
+#' \itemize{
+#'   \item \code{gibbs}: Gibbs sampler settings (see
+#'   \link[=get_default_gibbs_spec]{Gibbs Sampler Specifications}).
+#'   \item \code{fill$method}: "mean" or "median" used to fill ragged edges
+#'   during estimation.
+#' }
 #' See \link[=get_default_gibbs_spec]{Gibbs Sampler Specifications}.
 #' @param estimates Optional. A `koma_estimate` object
 #' (see \code{\link{estimate}}) containing the estimates of the previously
 #' estimated simultaneous equations model. Use this parameter when some
 #' equations of the system need to be re-estimated.
-#' @inheritParams fill_ragged_edge
 #'
 #' @section Parallel:
 #' This function provides the option for parallel computing through
@@ -63,14 +68,23 @@
 #' @export
 estimate <- function(ts_data, sys_eq, dates,
                      ...,
-                     options = list(),
-                     point_forecast = NULL,
+                     options = list(gibbs = list(), fill = list(method = "mean")),
                      estimates = NULL) {
   check_dots_used(...)
   setup_global_progress_handler()
 
   equation_settings <- sys_eq$equation_settings[sys_eq$stochastic_equations]
-  set_gibbs_settings(options, equation_settings)
+  if (is.null(options)) {
+    options <- list()
+  }
+  if (!is.list(options)) {
+    cli::cli_abort("`options` must be a list.")
+  }
+  gibbs_options <- options$gibbs
+  if (is.null(gibbs_options)) {
+    gibbs_options <- list()
+  }
+  set_gibbs_settings(gibbs_options, equation_settings)
 
   cli::cli_h1("Estimation")
   UseMethod("estimate")
@@ -79,9 +93,24 @@ estimate <- function(ts_data, sys_eq, dates,
 #' @export
 estimate.list <- function(ts_data, sys_eq, dates,
                           ...,
-                          options = list(),
-                          point_forecast = NULL,
+                          options = list(gibbs = list(), fill = list(method = "mean")),
                           estimates = NULL) {
+  if (is.null(options)) {
+    options <- list()
+  }
+  if (!is.list(options)) {
+    cli::cli_abort("`options` must be a list.")
+  }
+  gibbs_options <- options$gibbs
+  if (is.null(gibbs_options)) {
+    gibbs_options <- list()
+  }
+  fill_method <- options$fill$method
+  if (is.null(fill_method)) {
+    fill_method <- "mean"
+  }
+  fill_method <- match.arg(fill_method, c("mean", "median"))
+
   if (!inherits(ts_data, "list")) {
     cli::cli_abort("`ts_data` must be a list. You provided a {class(ts_data)}.")
   }
@@ -104,7 +133,7 @@ estimate.list <- function(ts_data, sys_eq, dates,
     ))
   }
 
-  pre <- new_prepare_estimation(ts_data, sys_eq, dates, point_forecast)
+  pre <- new_prepare_estimation(ts_data, sys_eq, dates, fill_method)
   if (is.null(estimates)) {
     estimates <- new_estimate(pre$sys_eq, pre$y_matrix, pre$x_matrix)
   } else {
@@ -127,7 +156,7 @@ estimate.list <- function(ts_data, sys_eq, dates,
     {
       acceptance_probs <- build_settings(
         default = get_default_acceptance_prob(),
-        settings = options,
+        settings = gibbs_options,
         equation_settings = sys_eq$equation_settings
       )
       validate_estimate_sem(estimates, acceptance_probs)
@@ -236,16 +265,8 @@ convert_ts_data_to_ets <- function(ts_data) {
   ts_data
 }
 
-new_prepare_estimation <- function(ts_data, sys_eq, dates, point_forecast) {
-  # Define default options
-  default_point_forecast <- list(active = TRUE, central_tendency = "mean")
-  # Merge user-provided options with default options
-  if (is.null(point_forecast)) {
-    point_forecast <- default_point_forecast
-  } else {
-    point_forecast <- utils::modifyList(default_point_forecast, point_forecast)
-  }
-
+new_prepare_estimation <- function(ts_data, sys_eq, dates, fill_method) {
+  fill_method <- match.arg(fill_method, c("mean", "median"))
   validate_estimation_dates(dates)
   dates <- dates_to_num(dates, frequency = 4)
 
@@ -274,7 +295,7 @@ new_prepare_estimation <- function(ts_data, sys_eq, dates, point_forecast) {
 
   ##### Fill ragged edge
   ts_data <- fill_ragged_edge(
-    rate(ts_data), sys_eq, sys_eq$exogenous_variables, dates, point_forecast
+    rate(ts_data), sys_eq, sys_eq$exogenous_variables, dates, fill_method
   )
 
   ##### Estimate filled balanced data
@@ -707,7 +728,7 @@ summary.koma_estimate <- function(object, ...) {
       start <- dates_to_str(object$dates$estimation$start, frequency = 4)
       end <- dates_to_str(object$dates$estimation$end, frequency = 4)
       custom_note <- paste0(
-        custom_note, "; Estimation period: ", start, " - ", end
+        custom_note, "\nEstimation period: ", start, " - ", end
       )
     }
     if (length(custom_note) > 1L) {

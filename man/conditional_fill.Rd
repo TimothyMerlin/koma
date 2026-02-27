@@ -4,7 +4,7 @@
 \alias{conditional_fill}
 \title{Conditional Fill and Forecast for Time Series Data}
 \usage{
-conditional_fill(ts_data, sys_eq, dates, estimates, point_forecast)
+conditional_fill(ts_data, sys_eq, dates, estimates, fill_method)
 }
 \arguments{
 \item{ts_data}{Time-series data set for the estimation.}
@@ -19,16 +19,8 @@ about the system of equations used in the model.}
 estimated simultaneous equations model. Use this parameter when some
 equations of the system need to be re-estimated.}
 
-\item{point_forecast}{A list of options used when ragged edge is filled
-that contains:
-\itemize{
-\item active: Determines the type of forecast generated.
-If TRUE, a density forecast is created. If FALSE, a point forecast is
-returned. Default is TRUE.
-\item central_tendency A character string indicating which central tendency
-measure ("mean" or "median") to use when point_forecast$active is TRUE.
-Default is "mean".
-}}
+\item{fill_method}{Character string indicating which central tendency measure
+("mean" or "median") to use when filling ragged edges.}
 }
 \value{
 An extended time series list containing the filled and forecasted

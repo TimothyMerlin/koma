@@ -92,8 +92,7 @@ test_that("quantiles_from_forecasts", {
       "consumption", "investment", "current_account", "manufacturing",
       "service", "gdp"
     )
-    ts_data <- stats::ts(data, start = start, end = end, frequency = freq)
-    return(ts_data)
+    stats::ts(data, start = start, end = end, frequency = freq)
   }
 
   # Generate fake forecasts
@@ -104,13 +103,11 @@ test_that("quantiles_from_forecasts", {
     generate_fake_forecast(11, 6, start_forecast, end_forecast, 4)
   })
 
-  # Run the function
   result <- quantiles_from_forecasts(
     fake_forecasts, 4,
     probs = c(0.25, 0.5, 0.75)
   )
 
-  # Check if the output is a list of time series
   expect_true(is.list(result))
 
   # Check if time series names correspond to quantiles
@@ -123,6 +120,30 @@ test_that("quantiles_from_forecasts", {
     as.vector(stats::time(result$q_50)),
     expected_time
   )
+})
+
+test_that("quantiles_from_forecasts keeps matrix shape for one column", {
+  generate_fake_forecast <- function(rows, start, end, freq) {
+    data <- matrix(runif(rows), nrow = rows, ncol = 1)
+    colnames(data) <- "manufacturing"
+    stats::ts(data, start = start, end = end, frequency = freq)
+  }
+
+  num_draws <- 5
+  start_forecast <- 2023.25
+  end_forecast <- 2025.75
+  fake_forecasts <- lapply(seq_len(num_draws), function(x) {
+    generate_fake_forecast(11, start_forecast, end_forecast, 4)
+  })
+
+  result <- quantiles_from_forecasts(
+    fake_forecasts, 4,
+    probs = c(0.25, 0.5, 0.75),
+    include_mean = TRUE
+  )
+
+  expect_equal(dim(result$q_50), c(11, 1))
+  expect_equal(dim(result$q_mean), c(11, 1))
 })
 
 test_that("quantiles_from_forecasts with data in levels", {

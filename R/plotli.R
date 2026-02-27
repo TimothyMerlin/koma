@@ -19,7 +19,8 @@
 #' @references
 #' \url{https://plotly.com/r/reference/#Layout_and_layout_style_objects}
 #' @keywords internal
-plotli <- function(df_long, fig = NULL, theme = NULL, ...) {
+plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL,
+                   whisker_data = NULL, ...) {
   if (is.null(theme)) {
     theme <- init_koma_theme()
   }
@@ -103,7 +104,7 @@ plotli <- function(df_long, fig = NULL, theme = NULL, ...) {
   annotations <- c(annotations_in_sample, annotations_oos)
 
   # Get optimal ticks
-  optimal_y_ticks <- get_optimal_ticks(df_long, theme$xaxis$range)
+  optimal_y_ticks <- get_optimal_ticks(df_long, theme$xaxis$range, whisker_data)
   ## plot
   # add growth bars for in sample data
   fig <-
@@ -128,13 +129,45 @@ plotli <- function(df_long, fig = NULL, theme = NULL, ...) {
       offsetgroup = bar_off_set_group
     )
 
+  growth_forecast <- subset(
+    df_long,
+    df_long$data_type == "growth" & df_long$sample_status != "in_sample"
+  )
+  error_y <- NULL
+  if (!is.null(whisker_data)) {
+    whisker_growth <- subset(
+      whisker_data,
+      whisker_data$data_type == "growth"
+    )
+    if (nrow(whisker_growth) > 0) {
+      key <- paste(growth_forecast$dates, growth_forecast$variable)
+      whisker_key <- paste(whisker_growth$dates, whisker_growth$variable)
+      idx <- match(key, whisker_key)
+      growth_forecast$lower <- whisker_growth$lower[idx]
+      growth_forecast$upper <- whisker_growth$upper[idx]
+      growth_forecast$error_plus <-
+        pmax(growth_forecast$upper - growth_forecast$value, 0)
+      growth_forecast$error_minus <-
+        pmax(growth_forecast$value - growth_forecast$lower, 0)
+      if (any(!is.na(growth_forecast$error_plus)) ||
+        any(!is.na(growth_forecast$error_minus))) {
+        error_y <- list(
+          type = "data",
+          symmetric = FALSE,
+          array = growth_forecast$error_plus,
+          arrayminus = growth_forecast$error_minus,
+          color = set_alpha(theme$color$marker$forecast, 0.8),
+          thickness = 1.5,
+          width = 3
+        )
+      }
+    }
+  }
+
   fig <-
     plotly::add_trace(
       fig,
-      data = subset(
-        df_long,
-        df_long$data_type == "growth" & df_long$sample_status != "in_sample"
-      ),
+      data = growth_forecast,
       x = ~dates,
       y = ~value,
       customdata = ~dates_formatted,
@@ -145,8 +178,16 @@ plotli <- function(df_long, fig = NULL, theme = NULL, ...) {
       name = theme$trace_name$forecast_growth,
       type = "bar",
       marker = list(color = ~color_code, width = 4),
-      offsetgroup = bar_off_set_group
+      offsetgroup = bar_off_set_group,
+      error_y = error_y
     )
+
+  if (!is.null(fan_data)) {
+    fan_data <- subset(fan_data, fan_data$data_type == "level")
+    if (nrow(fan_data) > 0) {
+      fig <- add_fan_chart(fig, fan_data, theme$color$marker$forecast)
+    }
+  }
 
   # add level scatter for in sample data
   fig <-
@@ -263,4 +304,59 @@ plotli <- function(df_long, fig = NULL, theme = NULL, ...) {
     )
 
   return(fig)
+}
+
+add_fan_chart <- function(fig, fan_data, base_color) {
+  band_ids <- unique(fan_data$band)
+  band_orders <- sapply(band_ids, function(band) {
+    min(fan_data$band_order[fan_data$band == band])
+  })
+  band_ids <- band_ids[order(band_orders)]
+  band_alphas <- seq(0.25, 0.08, length.out = length(band_ids))
+
+  for (band_idx in seq_along(band_ids)) {
+    band <- band_ids[band_idx]
+    alpha <- band_alphas[band_idx]
+    fill_color <- set_alpha(base_color, alpha)
+
+    band_data <- fan_data[fan_data$band == band, , drop = FALSE]
+    vars <- unique(band_data$variable)
+
+    for (var in vars) {
+      df_band <- band_data[band_data$variable == var, , drop = FALSE]
+      df_band <- df_band[order(df_band$dates), , drop = FALSE]
+
+      fig <- plotly::add_trace(
+        fig,
+        data = df_band,
+        x = ~dates,
+        y = ~lower,
+        type = "scatter",
+        mode = "lines",
+        legendgroup = "fan",
+        line = list(color = fill_color, width = 0),
+        hoverinfo = "skip",
+        showlegend = FALSE,
+        yaxis = "y2"
+      )
+
+      fig <- plotly::add_trace(
+        fig,
+        data = df_band,
+        x = ~dates,
+        y = ~upper,
+        type = "scatter",
+        mode = "lines",
+        legendgroup = "fan",
+        line = list(color = fill_color, width = 0),
+        fill = "tonexty",
+        fillcolor = fill_color,
+        hoverinfo = "skip",
+        showlegend = FALSE,
+        yaxis = "y2"
+      )
+    }
+  }
+
+  fig
 }

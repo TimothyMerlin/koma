@@ -13,7 +13,9 @@ forecast_sem(
   horizon,
   freq,
   forecast_dates,
-  point_forecast
+  approximate,
+  probs,
+  conditional_innov_method = "projection"
 )
 }
 \arguments{
@@ -34,16 +36,6 @@ variables.}
 \item{freq}{Frequency of the time series data.}
 
 \item{forecast_dates}{List containing 'start' and 'end' dates for forecast.}
-
-\item{point_forecast}{A list that contains the following elements:
-\itemize{
-\item \code{active}: Determines the type of forecast generated.
-If TRUE, a point forecast is created. If FALSE, a density forecast is
-returned. Default is TRUE.
-\item \code{central_tendency}: A character string indicating which
-central tendency measure ("mean" or "median") to use for summary statistics.
-Default is "mean".
-}}
 }
 \value{
 A list containing the forecast values.

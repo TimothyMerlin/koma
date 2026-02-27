@@ -1,6 +1,14 @@
 test_that("fill_ragged_edge with one-step ahead conditional forecasts", {
   # mock readline function always return "y"
-  testthat::local_mocked_bindings(readline = function(...) "y", .package = "base")
+  responses <- c("y", "median")
+  response_ix <- 0
+  testthat::local_mocked_bindings(
+    readline = function(...) {
+      response_ix <<- response_ix + 1
+      responses[[((response_ix - 1) %% length(responses)) + 1]]
+    },
+    .package = "base"
+  )
 
   # Case: test shortens current account data, which sem will fill with
   # conditional forecast
@@ -63,7 +71,7 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
 
   result <- fill_ragged_edge(
     ts_data, sys_eq, exogenous_variables, dates,
-    point_forecast = list(active = TRUE, central_tendency = "median")
+    fill_method = "median"
   )
 
   expect_equal(length(result$investment), length(ts_data$investment) + 4)
@@ -94,7 +102,7 @@ test_that("fill_ragged_edge - no observations to fill", {
 
   result <- fill_ragged_edge(
     ts_data, sys_eq, exogenous_variables, dates,
-    point_forecast = list(active = TRUE, central_tendency = "median")
+    fill_method = "median"
   )
 
   expect_length(result$current_account, 200)
@@ -146,7 +154,7 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
     7,
     estimate(
       ts_data, sys_eq, dates,
-      point_forecast = list(active = TRUE, central_tendency = "mean")
+      options = list(fill = list(method = "mean"))
     )
   )
 
@@ -156,7 +164,7 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
   )
   result <- conditional_fill(
     ts_data, sys_eq, dates, estimates$estimates,
-    point_forecast = list(active = TRUE, central_tendency = "mean")
+    fill_method = "mean"
   )
 
   # variable that should not have changed
@@ -220,7 +228,7 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
     7,
     estimate(
       ts_data, sys_eq, dates,
-      point_forecast = list(active = TRUE, central_tendency = "mean")
+      options = list(fill = list(method = "mean"))
     )
   )
 
@@ -230,7 +238,7 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
   )
   result <- conditional_fill(
     ts_data, sys_eq, dates, estimates$estimates,
-    point_forecast = list(active = TRUE, central_tendency = "mean")
+    fill_method = "mean"
   )
 
   # variable that should not have changed

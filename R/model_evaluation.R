@@ -16,6 +16,15 @@
 #' FALSE on growth rates.
 #' @inheritParams estimate
 #' @inheritParams forecast
+#' @param options Optional settings for model evaluation. Use
+#' \code{list(gibbs = list(), summary = "mean", approximate = FALSE)}. Elements:
+#' \itemize{
+#'   \item \code{gibbs}: Gibbs sampler settings (see
+#'   \link[=get_default_gibbs_spec]{Gibbs Sampler Specifications}).
+#'   \item \code{summary}: "mean" or "median" point forecast used for RMSE.
+#'   \item \code{approximate}: Logical; if TRUE, use the fast approximate
+#'   point forecast (mean/median of coefficient draws).
+#' }
 #'
 #' @details
 #' The function initiates the RMSE calculation from `dates$forecast$start` and
@@ -30,8 +39,11 @@
 model_evaluation <- function(sys_eq, variables,
                              horizon, ts_data, dates, ...,
                              evaluate_on_levels = TRUE,
-                             options = NULL,
-                             point_forecast = NULL,
+                             options = list(
+                               gibbs = list(),
+                               summary = "mean",
+                               approximate = FALSE
+                             ),
                              restrictions = NULL) {
   check_dots_used(...)
   validate_model_evaluation_input(
@@ -40,21 +52,37 @@ model_evaluation <- function(sys_eq, variables,
   setup_global_progress_handler()
 
   equation_settings <- sys_eq$equation_settings[sys_eq$stochastic_equations]
-  set_gibbs_settings(options, equation_settings)
+  if (is.null(options)) {
+    options <- list()
+  }
+  if (!is.list(options)) {
+    cli::cli_abort("`options` must be a list.")
+  }
+  gibbs_options <- options$gibbs
+  if (is.null(gibbs_options)) {
+    gibbs_options <- list()
+  }
+  set_gibbs_settings(gibbs_options, equation_settings)
 
-  default_point_forecast <- list(active = TRUE, central_tendency = "mean")
-  # Merge user-provided options with default options
-  if (is.null(point_forecast)) {
-    point_forecast <- default_point_forecast
-  } else {
-    point_forecast <- utils::modifyList(default_point_forecast, point_forecast)
+  summary <- options$summary
+  if (is.null(summary)) {
+    summary <- "mean"
+  }
+  summary <- match.arg(summary, c("mean", "median"))
+  approximate <- options$approximate
+  if (is.null(approximate)) {
+    approximate <- FALSE
+  }
+  if (!is.logical(approximate) || length(approximate) != 1L || is.na(approximate)) {
+    cli::cli_abort("`options$approximate` must be a single logical value.")
   }
 
   out <- new_model_evaluation(
     sys_eq, variables,
     horizon, ts_data, dates,
     evaluate_on_levels,
-    point_forecast,
+    summary,
+    approximate,
     restrictions
   )
 
@@ -64,7 +92,8 @@ model_evaluation <- function(sys_eq, variables,
 new_model_evaluation <- function(sys_eq, variables,
                                  horizon, ts_data, dates,
                                  evaluate_on_levels,
-                                 point_forecast,
+                                 summary,
+                                 approximate,
                                  restrictions) {
   # Initialize error accumulation
   errors <- matrix(0, ncol = length(variables), nrow = horizon)
@@ -123,7 +152,7 @@ new_model_evaluation <- function(sys_eq, variables,
     p(amount = 0)
 
     out <- run_model_iteration(
-      param, point_forecast,
+      param, summary, approximate,
       variables, restrictions, sys_eq,
       evaluate_on_levels, ts_data, estimates
     )
@@ -141,7 +170,8 @@ new_model_evaluation <- function(sys_eq, variables,
 }
 
 validate_model_evaluation_input <- function(
-    sys_eq, variables, horizon, ts_data, dates, ...) {
+  sys_eq, variables, horizon, ts_data, dates, ...
+) {
   if (is.null(variables)) {
     variables <- sys_eq$endogenous_variables
   } else {
@@ -158,32 +188,32 @@ validate_model_evaluation_input <- function(
   }
 }
 
-run_model_iteration <- function(param, point_forecast,
+run_model_iteration <- function(param, summary, approximate,
                                 variables, restrictions, sys_eq,
                                 evaluate_on_levels, realized, estimates) {
   # Perform estimation if necessary
   ragged <- param$dates$in_sample$end <= param$dates$estimation$end
   if (ragged || is.null(estimates)) {
     estimates <- estimate.list(
-      param$ts_data, sys_eq, param$dates,
-      point_forecast = point_forecast
+      param$ts_data, sys_eq, param$dates
     )
   }
 
   forecasts <- forecast.koma_estimate(
     estimates, param$dates,
-    restrictions = restrictions, point_forecast = point_forecast
+    restrictions = restrictions,
+    approximate = approximate
   )
 
   if (evaluate_on_levels) {
     # Convert growth rates to level
     forecasts <- as_mets(
-      level(forecasts[[point_forecast$central_tendency]])
+      level(forecasts[[summary]])
     )
     realized <- as_mets(level(realized))
   } else {
     forecasts <- as_mets(
-      rate(forecasts[[point_forecast$central_tendency]])
+      rate(forecasts[[summary]])
     )
     realized <- as_mets(rate(realized))
   }

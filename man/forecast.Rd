@@ -4,7 +4,14 @@
 \alias{forecast}
 \title{Forecast the Simultaneous Equations Model (SEM)}
 \usage{
-forecast(estimates, dates, ..., restrictions = NULL, point_forecast = NULL)
+forecast(
+  estimates,
+  dates,
+  ...,
+  restrictions = NULL,
+  options = list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
+    conditional_innov_method = "projection")
+)
 }
 \arguments{
 \item{estimates}{A \code{koma_estimate} object (\code{\link{estimate}}) containing
@@ -18,14 +25,21 @@ used in the estimation.}
 
 \item{restrictions}{List of model constraints. Default is empty.}
 
-\item{point_forecast}{A list that contains the following elements:
+\item{options}{Optional settings for forecasting. Use
+\code{list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
+conditional_innov_method = "projection")}.
+Elements:
 \itemize{
-\item \code{active}: Determines the type of forecast generated.
-If TRUE, a point forecast is created. If FALSE, a density forecast is
-returned. Default is TRUE.
-\item \code{central_tendency}: A character string indicating which
-central tendency measure ("mean" or "median") to use for summary statistics.
-Default is "mean".
+\item \code{approximate}: Logical. If FALSE (default), compute point
+forecasts from predictive draws. If TRUE, compute point forecasts from the
+mean/median of coefficient draws (fast approximation).
+\item \code{probs}: Numeric vector of quantile probabilities. If NULL, no
+quantiles are returned. When \code{approximate = FALSE} and \code{probs} is
+NULL, defaults to \code{setdiff(get_quantiles(), 0.5)}.
+\item \code{fill$method}: "mean" or "median" used for conditional fill
+before forecasting.
+\item \code{conditional_innov_method}: Method for drawing conditional
+innovations. One of \code{"projection"} (default) or \code{"eigen"}.
 }}
 }
 \value{
@@ -39,7 +53,7 @@ elements:
 \item{median}{Median point forecasts as a list of time series of class
 \code{koma_ts}.}
 \item{quantiles}{A list of quantiles, where each element is named
-according to the quantile (e.g., "5", "50", "95"), and contains the
+according to the quantile (e.g., "q_5", "q_50", "q_95"), and contains the
 forecasts for that quantile. This element is NULL if \code{quantiles = FALSE}.}
 \item{ts_data}{Time-series data set used in forecasting.}
 \item{y_matrix}{The Y matrix constructed from the balanced data up to the
@@ -52,10 +66,15 @@ This function produces forecasts for the SEM.
 }
 \details{
 The \code{forecast} function for SEM uses the estimates from the \code{koma_estimate}
-object to produce point forecasts or quantile forecasts based on the
-\code{point_forecast} parameter. If \code{point_forecast$active} is \code{TRUE}, only point
-forecasts are generated. If \code{FALSE}, quantile forecasts are generated and
-included in the \code{quantiles} list.
+object to produce point forecasts and, optionally, quantile forecasts.
+When \code{options$approximate} is FALSE (default), point forecasts are
+computed from the predictive draws (with quantiles controlled by
+\code{options$probs}). When TRUE, point forecasts are computed from the mean
+and median of the coefficient draws for faster, approximate results.
+
+The returned \code{koma_forecast} object keeps forecasts as named lists of
+\code{koma_ts} (for \code{mean}, \code{median}, and \code{quantiles}) alongside the input data
+and matrices used to produce them.
 
 Use the \code{\link[=print.koma_forecast]{print}} method to print a
 the forecast results, use the \code{\link[=plot.koma_forecast]{plot}} method,

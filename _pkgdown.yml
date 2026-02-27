@@ -76,6 +76,10 @@ articles:
     contents: 
       - koma-getting-started
 
+  - title: "Diagnostics"
+    contents:
+      - koma-diagnostics
+
   - title: "Equation Syntax"
     contents: 
       - koma-equations
@@ -83,6 +87,10 @@ articles:
   - title: "Extended Time Series"
     contents:
       - koma-extended-timeseries
+
+  - title: "HPD Summaries"
+    contents:
+      - koma-hpd
   
   - title: "Parallelization"
     contents:

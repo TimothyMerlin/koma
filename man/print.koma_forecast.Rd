@@ -4,7 +4,7 @@
 \alias{print.koma_forecast}
 \title{Print Method for koma_forecast Objects}
 \usage{
-\method{print}{koma_forecast}(x, ..., variables = NULL, central_tendency = NULL)
+\method{print}{koma_forecast}(x, ..., variables = NULL, central_tendency = NULL, digits = 4)
 }
 \arguments{
 \item{x}{A \code{koma_forecast} object.}
@@ -18,6 +18,9 @@ Default is NULL, which prints all forecasted variables.}
 to print. Can be "mean", "median", or a quantile name like "q_5", "q_50",
 "q_95". Default is "mean" if available, otherwise "median", or a specified
 quantile.}
+
+\item{digits}{Optional. Integer number of decimal digits to round the
+printed output. Default is 4.}
 }
 \description{
 This function prints the forecasts contained in a \code{koma_forecast} object as
@@ -35,4 +38,7 @@ printed.
 If \code{central_tendency} is not specified, the function defaults to printing the
 mean forecast if available, otherwise the median forecast, or a specified
 quantile.
+
+Printing converts the selected forecast list to an \code{mts} for readability; the
+underlying \code{koma_forecast} object remains a list of \code{koma_ts}.
 }

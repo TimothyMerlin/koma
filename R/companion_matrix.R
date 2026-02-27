@@ -60,7 +60,7 @@ construct_companion_matrix <- function(posterior, exogenous_variables) {
     companion_c <- constant
   }
 
-  companion_matrix <- list(
+  list(
     phi_matrix = companion_phi,
     beta_tilde_matrix = companion_beta_tilde,
     gamma_matrix = companion_gamma,
@@ -68,7 +68,6 @@ construct_companion_matrix <- function(posterior, exogenous_variables) {
     n = n,
     p = p
   )
-  return(companion_matrix)
 }
 
 #' Construct Reduced Form Parameters from Companion Matrix
@@ -100,9 +99,9 @@ construct_reduced_form <- function(companion_matrix) {
   companion_d <-
     companion_matrix$c_matrix %*% solve(companion_matrix$gamma_matrix)
 
-  return(list(
+  list(
     companion_pi = companion_pi,
     companion_theta = companion_theta,
     companion_d = companion_d
-  ))
+  )
 }

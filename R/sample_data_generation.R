@@ -89,11 +89,13 @@ generate_sample_data <- function(sample_size, sample_start, burnin,
 
   # Remove initial observations from y_matrix and x_matrix to mitigate
   # dependency on starting values.
-  y_matrix <- stats::ts(y_matrix[(burnin + 1):(sample_size + burnin), ],
+  y_matrix <- stats::ts(
+    y_matrix[(burnin + 1):(sample_size + burnin), , drop = FALSE],
     start = sample_start,
     frequency = 4
   )
-  x_matrix <- stats::ts(x_matrix[(burnin + 1):(sample_size + burnin), ],
+  x_matrix <- stats::ts(
+    x_matrix[(burnin + 1):(sample_size + burnin), , drop = FALSE],
     start = sample_start,
     frequency = 4
   )

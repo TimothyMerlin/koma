@@ -9,7 +9,22 @@
 #' @inheritParams estimate
 #' @param ... Additional parameters.
 #' @param restrictions List of model constraints. Default is empty.
-#' @inheritParams fill_ragged_edge
+#' @param options Optional settings for forecasting. Use
+#' \code{list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
+#' conditional_innov_method = "projection")}.
+#' Elements:
+#' \itemize{
+#'   \item \code{approximate}: Logical. If FALSE (default), compute point
+#'   forecasts from predictive draws. If TRUE, compute point forecasts from the
+#'   mean/median of coefficient draws (fast approximation).
+#'   \item \code{probs}: Numeric vector of quantile probabilities. If NULL, no
+#'   quantiles are returned. When \code{approximate = FALSE} and \code{probs} is
+#'   NULL, defaults to \code{setdiff(get_quantiles(), 0.5)}.
+#'   \item \code{fill$method}: "mean" or "median" used for conditional fill
+#'   before forecasting.
+#'   \item \code{conditional_innov_method}: Method for drawing conditional
+#'   innovations. One of \code{"projection"} (default) or \code{"eigen"}.
+#' }
 #'
 #' @inheritSection estimate Parallel
 #'
@@ -23,7 +38,7 @@
 #'   \item{median}{Median point forecasts as a list of time series of class
 #'   `koma_ts`.}
 #'   \item{quantiles}{A list of quantiles, where each element is named
-#'   according to the quantile (e.g., "5", "50", "95"), and contains the
+#'   according to the quantile (e.g., "q_5", "q_50", "q_95"), and contains the
 #'   forecasts for that quantile. This element is NULL if `quantiles = FALSE`.}
 #'   \item{ts_data}{Time-series data set used in forecasting.}
 #'   \item{y_matrix}{The Y matrix constructed from the balanced data up to the
@@ -33,10 +48,15 @@
 #'
 #' @details
 #' The `forecast` function for SEM uses the estimates from the `koma_estimate`
-#' object to produce point forecasts or quantile forecasts based on the
-#' `point_forecast` parameter. If `point_forecast$active` is `TRUE`, only point
-#' forecasts are generated. If `FALSE`, quantile forecasts are generated and
-#' included in the `quantiles` list.
+#' object to produce point forecasts and, optionally, quantile forecasts.
+#' When \code{options$approximate} is FALSE (default), point forecasts are
+#' computed from the predictive draws (with quantiles controlled by
+#' \code{options$probs}). When TRUE, point forecasts are computed from the mean
+#' and median of the coefficient draws for faster, approximate results.
+#'
+#' The returned `koma_forecast` object keeps forecasts as named lists of
+#' `koma_ts` (for `mean`, `median`, and `quantiles`) alongside the input data
+#' and matrices used to produce them.
 #'
 #' Use the \code{\link[=print.koma_forecast]{print}} method to print a
 #' the forecast results, use the \code{\link[=plot.koma_forecast]{plot}} method,
@@ -49,7 +69,13 @@
 #' \code{\link{estimate}}.
 #' @export
 forecast <- function(estimates, dates, ...,
-                     restrictions = NULL, point_forecast = NULL) {
+                     restrictions = NULL,
+                     options = list(
+                       approximate = FALSE,
+                       probs = NULL,
+                       fill = list(method = "mean"),
+                       conditional_innov_method = "projection"
+                     )) {
   check_dots_used(...)
   setup_global_progress_handler()
 
@@ -59,29 +85,65 @@ forecast <- function(estimates, dates, ...,
 
 #' @export
 forecast.koma_estimate <- function(estimates, dates, ...,
-                                   restrictions = NULL, point_forecast = NULL) {
+                                   restrictions = NULL,
+                                   options = list(
+                                     approximate = FALSE,
+                                     probs = NULL,
+                                     fill = list(method = "mean"),
+                                     conditional_innov_method = "projection"
+                                   )) {
   stopifnot(inherits(estimates, "koma_estimate"))
 
   validate_forecast_input(estimates, dates)
   dates$current <- iterate_n_periods(dates$forecast$start, -1, 4)
-  fo <- new_forecast(estimates, dates, restrictions, point_forecast)
+  fo <- new_forecast(estimates, dates, restrictions, options)
   validate_forecast_output(fo)
 }
 
-new_forecast <- function(estimates, dates, restrictions, point_forecast) {
+new_forecast <- function(estimates, dates, restrictions, options) {
   ts_data <- estimates$ts_data
   stopifnot(inherits(ts_data, "list"))
   stopifnot(sapply(ts_data, function(x) inherits(x, "koma_ts")))
   stopifnot(is_system_of_equations(estimates$sys_eq))
 
-  # Define default options
-  default_point_forecast <- list(active = TRUE, central_tendency = "mean")
-  # Merge user-provided options with default options
-  if (is.null(point_forecast)) {
-    point_forecast <- default_point_forecast
-  } else {
-    point_forecast <- utils::modifyList(default_point_forecast, point_forecast)
+  if (is.null(options)) {
+    options <- list()
   }
+  if (!is.list(options)) {
+    cli::cli_abort("`options` must be a list.")
+  }
+  approximate <- options$approximate
+  if (is.null(approximate)) {
+    approximate <- FALSE
+  }
+  if (!is.logical(approximate) || length(approximate) != 1L || is.na(approximate)) {
+    cli::cli_abort("`options$approximate` must be a single logical value.")
+  }
+  probs <- options$probs
+  if (is.null(probs) && !approximate) {
+    probs <- setdiff(get_quantiles(), 0.5)
+  }
+  if (!is.null(probs)) {
+    if (!is.numeric(probs) || length(probs) == 0L || anyNA(probs)) {
+      cli::cli_abort("`options$probs` must be a numeric vector with at least one value.")
+    }
+    if (any(probs < 0 | probs > 1)) {
+      cli::cli_abort("`options$probs` must be between 0 and 1.")
+    }
+    if (approximate) {
+      cli::cli_abort("`options$approximate = TRUE` cannot be used with `options$probs`.")
+    }
+  }
+  fill_method <- options$fill$method
+  if (is.null(fill_method)) {
+    fill_method <- "mean"
+  }
+  fill_method <- match.arg(fill_method, c("mean", "median"))
+  conditional_innov_method <- options$conditional_innov_method
+  if (is.null(conditional_innov_method)) {
+    conditional_innov_method <- "projection"
+  }
+  conditional_innov_method <- match.arg(conditional_innov_method, c("projection", "eigen"))
 
   dates <- dates_to_num(dates, frequency = 4)
 
@@ -135,7 +197,7 @@ new_forecast <- function(estimates, dates, restrictions, point_forecast) {
 
     ts_data <- conditional_fill(
       rate(ts_data), estimates$sys_eq, dates, estimates$estimates,
-      point_forecast
+      fill_method
     )
   }
 
@@ -170,7 +232,8 @@ new_forecast <- function(estimates, dates, restrictions, point_forecast) {
   ##### Forecast model
   forecasts <- forecast_sem(
     estimates$sys_eq, estimates$estimates, restrictions, y_matrix, x_matrix,
-    horizon, balanced_data$freq, dates$forecast, point_forecast
+    horizon, balanced_data$freq, dates$forecast, approximate, probs,
+    conditional_innov_method
   )
 
   exogenous_ts_data <- rate(estimates$ts_data[estimates$sys_eq$exogenous_variables])
@@ -346,6 +409,8 @@ validate_forecast_output <- function(x, ...) {
 #' to print. Can be "mean", "median", or a quantile name like "q_5", "q_50",
 #' "q_95". Default is "mean" if available, otherwise "median", or a specified
 #' quantile.
+#' @param digits Optional. Integer number of decimal digits to round the
+#' printed output. Default is 4.
 #'
 #' @details
 #' This function prints the forecasts contained in a `koma_forecast` object.
@@ -358,31 +423,227 @@ validate_forecast_output <- function(x, ...) {
 #' mean forecast if available, otherwise the median forecast, or a specified
 #' quantile.
 #'
+#' Printing converts the selected forecast list to an `mts` for readability; the
+#' underlying `koma_forecast` object remains a list of `koma_ts`.
+#'
 #' @export
 print.koma_forecast <- function(x, ..., variables = NULL,
-                                central_tendency = NULL) {
+                                central_tendency = NULL,
+                                digits = 4) {
+  stopifnot(inherits(x, "koma_forecast"))
+  print(format(
+    x,
+    ...,
+    variables = variables,
+    central_tendency = central_tendency,
+    digits = digits
+  ))
+  invisible(x)
+}
+
+#' @export
+format.koma_forecast <- function(x, ...,
+                                 variables = NULL,
+                                 central_tendency = NULL,
+                                 digits = 4) {
   stopifnot(inherits(x, "koma_forecast"))
 
   if (is.null(central_tendency)) {
-    out <- x[["mean"]]
+    if (!is.null(x[["mean"]])) {
+      out <- x[["mean"]]
+    } else if (!is.null(x[["median"]])) {
+      out <- x[["median"]]
+    } else if (!is.null(x$quantiles) && length(x$quantiles) > 0) {
+      out <- x$quantiles[[1]]
+    } else {
+      stop("No forecasts available to format.")
+    }
   } else if (central_tendency %in% c("mean", "median")) {
     out <- x[[central_tendency]]
-  } else if (central_tendency %in% names(x$quantiles)) {
+  } else if (!is.null(x$quantiles) && central_tendency %in% names(x$quantiles)) {
     out <- x$quantiles[[central_tendency]]
   } else {
     stop("Please provide a valid `central_tendency`.")
   }
 
   if (!is.null(variables)) {
-    stopifnot(any(is.character(variables), is.vector(variables)))
+    stopifnot(is.character(variables))
     out <- out[variables]
   }
-  print(as_mets(out))
+
+  formatted <- as_mets(out)
+  if (!is.null(digits)) {
+    formatted <- round(formatted, digits = digits)
+  }
+  formatted
 }
 
+#' Summary for koma_forecast Objects
+#'
+#' Prints a summary table for forecast horizons, including available central
+#' tendencies (mean/median) and quantiles.
+#'
+#' @param object A `koma_forecast` object.
+#' @param ... Unused.
+#' @param variables Optional character vector to filter variables.
+#' @param horizon Optional numeric or character vector selecting forecast horizon.
+#' @param digits Number of digits to round numeric values. Default is 3.
+#'
+#' @return Invisibly returns `object`.
 #' @export
-format.koma_forecast <- function(x, ...) {
-  NextMethod("print")
+summary.koma_forecast <- function(object,
+                                  ...,
+                                  variables = NULL,
+                                  horizon = NULL,
+                                  digits = 3) {
+  if (!inherits(object, "koma_forecast")) {
+    cli::cli_abort("`object` must be a koma_forecast.")
+  }
+
+  mean_list <- object$mean
+  median_list <- object$median
+  quantiles_list <- object$quantiles
+
+  normalize_quantiles <- function(quantiles) {
+    if (is.null(quantiles) || !length(quantiles)) {
+      return(list())
+    }
+    if (!is.null(names(quantiles))) {
+      probs <- vapply(names(quantiles), parse_quantile_name, numeric(1))
+      if (any(!is.na(probs))) {
+        return(quantiles)
+      }
+    }
+    is_ts_list <- all(vapply(quantiles, function(x) inherits(x, "ts"), logical(1)))
+    if (is_ts_list) {
+      return(list(quantile = quantiles))
+    }
+    quantiles
+  }
+
+  quantiles_list <- normalize_quantiles(quantiles_list)
+
+  base_list <- if (!is.null(mean_list) && length(mean_list)) {
+    mean_list
+  } else if (!is.null(median_list) && length(median_list)) {
+    median_list
+  } else if (length(quantiles_list)) {
+    quantiles_list[[1]]
+  } else {
+    NULL
+  }
+
+  if (is.null(base_list) || !length(base_list)) {
+    cli::cli_abort("No forecasts available in `object`.")
+  }
+
+  if (is.null(variables)) {
+    variables <- names(base_list)
+  }
+  if (!length(variables)) {
+    cli::cli_abort("`variables` must contain at least one variable name.")
+  }
+  missing_vars <- setdiff(variables, names(base_list))
+  if (length(missing_vars) > 0L) {
+    cli::cli_abort(c(
+      "Variable not found in forecasts:",
+      ">" = missing_vars
+    ))
+  }
+
+  has_mean <- !is.null(mean_list) && length(mean_list)
+  has_median <- !is.null(median_list) && length(median_list)
+
+  quantile_names <- names(quantiles_list)
+  quantile_probs <- vapply(quantile_names, parse_quantile_name, numeric(1))
+  quantile_order <- order(is.na(quantile_probs), quantile_probs, seq_along(quantile_names))
+  quantile_names <- quantile_names[quantile_order]
+  quantile_probs <- quantile_probs[quantile_order]
+  quantile_labels <- vapply(seq_along(quantile_names), function(i) {
+    if (!is.na(quantile_probs[i])) {
+      paste0(format(quantile_probs[i] * 100, trim = TRUE), "%")
+    } else {
+      quantile_names[i]
+    }
+  }, character(1))
+
+  value_at <- function(series, idx) {
+    if (is.null(series) || !inherits(series, "ts")) {
+      return(NA_real_)
+    }
+    if (idx > length(series)) {
+      return(NA_real_)
+    }
+    series[idx]
+  }
+
+  for (i in seq_along(variables)) {
+    variable <- variables[[i]]
+    mean_ts <- if (has_mean) mean_list[[variable]] else NULL
+    median_ts <- if (has_median) median_list[[variable]] else NULL
+    quantile_ts <- if (length(quantiles_list)) {
+      lapply(quantiles_list, function(q) q[[variable]])
+    } else {
+      list()
+    }
+
+    base_ts <- if (!is.null(mean_ts)) {
+      mean_ts
+    } else if (!is.null(median_ts)) {
+      median_ts
+    } else if (length(quantile_ts)) {
+      quantile_ts[[1]]
+    } else {
+      NULL
+    }
+
+    if (is.null(base_ts)) {
+      next
+    }
+
+    raw_labels <- format(stats::time(base_ts), trim = TRUE)
+    display_labels <- format_ts_time(base_ts)
+    idx <- summary_forecast_resolve_horizon(horizon, display_labels, raw_labels)
+
+    rows <- lapply(idx, function(j) {
+      row <- c(display_labels[j])
+      if (has_mean) {
+        row <- c(row, summary_forecast_format_num(value_at(mean_ts, j), digits))
+      }
+      if (has_median) {
+        row <- c(row, summary_forecast_format_num(value_at(median_ts, j), digits))
+      }
+      if (length(quantile_ts)) {
+        quant_vals <- vapply(quantile_names, function(qn) {
+          summary_forecast_format_num(value_at(quantile_ts[[qn]], j), digits)
+        }, character(1))
+        row <- c(row, quant_vals)
+      }
+      row
+    })
+
+    if (!length(rows)) {
+      next
+    }
+    row_mat <- do.call(rbind, rows)
+
+    col_names <- c(variable)
+    if (has_mean) col_names <- c(col_names, "Mean")
+    if (has_median) col_names <- c(col_names, "Median")
+    if (length(quantile_labels)) col_names <- c(col_names, quantile_labels)
+
+    summary_forecast_write_table(col_names, row_mat)
+  }
+
+  note_parts <- character(0)
+  if (has_mean) note_parts <- c(note_parts, "Mean")
+  if (has_median) note_parts <- c(note_parts, "Median")
+  if (length(quantile_labels)) note_parts <- c(note_parts, "Quantiles")
+  if (length(note_parts)) {
+    cat(paste(note_parts, collapse = ", "), "\n")
+  }
+
+  invisible(object)
 }
 
 #' @keywords internal

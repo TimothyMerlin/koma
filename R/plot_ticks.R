@@ -237,14 +237,24 @@ get_y_ticks <- function(extremas, num_ticks, center_around) {
 #' a 'min' and 'max' sub-element. These represent the adjusted minimum
 #' and maximum values for the growth rates and levels, respectively.
 #' @keywords internal
-find_extremas <- function(df_long) {
+find_extremas <- function(df_long, whisker_data = NULL) {
   df_growth <- subset(df_long, df_long$data_type == "growth")
   df_level <- subset(df_long, df_long$data_type == "level")
 
+  growth_min <- min(df_growth$value)
+  growth_max <- max(df_growth$value)
+  if (!is.null(whisker_data) && nrow(whisker_data) > 0) {
+    whisker_growth <- subset(whisker_data, whisker_data$data_type == "growth")
+    if (nrow(whisker_growth) > 0) {
+      growth_min <- min(c(growth_min, whisker_growth$lower), na.rm = TRUE)
+      growth_max <- max(c(growth_max, whisker_growth$upper), na.rm = TRUE)
+    }
+  }
+
   return(list(
     growth = list(
-      min = min(df_growth$value) - 0.04 * abs(min(df_growth$value)),
-      max = max(df_growth$value) + 0.04 * abs(min(df_growth$value))
+      min = growth_min - 0.04 * abs(growth_min),
+      max = growth_max + 0.04 * abs(growth_min)
     ),
     level = list(
       min = min(df_level$value) - 0.04 * abs(min(df_level$value)),
@@ -264,7 +274,7 @@ find_extremas <- function(df_long) {
 #' @return A list with y1 (growth) values and text, y2 (level)
 #' text and extremas.
 #' @keywords internal
-get_optimal_ticks <- function(df_long, x_range) {
+get_optimal_ticks <- function(df_long, x_range, whisker_data = NULL) {
   optimal_num_ticks_for_both_axes <- function(min_val1, max_val1,
                                               min_val2, max_val2) {
     # Calculate the span of the data for both axes
@@ -306,8 +316,15 @@ get_optimal_ticks <- function(df_long, x_range) {
     df_long$dates >= x_range$start &
       df_long$dates <= x_range$end
   )
+  if (!is.null(whisker_data)) {
+    whisker_data <- subset(
+      whisker_data,
+      whisker_data$dates >= x_range$start &
+        whisker_data$dates <= x_range$end
+    )
+  }
   # Find min and max values
-  extremas <- find_extremas(df_long)
+  extremas <- find_extremas(df_long, whisker_data)
 
   # Find optimal number of ticks
   num_ticks <- optimal_num_ticks_for_both_axes(
