@@ -1,4 +1,4 @@
-# koma (development)
+# koma 0.2.0
 
 * Added fan chart support in forecast plots, including density-based visuals built from stochastic draws.
 * Added growth-rate whiskers to forecast plots when fan charts are enabled.
