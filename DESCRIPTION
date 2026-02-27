@@ -1,6 +1,6 @@
 Package: koma
 Title: A Large Scale Macroeconomic Model 
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: c(
     person("Samad", "Sarferaz", , "sarferaz@kof.ethz.ch", role = c("aut", "cph")),
     person("Laurent", "Florin", , "florin@kof.ethz.ch", role = c("aut")),

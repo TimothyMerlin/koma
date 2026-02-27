@@ -1,3 +1,7 @@
+# koma 0.2.1
+
+* Fix pkgdown site build by adding package URL and completing `_pkgdown.yml` reference index.
+
 # koma 0.2.0
 
 * Added fan chart support in forecast plots, including density-based visuals built from stochastic draws.
