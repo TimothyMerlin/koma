@@ -71,6 +71,30 @@ reference:
       - print.koma_seq
       - model_evaluation
 
+  - title: HPD and Diagnostics
+    contents:
+      - hdi
+      - hdi.koma_estimate
+      - hdi.koma_forecast
+      - hdr
+      - hdr.koma_estimate
+      - hdr.koma_forecast
+      - summary.koma_estimate_hdi
+      - summary.koma_estimate_hdr
+      - summary.koma_forecast
+      - summary.koma_forecast_hdi
+      - summary.koma_forecast_hdr
+      - summary.koma_hdi
+      - summary.koma_hdr
+      - print.koma_hdi
+      - print.koma_hdr
+      - trace_plot
+      - acf_plot
+      - running_mean
+      - running_mean_plot
+      - plot.koma_estimate_hdr
+      - extract.koma_estimate
+
 articles:
   - title: "Getting started"
     contents: 

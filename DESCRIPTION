@@ -6,6 +6,7 @@ Authors@R: c(
     person("Laurent", "Florin", , "florin@kof.ethz.ch", role = c("aut")),
     person("Merlin", "Scherer", , "scherer@kof.ethz.ch", role = c("aut", "cre"), comment = c(ORCID = "0009-0005-7479-168X")))
 Description: A Bayesian Simultaneous Equations Model for Forecasting.
+URL: https://timothymerlin.github.io/koma, https://github.com/timothymerlin/koma
 License: GPL (>= 3)
 Suggests:
     devtools (>= 2.4.5),
