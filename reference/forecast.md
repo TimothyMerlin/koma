@@ -5,7 +5,14 @@ This function produces forecasts for the SEM.
 ## Usage
 
 ``` r
-forecast(estimates, dates, ..., restrictions = NULL, point_forecast = NULL)
+forecast(
+  estimates,
+  dates,
+  ...,
+  restrictions = NULL,
+  options = list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
+    conditional_innov_method = "projection")
+)
 ```
 
 ## Arguments
@@ -31,17 +38,25 @@ forecast(estimates, dates, ..., restrictions = NULL, point_forecast = NULL)
 
   List of model constraints. Default is empty.
 
-- point_forecast:
+- options:
 
-  A list that contains the following elements:
+  Optional settings for forecasting. Use
+  `list(approximate = FALSE, probs = NULL, fill = list(method = "mean"), conditional_innov_method = "projection")`.
+  Elements:
 
-  - `active`: Determines the type of forecast generated. If TRUE, a
-    point forecast is created. If FALSE, a density forecast is returned.
-    Default is TRUE.
+  - `approximate`: Logical. If FALSE (default), compute point forecasts
+    from predictive draws. If TRUE, compute point forecasts from the
+    mean/median of coefficient draws (fast approximation).
 
-  - `central_tendency`: A character string indicating which central
-    tendency measure ("mean" or "median") to use for summary statistics.
-    Default is "mean".
+  - `probs`: Numeric vector of quantile probabilities. If NULL, no
+    quantiles are returned. When `approximate = FALSE` and `probs` is
+    NULL, defaults to `setdiff(get_quantiles(), 0.5)`.
+
+  - `fill$method`: "mean" or "median" used for conditional fill before
+    forecasting.
+
+  - `conditional_innov_method`: Method for drawing conditional
+    innovations. One of `"projection"` (default) or `"eigen"`.
 
 ## Value
 
@@ -61,8 +76,8 @@ elements:
 - quantiles:
 
   A list of quantiles, where each element is named according to the
-  quantile (e.g., "5", "50", "95"), and contains the forecasts for that
-  quantile. This element is NULL if `quantiles = FALSE`.
+  quantile (e.g., "q_5", "q_50", "q_95"), and contains the forecasts for
+  that quantile. This element is NULL if `quantiles = FALSE`.
 
 - ts_data:
 
@@ -80,10 +95,16 @@ elements:
 ## Details
 
 The `forecast` function for SEM uses the estimates from the
-`koma_estimate` object to produce point forecasts or quantile forecasts
-based on the `point_forecast` parameter. If `point_forecast$active` is
-`TRUE`, only point forecasts are generated. If `FALSE`, quantile
-forecasts are generated and included in the `quantiles` list.
+`koma_estimate` object to produce point forecasts and, optionally,
+quantile forecasts. When `options$approximate` is FALSE (default), point
+forecasts are computed from the predictive draws (with quantiles
+controlled by `options$probs`). When TRUE, point forecasts are computed
+from the mean and median of the coefficient draws for faster,
+approximate results.
+
+The returned `koma_forecast` object keeps forecasts as named lists of
+`koma_ts` (for `mean`, `median`, and `quantiles`) alongside the input
+data and matrices used to produce them.
 
 Use the
 [`print`](https://timothymerlin.github.io/koma/reference/print.koma_forecast.md)

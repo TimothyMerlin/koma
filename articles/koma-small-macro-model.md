@@ -204,7 +204,7 @@ print(estimates)
 ##         exports ~  - 0.29  +  3.2 * world_gdp - 0.3 * exports.L(1)
 ##         imports ~  - 0.05  +  2.61 * domestic_demand - 0.11 * imports.L(1)
 ##          prices ~  0.04  +  0.03 * exchange_rate  +  0.01 * oil_price  +  0.56 * prices.L(1)
-##   interest_rate ~  - 0.51  +  0.47 * prices  +  0.57 * interest_rate_germany - 0.19 * 0.47 * prices.L(1)
+##   interest_rate ~  - 0.51  +  0.47 * prices  +  0.57 * interest_rate_germany - 0.19 * prices.L(1)
 ##             gdp == 0.6 * consumption  +  0.6 * domestic_demand  +  0.5 * exports - 0.4 * imports
 ## domestic_demand == 0.6 * consumption  +  0.4 * investment
 ```
@@ -242,7 +242,8 @@ summary(estimates)
 ## prices                                                                                             0.47        
 ##                                                                                                  [ 0.05;  0.96]
 ## ===============================================================================================================
-## Posterior mean (90% credible interval: [5.0%,  95.0%])
+## Posterior mean (90% credible interval: [5.0%, 95.0%])
+## Estimation period: 1996 Q1 - 2019 Q4
 ```
 
 ``` r
@@ -256,11 +257,41 @@ summary(estimates, variables = "investment")
 ## investment.L(1)   0.21       
 ##                  [0.03; 0.40]
 ## =============================
-## Posterior mean (90% credible interval: [5.0%,  95.0%])
+## Posterior mean (90% credible interval: [5.0%, 95.0%])
+## Estimation period: 1996 Q1 - 2019 Q4
 ```
 
 To see how to run the estimation in parallel, refer to the [parallel
 estimation vignette](https://timothymerlin.github.io/koma/parallel.md).
+
+## Diagnostics
+
+You can visualize MCMC diagnostics for coefficient draws using
+[`trace_plot()`](https://timothymerlin.github.io/koma/reference/trace_plot.md).
+
+``` r
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  trace_plot(estimates, variables = c("consumption", "investment"))
+}
+```
+
+You can also inspect running means (cumulative averages) with
+[`running_mean_plot()`](https://timothymerlin.github.io/koma/reference/running_mean_plot.md).
+
+``` r
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  running_mean_plot(estimates, variables = c("consumption", "investment"))
+}
+```
+
+You can inspect autocorrelation diagnostics with
+[`acf_plot()`](https://timothymerlin.github.io/koma/reference/acf_plot.md).
+
+``` r
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  acf_plot(estimates, variables = c("consumption", "investment"))
+}
+```
 
 ## Forecasting
 
@@ -274,36 +305,35 @@ forecasts <- forecast(
 )
 ## 
 ## ── Forecast ────────────────────────────────────────────────────────────────────
-## ✔ Forecasting completed.
+## 
+## Conditional fill detected after "2019 Q4".
+## Missing observations for: "consumption", "investment", "exports", "imports",
+## "prices", "interest_rate", "gdp", and "domestic_demand"
+## Missing values will be conditionally filled up to "2022 Q4" before forecasting.
 ## ✔ Forecasting completed.
 print(forecasts)
-##         consumption investment   exports  imports       prices interest_rate
-## 2023 Q1   0.3856023  0.5694451 1.2785726 1.033484 -0.056041196     0.8415619
-## 2023 Q2   0.3929089  0.5694450 0.6326627 1.048218 -0.069807507     1.2598407
-## 2023 Q3   0.3901838  0.5694450 0.8800770 1.042363  0.014919830     1.5836742
-## 2023 Q4   0.3970220  0.5694450 0.3740086 1.053709 -0.008441888     1.6966126
-##               gdp domestic_demand world_gdp interest_rate_germany exchange_rate
-## 2023 Q1 0.7327378       0.4591394 0.4827344              2.388667     0.9217413
-## 2023 Q2 0.4109035       0.4635233 0.4083410              3.146000    -1.3863355
-## 2023 Q3 0.5343367       0.4618883 0.4259099              3.639333    -1.7869351
-## 2023 Q4 0.2833288       0.4659912 0.2905613              3.885000    -0.7501833
-##         oil_price
-## 2023 Q1 -8.752037
-## 2023 Q2 -3.378704
-## 2023 Q3  9.900140
-## 2023 Q4 -3.337319
+##         consumption investment exports imports  prices interest_rate    gdp
+## 2023 Q1      0.3940     0.4953  1.2033  1.0677 -0.0587        0.8385 0.6717
+## 2023 Q2      0.3821     0.4917  0.6258  0.9778 -0.0703        1.2689 0.4066
+## 2023 Q3      0.3836     0.5117  0.7445  0.9278  0.0100        1.5664 0.4922
+## 2023 Q4      0.3883     0.5711  0.3600  0.9941 -0.0114        1.6947 0.2922
+##         domestic_demand world_gdp interest_rate_germany exchange_rate oil_price
+## 2023 Q1          0.4345    0.4827                2.3887        0.9217   -8.7520
+## 2023 Q2          0.4259    0.4083                3.1460       -1.3863   -3.3787
+## 2023 Q3          0.4348    0.4259                3.6393       -1.7869    9.9001
+## 2023 Q4          0.4614    0.2906                3.8850       -0.7502   -3.3373
 ```
 
 ``` r
 rate(forecasts$mean$gdp)
 ## rate, diff_log, c(192510.114596192, 2022.75)
 ##           Qtr1      Qtr2      Qtr3      Qtr4
-## 2023 0.7327378 0.4109035 0.5343367 0.2833288
+## 2023 0.6716659 0.4066033 0.4921892 0.2921809
 level(forecasts$mean$gdp)
 ## level, diff_log
 ##          Qtr1     Qtr2     Qtr3     Qtr4
 ## 2022                            192510.1
-## 2023 193925.9 194724.4 195767.6 196323.1
+## 2023 193807.5 194597.1 195557.3 196129.5
 ```
 
 ### Conditional Forecasting

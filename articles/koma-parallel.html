@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,14 +52,14 @@
       <h1>Executing `koma` in Parallel</h1>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/vignettes/koma-parallel.Rmd" class="external-link"><code>vignettes/koma-parallel.Rmd</code></a></small>
       <div class="d-none name"><code>koma-parallel.Rmd</code></div>
     </div>
 
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">koma</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://timothymerlin.github.io/koma">koma</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h2>
@@ -81,7 +81,7 @@ packages:</p>
 illustrate the use of <code><a href="https://future.futureverse.org/reference/plan.html" class="external-link">future::plan</a></code>. The setup is the
 following:</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">koma</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://timothymerlin.github.io/koma">koma</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">equations</span> <span class="op">&lt;-</span> <span class="st">"consumption ~ gdp + consumption.L(1),</span></span>
 <span><span class="st">investment ~ investment.L(1),</span></span>
@@ -95,8 +95,8 @@ following:</p>
 <span><span class="va">exogenous_variables</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"world_gdp"</span>, <span class="st">"interest_rate_germany"</span>, <span class="st">"exchange_rate"</span>, <span class="st">"oil_price"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">dates</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span></span>
-<span>  estimation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1996</span>, <span class="fl">1</span><span class="op">)</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2019</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  forecast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2023</span>, <span class="fl">1</span><span class="op">)</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2023</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
+<span>    estimation <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1996</span>, <span class="fl">1</span><span class="op">)</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2019</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    forecast <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2023</span>, <span class="fl">1</span><span class="op">)</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2023</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sys_eq</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/system_of_equations.html">system_of_equations</a></span><span class="op">(</span><span class="va">equations</span>, <span class="va">exogenous_variables</span><span class="op">)</span></span>
@@ -105,17 +105,17 @@ following:</p>
 <span><span class="va">series</span> <span class="op">&lt;-</span> <span class="va">series</span><span class="op">[</span><span class="op">!</span><span class="va">series</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"interest_rate"</span>, <span class="st">"interest_rate_germany"</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="va">ts_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">series</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="../reference/koma_ts.html">as_ets</a></span><span class="op">(</span><span class="va">small_open_economy</span><span class="op">[[</span><span class="va">x</span><span class="op">]</span><span class="op">]</span>,</span>
-<span>    series_type <span class="op">=</span> <span class="st">"level"</span>, method <span class="op">=</span> <span class="st">"diff_log"</span></span>
-<span>  <span class="op">)</span></span>
+<span>    <span class="fu"><a href="../reference/koma_ts.html">as_ets</a></span><span class="op">(</span><span class="va">small_open_economy</span><span class="op">[[</span><span class="va">x</span><span class="op">]</span><span class="op">]</span>,</span>
+<span>        series_type <span class="op">=</span> <span class="st">"level"</span>, method <span class="op">=</span> <span class="st">"diff_log"</span></span>
+<span>    <span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">ts_data</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">series</span></span>
 <span></span>
 <span><span class="va">ts_data</span><span class="op">$</span><span class="va">interest_rate</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/koma_ts.html">as_ets</a></span><span class="op">(</span><span class="va">small_open_economy</span><span class="op">$</span><span class="va">interest_rate</span>,</span>
-<span>  series_type <span class="op">=</span> <span class="st">"rate"</span>, method <span class="op">=</span> <span class="st">"none"</span></span>
+<span>    series_type <span class="op">=</span> <span class="st">"rate"</span>, method <span class="op">=</span> <span class="st">"none"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">ts_data</span><span class="op">$</span><span class="va">interest_rate_germany</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/koma_ts.html">as_ets</a></span><span class="op">(</span><span class="va">small_open_economy</span><span class="op">$</span><span class="va">interest_rate_germany</span>,</span>
-<span>  series_type <span class="op">=</span> <span class="st">"rate"</span>, method <span class="op">=</span> <span class="st">"none"</span></span>
+<span>    series_type <span class="op">=</span> <span class="st">"rate"</span>, method <span class="op">=</span> <span class="st">"none"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
@@ -123,7 +123,7 @@ following:</p>
 </h2>
 <p>By default, R executes code sequentially. For example:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">out_estimation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate.html">estimate</a></span><span class="op">(</span><span class="va">ts_data</span>, <span class="va">sys_eq</span>, <span class="va">dates</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="va">estimates</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate.html">estimate</a></span><span class="op">(</span><span class="va">ts_data</span>, <span class="va">sys_eq</span>, <span class="va">dates</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="parallel-execution-with-futureplan">Parallel Execution with <code>future::plan</code><a class="anchor" aria-label="anchor" href="#parallel-execution-with-futureplan"></a>
@@ -147,7 +147,7 @@ run on. Here we use all cores except one.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">future</span><span class="fu">::</span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="st">"future::multisession"</span>, workers <span class="op">=</span> <span class="va">workers</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">out_estimation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate.html">estimate</a></span><span class="op">(</span><span class="va">ts_data</span>, <span class="va">sys_eq</span>, <span class="va">dates</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">estimates</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate.html">estimate</a></span><span class="op">(</span><span class="va">ts_data</span>, <span class="va">sys_eq</span>, <span class="va">dates</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level3">
 <h3 id="unix-like-systems">Unix-like systems<a class="anchor" aria-label="anchor" href="#unix-like-systems"></a>
@@ -156,7 +156,7 @@ run on. Here we use all cores except one.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">future</span><span class="fu">::</span><span class="fu"><a href="https://future.futureverse.org/reference/plan.html" class="external-link">plan</a></span><span class="op">(</span><span class="st">"future::multicore"</span>, workers <span class="op">=</span> <span class="va">workers</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">out_estimation</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate.html">estimate</a></span><span class="op">(</span><span class="va">ts_data</span>, <span class="va">sys_eq</span>, <span class="va">dates</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">estimates</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate.html">estimate</a></span><span class="op">(</span><span class="va">ts_data</span>, <span class="va">sys_eq</span>, <span class="va">dates</span><span class="op">)</span></span></code></pre></div>
 </div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

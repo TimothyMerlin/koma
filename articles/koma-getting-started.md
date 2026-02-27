@@ -63,40 +63,50 @@ dates <- list(
 
 ## Prepare the data
 
-We convert the raw `ts` series to `ets` objects and trim endogenous
-series to the estimation window, leaving exogenous data available for
-the forecast.
+We use the `small_open_economy` dataset, which is a list of `ts`
+objects. We’ll keep only the variables that appear in the system.
 
 ``` r
-series_level <- c(
-    "consumption",
-    "investment",
-    "exports",
-    "imports",
-    "domestic_demand",
-    "gdp",
-    "world_gdp",
-    "exchange_rate"
-)
+data("small_open_economy")
+series <- unique(c(sys_eq$endogenous_variables, sys_eq$exogenous_variables))
+ts_data <- small_open_economy[series]
+```
 
-ts_data <- lapply(series_level, function(x) {
-    as_ets(small_open_economy[[x]],
-        series_type = "level",
-        method = "diff_log"
-    )
+If you pass `ts` objects directly,
+[`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md)
+will prompt you for default conversion settings and optional exceptions.
+For example, we override the defaults to use level/diff_log and keep
+`interest_rate` as a rate series:
+
+``` r
+estimates <- estimate(ts_data, sys_eq, dates)
+#> Some of the time series in `ts_data` are not `ets`.
+#> They will be automatically converted with `as_ets` using the defaults:
+#> Default settings
+#> series_type = level
+#> method = percentage
+#> Are these correct? (y/n): n
+#> Enter series_type: level
+#> Enter method: diff_log
+#> Specify exception to default settings? (y/n): y
+#> Enter series name: interest_rate
+#> Enter series_type for interest_rate (default level): rate
+#> Enter method for interest_rate (default diff_log): none
+#> Specify exception to default settings? (y/n): n
+```
+
+In this vignette we convert explicitly to keep the example
+non-interactive:
+
+``` r
+ts_data <- lapply(ts_data, function(x) {
+    as_ets(x, series_type = "level", method = "diff_log")
 })
-names(ts_data) <- series_level
-
 ts_data$interest_rate <- as_ets(
-    small_open_economy$interest_rate,
+    ts_data$interest_rate,
     series_type = "rate",
     method = "none"
 )
-
-ts_data[sys_eq$endogenous_variables] <-
-    lapply(sys_eq$endogenous_variables, function(x) {
-        stats::window(ts_data[[x]], end = dates$estimation$end)
-    })
 ```
 
 ## Estimate the model
@@ -158,38 +168,135 @@ summary(estimates)
 #> imports.L(1)                                                     -0.14        
 #>                                                                 [-0.31;  0.03]
 #> ==============================================================================
-#> Posterior mean (90% credible interval: [5.0%,  95.0%])
+#> Posterior mean (90% credible interval: [5.0%, 95.0%])
+#> Estimation period: 1996 Q1 - 2019 Q4
 ```
 
 ## Forecast and inspect
+
+Before forecasting, truncate endogenous series so they end in the
+quarter before the forecast start date.
+
+``` r
+estimates$ts_data[sys_eq$endogenous_variables] <-
+    lapply(sys_eq$endogenous_variables, function(x) {
+        stats::window(estimates$ts_data[[x]], end = c(2022, 4))
+    })
+```
 
 ``` r
 forecasts <- forecast(estimates, dates)
 #> 
 #> ── Forecast ────────────────────────────────────────────────────────────────────
-#> ✔ Forecasting completed.
-#> ✔ Forecasting completed.
 print(forecasts)
-#>         consumption  investment   exports   imports       gdp interest_rate
-#> 2023 Q1   0.4053098  0.93760500 1.3944842 1.2688461 0.6992962      1.100896
-#> 2023 Q2   0.4320724 -0.15417638 0.3433207 0.5094146 0.1858886      1.522694
-#> 2023 Q3   0.4408521 -0.08781447 0.5726424 0.7634791 0.2186501      1.707523
-#> 2023 Q4   0.4409708 -0.07201064 0.3998921 0.5492471 0.2269048      1.700577
-#>         world_gdp exchange_rate
-#> 2023 Q1 0.4827344     0.9217413
-#> 2023 Q2 0.4083410    -1.3863355
-#> 2023 Q3 0.4259099    -1.7869351
-#> 2023 Q4 0.2905613    -0.7501833
+#>         consumption investment exports imports    gdp interest_rate world_gdp
+#> 2023 Q1      0.3989     0.8350  1.4131  1.3520 0.6384        1.1009    0.4827
+#> 2023 Q2      0.4152    -0.1407  0.3795  0.4908 0.2083        1.5227    0.4083
+#> 2023 Q3      0.4284    -0.0777  0.5249  0.7429 0.1960        1.7075    0.4259
+#> 2023 Q4      0.4387    -0.0304  0.3685  0.5198 0.2329        1.7006    0.2906
+#>         exchange_rate
+#> 2023 Q1        0.9217
+#> 2023 Q2       -1.3863
+#> 2023 Q3       -1.7869
+#> 2023 Q4       -0.7502
 
 rate(forecasts$mean$gdp)
-#> rate, diff_log, c(189347.268533194, 2022.75)
+#> rate, diff_log, c(191668.860623222, 2022.75)
 #>           Qtr1      Qtr2      Qtr3      Qtr4
-#> 2023 0.6992962 0.1858886 0.2186501 0.2269048
+#> 2023 0.6384174 0.2083174 0.1959766 0.2328886
 level(forecasts$mean$gdp)
 #> level, diff_log
 #>          Qtr1     Qtr2     Qtr3     Qtr4
-#> 2022                            189347.3
-#> 2023 190676.0 191030.8 191448.9 191883.8
+#> 2022                            191668.9
+#> 2023 192896.4 193298.7 193677.9 194129.4
+```
+
+You can also summarize forecast horizons with mean/median and quantiles:
+
+``` r
+summary(forecasts)
+#> =========================================
+#> consumption  Mean   Median  5%      95%  
+#> -----------------------------------------
+#> 2023 Q1      0.399   0.409  -0.034  0.789
+#> 2023 Q2      0.415   0.414   0.003  0.843
+#> 2023 Q3      0.428   0.434   0.037  0.843
+#> 2023 Q4      0.439   0.437  -0.004  0.881
+#> =========================================
+#> 
+#> =========================================
+#> investment  Mean    Median  5%      95%  
+#> -----------------------------------------
+#> 2023 Q1      0.835   0.795   -3.62  5.269
+#> 2023 Q2     -0.141  -0.129  -5.131  4.645
+#> 2023 Q3     -0.078  -0.087  -5.036  4.598
+#> 2023 Q4      -0.03   0.009  -5.005  4.899
+#> =========================================
+#> 
+#> =====================================
+#> exports  Mean   Median  5%      95%  
+#> -------------------------------------
+#> 2023 Q1  1.413   1.453  -2.239  5.073
+#> 2023 Q2   0.38   0.327  -3.216  4.085
+#> 2023 Q3  0.525   0.578  -3.728  4.495
+#> 2023 Q4  0.369   0.363  -3.389  4.178
+#> =====================================
+#> 
+#> =====================================
+#> imports  Mean   Median  5%      95%  
+#> -------------------------------------
+#> 2023 Q1  1.352   1.392  -1.803  4.605
+#> 2023 Q2  0.491   0.504  -2.952  3.907
+#> 2023 Q3  0.743   0.806  -3.049  4.298
+#> 2023 Q4   0.52   0.489  -2.811  4.053
+#> =====================================
+#> 
+#> =====================================
+#> gdp      Mean   Median  5%      95%  
+#> -------------------------------------
+#> 2023 Q1  0.638   0.622   -0.95   2.33
+#> 2023 Q2  0.208   0.189  -1.575  2.043
+#> 2023 Q3  0.196   0.198  -1.526  1.992
+#> 2023 Q4  0.233   0.262  -1.601  2.145
+#> =====================================
+#> 
+#> ==========================================
+#> interest_rate  Mean   Median  5%     95%  
+#> ------------------------------------------
+#> 2023 Q1        1.101   1.101  1.101  1.101
+#> 2023 Q2        1.523   1.523  1.523  1.523
+#> 2023 Q3        1.708   1.708  1.708  1.708
+#> 2023 Q4        1.701   1.701  1.701  1.701
+#> ==========================================
+#> 
+#> ======================================
+#> world_gdp  Mean   Median  5%     95%  
+#> --------------------------------------
+#> 2023 Q1    0.483   0.483  0.483  0.483
+#> 2023 Q2    0.408   0.408  0.408  0.408
+#> 2023 Q3    0.426   0.426  0.426  0.426
+#> 2023 Q4    0.291   0.291  0.291  0.291
+#> ======================================
+#> 
+#> =============================================
+#> exchange_rate  Mean    Median  5%      95%   
+#> ---------------------------------------------
+#> 2023 Q1         0.922   0.922   0.922   0.922
+#> 2023 Q2        -1.386  -1.386  -1.386  -1.386
+#> 2023 Q3        -1.787  -1.787  -1.787  -1.787
+#> 2023 Q4         -0.75   -0.75   -0.75   -0.75
+#> =============================================
+#> 
+#> Mean, Median, Quantiles
+summary(forecasts, variables = "gdp", horizon = 2)
+#> =====================================
+#> gdp      Mean   Median  5%      95%  
+#> -------------------------------------
+#> 2023 Q1  0.638   0.622   -0.95   2.33
+#> 2023 Q2  0.208   0.189  -1.575  2.043
+#> =====================================
+#> 
+#> Mean, Median, Quantiles
 ```
 
 ``` r

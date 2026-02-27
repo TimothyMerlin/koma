@@ -36,6 +36,16 @@ plot(x, y = NULL, ...)
 
   :   Optional. A theme for the plot. Default is NULL.
 
+  fan
+
+  :   Optional. Logical. If TRUE, add a fan chart from quantiles.
+
+  fan_quantiles
+
+  :   Optional. Numeric probabilities in (0, 1\] (or percentages in
+      `[0, 100]`) to define fan-chart bands. Default uses the available
+      quantiles.
+
   central_tendency
 
   :   Optional. A string specifying the type of forecast to print. Can

@@ -42,8 +42,8 @@ domestic_demand == 0.6*consumption + 0.4*investment"
 exogenous_variables <- c("world_gdp", "interest_rate_germany", "exchange_rate", "oil_price")
 
 dates <- list(
-  estimation = list(start = c(1996, 1), end = c(2019, 4)),
-  forecast = list(start = c(2023, 1), end = c(2023, 4))
+    estimation = list(start = c(1996, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 1), end = c(2023, 4))
 )
 
 sys_eq <- system_of_equations(equations, exogenous_variables)
@@ -52,17 +52,17 @@ series <- names(small_open_economy)
 series <- series[!series %in% c("interest_rate", "interest_rate_germany")]
 
 ts_data <- lapply(series, function(x) {
-  as_ets(small_open_economy[[x]],
-    series_type = "level", method = "diff_log"
-  )
+    as_ets(small_open_economy[[x]],
+        series_type = "level", method = "diff_log"
+    )
 })
 names(ts_data) <- series
 
 ts_data$interest_rate <- as_ets(small_open_economy$interest_rate,
-  series_type = "rate", method = "none"
+    series_type = "rate", method = "none"
 )
 ts_data$interest_rate_germany <- as_ets(small_open_economy$interest_rate_germany,
-  series_type = "rate", method = "none"
+    series_type = "rate", method = "none"
 )
 ```
 
@@ -71,7 +71,7 @@ ts_data$interest_rate_germany <- as_ets(small_open_economy$interest_rate_germany
 By default, R executes code sequentially. For example:
 
 ``` r
-out_estimation <- estimate(ts_data, sys_eq, dates)
+estimates <- estimate(ts_data, sys_eq, dates)
 ```
 
 ## Parallel Execution with `future::plan`
@@ -98,7 +98,7 @@ For Windows, you can use **multisession**:
 ``` r
 future::plan("future::multisession", workers = workers)
 
-out_estimation <- estimate(ts_data, sys_eq, dates)
+estimates <- estimate(ts_data, sys_eq, dates)
 ```
 
 ### Unix-like systems
@@ -108,5 +108,5 @@ For Unix-like systems, you can use **multicore**:
 ``` r
 future::plan("future::multicore", workers = workers)
 
-out_estimation <- estimate(ts_data, sys_eq, dates)
+estimates <- estimate(ts_data, sys_eq, dates)
 ```

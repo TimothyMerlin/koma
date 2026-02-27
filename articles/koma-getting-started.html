@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,14 +52,14 @@
       <h1>Estimating and Forecasting with the koma Package</h1>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/vignettes/koma-getting-started.Rmd" class="external-link"><code>vignettes/koma-getting-started.Rmd</code></a></small>
       <div class="d-none name"><code>koma-getting-started.Rmd</code></div>
     </div>
 
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">koma</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://timothymerlin.github.io/koma">koma</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
@@ -117,44 +117,48 @@ estimation window.</p>
 <div class="section level2">
 <h2 id="prepare-the-data">Prepare the data<a class="anchor" aria-label="anchor" href="#prepare-the-data"></a>
 </h2>
-<p>We convert the raw <code>ts</code> series to <code>ets</code> objects
-and trim endogenous series to the estimation window, leaving exogenous
-data available for the forecast.</p>
+<p>We use the <code>small_open_economy</code> dataset, which is a list
+of <code>ts</code> objects. We’ll keep only the variables that appear in
+the system.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">series_level</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    <span class="st">"consumption"</span>,</span>
-<span>    <span class="st">"investment"</span>,</span>
-<span>    <span class="st">"exports"</span>,</span>
-<span>    <span class="st">"imports"</span>,</span>
-<span>    <span class="st">"domestic_demand"</span>,</span>
-<span>    <span class="st">"gdp"</span>,</span>
-<span>    <span class="st">"world_gdp"</span>,</span>
-<span>    <span class="st">"exchange_rate"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">ts_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">series_level</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
-<span>    <span class="fu"><a href="../reference/koma_ts.html">as_ets</a></span><span class="op">(</span><span class="va">small_open_economy</span><span class="op">[[</span><span class="va">x</span><span class="op">]</span><span class="op">]</span>,</span>
-<span>        series_type <span class="op">=</span> <span class="st">"level"</span>,</span>
-<span>        method <span class="op">=</span> <span class="st">"diff_log"</span></span>
-<span>    <span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/data.html" class="external-link">data</a></span><span class="op">(</span><span class="st">"small_open_economy"</span><span class="op">)</span></span>
+<span><span class="va">series</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sys_eq</span><span class="op">$</span><span class="va">endogenous_variables</span>, <span class="va">sys_eq</span><span class="op">$</span><span class="va">exogenous_variables</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="va">ts_data</span> <span class="op">&lt;-</span> <span class="va">small_open_economy</span><span class="op">[</span><span class="va">series</span><span class="op">]</span></span></code></pre></div>
+<p>If you pass <code>ts</code> objects directly, <code><a href="../reference/estimate.html">estimate()</a></code>
+will prompt you for default conversion settings and optional exceptions.
+For example, we override the defaults to use level/diff_log and keep
+<code>interest_rate</code> as a rate series:</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">estimates</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate.html">estimate</a></span><span class="op">(</span><span class="va">ts_data</span>, <span class="va">sys_eq</span>, <span class="va">dates</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Some of the time series in `ts_data` are not `ets`.</span></span>
+<span><span class="co">#&gt; They will be automatically converted with `as_ets` using the defaults:</span></span>
+<span><span class="co">#&gt; Default settings</span></span>
+<span><span class="co">#&gt; series_type = level</span></span>
+<span><span class="co">#&gt; method = percentage</span></span>
+<span><span class="co">#&gt; Are these correct? (y/n): n</span></span>
+<span><span class="co">#&gt; Enter series_type: level</span></span>
+<span><span class="co">#&gt; Enter method: diff_log</span></span>
+<span><span class="co">#&gt; Specify exception to default settings? (y/n): y</span></span>
+<span><span class="co">#&gt; Enter series name: interest_rate</span></span>
+<span><span class="co">#&gt; Enter series_type for interest_rate (default level): rate</span></span>
+<span><span class="co">#&gt; Enter method for interest_rate (default diff_log): none</span></span>
+<span><span class="co">#&gt; Specify exception to default settings? (y/n): n</span></span></code></pre></div>
+<p>In this vignette we convert explicitly to keep the example
+non-interactive:</p>
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">ts_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">ts_data</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>    <span class="fu"><a href="../reference/koma_ts.html">as_ets</a></span><span class="op">(</span><span class="va">x</span>, series_type <span class="op">=</span> <span class="st">"level"</span>, method <span class="op">=</span> <span class="st">"diff_log"</span><span class="op">)</span></span>
 <span><span class="op">}</span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">ts_data</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">series_level</span></span>
-<span></span>
 <span><span class="va">ts_data</span><span class="op">$</span><span class="va">interest_rate</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/koma_ts.html">as_ets</a></span><span class="op">(</span></span>
-<span>    <span class="va">small_open_economy</span><span class="op">$</span><span class="va">interest_rate</span>,</span>
+<span>    <span class="va">ts_data</span><span class="op">$</span><span class="va">interest_rate</span>,</span>
 <span>    series_type <span class="op">=</span> <span class="st">"rate"</span>,</span>
 <span>    method <span class="op">=</span> <span class="st">"none"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">ts_data</span><span class="op">[</span><span class="va">sys_eq</span><span class="op">$</span><span class="va">endogenous_variables</span><span class="op">]</span> <span class="op">&lt;-</span></span>
-<span>    <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">sys_eq</span><span class="op">$</span><span class="va">endogenous_variables</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
-<span>        <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">ts_data</span><span class="op">[[</span><span class="va">x</span><span class="op">]</span><span class="op">]</span>, end <span class="op">=</span> <span class="va">dates</span><span class="op">$</span><span class="va">estimation</span><span class="op">$</span><span class="va">end</span><span class="op">)</span></span>
-<span>    <span class="op">}</span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="estimate-the-model">Estimate the model<a class="anchor" aria-label="anchor" href="#estimate-the-model"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">estimates</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate.html">estimate</a></span><span class="op">(</span></span>
 <span>    <span class="va">ts_data</span>,</span>
 <span>    <span class="va">sys_eq</span>,</span>
@@ -211,39 +215,131 @@ data available for the forecast.</p>
 <span><span class="co">#&gt; imports.L(1)                                                     -0.14        </span></span>
 <span><span class="co">#&gt;                                                                 [-0.31;  0.03]</span></span>
 <span><span class="co">#&gt; ==============================================================================</span></span>
-<span><span class="co">#&gt; Posterior mean (90% credible interval: [5.0%,  95.0%])</span></span></code></pre></div>
+<span><span class="co">#&gt; Posterior mean (90% credible interval: [5.0%, 95.0%])</span></span>
+<span><span class="co">#&gt; Estimation period: 1996 Q1 - 2019 Q4</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="forecast-and-inspect">Forecast and inspect<a class="anchor" aria-label="anchor" href="#forecast-and-inspect"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<p>Before forecasting, truncate endogenous series so they end in the
+quarter before the forecast start date.</p>
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">estimates</span><span class="op">$</span><span class="va">ts_data</span><span class="op">[</span><span class="va">sys_eq</span><span class="op">$</span><span class="va">endogenous_variables</span><span class="op">]</span> <span class="op">&lt;-</span></span>
+<span>    <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">sys_eq</span><span class="op">$</span><span class="va">endogenous_variables</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
+<span>        <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">estimates</span><span class="op">$</span><span class="va">ts_data</span><span class="op">[[</span><span class="va">x</span><span class="op">]</span><span class="op">]</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2022</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
+<span>    <span class="op">}</span><span class="op">)</span></span></code></pre></div>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">forecasts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/forecast.html">forecast</a></span><span class="op">(</span><span class="va">estimates</span>, <span class="va">dates</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Forecast</span> <span style="color: #00BBBB;">────────────────────────────────────────────────────────────────────</span></span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Forecasting completed.</span></span>
-<span><span class="co">#&gt; <span style="color: #00BB00;">✔</span> Forecasting completed.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">forecasts</span><span class="op">)</span></span>
-<span><span class="co">#&gt;         consumption  investment   exports   imports       gdp interest_rate</span></span>
-<span><span class="co">#&gt; 2023 Q1   0.4053098  0.93760500 1.3944842 1.2688461 0.6992962      1.100896</span></span>
-<span><span class="co">#&gt; 2023 Q2   0.4320724 -0.15417638 0.3433207 0.5094146 0.1858886      1.522694</span></span>
-<span><span class="co">#&gt; 2023 Q3   0.4408521 -0.08781447 0.5726424 0.7634791 0.2186501      1.707523</span></span>
-<span><span class="co">#&gt; 2023 Q4   0.4409708 -0.07201064 0.3998921 0.5492471 0.2269048      1.700577</span></span>
-<span><span class="co">#&gt;         world_gdp exchange_rate</span></span>
-<span><span class="co">#&gt; 2023 Q1 0.4827344     0.9217413</span></span>
-<span><span class="co">#&gt; 2023 Q2 0.4083410    -1.3863355</span></span>
-<span><span class="co">#&gt; 2023 Q3 0.4259099    -1.7869351</span></span>
-<span><span class="co">#&gt; 2023 Q4 0.2905613    -0.7501833</span></span>
+<span><span class="co">#&gt;         consumption investment exports imports    gdp interest_rate world_gdp</span></span>
+<span><span class="co">#&gt; 2023 Q1      0.3989     0.8350  1.4131  1.3520 0.6384        1.1009    0.4827</span></span>
+<span><span class="co">#&gt; 2023 Q2      0.4152    -0.1407  0.3795  0.4908 0.2083        1.5227    0.4083</span></span>
+<span><span class="co">#&gt; 2023 Q3      0.4284    -0.0777  0.5249  0.7429 0.1960        1.7075    0.4259</span></span>
+<span><span class="co">#&gt; 2023 Q4      0.4387    -0.0304  0.3685  0.5198 0.2329        1.7006    0.2906</span></span>
+<span><span class="co">#&gt;         exchange_rate</span></span>
+<span><span class="co">#&gt; 2023 Q1        0.9217</span></span>
+<span><span class="co">#&gt; 2023 Q2       -1.3863</span></span>
+<span><span class="co">#&gt; 2023 Q3       -1.7869</span></span>
+<span><span class="co">#&gt; 2023 Q4       -0.7502</span></span>
 <span></span>
 <span><span class="fu"><a href="../reference/rate.html">rate</a></span><span class="op">(</span><span class="va">forecasts</span><span class="op">$</span><span class="va">mean</span><span class="op">$</span><span class="va">gdp</span><span class="op">)</span></span>
-<span><span class="co">#&gt; rate, diff_log, c(189347.268533194, 2022.75)</span></span>
+<span><span class="co">#&gt; rate, diff_log, c(191668.860623222, 2022.75)</span></span>
 <span><span class="co">#&gt;           Qtr1      Qtr2      Qtr3      Qtr4</span></span>
-<span><span class="co">#&gt; 2023 0.6992962 0.1858886 0.2186501 0.2269048</span></span>
+<span><span class="co">#&gt; 2023 0.6384174 0.2083174 0.1959766 0.2328886</span></span>
 <span><span class="fu"><a href="../reference/level.html">level</a></span><span class="op">(</span><span class="va">forecasts</span><span class="op">$</span><span class="va">mean</span><span class="op">$</span><span class="va">gdp</span><span class="op">)</span></span>
 <span><span class="co">#&gt; level, diff_log</span></span>
 <span><span class="co">#&gt;          Qtr1     Qtr2     Qtr3     Qtr4</span></span>
-<span><span class="co">#&gt; 2022                            189347.3</span></span>
-<span><span class="co">#&gt; 2023 190676.0 191030.8 191448.9 191883.8</span></span></code></pre></div>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<span><span class="co">#&gt; 2022                            191668.9</span></span>
+<span><span class="co">#&gt; 2023 192896.4 193298.7 193677.9 194129.4</span></span></code></pre></div>
+<p>You can also summarize forecast horizons with mean/median and
+quantiles:</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">forecasts</span><span class="op">)</span></span>
+<span><span class="co">#&gt; =========================================</span></span>
+<span><span class="co">#&gt; consumption  Mean   Median  5%      95%  </span></span>
+<span><span class="co">#&gt; -----------------------------------------</span></span>
+<span><span class="co">#&gt; 2023 Q1      0.399   0.409  -0.034  0.789</span></span>
+<span><span class="co">#&gt; 2023 Q2      0.415   0.414   0.003  0.843</span></span>
+<span><span class="co">#&gt; 2023 Q3      0.428   0.434   0.037  0.843</span></span>
+<span><span class="co">#&gt; 2023 Q4      0.439   0.437  -0.004  0.881</span></span>
+<span><span class="co">#&gt; =========================================</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; =========================================</span></span>
+<span><span class="co">#&gt; investment  Mean    Median  5%      95%  </span></span>
+<span><span class="co">#&gt; -----------------------------------------</span></span>
+<span><span class="co">#&gt; 2023 Q1      0.835   0.795   -3.62  5.269</span></span>
+<span><span class="co">#&gt; 2023 Q2     -0.141  -0.129  -5.131  4.645</span></span>
+<span><span class="co">#&gt; 2023 Q3     -0.078  -0.087  -5.036  4.598</span></span>
+<span><span class="co">#&gt; 2023 Q4      -0.03   0.009  -5.005  4.899</span></span>
+<span><span class="co">#&gt; =========================================</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; =====================================</span></span>
+<span><span class="co">#&gt; exports  Mean   Median  5%      95%  </span></span>
+<span><span class="co">#&gt; -------------------------------------</span></span>
+<span><span class="co">#&gt; 2023 Q1  1.413   1.453  -2.239  5.073</span></span>
+<span><span class="co">#&gt; 2023 Q2   0.38   0.327  -3.216  4.085</span></span>
+<span><span class="co">#&gt; 2023 Q3  0.525   0.578  -3.728  4.495</span></span>
+<span><span class="co">#&gt; 2023 Q4  0.369   0.363  -3.389  4.178</span></span>
+<span><span class="co">#&gt; =====================================</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; =====================================</span></span>
+<span><span class="co">#&gt; imports  Mean   Median  5%      95%  </span></span>
+<span><span class="co">#&gt; -------------------------------------</span></span>
+<span><span class="co">#&gt; 2023 Q1  1.352   1.392  -1.803  4.605</span></span>
+<span><span class="co">#&gt; 2023 Q2  0.491   0.504  -2.952  3.907</span></span>
+<span><span class="co">#&gt; 2023 Q3  0.743   0.806  -3.049  4.298</span></span>
+<span><span class="co">#&gt; 2023 Q4   0.52   0.489  -2.811  4.053</span></span>
+<span><span class="co">#&gt; =====================================</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; =====================================</span></span>
+<span><span class="co">#&gt; gdp      Mean   Median  5%      95%  </span></span>
+<span><span class="co">#&gt; -------------------------------------</span></span>
+<span><span class="co">#&gt; 2023 Q1  0.638   0.622   -0.95   2.33</span></span>
+<span><span class="co">#&gt; 2023 Q2  0.208   0.189  -1.575  2.043</span></span>
+<span><span class="co">#&gt; 2023 Q3  0.196   0.198  -1.526  1.992</span></span>
+<span><span class="co">#&gt; 2023 Q4  0.233   0.262  -1.601  2.145</span></span>
+<span><span class="co">#&gt; =====================================</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ==========================================</span></span>
+<span><span class="co">#&gt; interest_rate  Mean   Median  5%     95%  </span></span>
+<span><span class="co">#&gt; ------------------------------------------</span></span>
+<span><span class="co">#&gt; 2023 Q1        1.101   1.101  1.101  1.101</span></span>
+<span><span class="co">#&gt; 2023 Q2        1.523   1.523  1.523  1.523</span></span>
+<span><span class="co">#&gt; 2023 Q3        1.708   1.708  1.708  1.708</span></span>
+<span><span class="co">#&gt; 2023 Q4        1.701   1.701  1.701  1.701</span></span>
+<span><span class="co">#&gt; ==========================================</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ======================================</span></span>
+<span><span class="co">#&gt; world_gdp  Mean   Median  5%     95%  </span></span>
+<span><span class="co">#&gt; --------------------------------------</span></span>
+<span><span class="co">#&gt; 2023 Q1    0.483   0.483  0.483  0.483</span></span>
+<span><span class="co">#&gt; 2023 Q2    0.408   0.408  0.408  0.408</span></span>
+<span><span class="co">#&gt; 2023 Q3    0.426   0.426  0.426  0.426</span></span>
+<span><span class="co">#&gt; 2023 Q4    0.291   0.291  0.291  0.291</span></span>
+<span><span class="co">#&gt; ======================================</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; =============================================</span></span>
+<span><span class="co">#&gt; exchange_rate  Mean    Median  5%      95%   </span></span>
+<span><span class="co">#&gt; ---------------------------------------------</span></span>
+<span><span class="co">#&gt; 2023 Q1         0.922   0.922   0.922   0.922</span></span>
+<span><span class="co">#&gt; 2023 Q2        -1.386  -1.386  -1.386  -1.386</span></span>
+<span><span class="co">#&gt; 2023 Q3        -1.787  -1.787  -1.787  -1.787</span></span>
+<span><span class="co">#&gt; 2023 Q4         -0.75   -0.75   -0.75   -0.75</span></span>
+<span><span class="co">#&gt; =============================================</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Mean, Median, Quantiles</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">forecasts</span>, variables <span class="op">=</span> <span class="st">"gdp"</span>, horizon <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="co">#&gt; =====================================</span></span>
+<span><span class="co">#&gt; gdp      Mean   Median  5%      95%  </span></span>
+<span><span class="co">#&gt; -------------------------------------</span></span>
+<span><span class="co">#&gt; 2023 Q1  0.638   0.622   -0.95   2.33</span></span>
+<span><span class="co">#&gt; 2023 Q2  0.208   0.189  -1.575  2.043</span></span>
+<span><span class="co">#&gt; =====================================</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Mean, Median, Quantiles</span></span></code></pre></div>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"plotly"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">forecasts</span>, variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"gdp"</span>, <span class="st">"consumption"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>

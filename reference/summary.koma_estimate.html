@@ -9,7 +9,7 @@ It can return either a texreg object or an ASCII table."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,7 +31,7 @@ It can return either a texreg object or an ASCII table."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Summary method for koma_estimate objects</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/R/estimate.R" class="external-link"><code>R/estimate.R</code></a></small>
       <div class="d-none name"><code>summary.koma_estimate.Rd</code></div>
     </div>
 
@@ -71,22 +71,26 @@ is 5.</p></dd>
 <dd><p>Optional. Upper bound of the confidence interval. Default is
 95.</p></dd>
 
-<dt>texreg_object</dt>
-<dd><p>Optional. If TRUE, returns a texreg object. Default
-is FALSE, which returns an ASCII table.</p></dd>
+<dt>use_texreg</dt>
+<dd><p>Optional. If TRUE, prints a texreg summary when
+available. Defaults to TRUE when texreg is installed, otherwise
+FALSE.</p></dd>
 
 <dt>digits</dt>
 <dd><p>Optional. Number of digits to round numeric values.
 Default is 2.</p></dd>
 
 
-</dl></dd>
+</dl><p>Additional arguments are forwarded to texreg output helpers (for example,
+arguments accepted by <code><a href="https://rdrr.io/pkg/texreg/man/screenreg.html" class="external-link">texreg::screenreg()</a></code>) when <code>use_texreg = TRUE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Depending on the value of texreg_object, returns either a list of
-texreg objects or prints an ASCII table.</p>
+    <p>Returns a list of summary statistics for each variable (invisibly)
+when <code>use_texreg</code> is FALSE. When <code>use_texreg</code> is TRUE and texreg is
+installed, returns a texreg extract object that prints via
+<code>screenreg()</code> when printed.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

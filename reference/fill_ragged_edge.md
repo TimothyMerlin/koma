@@ -8,7 +8,7 @@ conditional forecast until the time series is balanced.
 ## Usage
 
 ``` r
-fill_ragged_edge(ts_data, sys_eq, exogenous_variables, dates, point_forecast)
+fill_ragged_edge(ts_data, sys_eq, exogenous_variables, dates, fill_method)
 ```
 
 ## Arguments
@@ -31,17 +31,10 @@ fill_ragged_edge(ts_data, sys_eq, exogenous_variables, dates, point_forecast)
 
   Key-value list for date ranges in various model operations.
 
-- point_forecast:
+- fill_method:
 
-  A list that contains the following elements:
-
-  - `active`: Determines the type of forecast generated. If TRUE, a
-    point forecast is created. If FALSE, a density forecast is returned.
-    Default is TRUE.
-
-  - `central_tendency`: A character string indicating which central
-    tendency measure ("mean" or "median") to use for summary statistics.
-    Default is "mean".
+  Character string indicating which central tendency measure ("mean" or
+  "median") to use when filling ragged edges.
 
 ## Value
 

@@ -16,7 +16,9 @@ forecast_sem(
   horizon,
   freq,
   forecast_dates,
-  point_forecast
+  approximate,
+  probs,
+  conditional_innov_method = "projection"
 )
 ```
 
@@ -55,18 +57,6 @@ forecast_sem(
 - forecast_dates:
 
   List containing 'start' and 'end' dates for forecast.
-
-- point_forecast:
-
-  A list that contains the following elements:
-
-  - `active`: Determines the type of forecast generated. If TRUE, a
-    point forecast is created. If FALSE, a density forecast is returned.
-    Default is TRUE.
-
-  - `central_tendency`: A character string indicating which central
-    tendency measure ("mean" or "median") to use for summary statistics.
-    Default is "mean".
 
 ## Value
 

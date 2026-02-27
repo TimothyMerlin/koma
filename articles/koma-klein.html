@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@
       <h1>Estimating Klein's Model I</h1>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/vignettes/koma-klein.Rmd" class="external-link"><code>vignettes/koma-klein.Rmd</code></a></small>
       <div class="d-none name"><code>koma-klein.Rmd</code></div>
     </div>
 
@@ -164,7 +164,7 @@ details on the syntax, please refer to the <a href="../equations.html">equation 
 system of equations object, which can then be used for estimation and
 forecasting.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">koma</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://timothymerlin.github.io/koma">koma</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sys_eq</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/system_of_equations.html">system_of_equations</a></span><span class="op">(</span></span>
 <span>  equations <span class="op">=</span> <span class="va">equations</span>,</span>
@@ -297,9 +297,9 @@ in the equations. Now, we can estimate the model using the
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">estimates</span><span class="op">)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Estimates</span> <span style="color: #00BBBB;">───────────────────────────────────────────────────────────────────</span></span></span>
-<span><span class="co">##   <span style="font-weight: bold;">consumption</span> ~  - 0.12  +  0.13 * profits - 0.03 * 0.13 * profits.L(1)  +  1.11 * total_wages</span></span>
-<span><span class="co">##    <span style="font-weight: bold;">investment</span> ~  - 0.86  +  0.39 * profits  +  0.16 * 0.39 * profits.L(1)  +  1.51 * capital_stock.L(1)</span></span>
-<span><span class="co">##         <span style="font-weight: bold;">wages</span> ~  - 0.68  +  0.95 * gdp  +  0.43 * 0.95 * gdp.L(1)  +  0 * time_trend</span></span>
+<span><span class="co">##   <span style="font-weight: bold;">consumption</span> ~  - 0.12  +  0.13 * profits - 0.03 * profits.L(1)  +  1.11 * total_wages</span></span>
+<span><span class="co">##    <span style="font-weight: bold;">investment</span> ~  - 0.86  +  0.39 * profits  +  0.16 * profits.L(1)  +  1.51 * capital_stock.L(1)</span></span>
+<span><span class="co">##         <span style="font-weight: bold;">wages</span> ~  - 0.68  +  0.95 * gdp  +  0.43 * gdp.L(1)  +  0 * time_trend</span></span>
 <span><span class="co">##           <span style="font-weight: bold;">gdp</span> == (n_consumption/n_gdp) * consumption  +  (n_investment/n_gdp) * investment  +  (n_government/n_gdp) * government</span></span>
 <span><span class="co">##       <span style="font-weight: bold;">profits</span> == (n_gdp/n_profits) * gdp - (n_taxes/n_profits) * taxes - (n_wages/n_profits) * wages</span></span>
 <span><span class="co">## <span style="font-weight: bold;">capital_stock</span> == 1.001 * capital_stock.L(1)  +  0.0002 * investment</span></span>
@@ -327,7 +327,8 @@ in the equations. Now, we can estimate the model using the
 <span><span class="co">## gdp                                                  0.95        </span></span>
 <span><span class="co">##                                                    [ 0.80;  1.10]</span></span>
 <span><span class="co">## =================================================================</span></span>
-<span><span class="co">## Posterior mean (90% credible interval: [5.0%,  95.0%])</span></span></code></pre></div>
+<span><span class="co">## Posterior mean (90% credible interval: [5.0%, 95.0%])</span></span>
+<span><span class="co">## Estimation period: 1990 Q1 - 2020 Q4</span></span></code></pre></div>
 <p>To see how to run the estimation in parallel, refer to the <a href="../parallel.html">parallel estimation vignette</a>.</p>
 </div>
 <div class="section level2">
@@ -342,34 +343,33 @@ This function will generate forecasts for the specified date range.</p>
 <span><span class="op">)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Forecast</span> <span style="color: #00BBBB;">────────────────────────────────────────────────────────────────────</span></span></span>
-<span><span class="co">## <span style="color: #00BB00;">✔</span> Forecasting completed.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">forecasts</span><span class="op">)</span></span>
-<span><span class="co">##         consumption  investment      wages         gdp   profits capital_stock</span></span>
-<span><span class="co">## 2021 Q1  -1.2940063 -0.99556028 -0.3387788 -0.82305516 -7.322447      2.503406</span></span>
-<span><span class="co">## 2021 Q2  -0.2981365  1.91448090 -0.4060502 -0.04343018  0.315740      2.506293</span></span>
-<span><span class="co">## 2021 Q3  -1.2892002  1.09045377 -0.7286282 -0.73506909 -4.884415      2.509017</span></span>
-<span><span class="co">## 2021 Q4  -0.9010011  1.68225126 -0.6182451 -0.31225408 -1.282972      2.511862</span></span>
-<span><span class="co">## 2022 Q1  -0.7045260  2.27464617 -0.3376342 -0.21102473 -1.210574      2.514829</span></span>
-<span><span class="co">## 2022 Q2  -0.9725958  2.00662704 -0.4284649 -0.35510899 -1.942482      2.517745</span></span>
-<span><span class="co">## 2022 Q3  -1.6702770  0.55227115 -1.0553909 -0.95145610 -5.411500      2.520374</span></span>
-<span><span class="co">## 2022 Q4  -2.0561957 -0.17733502 -1.5230350 -1.17774912 -5.912272      2.522858</span></span>
-<span><span class="co">## 2023 Q1  -2.0613849 -0.13030837 -1.6256864 -1.18724541 -5.599824      2.525355</span></span>
-<span><span class="co">## 2023 Q2  -1.7606452  0.28464001 -1.4495471 -1.00158969 -4.664612      2.527938</span></span>
-<span><span class="co">## 2023 Q3  -2.1741368 -0.45391948 -1.6479523 -1.29640757 -6.954730      2.530375</span></span>
-<span><span class="co">## 2023 Q4  -1.8209727 -0.07385907 -1.5616212 -1.07691071 -5.065443      2.532890</span></span>
-<span><span class="co">##         total_wages government government_wages      taxes time_trend</span></span>
-<span><span class="co">## 2021 Q1  -0.3791242  1.2757877       -0.5981850  0.8997407        205</span></span>
-<span><span class="co">## 2021 Q2  -0.3776446 -1.0791366       -0.2234124  9.1808930        206</span></span>
-<span><span class="co">## 2021 Q3  -0.4831044 -0.3873293        0.8500016  0.3181641        207</span></span>
-<span><span class="co">## 2021 Q4  -0.6770865 -0.0707721       -0.9965740  4.6250778        208</span></span>
-<span><span class="co">## 2022 Q1  -0.4214105 -0.8533318       -0.8762856  3.5974820        209</span></span>
-<span><span class="co">## 2022 Q2  -0.5764775 -0.3751771       -1.3801329 -1.3602277        210</span></span>
-<span><span class="co">## 2022 Q3  -0.8201585  0.3882606        0.4570688 -5.3550978        211</span></span>
-<span><span class="co">## 2022 Q4  -1.1938060  1.3228264        0.5937889 -6.2183336        212</span></span>
-<span><span class="co">## 2023 Q1  -1.2469188  1.2402222        0.8096532 -6.4787268        213</span></span>
-<span><span class="co">## 2023 Q2  -1.0767545  0.7228893        0.9473758 -2.6579290        214</span></span>
-<span><span class="co">## 2023 Q3  -1.1609521  1.3819458        1.4832848 -2.8205388        215</span></span>
-<span><span class="co">## 2023 Q4  -1.1171900  0.8931133        1.2959118 -2.1251498        216</span></span></code></pre></div>
+<span><span class="co">##         consumption investment   wages     gdp profits capital_stock</span></span>
+<span><span class="co">## 2021 Q1     -1.5696    -0.9364 -0.4585 -0.9971 -8.6728        2.5034</span></span>
+<span><span class="co">## 2021 Q2     -0.3184     2.0125 -0.4641 -0.0393  0.5787        2.5063</span></span>
+<span><span class="co">## 2021 Q3     -1.4778     1.1015 -0.8382 -0.8595 -5.7589        2.5091</span></span>
+<span><span class="co">## 2021 Q4     -0.9760     1.8101 -0.7312 -0.3394 -1.1363        2.5119</span></span>
+<span><span class="co">## 2022 Q1     -0.8366     2.3480 -0.4170 -0.2863 -1.6901        2.5149</span></span>
+<span><span class="co">## 2022 Q2     -0.9388     2.0577 -0.4517 -0.3232 -1.5241        2.5178</span></span>
+<span><span class="co">## 2022 Q3     -1.8300     0.3312 -1.1432 -1.0985 -6.6025        2.5204</span></span>
+<span><span class="co">## 2022 Q4     -2.1483    -0.0936 -1.6466 -1.2243 -5.9269        2.5229</span></span>
+<span><span class="co">## 2023 Q1     -2.3428    -0.3106 -1.8222 -1.4085 -7.1482        2.5254</span></span>
+<span><span class="co">## 2023 Q2     -1.7959     0.0577 -1.5161 -1.0662 -5.0824        2.5279</span></span>
+<span><span class="co">## 2023 Q3     -2.4004    -0.4895 -1.8163 -1.4545 -7.9550        2.5303</span></span>
+<span><span class="co">## 2023 Q4     -1.9098    -0.3149 -1.6764 -1.1801 -5.6997        2.5328</span></span>
+<span><span class="co">##         total_wages government government_wages   taxes time_trend</span></span>
+<span><span class="co">## 2021 Q1     -0.4802     1.2758          -0.5982  0.8997        205</span></span>
+<span><span class="co">## 2021 Q2     -0.4267    -1.0791          -0.2234  9.1809        206</span></span>
+<span><span class="co">## 2021 Q3     -0.5756    -0.3873           0.8500  0.3182        207</span></span>
+<span><span class="co">## 2021 Q4     -0.7725    -0.0708          -0.9966  4.6251        208</span></span>
+<span><span class="co">## 2022 Q1     -0.4884    -0.8533          -0.8763  3.5975        209</span></span>
+<span><span class="co">## 2022 Q2     -0.5961    -0.3752          -1.3801 -1.3602        210</span></span>
+<span><span class="co">## 2022 Q3     -0.8943     0.3883           0.4571 -5.3551        211</span></span>
+<span><span class="co">## 2022 Q4     -1.2981     1.3228           0.5938 -6.2183        212</span></span>
+<span><span class="co">## 2023 Q1     -1.4128     1.2402           0.8097 -6.4787        213</span></span>
+<span><span class="co">## 2023 Q2     -1.1329     0.7229           0.9474 -2.6579        214</span></span>
+<span><span class="co">## 2023 Q3     -1.3031     1.3819           1.4833 -2.8205        215</span></span>
+<span><span class="co">## 2023 Q4     -1.2141     0.8931           1.2959 -2.1251        216</span></span></code></pre></div>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">forecasts</span>, variables <span class="op">=</span> <span class="st">"gdp"</span><span class="op">)</span></span></code></pre></div>
 </div>

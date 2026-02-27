@@ -13,7 +13,7 @@ quantiles of the forecast distribution."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,7 +35,7 @@ quantiles of the forecast distribution."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Print Method for koma_forecast Objects</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/R/forecast.R" class="external-link"><code>R/forecast.R</code></a></small>
       <div class="d-none name"><code>print.koma_forecast.Rd</code></div>
     </div>
 
@@ -49,7 +49,7 @@ quantiles of the forecast distribution.</p>
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="co"># S3 method for class 'koma_forecast'</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, variables <span class="op">=</span> <span class="cn">NULL</span>, central_tendency <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">...</span>, variables <span class="op">=</span> <span class="cn">NULL</span>, central_tendency <span class="op">=</span> <span class="cn">NULL</span>, digits <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -75,6 +75,11 @@ to print. Can be "mean", "median", or a quantile name like "q_5", "q_50",
 "q_95". Default is "mean" if available, otherwise "median", or a specified
 quantile.</p></dd>
 
+
+<dt id="arg-digits">digits<a class="anchor" aria-label="anchor" href="#arg-digits"></a></dt>
+<dd><p>Optional. Integer number of decimal digits to round the
+printed output. Default is 4.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -86,6 +91,8 @@ printed.
 If <code>central_tendency</code> is not specified, the function defaults to printing the
 mean forecast if available, otherwise the median forecast, or a specified
 quantile.</p>
+<p>Printing converts the selected forecast list to an <code>mts</code> for readability; the
+underlying <code>koma_forecast</code> object remains a list of <code>koma_ts</code>.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

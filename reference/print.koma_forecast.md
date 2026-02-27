@@ -9,7 +9,7 @@ specific quantiles of the forecast distribution.
 
 ``` r
 # S3 method for class 'koma_forecast'
-print(x, ..., variables = NULL, central_tendency = NULL)
+print(x, ..., variables = NULL, central_tendency = NULL, digits = 4)
 ```
 
 ## Arguments
@@ -34,6 +34,11 @@ print(x, ..., variables = NULL, central_tendency = NULL)
   Default is "mean" if available, otherwise "median", or a specified
   quantile.
 
+- digits:
+
+  Optional. Integer number of decimal digits to round the printed
+  output. Default is 4.
+
 ## Details
 
 This function prints the forecasts contained in a `koma_forecast`
@@ -44,3 +49,7 @@ If `variables` is specified, only the forecasts for those variables are
 printed. If `central_tendency` is not specified, the function defaults
 to printing the mean forecast if available, otherwise the median
 forecast, or a specified quantile.
+
+Printing converts the selected forecast list to an `mts` for
+readability; the underlying `koma_forecast` object remains a list of
+`koma_ts`.

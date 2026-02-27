@@ -11,7 +11,7 @@ based on the estimates and realized observations."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,7 +33,7 @@ based on the estimates and realized observations."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Conditional Fill and Forecast for Time Series Data</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/R/fill_ragged_edge.R" class="external-link"><code>R/fill_ragged_edge.R</code></a></small>
       <div class="d-none name"><code>conditional_fill.Rd</code></div>
     </div>
 
@@ -45,7 +45,7 @@ based on the estimates and realized observations.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">conditional_fill</span><span class="op">(</span><span class="va">ts_data</span>, <span class="va">sys_eq</span>, <span class="va">dates</span>, <span class="va">estimates</span>, <span class="va">point_forecast</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">conditional_fill</span><span class="op">(</span><span class="va">ts_data</span>, <span class="va">sys_eq</span>, <span class="va">dates</span>, <span class="va">estimates</span>, <span class="va">fill_method</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -72,15 +72,9 @@ estimated simultaneous equations model. Use this parameter when some
 equations of the system need to be re-estimated.</p></dd>
 
 
-<dt id="arg-point-forecast">point_forecast<a class="anchor" aria-label="anchor" href="#arg-point-forecast"></a></dt>
-<dd><p>A list of options used when ragged edge is filled
-that contains:</p><ul><li><p>active: Determines the type of forecast generated.
-If TRUE, a density forecast is created. If FALSE, a point forecast is
-returned. Default is TRUE.</p></li>
-<li><p>central_tendency A character string indicating which central tendency
-measure ("mean" or "median") to use when point_forecast$active is TRUE.
-Default is "mean".</p></li>
-</ul></dd>
+<dt id="arg-fill-method">fill_method<a class="anchor" aria-label="anchor" href="#arg-fill-method"></a></dt>
+<dd><p>Character string indicating which central tendency measure
+("mean" or "median") to use when filling ragged edges.</p></dd>
 
 </dl></div>
     <div class="section level2">

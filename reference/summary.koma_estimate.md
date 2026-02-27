@@ -38,16 +38,23 @@ summary(object, ...)
 
   :   Optional. Upper bound of the confidence interval. Default is 95.
 
-  texreg_object
+  use_texreg
 
-  :   Optional. If TRUE, returns a texreg object. Default is FALSE,
-      which returns an ASCII table.
+  :   Optional. If TRUE, prints a texreg summary when available.
+      Defaults to TRUE when texreg is installed, otherwise FALSE.
 
   digits
 
   :   Optional. Number of digits to round numeric values. Default is 2.
 
+  Additional arguments are forwarded to texreg output helpers (for
+  example, arguments accepted by
+  [`texreg::screenreg()`](https://rdrr.io/pkg/texreg/man/screenreg.html))
+  when `use_texreg = TRUE`.
+
 ## Value
 
-Depending on the value of texreg_object, returns either a list of texreg
-objects or prints an ASCII table.
+Returns a list of summary statistics for each variable (invisibly) when
+`use_texreg` is FALSE. When `use_texreg` is TRUE and texreg is
+installed, returns a texreg extract object that prints via `screenreg()`
+when printed.

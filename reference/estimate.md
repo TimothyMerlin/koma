@@ -12,8 +12,7 @@ estimate(
   sys_eq,
   dates,
   ...,
-  options = list(),
-  point_forecast = NULL,
+  options = list(gibbs = list(), fill = list(method = "mean")),
   estimates = NULL
 )
 ```
@@ -40,21 +39,17 @@ estimate(
 
 - options:
 
-  Optional settings for modifying the Gibbs sampler specifications for
-  all equations. See [Gibbs Sampler
+  Optional settings for estimation. Use
+  `list(gibbs = list(), fill = list(method = "mean"))`. Elements:
+
+  - `gibbs`: Gibbs sampler settings (see [Gibbs Sampler
+    Specifications](https://timothymerlin.github.io/koma/reference/get_default_gibbs_spec.md)).
+
+  - `fill$method`: "mean" or "median" used to fill ragged edges during
+    estimation.
+
+  See [Gibbs Sampler
   Specifications](https://timothymerlin.github.io/koma/reference/get_default_gibbs_spec.md).
-
-- point_forecast:
-
-  A list that contains the following elements:
-
-  - `active`: Determines the type of forecast generated. If TRUE, a
-    point forecast is created. If FALSE, a density forecast is returned.
-    Default is TRUE.
-
-  - `central_tendency`: A character string indicating which central
-    tendency measure ("mean" or "median") to use for summary statistics.
-    Default is "mean".
 
 - estimates:
 
@@ -98,6 +93,10 @@ elements:
 - gibbs_specifications:
 
   The specifications used for the Gibbs sampling.
+
+- dates:
+
+  The date ranges used during estimation.
 
 ## Details
 

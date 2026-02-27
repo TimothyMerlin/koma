@@ -7,7 +7,7 @@ forecasts based on the estimates and realized observations.
 ## Usage
 
 ``` r
-conditional_fill(ts_data, sys_eq, dates, estimates, point_forecast)
+conditional_fill(ts_data, sys_eq, dates, estimates, fill_method)
 ```
 
 ## Arguments
@@ -34,17 +34,10 @@ conditional_fill(ts_data, sys_eq, dates, estimates, point_forecast)
   equations model. Use this parameter when some equations of the system
   need to be re-estimated.
 
-- point_forecast:
+- fill_method:
 
-  A list of options used when ragged edge is filled that contains:
-
-  - active: Determines the type of forecast generated. If TRUE, a
-    density forecast is created. If FALSE, a point forecast is returned.
-    Default is TRUE.
-
-  - central_tendency A character string indicating which central
-    tendency measure ("mean" or "median") to use when
-    point_forecast\$active is TRUE. Default is "mean".
+  Character string indicating which central tendency measure ("mean" or
+  "median") to use when filling ragged edges.
 
 ## Value
 

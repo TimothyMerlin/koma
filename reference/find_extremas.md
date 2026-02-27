@@ -8,7 +8,7 @@ y-axis values in plotting functions.
 ## Usage
 
 ``` r
-find_extremas(df_long)
+find_extremas(df_long, whisker_data = NULL)
 ```
 
 ## Arguments

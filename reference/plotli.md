@@ -6,7 +6,14 @@ theme provided.
 ## Usage
 
 ``` r
-plotli(df_long, fig = NULL, theme = NULL, ...)
+plotli(
+  df_long,
+  fig = NULL,
+  theme = NULL,
+  fan_data = NULL,
+  whisker_data = NULL,
+  ...
+)
 ```
 
 ## Arguments

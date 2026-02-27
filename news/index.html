@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,14 +29,34 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-
+      <small>Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.1" id="koma-021">koma 0.2.1<a class="anchor" aria-label="anchor" href="#koma-021"></a></h2>
+<ul><li>Fix pkgdown site build by adding package URL and completing <code>_pkgdown.yml</code> reference index.</li>
+</ul></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.2.0" id="koma-020">koma 0.2.0<a class="anchor" aria-label="anchor" href="#koma-020"></a></h2>
+<ul><li>Added fan chart support in forecast plots, including density-based visuals built from stochastic draws.</li>
+<li>Added growth-rate whiskers to forecast plots when fan charts are enabled.</li>
+<li>Improved conditional forecasting behavior and messaging.</li>
+<li>Tightened forecast/estimation validation and fixed several forecasting edge cases.</li>
+<li>Expanded estimation utilities: support <code>ts</code> inputs, per-series ts→ets overrides, and richer <code>texreg</code> extracts/summaries.</li>
+<li>Added/updated documentation and vignettes (error correction, extract methods, and forecast output guidance).</li>
+<li>Reduced/adjusted dependencies (e.g., removed <code>expm</code>, <code>tidyr</code>, <code>stringr</code>; moved <code>plotly</code> to Suggests; added standalone Wishart helpers).</li>
+<li>Improved CI and tooling (GitHub Actions checks, codecov, release/tag workflows, and renv handling).</li>
+<li>Added <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> output for <code>koma_forecast</code> with mean/median and quantile columns.</li>
+<li>Added MCMC trace plots via <code><a href="../reference/trace_plot.html">trace_plot()</a></code> for coefficient diagnostics.</li>
+<li>Added running-mean diagnostics via <code><a href="../reference/running_mean.html">running_mean()</a></code> and <code><a href="../reference/running_mean_plot.html">running_mean_plot()</a></code>.</li>
+<li>Added autocorrelation diagnostics via <code><a href="../reference/acf_plot.html">acf_plot()</a></code>.</li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="koma-010">koma 0.1.0<a class="anchor" aria-label="anchor" href="#koma-010"></a></h2>
 <ul><li>Initial github release.</li>
 </ul></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

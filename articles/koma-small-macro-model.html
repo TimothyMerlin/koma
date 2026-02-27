@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@
       <h1>Estimating Small Macro Model for Switzerland</h1>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/vignettes/koma-small-macro-model.Rmd" class="external-link"><code>vignettes/koma-small-macro-model.Rmd</code></a></small>
       <div class="d-none name"><code>koma-small-macro-model.Rmd</code></div>
     </div>
 
@@ -140,7 +140,7 @@ details on the syntax, please refer to the <a href="../equations.html">equation 
 system of equations object, which can then be used for estimation and
 forecasting.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">koma</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://timothymerlin.github.io/koma">koma</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sys_eq</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/system_of_equations.html">system_of_equations</a></span><span class="op">(</span></span>
 <span>  equations <span class="op">=</span> <span class="va">equations</span>,</span>
@@ -254,7 +254,7 @@ in the equations. Now, we can estimate the model using the
 <span><span class="co">##         <span style="font-weight: bold;">exports</span> ~  - 0.29  +  3.2 * world_gdp - 0.3 * exports.L(1)</span></span>
 <span><span class="co">##         <span style="font-weight: bold;">imports</span> ~  - 0.05  +  2.61 * domestic_demand - 0.11 * imports.L(1)</span></span>
 <span><span class="co">##          <span style="font-weight: bold;">prices</span> ~  0.04  +  0.03 * exchange_rate  +  0.01 * oil_price  +  0.56 * prices.L(1)</span></span>
-<span><span class="co">##   <span style="font-weight: bold;">interest_rate</span> ~  - 0.51  +  0.47 * prices  +  0.57 * interest_rate_germany - 0.19 * 0.47 * prices.L(1)</span></span>
+<span><span class="co">##   <span style="font-weight: bold;">interest_rate</span> ~  - 0.51  +  0.47 * prices  +  0.57 * interest_rate_germany - 0.19 * prices.L(1)</span></span>
 <span><span class="co">##             <span style="font-weight: bold;">gdp</span> == 0.6 * consumption  +  0.6 * domestic_demand  +  0.5 * exports - 0.4 * imports</span></span>
 <span><span class="co">## <span style="font-weight: bold;">domestic_demand</span> == 0.6 * consumption  +  0.4 * investment</span></span></code></pre></div>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
@@ -290,7 +290,8 @@ in the equations. Now, we can estimate the model using the
 <span><span class="co">## prices                                                                                             0.47        </span></span>
 <span><span class="co">##                                                                                                  [ 0.05;  0.96]</span></span>
 <span><span class="co">## ===============================================================================================================</span></span>
-<span><span class="co">## Posterior mean (90% credible interval: [5.0%,  95.0%])</span></span></code></pre></div>
+<span><span class="co">## Posterior mean (90% credible interval: [5.0%, 95.0%])</span></span>
+<span><span class="co">## Estimation period: 1996 Q1 - 2019 Q4</span></span></code></pre></div>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">estimates</span>, variables <span class="op">=</span> <span class="st">"investment"</span><span class="op">)</span></span>
 <span><span class="co">## </span></span>
@@ -302,49 +303,71 @@ in the equations. Now, we can estimate the model using the
 <span><span class="co">## investment.L(1)   0.21       </span></span>
 <span><span class="co">##                  [0.03; 0.40]</span></span>
 <span><span class="co">## =============================</span></span>
-<span><span class="co">## Posterior mean (90% credible interval: [5.0%,  95.0%])</span></span></code></pre></div>
+<span><span class="co">## Posterior mean (90% credible interval: [5.0%, 95.0%])</span></span>
+<span><span class="co">## Estimation period: 1996 Q1 - 2019 Q4</span></span></code></pre></div>
 <p>To see how to run the estimation in parallel, refer to the <a href="../parallel.html">parallel estimation vignette</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="diagnostics">Diagnostics<a class="anchor" aria-label="anchor" href="#diagnostics"></a>
+</h2>
+<p>You can visualize MCMC diagnostics for coefficient draws using
+<code><a href="../reference/trace_plot.html">trace_plot()</a></code>.</p>
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="../reference/trace_plot.html">trace_plot</a></span><span class="op">(</span><span class="va">estimates</span>, variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"consumption"</span>, <span class="st">"investment"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>You can also inspect running means (cumulative averages) with
+<code><a href="../reference/running_mean_plot.html">running_mean_plot()</a></code>.</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="../reference/running_mean_plot.html">running_mean_plot</a></span><span class="op">(</span><span class="va">estimates</span>, variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"consumption"</span>, <span class="st">"investment"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p>You can inspect autocorrelation diagnostics with
+<code><a href="../reference/acf_plot.html">acf_plot()</a></code>.</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="fu"><a href="../reference/acf_plot.html">acf_plot</a></span><span class="op">(</span><span class="va">estimates</span>, variables <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"consumption"</span>, <span class="st">"investment"</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="forecasting">Forecasting<a class="anchor" aria-label="anchor" href="#forecasting"></a>
 </h2>
 <p>To forecast the model, we can use the <code>forecast</code> function.
 This function will generate forecasts for the specified date range.</p>
-<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">forecasts</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/forecast.html">forecast</a></span><span class="op">(</span></span>
 <span>  <span class="va">estimates</span>,</span>
 <span>  dates <span class="op">=</span> <span class="va">dates</span></span>
 <span><span class="op">)</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Forecast</span> <span style="color: #00BBBB;">────────────────────────────────────────────────────────────────────</span></span></span>
-<span><span class="co">## <span style="color: #00BB00;">✔</span> Forecasting completed.</span></span>
+<span><span class="co">## </span></span>
+<span><span class="co">## Conditional fill detected after <span style="color: #0000BB;">"2019 Q4"</span>.</span></span>
+<span><span class="co">## Missing observations for: <span style="color: #0000BB;">"consumption"</span>, <span style="color: #0000BB;">"investment"</span>, <span style="color: #0000BB;">"exports"</span>, <span style="color: #0000BB;">"imports"</span>,</span></span>
+<span><span class="co">## <span style="color: #0000BB;">"prices"</span>, <span style="color: #0000BB;">"interest_rate"</span>, <span style="color: #0000BB;">"gdp"</span>, and <span style="color: #0000BB;">"domestic_demand"</span></span></span>
+<span><span class="co">## Missing values will be conditionally filled up to <span style="color: #0000BB;">"2022 Q4"</span> before forecasting.</span></span>
 <span><span class="co">## <span style="color: #00BB00;">✔</span> Forecasting completed.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">forecasts</span><span class="op">)</span></span>
-<span><span class="co">##         consumption investment   exports  imports       prices interest_rate</span></span>
-<span><span class="co">## 2023 Q1   0.3856023  0.5694451 1.2785726 1.033484 -0.056041196     0.8415619</span></span>
-<span><span class="co">## 2023 Q2   0.3929089  0.5694450 0.6326627 1.048218 -0.069807507     1.2598407</span></span>
-<span><span class="co">## 2023 Q3   0.3901838  0.5694450 0.8800770 1.042363  0.014919830     1.5836742</span></span>
-<span><span class="co">## 2023 Q4   0.3970220  0.5694450 0.3740086 1.053709 -0.008441888     1.6966126</span></span>
-<span><span class="co">##               gdp domestic_demand world_gdp interest_rate_germany exchange_rate</span></span>
-<span><span class="co">## 2023 Q1 0.7327378       0.4591394 0.4827344              2.388667     0.9217413</span></span>
-<span><span class="co">## 2023 Q2 0.4109035       0.4635233 0.4083410              3.146000    -1.3863355</span></span>
-<span><span class="co">## 2023 Q3 0.5343367       0.4618883 0.4259099              3.639333    -1.7869351</span></span>
-<span><span class="co">## 2023 Q4 0.2833288       0.4659912 0.2905613              3.885000    -0.7501833</span></span>
-<span><span class="co">##         oil_price</span></span>
-<span><span class="co">## 2023 Q1 -8.752037</span></span>
-<span><span class="co">## 2023 Q2 -3.378704</span></span>
-<span><span class="co">## 2023 Q3  9.900140</span></span>
-<span><span class="co">## 2023 Q4 -3.337319</span></span></code></pre></div>
-<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<span><span class="co">##         consumption investment exports imports  prices interest_rate    gdp</span></span>
+<span><span class="co">## 2023 Q1      0.3940     0.4953  1.2033  1.0677 -0.0587        0.8385 0.6717</span></span>
+<span><span class="co">## 2023 Q2      0.3821     0.4917  0.6258  0.9778 -0.0703        1.2689 0.4066</span></span>
+<span><span class="co">## 2023 Q3      0.3836     0.5117  0.7445  0.9278  0.0100        1.5664 0.4922</span></span>
+<span><span class="co">## 2023 Q4      0.3883     0.5711  0.3600  0.9941 -0.0114        1.6947 0.2922</span></span>
+<span><span class="co">##         domestic_demand world_gdp interest_rate_germany exchange_rate oil_price</span></span>
+<span><span class="co">## 2023 Q1          0.4345    0.4827                2.3887        0.9217   -8.7520</span></span>
+<span><span class="co">## 2023 Q2          0.4259    0.4083                3.1460       -1.3863   -3.3787</span></span>
+<span><span class="co">## 2023 Q3          0.4348    0.4259                3.6393       -1.7869    9.9001</span></span>
+<span><span class="co">## 2023 Q4          0.4614    0.2906                3.8850       -0.7502   -3.3373</span></span></code></pre></div>
+<div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/rate.html">rate</a></span><span class="op">(</span><span class="va">forecasts</span><span class="op">$</span><span class="va">mean</span><span class="op">$</span><span class="va">gdp</span><span class="op">)</span></span>
 <span><span class="co">## rate, diff_log, c(192510.114596192, 2022.75)</span></span>
 <span><span class="co">##           Qtr1      Qtr2      Qtr3      Qtr4</span></span>
-<span><span class="co">## 2023 0.7327378 0.4109035 0.5343367 0.2833288</span></span>
+<span><span class="co">## 2023 0.6716659 0.4066033 0.4921892 0.2921809</span></span>
 <span><span class="fu"><a href="../reference/level.html">level</a></span><span class="op">(</span><span class="va">forecasts</span><span class="op">$</span><span class="va">mean</span><span class="op">$</span><span class="va">gdp</span><span class="op">)</span></span>
 <span><span class="co">## level, diff_log</span></span>
 <span><span class="co">##          Qtr1     Qtr2     Qtr3     Qtr4</span></span>
 <span><span class="co">## 2022                            192510.1</span></span>
-<span><span class="co">## 2023 193925.9 194724.4 195767.6 196323.1</span></span></code></pre></div>
+<span><span class="co">## 2023 193807.5 194597.1 195557.3 196129.5</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="conditional-forecasting">Conditional Forecasting<a class="anchor" aria-label="anchor" href="#conditional-forecasting"></a>
 </h3>
@@ -352,7 +375,7 @@ This function will generate forecasts for the specified date range.</p>
 variables during the forecast period to fix their values. This is useful
 for scenario analysis and policy evaluation, as the forecasts will
 reflect these user-defined conditions.</p>
-<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fig</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">forecasts</span>, variables <span class="op">=</span> <span class="st">"prices"</span><span class="op">)</span></span>
 <span><span class="va">fig</span></span>
 <span></span>

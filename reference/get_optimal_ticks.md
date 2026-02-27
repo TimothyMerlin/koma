@@ -5,7 +5,7 @@ Find Optimal Ticks for y Axis
 ## Usage
 
 ``` r
-get_optimal_ticks(df_long, x_range)
+get_optimal_ticks(df_long, x_range, whisker_data = NULL)
 ```
 
 ## Arguments

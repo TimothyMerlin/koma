@@ -2,13 +2,16 @@ pandoc: 3.1.11
 pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
+  koma-diagnostics: koma-diagnostics.html
   koma-equations: koma-equations.html
+  koma-error-correction: koma-error-correction.html
   koma-extended-timeseries: koma-extended-timeseries.html
   koma-getting-started: koma-getting-started.html
+  koma-hpd: koma-hpd.html
   koma-klein: koma-klein.html
   koma-parallel: koma-parallel.html
   koma-small-macro-model: koma-small-macro-model.html
-last_built: 2026-01-10T12:02Z
+last_built: 2026-02-27T12:10Z
 urls:
   reference: https://timothymerlin.github.io/koma/reference
   article: https://timothymerlin.github.io/koma/articles

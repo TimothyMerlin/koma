@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,7 +29,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Forecast the Simultaneous Equations Model (SEM)</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/R/forecast.R" class="external-link"><code>R/forecast.R</code></a></small>
       <div class="d-none name"><code>forecast.Rd</code></div>
     </div>
 
@@ -39,7 +39,14 @@
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">forecast</span><span class="op">(</span><span class="va">estimates</span>, <span class="va">dates</span>, <span class="va">...</span>, restrictions <span class="op">=</span> <span class="cn">NULL</span>, point_forecast <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">forecast</span><span class="op">(</span></span>
+<span>  <span class="va">estimates</span>,</span>
+<span>  <span class="va">dates</span>,</span>
+<span>  <span class="va">...</span>,</span>
+<span>  restrictions <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>approximate <span class="op">=</span> <span class="cn">FALSE</span>, probs <span class="op">=</span> <span class="cn">NULL</span>, fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"mean"</span><span class="op">)</span>,</span>
+<span>    conditional_innov_method <span class="op">=</span> <span class="st">"projection"</span><span class="op">)</span></span>
+<span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -65,13 +72,20 @@ used in the estimation.</p></dd>
 <dd><p>List of model constraints. Default is empty.</p></dd>
 
 
-<dt id="arg-point-forecast">point_forecast<a class="anchor" aria-label="anchor" href="#arg-point-forecast"></a></dt>
-<dd><p>A list that contains the following elements:</p><ul><li><p><code>active</code>: Determines the type of forecast generated.
-If TRUE, a point forecast is created. If FALSE, a density forecast is
-returned. Default is TRUE.</p></li>
-<li><p><code>central_tendency</code>: A character string indicating which
-central tendency measure ("mean" or "median") to use for summary statistics.
-Default is "mean".</p></li>
+<dt id="arg-options">options<a class="anchor" aria-label="anchor" href="#arg-options"></a></dt>
+<dd><p>Optional settings for forecasting. Use
+<code>list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
+conditional_innov_method = "projection")</code>.
+Elements:</p><ul><li><p><code>approximate</code>: Logical. If FALSE (default), compute point
+forecasts from predictive draws. If TRUE, compute point forecasts from the
+mean/median of coefficient draws (fast approximation).</p></li>
+<li><p><code>probs</code>: Numeric vector of quantile probabilities. If NULL, no
+quantiles are returned. When <code>approximate = FALSE</code> and <code>probs</code> is
+NULL, defaults to <code>setdiff(get_quantiles(), 0.5)</code>.</p></li>
+<li><p><code>fill$method</code>: "mean" or "median" used for conditional fill
+before forecasting.</p></li>
+<li><p><code>conditional_innov_method</code>: Method for drawing conditional
+innovations. One of <code>"projection"</code> (default) or <code>"eigen"</code>.</p></li>
 </ul></dd>
 
 </dl></div>
@@ -89,7 +103,7 @@ elements:</p><dl><dt>mean</dt>
 
 <dt>quantiles</dt>
 <dd><p>A list of quantiles, where each element is named
-according to the quantile (e.g., "5", "50", "95"), and contains the
+according to the quantile (e.g., "q_5", "q_50", "q_95"), and contains the
 forecasts for that quantile. This element is NULL if <code>quantiles = FALSE</code>.</p></dd>
 
 <dt>ts_data</dt>
@@ -107,10 +121,14 @@ current quarter, used for forecasting.</p></dd>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The <code>forecast</code> function for SEM uses the estimates from the <code>koma_estimate</code>
-object to produce point forecasts or quantile forecasts based on the
-<code>point_forecast</code> parameter. If <code>point_forecast$active</code> is <code>TRUE</code>, only point
-forecasts are generated. If <code>FALSE</code>, quantile forecasts are generated and
-included in the <code>quantiles</code> list.</p>
+object to produce point forecasts and, optionally, quantile forecasts.
+When <code>options$approximate</code> is FALSE (default), point forecasts are
+computed from the predictive draws (with quantiles controlled by
+<code>options$probs</code>). When TRUE, point forecasts are computed from the mean
+and median of the coefficient draws for faster, approximate results.</p>
+<p>The returned <code>koma_forecast</code> object keeps forecasts as named lists of
+<code>koma_ts</code> (for <code>mean</code>, <code>median</code>, and <code>quantiles</code>) alongside the input data
+and matrices used to produce them.</p>
 <p>Use the <code><a href="print.koma_forecast.html">print</a></code> method to print a
 the forecast results, use the <code><a href="plot.koma_forecast.html">plot</a></code> method,
 to visualize the forecasts and prediction intervals.</p>

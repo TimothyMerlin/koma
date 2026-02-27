@@ -11,7 +11,7 @@ both density and point forecasts."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,7 +33,7 @@ both density and point forecasts."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Estimate the Simultaneous Equations Model (SEM)</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/R/estimate.R" class="external-link"><code>R/estimate.R</code></a></small>
       <div class="d-none name"><code>estimate.Rd</code></div>
     </div>
 
@@ -50,8 +50,7 @@ both density and point forecasts.</p>
 <span>  <span class="va">sys_eq</span>,</span>
 <span>  <span class="va">dates</span>,</span>
 <span>  <span class="va">...</span>,</span>
-<span>  options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>,</span>
-<span>  point_forecast <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>gibbs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, fill <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"mean"</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  estimates <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -78,19 +77,12 @@ about the system of equations used in the model.</p></dd>
 
 
 <dt id="arg-options">options<a class="anchor" aria-label="anchor" href="#arg-options"></a></dt>
-<dd><p>Optional settings for modifying the Gibbs sampler
-specifications for all equations.
-See <a href="get_default_gibbs_spec.html">Gibbs Sampler Specifications</a>.</p></dd>
-
-
-<dt id="arg-point-forecast">point_forecast<a class="anchor" aria-label="anchor" href="#arg-point-forecast"></a></dt>
-<dd><p>A list that contains the following elements:</p><ul><li><p><code>active</code>: Determines the type of forecast generated.
-If TRUE, a point forecast is created. If FALSE, a density forecast is
-returned. Default is TRUE.</p></li>
-<li><p><code>central_tendency</code>: A character string indicating which
-central tendency measure ("mean" or "median") to use for summary statistics.
-Default is "mean".</p></li>
-</ul></dd>
+<dd><p>Optional settings for estimation. Use
+<code>list(gibbs = list(), fill = list(method = "mean"))</code>. Elements:</p><ul><li><p><code>gibbs</code>: Gibbs sampler settings (see
+<a href="get_default_gibbs_spec.html">Gibbs Sampler Specifications</a>).</p></li>
+<li><p><code>fill$method</code>: "mean" or "median" used to fill ragged edges
+during estimation.</p></li>
+</ul><p>See <a href="get_default_gibbs_spec.html">Gibbs Sampler Specifications</a>.</p></dd>
 
 
 <dt id="arg-estimates">estimates<a class="anchor" aria-label="anchor" href="#arg-estimates"></a></dt>
@@ -127,6 +119,9 @@ the estimation process.</p></dd>
 <dt>gibbs_specifications</dt>
 <dd><p>The specifications used for the Gibbs
 sampling.</p></dd>
+
+<dt>dates</dt>
+<dd><p>The date ranges used during estimation.</p></dd>
 
 
 </dl></div>

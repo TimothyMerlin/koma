@@ -6,7 +6,7 @@ combination across all draws.
 ## Usage
 
 ``` r
-quantiles_from_forecasts(forecasts, freq, probs = NULL)
+quantiles_from_forecasts(forecasts, freq, probs = NULL, include_mean = FALSE)
 ```
 
 ## Arguments
@@ -24,6 +24,11 @@ quantiles_from_forecasts(forecasts, freq, probs = NULL)
 
   A numeric vector specifying which quantiles to compute. Default is
   c(0.25, 0.5, 0.75, 1).
+
+- include_mean:
+
+  Logical. If TRUE, the mean of the forecasts will also be computed and
+  returned along with the quantiles. Default is FALSE.
 
 ## Value
 

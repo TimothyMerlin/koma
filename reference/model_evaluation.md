@@ -16,8 +16,7 @@ model_evaluation(
   dates,
   ...,
   evaluate_on_levels = TRUE,
-  options = NULL,
-  point_forecast = NULL,
+  options = list(gibbs = list(), summary = "mean", approximate = FALSE),
   restrictions = NULL
 )
 ```
@@ -61,21 +60,17 @@ model_evaluation(
 
 - options:
 
-  Optional settings for modifying the Gibbs sampler specifications for
-  all equations. See [Gibbs Sampler
-  Specifications](https://timothymerlin.github.io/koma/reference/get_default_gibbs_spec.md).
+  Optional settings for model evaluation. Use
+  `list(gibbs = list(), summary = "mean", approximate = FALSE)`.
+  Elements:
 
-- point_forecast:
+  - `gibbs`: Gibbs sampler settings (see [Gibbs Sampler
+    Specifications](https://timothymerlin.github.io/koma/reference/get_default_gibbs_spec.md)).
 
-  A list that contains the following elements:
+  - `summary`: "mean" or "median" point forecast used for RMSE.
 
-  - `active`: Determines the type of forecast generated. If TRUE, a
-    point forecast is created. If FALSE, a density forecast is returned.
-    Default is TRUE.
-
-  - `central_tendency`: A character string indicating which central
-    tendency measure ("mean" or "median") to use for summary statistics.
-    Default is "mean".
+  - `approximate`: Logical; if TRUE, use the fast approximate point
+    forecast (mean/median of coefficient draws).
 
 - restrictions:
 

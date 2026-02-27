@@ -1,8 +1,9 @@
 # Update Gamma and Beta Matrices with Identity Weights
 
-The function takes in the identities and initial matrices for gamma and
-beta, and updates the values in the matrices based on the identity
-weights.
+This function injects identity weights into the structural coefficient
+matrices. For each identity component, it finds the target entry encoded
+in the theta name (e.g., "theta6_4") and replaces the corresponding
+value in \\\Gamma\\ or \\B\\.
 
 ## Usage
 
@@ -18,19 +19,19 @@ update_estimates_with_weights(identities, gamma_matrix, beta_matrix)
 
 - gamma_matrix:
 
-  Initial gamma matrix derived from median estimates.
+  Initial \\\Gamma\\ matrix (structural coefficients).
 
 - beta_matrix:
 
-  Initial beta matrix derived from median estimates.
+  Initial \\B\\ matrix (exogenous coefficients).
 
 ## Value
 
 A list containing:
 
-- `gamma_matrix`: Gamma matrix updated with identity weights.
+- `gamma_matrix`: \\\Gamma\\ updated with identity weights.
 
-- `beta_matrix`: Beta matrix updated with identity weights.
+- `beta_matrix`: \\B\\ updated with identity weights.
 
 ## See also
 

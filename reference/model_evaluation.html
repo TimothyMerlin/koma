@@ -11,7 +11,7 @@ until the specified horizon equals the end date in the forecast period."></head>
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,7 +33,7 @@ until the specified horizon equals the end date in the forecast period."></head>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Calculate Out-of-Sample RMSE for a Specified Horizon</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/R/model_evaluation.R" class="external-link"><code>R/model_evaluation.R</code></a></small>
       <div class="d-none name"><code>model_evaluation.Rd</code></div>
     </div>
 
@@ -53,8 +53,7 @@ until the specified horizon equals the end date in the forecast period.</p>
 <span>  <span class="va">dates</span>,</span>
 <span>  <span class="va">...</span>,</span>
 <span>  evaluate_on_levels <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  options <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  point_forecast <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  options <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>gibbs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="op">)</span>, summary <span class="op">=</span> <span class="st">"mean"</span>, approximate <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span>,</span>
 <span>  restrictions <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -98,18 +97,12 @@ FALSE on growth rates.</p></dd>
 
 
 <dt id="arg-options">options<a class="anchor" aria-label="anchor" href="#arg-options"></a></dt>
-<dd><p>Optional settings for modifying the Gibbs sampler
-specifications for all equations.
-See <a href="get_default_gibbs_spec.html">Gibbs Sampler Specifications</a>.</p></dd>
-
-
-<dt id="arg-point-forecast">point_forecast<a class="anchor" aria-label="anchor" href="#arg-point-forecast"></a></dt>
-<dd><p>A list that contains the following elements:</p><ul><li><p><code>active</code>: Determines the type of forecast generated.
-If TRUE, a point forecast is created. If FALSE, a density forecast is
-returned. Default is TRUE.</p></li>
-<li><p><code>central_tendency</code>: A character string indicating which
-central tendency measure ("mean" or "median") to use for summary statistics.
-Default is "mean".</p></li>
+<dd><p>Optional settings for model evaluation. Use
+<code>list(gibbs = list(), summary = "mean", approximate = FALSE)</code>. Elements:</p><ul><li><p><code>gibbs</code>: Gibbs sampler settings (see
+<a href="get_default_gibbs_spec.html">Gibbs Sampler Specifications</a>).</p></li>
+<li><p><code>summary</code>: "mean" or "median" point forecast used for RMSE.</p></li>
+<li><p><code>approximate</code>: Logical; if TRUE, use the fast approximate
+point forecast (mean/median of coefficient draws).</p></li>
 </ul></dd>
 
 

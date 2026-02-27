@@ -45,17 +45,17 @@ planned to be released on CRAN.
 ## Documentation
 
 - **Getting started** → [Getting started with
-  koma](https://timothymerlin.github.io/koma/articles/koma-getting-started.md)
+  koma](https://timothymerlin.github.io/koma/articles/koma-getting-started.html)
 - **Equation syntax** → [Equation syntax
-  reference](https://timothymerlin.github.io/koma/articles/koma-equations.md)
+  reference](https://timothymerlin.github.io/koma/articles/koma-equations.html)
 - **Extended time series** → [Extended time series
-  (ets)](https://timothymerlin.github.io/koma/articles/koma-extended-timeseries.md)
+  (ets)](https://timothymerlin.github.io/koma/articles/koma-extended-timeseries.html)
 - **Parallelization** → [Executing koma in
-  parallel](https://timothymerlin.github.io/koma/articles/koma-parallel.md)
+  parallel](https://timothymerlin.github.io/koma/articles/koma-parallel.html)
 - **Example: Klein model** → [Estimating Klein’s Model
-  I](https://timothymerlin.github.io/koma/articles/koma-klein.md)
+  I](https://timothymerlin.github.io/koma/articles/koma-klein.html)
 - **Example: small macro model** → [Estimating small macro model for
-  Switzerland](https://timothymerlin.github.io/koma/articles/koma-small-macro-model.md)
+  Switzerland](https://timothymerlin.github.io/koma/articles/koma-small-macro-model.html)
 
 ## Development
 
@@ -176,12 +176,62 @@ git push origin --tags
 - [`model_evaluation()`](https://timothymerlin.github.io/koma/reference/model_evaluation.md)
   : Calculate Out-of-Sample RMSE for a Specified Horizon
 
+## HPD and Diagnostics
+
+- [`hdi()`](https://timothymerlin.github.io/koma/reference/hdi.md) :
+  Highest Density Intervals from Draws
+- [`hdi(`*`<koma_estimate>`*`)`](https://timothymerlin.github.io/koma/reference/hdi.koma_estimate.md)
+  : Highest Density Intervals for koma_estimate Objects
+- [`hdi(`*`<koma_forecast>`*`)`](https://timothymerlin.github.io/koma/reference/hdi.koma_forecast.md)
+  : Highest Density Intervals for koma_forecast Objects
+- [`hdr()`](https://timothymerlin.github.io/koma/reference/hdr.md) :
+  Highest Density Regions from a Kernel Density Estimate
+- [`hdr(`*`<koma_estimate>`*`)`](https://timothymerlin.github.io/koma/reference/hdr.koma_estimate.md)
+  : Highest Density Regions for koma_estimate Objects
+- [`hdr(`*`<koma_forecast>`*`)`](https://timothymerlin.github.io/koma/reference/hdr.koma_forecast.md)
+  : Highest Density Regions for koma_forecast Objects
+- [`summary(`*`<koma_estimate_hdi>`*`)`](https://timothymerlin.github.io/koma/reference/summary.koma_estimate_hdi.md)
+  : Summary for koma_estimate_hdi Objects
+- [`summary(`*`<koma_estimate_hdr>`*`)`](https://timothymerlin.github.io/koma/reference/summary.koma_estimate_hdr.md)
+  : Summary for koma_estimate_hdr Objects
+- [`summary(`*`<koma_forecast>`*`)`](https://timothymerlin.github.io/koma/reference/summary.koma_forecast.md)
+  : Summary for koma_forecast Objects
+- [`summary(`*`<koma_forecast_hdi>`*`)`](https://timothymerlin.github.io/koma/reference/summary.koma_forecast_hdi.md)
+  : Summary for koma_forecast_hdi Objects
+- [`summary(`*`<koma_forecast_hdr>`*`)`](https://timothymerlin.github.io/koma/reference/summary.koma_forecast_hdr.md)
+  : Summary for koma_forecast_hdr Objects
+- [`summary(`*`<koma_hdi>`*`)`](https://timothymerlin.github.io/koma/reference/summary.koma_hdi.md)
+  : Summary for koma_hdi Objects
+- [`summary(`*`<koma_hdr>`*`)`](https://timothymerlin.github.io/koma/reference/summary.koma_hdr.md)
+  : Summary for koma_hdr Objects
+- [`print(`*`<koma_hdi>`*`)`](https://timothymerlin.github.io/koma/reference/print.koma_hdi.md)
+  : Print method for koma_hdi objects
+- [`print(`*`<koma_hdr>`*`)`](https://timothymerlin.github.io/koma/reference/print.koma_hdr.md)
+  : Print method for koma_hdr objects
+- [`trace_plot()`](https://timothymerlin.github.io/koma/reference/trace_plot.md)
+  : Trace Plots for koma_estimate Objects
+- [`acf_plot()`](https://timothymerlin.github.io/koma/reference/acf_plot.md)
+  : Autocorrelation Function Plots for koma_estimate Objects
+- [`running_mean()`](https://timothymerlin.github.io/koma/reference/running_mean.md)
+  : Running Means for koma_estimate Objects
+- [`running_mean_plot()`](https://timothymerlin.github.io/koma/reference/running_mean_plot.md)
+  : Running Mean Plots for koma_estimate Objects
+- [`plot(`*`<koma_estimate_hdr>`*`)`](https://timothymerlin.github.io/koma/reference/plot.koma_estimate_hdr.md)
+  : Plot HDRs for koma_estimate Objects
+- [`extract.koma_estimate()`](https://timothymerlin.github.io/koma/reference/extract.koma_estimate.md)
+  : Extract a texreg summary from a koma_estimate
+
 # Articles
 
 ### Getting started
 
 - [Estimating and Forecasting with the koma
   Package](https://timothymerlin.github.io/koma/articles/koma-getting-started.md):
+
+### Diagnostics
+
+- [MCMC Diagnostics for Estimated
+  SEM](https://timothymerlin.github.io/koma/articles/koma-diagnostics.md):
 
 ### Equation Syntax
 
@@ -192,6 +242,11 @@ git push origin --tags
 
 - [Extended Time Series
   (ets)](https://timothymerlin.github.io/koma/articles/koma-extended-timeseries.md):
+
+### HPD Summaries
+
+- [Highest Probability Density (HPD): HDR and
+  HDI](https://timothymerlin.github.io/koma/articles/koma-hpd.md):
 
 ### Parallelization
 
@@ -207,3 +262,8 @@ git push origin --tags
 
 - [Estimating Small Macro Model for
   Switzerland](https://timothymerlin.github.io/koma/articles/koma-small-macro-model.md):
+
+### Example: Error Correction
+
+- [Error Correction in a Small Open Economy
+  Model](https://timothymerlin.github.io/koma/articles/koma-error-correction.md):
