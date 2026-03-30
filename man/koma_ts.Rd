@@ -43,7 +43,8 @@ is_ets(x)
 
 \item{ts.eps}{time series comparison tolerance.  Frequencies are
     considered equal if their absolute difference is less than
-    \code{ts.eps}.}
+    \code{ts.eps}.  It is also used to check consistency of \code{end - start},
+    \code{frequency}, and the length of the time-series.}
 
 \item{...}{Additional attributes.}
 
@@ -62,6 +63,12 @@ The function \code{\link{ets}} is used to create an extended time-series
 
 \code{\link{as_ets}} and \code{\link{is_ets}} coerce an object to a time-
 series and test whether an object is a time series of class \code{koma_ts}.
+}
+\details{
+Mixed arithmetic between \code{koma_ts} and plain \code{ts} objects currently
+follows base R's group generic dispatch and may emit an
+"Incompatible methods" warning even when the resulting values are valid.
+Coercing both operands to \code{koma_ts} avoids that warning.
 }
 \seealso{
 \code{\link[stats]{ts}}

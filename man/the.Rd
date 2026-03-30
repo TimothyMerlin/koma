@@ -5,7 +5,7 @@
 \alias{the}
 \title{Define the internal environment of the package}
 \format{
-An object of class \code{environment} of length 1.
+An object of class \code{environment} of length 2.
 }
 \usage{
 the

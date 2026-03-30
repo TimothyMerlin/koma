@@ -19,7 +19,9 @@ test_that("koma_ts class operations", {
   )
 
   expect_equal(w, x)
-  expect_output(print(x), "level, real")
+  expect_output(print(x), "<koma_ts>")
+  expect_output(print(x), "attributes:")
+  expect_output(print(x), "series_type")
   expect_equal(format(x), format(ts_obj))
 
   w1 <- stats::window(x, start = c(2019, 4))
@@ -77,6 +79,9 @@ test_that("koma_ts class operations", {
   )
 
   expect_silent(x + y)
+  mixed_sum <- suppressWarnings(x + ts_obj)
+  expect_true(is_ets(mixed_sum))
+  expect_equal(as.numeric(mixed_sum), as.numeric(ts_obj + ts_obj))
   expect_silent(ts_obj + y_ts_obj)
 
   r1 <- rate(
@@ -150,6 +155,89 @@ test_that("koma_ts class operations", {
   )
 
   expect_true(is.matrix(mat_conv))
+})
+
+test_that("koma_ts supports user-defined metadata policies", {
+  set_koma_attr_policy(
+    "aligned_flag",
+    merge = function(left, right, attr, op = NULL, template = NULL) {
+      left_aligned <- if (is.null(left)) NULL else align_koma_attr(left, attr, template)
+      right_aligned <- if (is.null(right)) NULL else align_koma_attr(right, attr, template)
+
+      if (is.null(left_aligned)) {
+        return(right_aligned)
+      }
+      if (is.null(right_aligned)) {
+        return(left_aligned)
+      }
+
+      left_vals <- as.logical(left_aligned)
+      right_vals <- as.logical(right_aligned)
+      left_vals[is.na(left_vals)] <- FALSE
+      right_vals[is.na(right_vals)] <- FALSE
+
+      stats::ts(
+        left_vals | right_vals,
+        start = stats::start(template),
+        frequency = stats::frequency(template)
+      )
+    },
+    lag = function(value, attr, template = NULL, ...) {
+      stats::lag(value, ...)
+    },
+    window = function(value, attr, template = NULL, ...) {
+      stats::window(value, ...)
+    },
+    na_omit = function(value, attr, template = NULL, ...) {
+      stats::na.omit(value)
+    }
+  )
+
+  base <- ets(
+    1:6,
+    start = c(2020, 1),
+    frequency = 4,
+    series_type = "level",
+    method = "none",
+    aligned_flag = stats::ts(c(FALSE, FALSE, FALSE, TRUE, TRUE, TRUE),
+      start = c(2020, 1), frequency = 4
+    )
+  )
+  shifted <- ets(
+    6:1,
+    start = c(2020, 1),
+    frequency = 4,
+    series_type = "level",
+    method = "none",
+    aligned_flag = stats::ts(c(TRUE, TRUE, FALSE, FALSE),
+      start = c(2020, 3), frequency = 4
+    )
+  )
+
+  aligned <- align_koma_attr(shifted, "aligned_flag", base)
+  expect_true(stats::is.ts(aligned))
+  expect_equal(as.logical(aligned), c(NA, NA, TRUE, TRUE, FALSE, FALSE))
+
+  merged <- base + shifted
+  expect_true(is_ets(merged))
+  expect_equal(
+    as.logical(attr(merged, "aligned_flag")),
+    c(FALSE, FALSE, TRUE, TRUE, TRUE, TRUE)
+  )
+
+  lagged <- lag(base, k = -1)
+  expect_equal(attr(lagged, "aligned_flag"), stats::lag(attr(base, "aligned_flag"), -1))
+
+  windowed <- window(base, start = c(2020, 2), end = c(2021, 1))
+  expect_equal(
+    attr(windowed, "aligned_flag"),
+    stats::window(attr(base, "aligned_flag"), start = c(2020, 2), end = c(2021, 1))
+  )
+
+  plain <- strip_koma_attrs(base)
+  restored <- restore_koma_attrs(plain, get_custom_attributes(base))
+  expect_true(is_ets(restored))
+  expect_equal(attr(restored, "aligned_flag"), attr(base, "aligned_flag"))
 })
 
 test_that("ets as ets", {

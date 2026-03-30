@@ -3,6 +3,11 @@
 #' The function \code{\link{ets}} is used to create an extended time-series
 #' (ets) object. Any additional attribute passed is saved as such in the ets.
 #'
+#' Mixed arithmetic between \code{koma_ts} and plain \code{ts} objects currently
+#' follows base R's group generic dispatch and may emit an
+#' "Incompatible methods" warning even when the resulting values are valid.
+#' Coercing both operands to \code{koma_ts} avoids that warning.
+#'
 #'
 #' @param ... Additional attributes.
 #' @inheritParams stats::ts
@@ -150,11 +155,11 @@ as_list.mts <- function(x, ...) {
         out <- x[, i]
 
         out <- stats::na.omit(out)
-        attributes(out) <- c(
-          attributes(out),
-          lapply(x_attr, function(k) {
-            if (length(k) >= i) {
-              elem <- k[i]
+        if (length(x_attr)) {
+          restored_attrs <- lapply(names(x_attr), function(attr_name) {
+            values <- x_attr[[attr_name]]
+            if (length(values) >= i) {
+              elem <- values[i]
               if (is.expression(elem[[1]])) {
                 elem[[1]]
               } else {
@@ -163,10 +168,13 @@ as_list.mts <- function(x, ...) {
             } else {
               NA
             }
-          }),
-          ets_attributes
-        )
-        class(out) <- unique(c("koma_ts", class(out)))
+          })
+          names(restored_attrs) <- names(x_attr)
+          restored_attrs$ets_attributes <- names(restored_attrs)
+          out <- restore_koma_attrs(out, restored_attrs)
+        } else {
+          class(out) <- unique(c("koma_ts", class(out)))
+        }
 
         # removing unnecessary attribute
         attributes(out)$na.action <- NULL
@@ -272,28 +280,274 @@ as.ts.list <- function(x, ...) {
   lapply(x, function(k) as.ts.koma_ts(k))
 }
 
+# Internal registry for attribute-specific metadata policies
+if (is.null(the$koma_attr_policies)) {
+  the$koma_attr_policies <- list()
+}
+
+get_koma_attr_policy <- function(attr) {
+  the$koma_attr_policies[[attr]]
+}
+
+default_koma_attr_merge <- function(left, right, attr, op = NULL, template = NULL) {
+  if (is.null(left)) {
+    return(right)
+  }
+  if (is.null(right)) {
+    return(left)
+  }
+  if (isTRUE(all.equal(left, right))) {
+    return(left)
+  }
+
+  cli::cli_abort(c(
+    "Cannot merge koma_ts attribute {.field {attr}}.",
+    "x" = "The attribute values differ for operation {.val {if (is.null(op)) 'unknown' else op}}.",
+    "i" = "Register a policy with {.fn set_koma_attr_policy} for this attribute."
+  ))
+}
+
+align_ts_metadata <- function(x, template) {
+  if (is.null(x) || !stats::is.ts(x)) {
+    return(x)
+  }
+
+  aligned <- suppressWarnings(stats::window(
+    x,
+    start = stats::start(template),
+    end = stats::end(template),
+    extend = TRUE
+  ))
+
+  if (!isTRUE(all.equal(stats::tsp(aligned), stats::tsp(template)))) {
+    aligned <- stats::ts(
+      as.vector(aligned),
+      start = stats::start(template),
+      frequency = stats::frequency(template)
+    )
+  }
+
+  aligned
+}
+
+collect_koma_attrs <- function(x) {
+  if (!is_ets(x)) {
+    return(list())
+  }
+
+  get_custom_attributes(x)
+}
+
+transform_koma_attrs <- function(attrs, op, template = NULL, ...) {
+  attr_names <- setdiff(names(attrs), "ets_attributes")
+  transformed <- lapply(attr_names, function(attr_name) {
+    value <- attrs[[attr_name]]
+
+    policy <- get_koma_attr_policy(attr_name)
+    handler <- if (is.null(policy)) NULL else policy[[op]]
+    if (is.null(handler)) {
+      value
+    } else {
+      handler(
+        value = value,
+        attr = attr_name,
+        template = template,
+        ...
+      )
+    }
+  })
+  names(transformed) <- attr_names
+
+  transformed$ets_attributes <- names(transformed)
+  transformed
+}
+
+apply_koma_attrs <- function(x, attrs) {
+  if (!length(attrs)) {
+    return(x)
+  }
+
+  attrs$class <- NULL
+  attr_names <- setdiff(names(attrs), "ets_attributes")
+  attrs$ets_attributes <- attr_names
+
+  class(x) <- unique(c("koma_ts", class(x)))
+  attributes(x) <- c(attributes(x), attrs)
+  x
+}
+
+rebuild_ts_like <- function(result, template) {
+  if (stats::is.ts(result)) {
+    return(result)
+  }
+
+  if (stats::is.mts(template)) {
+    dims <- dim(template)
+    dim(result) <- dims
+    result <- stats::ts(
+      result,
+      start = stats::start(template),
+      frequency = stats::frequency(template)
+    )
+    colnames(result) <- colnames(template)
+    return(result)
+  }
+
+  stats::ts(
+    as.vector(result),
+    start = stats::start(template),
+    frequency = stats::frequency(template)
+  )
+}
+
+#' Register metadata behavior for a koma_ts attribute
+#'
+#' @param attr Name of the attribute.
+#' @param merge Optional binary merge handler with signature
+#'   `function(left, right, attr, op = NULL, template = NULL)`.
+#' @param lag Optional lag handler with signature
+#'   `function(value, attr, template = NULL, ...)`.
+#' @param window Optional window handler with signature
+#'   `function(value, attr, template = NULL, ...)`.
+#' @param na_omit Optional `na.omit` handler with signature
+#'   `function(value, attr, template = NULL, ...)`.
+#' @return The registered policy, invisibly.
+#' @export
+set_koma_attr_policy <- function(attr, merge = NULL, lag = NULL, window = NULL, na_omit = NULL) {
+  stopifnot(is.character(attr), length(attr) == 1L, nzchar(attr))
+  handlers <- list(merge = merge, lag = lag, window = window, na_omit = na_omit)
+  non_null_handlers <- Filter(Negate(is.null), handlers)
+  stopifnot(all(vapply(non_null_handlers, is.function, logical(1))))
+
+  the$koma_attr_policies[[attr]] <- handlers
+
+  invisible(handlers)
+}
+
+#' Align a koma_ts attribute or metadata series to another time series
+#'
+#' @param x A `koma_ts` object or metadata series.
+#' @param attr Name of the attribute to align. Only used when `x` is `koma_ts`.
+#' @param template A time series whose `tsp` should be used.
+#' @return The aligned attribute value.
+#' @export
+align_koma_attr <- function(x, attr = NULL, template) {
+  stopifnot(stats::is.ts(template))
+
+  value <- if (is_ets(x)) {
+    stopifnot(is.character(attr), length(attr) == 1L)
+    attr(x, attr)
+  } else {
+    x
+  }
+
+  align_ts_metadata(value, template)
+}
+
+#' Merge custom metadata from two koma_ts objects
+#'
+#' @param e1 First operand.
+#' @param e2 Second operand.
+#' @param op Name of the operation.
+#' @param template Result template used for alignment.
+#' @return A named list of merged custom attributes.
+#' @export
+merge_koma_attrs <- function(e1, e2 = NULL, op = NULL, template = NULL) {
+  attrs_e1 <- collect_koma_attrs(e1)
+  attrs_e2 <- collect_koma_attrs(e2)
+
+  attr_names <- union(
+    setdiff(names(attrs_e1), "ets_attributes"),
+    setdiff(names(attrs_e2), "ets_attributes")
+  )
+
+  merged <- lapply(attr_names, function(attr_name) {
+    policy <- get_koma_attr_policy(attr_name)
+    merge_handler <- if (is.null(policy)) NULL else policy$merge
+    if (is.null(merge_handler)) {
+      merge_handler <- default_koma_attr_merge
+    }
+
+    merge_handler(
+      left = attrs_e1[[attr_name]],
+      right = attrs_e2[[attr_name]],
+      attr = attr_name,
+      op = op,
+      template = template
+    )
+  })
+  names(merged) <- attr_names
+
+  merged$ets_attributes <- attr_names
+  merged
+}
+
+#' Remove custom metadata from a koma_ts object
+#'
+#' @param x A time series object.
+#' @return A plain `ts` object when `x` is `koma_ts`, otherwise `x`.
+#' @export
+strip_koma_attrs <- function(x) {
+  if (!is_ets(x)) {
+    return(x)
+  }
+
+  as.ts.koma_ts(x)
+}
+
+#' Restore custom metadata onto a time series
+#'
+#' @param x A time series object.
+#' @param attrs A named list of custom attributes.
+#' @return A `koma_ts` object.
+#' @export
+restore_koma_attrs <- function(x, attrs) {
+  stopifnot(stats::is.ts(x), is.list(attrs))
+
+  apply_koma_attrs(x, attrs)
+}
+
 #' @importFrom stats is.ts
 #' @importFrom stats is.mts
 #' @export
 print.koma_ts <- function(x, ...) {
   custom_attrs <- get_custom_attributes(x)
-  if (!is.null(custom_attrs[[1]])) {
-    attributes_x <- setdiff(attributes(x), custom_attrs)
-    names(attributes_x) <- names(attributes(x))[!names(attributes(x)) %in% names(custom_attrs)]
-    attributes(x) <- attributes(x)
+  attr_names <- setdiff(names(custom_attrs), "ets_attributes")
 
-    if (stats::is.ts(x) && !stats::is.mts(x)) {
-      custom_attrs$ets_attributes <- NULL
-
-      cat(paste(custom_attrs, collapse = ", "), "\n", sep = "")
+  format_attr_value <- function(value) {
+    if (stats::is.ts(value)) {
+      descriptor <- paste(class(as.vector(value))[1], "[", length(value), "obs]")
+      if (is.logical(as.vector(value))) {
+        descriptor <- paste(descriptor, paste(sum(value, na.rm = TRUE), "TRUE"))
+      }
+      return(paste("ts", descriptor))
     }
+    if (is.list(value) && !is.expression(value)) {
+      return(paste0("list[", length(value), "]"))
+    }
+    paste(
+      utils::capture.output(utils::str(value, give.attr = FALSE, vec.len = 4)),
+      collapse = " "
+    )
   }
-  NextMethod("print")
+
+  cat("<koma_ts>\n")
+  if (length(attr_names)) {
+    cat("attributes:\n")
+    for (attr_name in attr_names) {
+      cat("  ", attr_name, ": ", format_attr_value(custom_attrs[[attr_name]]), "\n", sep = "")
+    }
+    cat("\n")
+  }
+  cat("series:\n")
+  print(strip_koma_attrs(x), ...)
+
+  invisible(x)
 }
 
 #' @export
 format.koma_ts <- function(x, ...) {
-  NextMethod("print")
+  format(strip_koma_attrs(x), ...)
 }
 
 #' @export
@@ -303,42 +557,34 @@ format.koma_ts <- function(x, ...) {
 }
 
 get_custom_attributes <- function(x) {
-  attributes(x)[c(attr(x, "ets_attributes"), "ets_attributes")]
+  attr_names <- attr(x, "ets_attributes")
+  if (is.null(attr_names)) {
+    return(list())
+  }
+
+  attributes(x)[unique(c(attr_names, "ets_attributes"))]
 }
 
 #' @export
 Ops.koma_ts <- function(e1, e2 = NULL) {
-  result <- NextMethod()
+  lhs <- strip_koma_attrs(e1)
+  rhs <- strip_koma_attrs(e2)
 
-  # Preserve custom attributes
-  custom_attrs_e1 <- c(class = list(class(e1)), get_custom_attributes(e1))
-
-  if (!is.null(e2)) {
-    custom_attrs_e2 <- c(class = list(class(e2)), get_custom_attributes(e2))
-    if (inherits(e1, "koma_ts") && inherits(e2, "koma_ts")) {
-      stopifnot(all.equal(custom_attrs_e1, custom_attrs_e2))
-    } else if (inherits(e2, "koma_ts")) {
-      custom_attrs_e1 <- custom_attrs_e2
-    }
+  result <- if (is.null(e2)) {
+    do.call(.Generic, list(lhs))
+  } else {
+    do.call(.Generic, list(lhs, rhs))
   }
 
-  attributes(result) <- c(attributes(result), custom_attrs_e1)
-
-  result
+  merged_attrs <- merge_koma_attrs(e1, e2, op = .Generic, template = result)
+  restore_koma_attrs(result, merged_attrs)
 }
 
 #' @export
 diff.koma_ts <- function(x, ...) {
   result <- NextMethod("diff")
 
-  custom_attrs <- c(class = list(class(x)), get_custom_attributes(x))
-
-  # Preserve custom attributes in the result
-  attributes(result) <- c(attributes(result), custom_attrs)
-
-  class(result) <- class(x)
-
-  result
+  restore_koma_attrs(result, get_custom_attributes(x))
 }
 
 #' @importFrom stats lag
@@ -346,12 +592,15 @@ diff.koma_ts <- function(x, ...) {
 lag.koma_ts <- function(x, k = 1, ...) {
   result <- NextMethod("lag")
 
-  custom_attrs <- c(class = list(class(x)), get_custom_attributes(x))
+  custom_attrs <- transform_koma_attrs(
+    get_custom_attributes(x),
+    op = "lag",
+    template = result,
+    k = k,
+    ...
+  )
 
-  # Preserve custom attributes in the result
-  attributes(result) <- c(attributes(result), custom_attrs)
-
-  class(result) <- class(x)
+  result <- restore_koma_attrs(result, custom_attrs)
 
   # if rate update the anker
   if (!is.null(custom_attrs$anker)) {
@@ -368,12 +617,14 @@ lag.koma_ts <- function(x, k = 1, ...) {
 window.koma_ts <- function(x, ...) {
   result <- NextMethod("window")
 
-  custom_attrs <- c(class = list(class(x)), get_custom_attributes(x))
+  custom_attrs <- transform_koma_attrs(
+    get_custom_attributes(x),
+    op = "window",
+    template = result,
+    ...
+  )
 
-  # Preserve custom attributes in the result
-  attributes(result) <- c(attributes(result), custom_attrs)
-
-  class(result) <- class(x)
+  result <- restore_koma_attrs(result, custom_attrs)
 
   # if rate update the anker
   if (!is.null(custom_attrs$anker)) {
@@ -399,28 +650,28 @@ window.koma_ts <- function(x, ...) {
 na.omit.koma_ts <- function(object, ...) {
   result <- NextMethod("na.omit")
 
-  custom_attrs <- c(class = list(class(object)), get_custom_attributes(object))
+  custom_attrs <- transform_koma_attrs(
+    get_custom_attributes(object),
+    op = "na_omit",
+    template = result,
+    ...
+  )
 
-  # Preserve custom attributes in the result
-  attributes(result) <- c(attributes(result), custom_attrs)
-
-  class(result) <- class(object)
-
-  result
+  restore_koma_attrs(result, custom_attrs)
 }
 
 #' @export
 cumsum.koma_ts <- function(x, ...) {
   result <- NextMethod("cumsum", x)
-  attributes(result) <- attributes(x)
-  result
+  result <- rebuild_ts_like(result, x)
+  restore_koma_attrs(result, get_custom_attributes(x))
 }
 
 #' @export
 cumprod.koma_ts <- function(x, ...) {
   result <- NextMethod("cumprod", x)
-  attributes(result) <- attributes(x)
-  result
+  result <- rebuild_ts_like(result, x)
+  restore_koma_attrs(result, get_custom_attributes(x))
 }
 
 #' @importFrom tempdisagg ta
@@ -428,11 +679,7 @@ cumprod.koma_ts <- function(x, ...) {
 ta.koma_ts <- function(x, conversion, to, ...) {
   result <- NextMethod("ta", x)
 
-  custom_attrs <- c(class = list(class(x)), get_custom_attributes(x))
-  # Preserve custom attributes in the result
-  attributes(result) <- c(attributes(result), custom_attrs)
-  class(result) <- class(x)
-  result
+  restore_koma_attrs(result, get_custom_attributes(x))
 }
 
 #' Compute the rate of change for a time series
