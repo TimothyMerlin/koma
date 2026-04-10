@@ -172,8 +172,9 @@ summary_interval_table <- function(object,
   note <- sprintf("%s, [%s]", center_label, interval_label)
   if (!is.null(object$dates$estimation$start) &&
     !is.null(object$dates$estimation$end)) {
-    start <- dates_to_str(object$dates$estimation$start, frequency = 4)
-    end <- dates_to_str(object$dates$estimation$end, frequency = 4)
+    frequency <- get_single_frequency(object$ts_data)
+    start <- dates_to_str(object$dates$estimation$start, frequency = frequency)
+    end <- dates_to_str(object$dates$estimation$end, frequency = frequency)
     note <- paste0(note, "\nEstimation period: ", start, " - ", end)
   }
   cat(note, "\n")

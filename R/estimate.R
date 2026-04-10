@@ -267,8 +267,9 @@ convert_ts_data_to_ets <- function(ts_data) {
 
 new_prepare_estimation <- function(ts_data, sys_eq, dates, fill_method) {
   fill_method <- match.arg(fill_method, c("mean", "median"))
-  validate_estimation_dates(dates)
-  dates <- dates_to_num(dates, frequency = 4)
+  frequency <- get_single_frequency(ts_data)
+  validate_estimation_dates(dates, frequency = frequency)
+  dates <- dates_to_num(dates, frequency = frequency)
 
   # only keep data needed for system
   ts_data <- ts_data[c(
@@ -283,7 +284,12 @@ new_prepare_estimation <- function(ts_data, sys_eq, dates, fill_method) {
   )
 
   #### Calculate dynamic weights
-  sys_eq$identities <- get_seq_weights(level(ts_data), sys_eq$identities, dates)
+  sys_eq$identities <- get_seq_weights(
+    level(ts_data),
+    sys_eq$identities,
+    dates,
+    frequency = frequency
+  )
 
   # Check if model can be identified
   model_identification(
@@ -725,8 +731,9 @@ summary.koma_estimate <- function(object, ...) {
       central_tendency, ci_level, ci_low, ci_up
     )
     if (!is.null(object$dates$estimation$start) && !is.null(object$dates$estimation$end)) {
-      start <- dates_to_str(object$dates$estimation$start, frequency = 4)
-      end <- dates_to_str(object$dates$estimation$end, frequency = 4)
+      frequency <- get_single_frequency(object$ts_data)
+      start <- dates_to_str(object$dates$estimation$start, frequency = frequency)
+      end <- dates_to_str(object$dates$estimation$end, frequency = frequency)
       custom_note <- paste0(
         custom_note, "\nEstimation period: ", start, " - ", end
       )

@@ -16,6 +16,37 @@ dates_to_num <- function(x, frequency, ...) {
   UseMethod("dates_to_num")
 }
 
+get_single_frequency <- function(x, call = rlang::caller_env()) {
+  if (stats::is.ts(x)) {
+    return(as.integer(stats::frequency(x)))
+  }
+
+  if (!is.list(x) || length(x) == 0L) {
+    cli::cli_abort(
+      "`x` must be a non-empty ts object or a non-empty list of ts objects.",
+      call = call
+    )
+  }
+
+  is_ts <- vapply(x, stats::is.ts, logical(1))
+  if (!all(is_ts)) {
+    cli::cli_abort(
+      "All elements in `x` must be ts objects.",
+      call = call
+    )
+  }
+
+  frequencies <- unique(vapply(x, stats::frequency, numeric(1)))
+  if (length(frequencies) != 1L) {
+    cli::cli_abort(
+      "All time series data must share a single frequency.",
+      call = call
+    )
+  }
+
+  as.integer(frequencies[[1]])
+}
+
 #' @export
 dates_to_num.double <- function(x, frequency, ...) {
   if (length(x) == 1L) {
@@ -62,7 +93,9 @@ dates_to_str.NULL <- function(x, frequency, ...) {
 dates_to_str.Date <- function(x, frequency, ...) {
   yr <- format(x, "%Y")
   mo <- as.integer(format(x, "%m"))
-  if (frequency == 4L) {
+  if (frequency == 1L) {
+    yr
+  } else if (frequency == 4L) {
     qtr <- (mo - 1L) %/% 3L + 1L
     paste0(yr, " Q", qtr)
   } else if (frequency == 12L) {
@@ -87,6 +120,8 @@ dates_to_str.double <- function(x, frequency, ...) {
   period <- x[2L]
   if (frequency == 4L) {
     paste0(year, " Q", period)
+  } else if (frequency == 1L) {
+    as.character(year)
   } else {
     paste0(year, "-", sprintf("%02d", period))
   }

@@ -18,7 +18,7 @@
 #' @return The function updates the `identities` list with the calculated
 #' dynamic weights and returns nothing explicitly.
 #' @keywords internal
-get_seq_weights <- function(ts_data, identities, dates) {
+get_seq_weights <- function(ts_data, identities, dates, frequency = 4) {
   # Calculate dynamic weights
   weights <- c()
 
@@ -26,9 +26,9 @@ get_seq_weights <- function(ts_data, identities, dates) {
     is_na <- is.na(suppressWarnings(as.numeric(identities[ix][[1]]$weights)))
 
     if (any(is_na)) {
-      validate_dynamic_weights_dates(dates)
-      dynamic_start <- dates_to_num(dates$dynamic_weights$start, frequency = 4)
-      dynamic_end <- dates_to_num(dates$dynamic_weights$end, frequency = 4)
+      validate_dynamic_weights_dates(dates, frequency = frequency)
+      dynamic_start <- dates_to_num(dates$dynamic_weights$start, frequency = frequency)
+      dynamic_end <- dates_to_num(dates$dynamic_weights$end, frequency = frequency)
       out <- calculate_eq_weights(
         ts_data, identities[ix],
         dynamic_start,

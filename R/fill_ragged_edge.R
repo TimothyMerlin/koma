@@ -84,10 +84,10 @@ fill_ragged_edge <- function(ts_data, sys_eq,
     )
 
     forecast_dates <- list()
-    forecast_dates$start <- iterate_n_periods(edge$date, 1, frequency = 4)
+    forecast_dates$start <- iterate_n_periods(edge$date, 1, frequency = balanced_data$freq)
     # forecast end date needs to be different to start to get a matrix
     # because horizon is 1 the end date will be disregarded
-    forecast_dates$end <- iterate_n_periods(edge$date, 2, frequency = 4)
+    forecast_dates$end <- iterate_n_periods(edge$date, 2, frequency = balanced_data$freq)
 
     forecast_x_matrix <- stats::window(
       as_mets(ts_data[sys_eq$exogenous_variables]),
@@ -165,7 +165,7 @@ conditional_fill <- function(ts_data, sys_eq, dates,
   edge <- balanced_data$edge
 
   # Forecast horizon
-  frequency <- 4
+  frequency <- balanced_data$freq
   horizon <- length(seq(
     iterate_n_periods(edge$date, 1, frequency),
     dates$current,
@@ -178,15 +178,15 @@ conditional_fill <- function(ts_data, sys_eq, dates,
   ]
   restrictions <- set_restrictions(
     ts_data, variables_to_restrict,
-    start = iterate_n_periods(edge$date, 1, frequency = 4),
+    start = iterate_n_periods(edge$date, 1, frequency = frequency),
     end = dates$current
   )
 
   forecast_dates <- list()
-  forecast_dates$start <- iterate_n_periods(edge$date, 1, frequency = 4)
+  forecast_dates$start <- iterate_n_periods(edge$date, 1, frequency = frequency)
   # forecast end date needs to be different to start to get a matrix
   # because horizon is 1 the end date will be disregarded
-  forecast_dates$end <- iterate_n_periods(edge$date, horizon, frequency = 4)
+  forecast_dates$end <- iterate_n_periods(edge$date, horizon, frequency = frequency)
 
   forecast_x_matrix <- stats::window(
     as_mets(ts_data[sys_eq$exogenous_variables]),

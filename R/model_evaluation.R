@@ -95,6 +95,7 @@ new_model_evaluation <- function(sys_eq, variables,
                                  summary,
                                  approximate,
                                  restrictions) {
+  frequency <- get_single_frequency(ts_data)
   # Initialize error accumulation
   errors <- matrix(0, ncol = length(variables), nrow = horizon)
   colnames(errors) <- variables
@@ -103,11 +104,11 @@ new_model_evaluation <- function(sys_eq, variables,
   params <- list()
   n_iterations <- 0
 
-  dates <- dates_to_num(dates, frequency = 4)
-  dates$in_sample$end <- iterate_n_periods(dates$forecast$start, -1, frequency = 4)
+  dates <- dates_to_num(dates, frequency = frequency)
+  dates$in_sample$end <- iterate_n_periods(dates$forecast$start, -1, frequency = frequency)
 
   while (
-    iterate_n_periods(dates$forecast$start, horizon - 1, frequency = 4) <=
+    iterate_n_periods(dates$forecast$start, horizon - 1, frequency = frequency) <=
       dates$forecast$end
   ) {
     temp_dates <- dates
@@ -129,7 +130,7 @@ new_model_evaluation <- function(sys_eq, variables,
     }
 
     temp_dates$forecast$end <-
-      iterate_n_periods(temp_dates$forecast$start, horizon - 1, frequency = 4)
+      iterate_n_periods(temp_dates$forecast$start, horizon - 1, frequency = frequency)
     temp_dates$current <- temp_dates$in_sample$end
 
     # Store the parameters for this iteration
@@ -139,8 +140,8 @@ new_model_evaluation <- function(sys_eq, variables,
     )
 
     # advance one quarter
-    dates$forecast$start <- iterate_n_periods(temp_dates$forecast$start, 1, frequency = 4)
-    dates$in_sample$end <- iterate_n_periods(dates$in_sample$end, 1, frequency = 4)
+    dates$forecast$start <- iterate_n_periods(temp_dates$forecast$start, 1, frequency = frequency)
+    dates$in_sample$end <- iterate_n_periods(dates$in_sample$end, 1, frequency = frequency)
     n_iterations <- n_iterations + 1
   }
 

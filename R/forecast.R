@@ -94,14 +94,16 @@ forecast.koma_estimate <- function(estimates, dates, ...,
                                    )) {
   stopifnot(inherits(estimates, "koma_estimate"))
 
-  validate_forecast_input(estimates, dates)
-  dates$current <- iterate_n_periods(dates$forecast$start, -1, 4)
+  frequency <- get_single_frequency(estimates$ts_data)
+  validate_forecast_input(estimates, dates, frequency = frequency)
+  dates$current <- iterate_n_periods(dates$forecast$start, -1, frequency)
   fo <- new_forecast(estimates, dates, restrictions, options)
   validate_forecast_output(fo)
 }
 
 new_forecast <- function(estimates, dates, restrictions, options) {
   ts_data <- estimates$ts_data
+  frequency <- get_single_frequency(ts_data)
   stopifnot(inherits(ts_data, "list"))
   stopifnot(sapply(ts_data, function(x) inherits(x, "koma_ts")))
   stopifnot(is_system_of_equations(estimates$sys_eq))
@@ -145,7 +147,7 @@ new_forecast <- function(estimates, dates, restrictions, options) {
   }
   conditional_innov_method <- match.arg(conditional_innov_method, c("projection", "eigen"))
 
-  dates <- dates_to_num(dates, frequency = 4)
+  dates <- dates_to_num(dates, frequency = frequency)
 
   if (is.null(dates$forecast$start) ||
     is.null(dates$forecast$start) ||
@@ -159,7 +161,7 @@ new_forecast <- function(estimates, dates, restrictions, options) {
     ))
   }
 
-  horizon <- length(seq(dates$forecast$start, dates$forecast$end, by = 1 / 4))
+  horizon <- length(seq(dates$forecast$start, dates$forecast$end, by = 1 / frequency))
 
   edge <- detect_edge(
     rate(ts_data[estimates$sys_eq$endogenous_variables]),
@@ -179,8 +181,8 @@ new_forecast <- function(estimates, dates, restrictions, options) {
       missing_vars <- edge$variable_names
     }
 
-    edge_date <- dates_to_str(num_to_dates(edge$date, 4), 4)
-    current_date <- dates_to_str(num_to_dates(dates$current, 4), 4)
+    edge_date <- dates_to_str(num_to_dates(edge$date, frequency), frequency)
+    current_date <- dates_to_str(num_to_dates(dates$current, frequency), frequency)
     cli::cli_text("")
     cli::cli_text("Conditional fill detected after {.val {edge_date}}.")
     cli::cli_text("Missing observations for: {.val {missing_vars}}")
@@ -278,7 +280,7 @@ new_forecast <- function(estimates, dates, restrictions, options) {
   )
 }
 
-validate_forecast_input <- function(estimates, dates, ...) {
+validate_forecast_input <- function(estimates, dates, frequency = 4, ...) {
   if (is.null(dates$forecast) ||
     is.null(dates$forecast$start) ||
     is.null(dates$forecast$end) ||
@@ -315,24 +317,24 @@ validate_forecast_input <- function(estimates, dates, ...) {
     ))
   }
   if (length(dates$forecast$start) == 2L &&
-    (dates$forecast$start[2] < 1L || dates$forecast$start[2] > 4L)
+    (dates$forecast$start[2] < 1L || dates$forecast$start[2] > frequency)
   ) {
     cli::cli_abort(c(
       "!" = "Invalid {.field dates$forecast}:",
-      "x" = "{.field start} period must be between 1 and 4"
+      "x" = "{.field start} period must be between 1 and {frequency}"
     ))
   }
   if (length(dates$forecast$end) == 2L &&
-    (dates$forecast$end[2] < 1L || dates$forecast$end[2] > 4L)
+    (dates$forecast$end[2] < 1L || dates$forecast$end[2] > frequency)
   ) {
     cli::cli_abort(c(
       "!" = "Invalid {.field dates$forecast}:",
-      "x" = "{.field end} period must be between 1 and 4"
+      "x" = "{.field end} period must be between 1 and {frequency}"
     ))
   }
 
-  forecast_start <- dates_to_num(dates$forecast$start, frequency = 4)
-  forecast_end <- dates_to_num(dates$forecast$end, frequency = 4)
+  forecast_start <- dates_to_num(dates$forecast$start, frequency = frequency)
+  forecast_end <- dates_to_num(dates$forecast$end, frequency = frequency)
   if (length(forecast_start) != 1L || length(forecast_end) != 1L) {
     cli::cli_abort(c(
       "!" = "Invalid {.field dates$forecast}:",
@@ -346,14 +348,14 @@ validate_forecast_input <- function(estimates, dates, ...) {
     ))
   }
 
-  current_date <- iterate_n_periods(dates$forecast$start, -1, 4)
+  current_date <- iterate_n_periods(dates$forecast$start, -1, frequency)
 
   # Check if exogenous data extends to forecast start date
   # If exogenous data is shorter then forecast end date the forecast horizon
   # will later be automatically shortened.
   data_too_short <- list()
   for (x in estimates$sys_eq$exogenous_variables) {
-    if (stats::tsp(estimates$ts_data[[x]])[2] < dates_to_num(dates$forecast$start, frequency = 4)) {
+    if (stats::tsp(estimates$ts_data[[x]])[2] < dates_to_num(dates$forecast$start, frequency = frequency)) {
       data_too_short <- c(data_too_short, x)
     }
   }
@@ -371,7 +373,7 @@ validate_forecast_input <- function(estimates, dates, ...) {
   # Check if data longer than current quarter
   data_too_long <- list()
   for (x in estimates$sys_eq$endogenous_variables) {
-    if (stats::tsp(estimates$ts_data[[x]])[2] > dates_to_num(current_date, frequency = 4)) {
+    if (stats::tsp(estimates$ts_data[[x]])[2] > dates_to_num(current_date, frequency = frequency)) {
       data_too_long <- c(data_too_long, x)
     }
   }
