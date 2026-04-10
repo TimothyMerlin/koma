@@ -429,6 +429,11 @@ create_annotations <- function(x_ticks, y_position,
   annotations_list <- list()
 
   for (i in seq_len(nrow(x_ticks))) {
+    color <- x_ticks$color_code[i]
+    if ("sample_status" %in% names(x_ticks)) {
+      names(color) <- as.character(x_ticks$sample_status[i])
+    }
+
     annotations_list[[length(annotations_list) + 1]] <- list(
       x = x_ticks$year[i],
       y = y_position,
@@ -439,7 +444,7 @@ create_annotations <- function(x_ticks, y_position,
       xanchor = "center",
       yanchor = "top",
       font = list(
-        color = x_ticks$color_code[i],
+        color = color,
         family = font$family,
         size = font$size
       )

@@ -25,12 +25,29 @@ plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL,
     theme <- init_koma_theme()
   }
 
+  frequency <- attr(df_long, "frequency")
+  if (is.null(frequency)) {
+    frequency <- 4L
+  }
+
   df_long <- attach_color_code(df_long, theme$color$marker, "sample_status")
 
-  dates <- sapply(df_long$dates, num_to_dates, 4)
-  df_long$dates_formatted <- paste0(dates[1, ], " Q", dates[2, ])
+  dates <- sapply(df_long$dates, num_to_dates, frequency)
+  df_long$dates_formatted <- vapply(
+    df_long$dates,
+    function(x) dates_to_str(num_to_dates(x, frequency), frequency),
+    character(1)
+  )
   df_long$year <- dates[1, ]
-  df_long$quarter <- paste0(" Q", dates[2, ])
+  if (frequency == 4L) {
+    df_long$period_label <- paste0(" Q", dates[2, ])
+  } else if (frequency == 12L) {
+    df_long$period_label <- paste0(" ", month.abb[dates[2, ]])
+  } else if (frequency == 1L) {
+    df_long$period_label <- paste0(" ", dates[1, ])
+  } else {
+    df_long$period_label <- as.character(dates[2, ])
+  }
 
   # Specify trace names used in legend if not overwritten in theme
   if (is.null(theme$trace_name)) {
@@ -40,8 +57,14 @@ plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL,
     )
     date_start <- min(df_sub$dates)
 
-    forecast_start <- num_to_dates(date_start, frequency = 4)
-    date_str <- paste0(forecast_start[1], "-Q", forecast_start[2])
+    forecast_start <- num_to_dates(date_start, frequency = frequency)
+    date_str <- if (frequency == 4L) {
+      paste0(forecast_start[1], "-Q", forecast_start[2])
+    } else if (frequency == 12L) {
+      sprintf("%s-%02d", forecast_start[1], forecast_start[2])
+    } else {
+      as.character(forecast_start[1])
+    }
 
     theme$trace_name <- list(
       in_sample_growth = paste(date_str, "Data (Growth Rate)", sep = " "),
@@ -53,17 +76,17 @@ plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL,
 
   # Set x range to display if not set by user
   theme$xaxis$range$end <- if (is.null(theme$xaxis$range$end)) {
-    max(df_long$dates) + 0.25 # add one quarter
+    max(df_long$dates) + 1 / frequency
   } else {
-    dates_to_num(theme$xaxis$range$end, frequency = 4)
+    dates_to_num(theme$xaxis$range$end, frequency = frequency)
   }
   theme$xaxis$range$start <- if (is.null(theme$xaxis$range$start)) {
     theme$xaxis$range$end - 5 # show 5 years
   } else {
-    dates_to_num(theme$xaxis$range$start, frequency = 4)
+    dates_to_num(theme$xaxis$range$start, frequency = frequency)
   }
 
-  x_range_padding <- 0.125 # extend x_range by half a quarter
+  x_range_padding <- 0.5 / frequency
 
   if (!inherits(fig, "plotly")) {
     fig <- plotly::plot_ly()
@@ -118,7 +141,7 @@ plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL,
       y = ~value,
       customdata = ~dates_formatted,
       color = ~data_type,
-      text = ~quarter,
+      text = ~period_label,
       textfont = list(color = theme$color$bar_textfont$in_sample),
       hovertemplate = "%{customdata}: %{y:.2f}",
       name = theme$trace_name$in_sample_growth,
@@ -172,7 +195,7 @@ plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL,
       y = ~value,
       customdata = ~dates_formatted,
       color = ~data_type,
-      text = ~quarter,
+      text = ~period_label,
       textfont = list(color = theme$color$bar_textfont$forecast),
       hovertemplate = "%{customdata}: %{y:.2f}",
       name = theme$trace_name$forecast_growth,

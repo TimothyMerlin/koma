@@ -81,7 +81,8 @@ new_plot <- function(x, ...) {
 
   tsl <- x$ts_data[names(out)]
   forecast_start <- stats::start(x$mean[[1]])
-  current_date <- iterate_n_periods(forecast_start, -1, frequency = 4)
+  frequency <- stats::frequency(x$mean[[1]])
+  current_date <- iterate_n_periods(forecast_start, -1, frequency = frequency)
   suppressWarnings(
     tsl <- lapply(tsl, function(x) {
       stats::window(x, end = current_date)
@@ -123,11 +124,12 @@ new_plot <- function(x, ...) {
       level = level(out),
       growth_annual = rate(out_annual)
     ),
-    start = dates_to_num(forecast_start, frequency = 4)
+    start = dates_to_num(forecast_start, frequency = frequency)
   )
 
   # Only keep the variable(s) that we want to plot
   df_long <- subset(df_long, df_long$variable %in% variables)
+  attr(df_long, "frequency") <- frequency
 
   plotli(
     df_long,

@@ -11,6 +11,7 @@
 #' growth rates, and level data.
 #' @keywords internal
 prepare_data_to_plot <- function(mts_list, start) {
+  frequency <- stats::frequency(mts_list[[1]])
   # Transform the metrics to long format and concatenate
   df_long <- do.call(rbind, lapply(names(mts_list), function(type) {
     df <- to_long(
@@ -49,6 +50,7 @@ prepare_data_to_plot <- function(mts_list, start) {
   df_long <- df_long[order(df_long$dates), ]
 
   df_long$data_type <- factor(df_long$data_type)
+  attr(df_long, "frequency") <- frequency
 
   return(df_long)
 }
@@ -64,6 +66,7 @@ prepare_data_to_plot <- function(mts_list, start) {
 #' with the sample status, dates, and frame identifiers.
 #' @keywords internal
 to_long <- function(mts, start) {
+  frequency <- stats::frequency(mts)
   sample_status <-
     ifelse(stats::time(mts) < start,
       "in_sample", "forecast"
@@ -71,8 +74,14 @@ to_long <- function(mts, start) {
 
   sample_status <- factor(sample_status)
 
-  start <- num_to_dates(start, frequency = 4)
-  date_str <- paste0(start[1], "-Q", start[2])
+  start <- num_to_dates(start, frequency = frequency)
+  date_str <- if (frequency == 4L) {
+    paste0(start[1], "-Q", start[2])
+  } else if (frequency == 12L) {
+    sprintf("%s-%02d", start[1], start[2])
+  } else {
+    as.character(start[1])
+  }
 
   df <- as.data.frame(as.matrix(mts))
   df$dates <- stats::time(mts)
