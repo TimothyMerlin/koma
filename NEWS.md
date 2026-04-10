@@ -1,3 +1,7 @@
+# koma development
+
+* Added support for single-frequency monthly and yearly data across estimation, forecasting, evaluation, weighting, and summary utilities.
+
 # koma 0.2.1
 
 * Fix pkgdown site build by adding package URL and completing `_pkgdown.yml` reference index.

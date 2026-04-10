@@ -1,2 +1,3 @@
-r 4.5.0
+r 4.5.2
 pandoc 3.8.2.1
+codex rust-v0.118.0
