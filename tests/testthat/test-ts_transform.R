@@ -110,3 +110,39 @@ test_that("to_long", {
 
   expect_equal(result, expected_result)
 })
+
+test_that("to_long supports monthly and yearly frames", {
+  mts_monthly <- stats::ts(
+    matrix(1:12, ncol = 1),
+    start = c(2020, 1),
+    frequency = 12
+  )
+  monthly_result <- to_long(mts_monthly, dates_to_num(c(2020, 5), frequency = 12))
+
+  expect_true(all(monthly_result$frames == "2020-05"))
+  expect_identical(
+    as.character(monthly_result$sample_status[1:4]),
+    rep("in_sample", 4)
+  )
+  expect_identical(
+    as.character(monthly_result$sample_status[5:12]),
+    rep("forecast", 8)
+  )
+
+  mts_yearly <- stats::ts(
+    matrix(1:6, ncol = 1),
+    start = 2018,
+    frequency = 1
+  )
+  yearly_result <- to_long(mts_yearly, dates_to_num(2021, frequency = 1))
+
+  expect_true(all(yearly_result$frames == "2021"))
+  expect_identical(
+    as.character(yearly_result$sample_status[1:3]),
+    rep("in_sample", 3)
+  )
+  expect_identical(
+    as.character(yearly_result$sample_status[4:6]),
+    rep("forecast", 3)
+  )
+})

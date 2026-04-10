@@ -110,6 +110,120 @@ test_that("forecast works correctly for density forecasts", {
   expect_equal(formatted0, expected0)
 })
 
+test_that("estimate and forecast support monthly single-frequency data", {
+  y <- as_ets(
+    stats::ts(
+      cumsum(seq(0.5, 2.85, by = 0.05)),
+      start = c(2019, 1),
+      frequency = 12
+    ),
+    series_type = "rate",
+    method = "none"
+  )
+  x <- as_ets(
+    stats::ts(
+      seq(1, 6, by = 0.1),
+      start = c(2019, 1),
+      frequency = 12
+    ),
+    series_type = "rate",
+    method = "none"
+  )
+
+  ts_data <- list(
+    y = stats::window(y, end = c(2022, 12)),
+    x = x
+  )
+  sys_eq <- system_of_equations("y ~ y.L(1) + x", exogenous_variables = "x")
+  dates <- list(
+    estimation = list(start = c(2019, 2), end = c(2022, 12)),
+    forecast = list(start = c(2023, 1), end = c(2023, 3))
+  )
+
+  estimates <- withr::with_seed(
+    42,
+    estimate(
+      ts_data,
+      sys_eq,
+      dates,
+      options = list(gibbs = list(ndraws = 40))
+    )
+  )
+
+  result <- withr::with_seed(
+    42,
+    forecast(
+      estimates,
+      dates,
+      options = list(probs = c(0.1, 0.9))
+    )
+  )
+
+  expect_s3_class(estimates, "koma_estimate")
+  expect_s3_class(result, "koma_forecast")
+  expect_equal(stats::frequency(result$mean$y), 12)
+  expect_equal(stats::start(result$mean$y), c(2023, 1))
+  expect_equal(stats::end(result$mean$y), c(2023, 3))
+  expect_identical(names(result$quantiles), c("q_10", "q_90"))
+})
+
+test_that("estimate and forecast support yearly single-frequency data", {
+  y <- as_ets(
+    stats::ts(
+      cumsum(seq(1, 8, by = 1)),
+      start = 2015,
+      frequency = 1
+    ),
+    series_type = "rate",
+    method = "none"
+  )
+  x <- as_ets(
+    stats::ts(
+      seq(2, 11, by = 1),
+      start = 2015,
+      frequency = 1
+    ),
+    series_type = "rate",
+    method = "none"
+  )
+
+  ts_data <- list(
+    y = stats::window(y, end = 2020),
+    x = x
+  )
+  sys_eq <- system_of_equations("y ~ y.L(1) + x", exogenous_variables = "x")
+  dates <- list(
+    estimation = list(start = 2016, end = 2020),
+    forecast = list(start = 2021, end = 2022)
+  )
+
+  estimates <- withr::with_seed(
+    42,
+    estimate(
+      ts_data,
+      sys_eq,
+      dates,
+      options = list(gibbs = list(ndraws = 40))
+    )
+  )
+
+  result <- withr::with_seed(
+    42,
+    forecast(
+      estimates,
+      dates,
+      options = list(probs = c(0.1, 0.9))
+    )
+  )
+
+  expect_s3_class(estimates, "koma_estimate")
+  expect_s3_class(result, "koma_forecast")
+  expect_equal(stats::frequency(result$mean$y), 1)
+  expect_equal(stats::start(result$mean$y), c(2021, 1))
+  expect_equal(stats::end(result$mean$y), c(2022, 1))
+  expect_identical(names(result$quantiles), c("q_10", "q_90"))
+})
+
 test_that("forecast conditional innovation methods", {
   # yield approximatively equal distributions
   dates <- list(estimation = list(), forecast = list())

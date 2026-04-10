@@ -4,7 +4,7 @@
 \alias{get_seq_weights}
 \title{Get System of Equations Weights}
 \usage{
-get_seq_weights(ts_data, identities, dates)
+get_seq_weights(ts_data, identities, dates, frequency = 4)
 }
 \arguments{
 \item{ts_data}{A named list of \code{stats::ts} objects. This list should contain

@@ -32,6 +32,7 @@ test_that("dates_to_num is list", {
 test_that("dates_to_str for double vector with one date", {
   result <- dates_to_str(c(2013, 2), 4)
   expect_identical(result, "2013 Q2")
+  expect_identical(dates_to_str(c(2013, 1), 1), "2013")
 
   # contains NULL
   expect_equal(dates_to_str(NULL, 4), NULL)
@@ -39,6 +40,7 @@ test_that("dates_to_str for double vector with one date", {
 
 test_that("dates_to_str for Date objects", {
   d <- as.Date("2021-11-05")
+  expect_identical(dates_to_str(d, 1), "2021")
   expect_identical(dates_to_str(d, 4), "2021 Q4")
   expect_identical(dates_to_str(d, 12), "2021-11")
   # fallback to full date
@@ -120,4 +122,18 @@ test_that("Iterating by months works correctly with monthly frequency", {
 test_that("Iterating by years works correctly with yearly frequency", {
   expect_equal(iterate_n_periods(2022, 1, 1), 2023)
   expect_equal(iterate_n_periods(2020, 5, 1), 2025)
+})
+
+test_that("get_single_frequency returns the common frequency and rejects mixed frequencies", {
+  monthly <- list(
+    a = stats::ts(1:12, start = c(2020, 1), frequency = 12),
+    b = stats::ts(13:24, start = c(2020, 1), frequency = 12)
+  )
+  mixed <- c(monthly, list(c = stats::ts(1:8, start = c(2020, 1), frequency = 4)))
+
+  expect_identical(get_single_frequency(monthly), 12L)
+  expect_error(
+    get_single_frequency(mixed),
+    "share a single frequency"
+  )
 })

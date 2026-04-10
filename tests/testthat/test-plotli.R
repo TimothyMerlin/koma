@@ -218,3 +218,92 @@ test_that("plotli", {
   expect_true(all(grepl(pattern = "2022-Q1", trace_names[1:4])))
   expect_true(all(grepl(pattern = "2023-Q1", trace_names[5:8])))
 })
+
+test_that("plotli default trace names support monthly and yearly frequencies", {
+  build_df_long <- function(freq, frame, growth_vals, annual_vals, level_vals, start) {
+    df_long <- structure(list(
+      dates = c(
+        stats::time(growth_vals),
+        stats::time(annual_vals),
+        stats::time(level_vals)
+      ),
+      sample_status = factor(
+        c(
+          rep("in_sample", length(growth_vals) - 2),
+          rep("base_forecast", 2),
+          rep("in_sample", length(annual_vals) - 1),
+          rep("base_forecast", 1),
+          rep("in_sample", length(level_vals) - 2),
+          rep("base_forecast", 2)
+        ),
+        levels = c("base_forecast", "in_sample", "conditional_forecast")
+      ),
+      frames = rep(frame, length(growth_vals) + length(annual_vals) + length(level_vals)),
+      variable = rep("consumption", length(growth_vals) + length(annual_vals) + length(level_vals)),
+      value = c(growth_vals, annual_vals, level_vals),
+      data_type = factor(
+        c(
+          rep("growth", length(growth_vals)),
+          rep("growth_annual", length(annual_vals)),
+          rep("level", length(level_vals))
+        ),
+        levels = c("growth", "growth_annual", "level")
+      )
+    ), row.names = c(NA, -(length(growth_vals) + length(annual_vals) + length(level_vals))),
+    class = c("tbl_df", "tbl", "data.frame"))
+    attr(df_long, "frequency") <- freq
+    df_long
+  }
+
+  monthly_growth <- ets(
+    c(1.2, -0.5, 0.3, 0.7, 0.4, 0.6),
+    start = c(2022, 11),
+    frequency = 12,
+    method = "none",
+    series_type = "rate"
+  )
+  monthly_level <- level(monthly_growth)
+  monthly_annual <- stats::ts(c(2.4, 2.6), start = 2022, frequency = 1)
+  monthly_df <- build_df_long(
+    freq = 12,
+    frame = "2023-03",
+    growth_vals = monthly_growth,
+    annual_vals = monthly_annual,
+    level_vals = monthly_level,
+    start = c(2022, 11)
+  )
+  monthly_fig <- plotli(
+    monthly_df,
+    theme = init_koma_theme(index = list(start = NULL, end = NULL), trace_name = NULL)
+  )
+  monthly_built <- plotly::plotly_build(monthly_fig)
+  monthly_trace_names <- vapply(monthly_built$x$data[1:4], `[[`, character(1), "name")
+
+  expect_true(all(grepl("2023-03", monthly_trace_names)))
+  expect_equal(as.vector(monthly_built$x$data[[1]]$text), c(" Nov", " Dec", " Jan", " Feb"))
+
+  yearly_growth <- ets(
+    c(1.1, 1.3, 1.5, 1.7),
+    start = 2020,
+    frequency = 1,
+    method = "none",
+    series_type = "rate"
+  )
+  yearly_level <- level(yearly_growth)
+  yearly_annual <- yearly_growth
+  yearly_df <- build_df_long(
+    freq = 1,
+    frame = "2022",
+    growth_vals = yearly_growth,
+    annual_vals = yearly_annual,
+    level_vals = yearly_level,
+    start = 2020
+  )
+  yearly_fig <- plotli(
+    yearly_df,
+    theme = init_koma_theme(index = list(start = NULL, end = NULL), trace_name = NULL)
+  )
+  yearly_trace_names <- vapply(plotly::plotly_build(yearly_fig)$x$data[1:4], `[[`, character(1), "name")
+
+  expect_true(all(grepl("2022", yearly_trace_names)))
+})
