@@ -140,6 +140,18 @@ test_that("system_of_equations stores omitted exogenous variables as character(0
   expect_identical(result$total_exogenous_variables, c("constant", "y.L(1)"))
 })
 
+test_that("system_of_equations requires at least one equation", {
+  expect_error(
+    system_of_equations(),
+    "No equations provided"
+  )
+
+  expect_error(
+    system_of_equations(""),
+    "No equations provided"
+  )
+})
+
 test_that("system_of_equation throws error when exogenous not declared", {
   # Case 1
   equations <- c(

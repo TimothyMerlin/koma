@@ -74,6 +74,13 @@ system_of_equations <- function(equations = vector(),
   equations <- equations[equations != ""]
   exogenous_variables <- as.character(exogenous_variables)
 
+  if (length(equations) == 0) {
+    cli::cli_abort(c(
+      "!" = "No equations provided.",
+      "i" = "Pass at least one stochastic equation to {.fun system_of_equations}."
+    ))
+  }
+
   priors <- lapply(equations, extract_priors)
   equation_settings <- lapply(equations, extract_settings)
   equations <- sapply(equations, parse_equation, USE.NAMES = FALSE)
