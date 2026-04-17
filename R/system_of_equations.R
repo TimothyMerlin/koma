@@ -72,6 +72,7 @@ system_of_equations <- function(equations = vector(),
   equations <- gsub(" ", "", equations)
   # Remove empty strings
   equations <- equations[equations != ""]
+  exogenous_variables <- as.character(exogenous_variables)
 
   priors <- lapply(equations, extract_priors)
   equation_settings <- lapply(equations, extract_settings)

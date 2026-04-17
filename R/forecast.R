@@ -221,7 +221,7 @@ new_forecast <- function(estimates, dates, restrictions, options) {
   )
 
   y_matrix <- balanced_data$y_matrix
-  if (!is.null(estimates$sys_eq$exogenous_variables)) {
+  if (length(estimates$sys_eq$exogenous_variables) > 0) {
     x_matrix <- stats::window(
       as_mets(rate(ts_data[estimates$sys_eq$exogenous_variables])),
       start = dates$forecast$start,

@@ -712,6 +712,33 @@ test_that("forecast with one AR equation", {
   expect_equal(out$mean$manufacturing[2], (phi_hat^2) * y_end, tolerance = 1e-8)
 })
 
+test_that("forecast works when exogenous variables are omitted", {
+  dates <- list(
+    estimation = list(start = c(1977, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
+  )
+
+  equations <- "manufacturing ~ 0 + manufacturing.L(1)"
+  sys_eq <- system_of_equations(equations)
+
+  ts_data <- simulated_data$ts_data
+  dates_current <- c(2023, 1)
+  ts_data[sys_eq$endogenous_variables] <-
+    lapply(sys_eq$endogenous_variables, function(x) {
+      stats::window(ts_data[[x]], end = dates_current)
+    })
+
+  est <- withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
+  )
+
+  out <- forecast(est, dates, options = list(approximate = TRUE))
+
+  expect_null(out$x_matrix)
+  expect_identical(names(out$mean), "manufacturing")
+})
+
 test_that("forecast without lags and with restrictions", {
   # no-lag restrictions do not propagate to later horizons #
   dates <- list(
