@@ -150,11 +150,9 @@ new_forecast <- function(estimates, dates, restrictions, options) {
   dates <- dates_to_num(dates, frequency = frequency)
 
   if (is.null(dates$forecast$start) ||
-    is.null(dates$forecast$start) ||
     is.null(dates$forecast$end) ||
     !is.numeric(dates$forecast$start) ||
-    !is.numeric(dates$forecast$end)
-  ) {
+    !is.numeric(dates$forecast$end)) {
     cli::cli_abort(c(
       "!" = "Invalid {.field dates$forecast}:",
       "x" = "{.field start} and {.field end} must be numeric and provided"
