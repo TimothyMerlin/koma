@@ -30,13 +30,16 @@ and for time series handling see the [ets vignette](../koma-extended-timeseries.
 We start with four stochastic equations and two identities that mirror a small
 open economy. The interest rate, world GDP, and the exchange rate are treated
 as exogenous in this example.
+To keep the setup minimal, the GDP identity below uses fixed illustrative
+weights. For an example with time-varying weights computed from nominal series,
+see the [Klein vignette](../koma-klein.html).
 
 ```{R}
 equations <- "consumption ~ gdp + consumption.L(1) + interest_rate,
 investment ~ gdp + investment.L(1) + interest_rate,
 exports ~ world_gdp + exchange_rate + exports.L(1),
 imports ~ gdp + exchange_rate + imports.L(1),
-gdp == (consumption/gdp)*consumption + (investment/gdp)*investment + (exports/gdp)*exports - (imports/gdp)*imports"
+gdp == 0.55*consumption + 0.20*investment + 0.30*exports - 0.05*imports"
 
 exogenous_variables <- c("interest_rate", "world_gdp", "exchange_rate")
 ```
@@ -55,13 +58,13 @@ print(sys_eq)
 # Pick estimation and forecast ranges
 
 We use the last year of the dataset as a short out-of-sample forecast period.
-The identity weights are computed from level shares over the estimation window.
+For this introductory example, the identity already contains fixed numeric
+weights, so only estimation and forecast ranges are needed.
 
 ```{R}
 dates <- list(
     estimation = list(start = c(1996, 1), end = c(2019, 4)),
-    forecast = list(start = c(2023, 1), end = c(2023, 4)),
-    dynamic_weights = list(start = c(1996, 1), end = c(2019, 4))
+    forecast = list(start = c(2023, 1), end = c(2023, 4))
 )
 ```
 
