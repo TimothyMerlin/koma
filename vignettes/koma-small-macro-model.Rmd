@@ -45,31 +45,28 @@ $$
 
 **Endogenous variables**  
 
-\item{C_t}{Consumption at time \eqn{t}.}
-\item{I_t}{Gross fixed capital formation (investment)
-  at time \eqn{t}.}
-\item{X_t}{Exports at time \eqn{t}.}
-\item{M_t}{Imports at time \eqn{t}.}
-\item{P_t}{Price level at time \eqn{t}.}
-\item{R_t}{Short-term interest rate at time \eqn{t}.}
-\item{D_t}{Domestic demand, defined by
-  \eqn{D_t = 0.6 * C_t + 0.4 * I_t}.}
-\item{GDP_t}{Equilibrium output (demand), defined by
-  \eqn{GDP_t = 0.6 * C_t + 0.6 * D_t + 0.5 * X_t - 0.4 * I_t}.}
+- $C_t$: Consumption at time $t$.
+- $I_t$: Gross fixed capital formation (investment) at time $t$.
+- $X_t$: Exports at time $t$.
+- $M_t$: Imports at time $t$.
+- $P_t$: Price level at time $t$.
+- $R_t$: Short-term interest rate at time $t$.
+- $D_t$: Domestic demand, defined by $D_t = 0.6 * C_t + 0.4 * I_t$.
+- $GDP_t$: Equilibrium output (demand), defined by
+  $GDP_t = 0.6 * C_t + 0.6 * D_t + 0.5 * X_t - 0.4 * I_t$.
 
 **Exogenous variables**  
 
-\item{WGDP_t}{World GDP at time \eqn{t}.}
-\item{ER_t}{Exchange rate at time \eqn{t}.}
-\item{OP_t}{Oil price at time \eqn{t}.}
-\item{\eqn{R_{GE,t}}}{German interest rate at time \eqn{t}}.
+- $WGDP_t$: World GDP at time $t$.
+- $ER_t$: Exchange rate at time $t$.
+- $OP_t$: Oil price at time $t$.
+- $R_{GE,t}$: German interest rate at time $t$.
 
 **Other variables**  
 
-\item{G_t}{Government spending at time \eqn{t}.}
-\item{T_t}{Taxes at time \eqn{t}.}
-\item{epsilon_it}{Stochastic error term for equation \eqn{i}
-  at time \eqn{t}.}
+- $G_t$: Government spending at time $t$.
+- $T_t$: Taxes at time $t$.
+- $\varepsilon_{it}$: Stochastic error term for equation $i$ at time $t$.
 
 
 # Defining the SEM in R
