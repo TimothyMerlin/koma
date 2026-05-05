@@ -45,16 +45,26 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
 
   gibbs_settings <- get_gibbs_settings()
 
+  safe_draw_parameters <- purrr::safely(function(eq_jx) {
+    gibbs_sampler <- gibbs_settings[[colnames(character_gamma_matrix)[eq_jx]]]
+
+    if (length(priors[[eq_jx]]) == 0) {
+      draw_parameters_j(
+        y_matrix, x_matrix, character_gamma_matrix,
+        character_beta_matrix, eq_jx, gibbs_sampler
+      )
+    } else {
+      draw_parameters_j_informative(
+        y_matrix, x_matrix, character_gamma_matrix,
+        character_beta_matrix, eq_jx, gibbs_sampler, priors
+      )
+    }
+  }, quiet = FALSE)
+
   globals_to_export <- c(
     "p",
     "safe_draw_parameters",
-    "stochastic_equations",
-    "y_matrix",
-    "x_matrix",
-    "character_gamma_matrix",
-    "character_beta_matrix",
-    "priors",
-    "gibbs_settings"
+    "stochastic_equations"
   )
 
   suppressPackageStartupMessages(
@@ -85,19 +95,3 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
   }
   out
 }
-
-safe_draw_parameters <- purrr::safely(function(eq_jx) {
-  gibbs_sampler <- gibbs_settings[[colnames(character_gamma_matrix)[eq_jx]]]
-
-  if (length(priors[[eq_jx]]) == 0) {
-    draw_parameters_j(
-      y_matrix, x_matrix, character_gamma_matrix,
-      character_beta_matrix, eq_jx, gibbs_sampler
-    )
-  } else {
-    draw_parameters_j_informative(
-      y_matrix, x_matrix, character_gamma_matrix,
-      character_beta_matrix, eq_jx, gibbs_sampler, priors
-    )
-  }
-}, quiet = FALSE)

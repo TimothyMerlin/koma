@@ -126,3 +126,29 @@ test_that("estimate_sem error in equation j", {
   )
   expect_equal(result$consumption, NULL)
 })
+
+test_that("estimate_sem works with multisession futures", {
+  skip_if_not_installed(c("future", "doFuture"))
+
+  old_plan <- future::plan()
+  on.exit(future::plan(old_plan), add = TRUE)
+
+  future::plan(future::multisession, workers = 2)
+
+  sys_eq <- simulated_data$sys_eq
+  x_matrix <- simulated_data$x_matrix
+  y_matrix <- simulated_data$y_matrix
+
+  set_gibbs_settings(
+    settings = list(ndraws = 200),
+    simulated_data$sys_eq$equation_settings
+  )
+
+  estimates <- withr::with_seed(7, estimate_sem(sys_eq, y_matrix, x_matrix))
+
+  expect_identical(
+    names(estimates),
+    c("consumption", "investment", "current_account", "manufacturing", "service")
+  )
+  expect_length(estimates$consumption[["beta_jw"]], 100)
+})
