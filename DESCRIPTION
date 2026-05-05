@@ -20,7 +20,8 @@ Suggests:
     withr (>= 3.0.0),
     texreg (>= 1.39.4),
     testthat (>= 3.2.3),
-    plotly (>= 4.11.0)
+    plotly (>= 4.11.0),
+    webshot2 (>= 0.1.2)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3

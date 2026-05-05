@@ -6,6 +6,7 @@ docs
 inst/doc
 .Rhistory
 .Renviron
+.DS_Store
 *.xlsx
 /doc/
 /Meta/
