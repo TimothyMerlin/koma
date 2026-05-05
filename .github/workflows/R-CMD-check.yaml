@@ -45,16 +45,9 @@ jobs:
                   http-user-agent: ${{ matrix.config.http-user-agent }}
                   use-public-rspm: true
 
-            - name: Install dependencies (Windows)
-              if: runner.os == 'Windows'
-              run: |
-                  Rscript -e "install.packages('rcmdcheck', repos='https://cloud.r-project.org')"
-                  Rscript -e "deps <- tools::package_dependencies('.', recursive=TRUE)$.; install.packages(unique(deps), repos='https://cloud.r-project.org')"
-
             - uses: r-lib/actions/setup-r-dependencies@v2
-              if: runner.os != 'Windows'
               with:
-                extra-packages: any::rcmdcheck
+                extra-packages: any::rcmdcheck, local::.
                 needs: check
 
             - uses: r-lib/actions/check-r-package@v2
