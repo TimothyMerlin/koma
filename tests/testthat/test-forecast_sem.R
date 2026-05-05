@@ -289,8 +289,9 @@ test_that("projection and eigen conditional draws match empirically", {
   Omega_c <- 0.5 * (Omega_c + t(Omega_c))
 
   # Mean MC error scales with marginal variance and 1/sqrt(n_draws).
-  se_mean <- sqrt(diag(Omega_c) / n_draws)
-  idx_var <- se_mean > 0
+  marginal_var <- pmax(diag(Omega_c), 0)
+  se_mean <- sqrt(marginal_var / n_draws)
+  idx_var <- se_mean > sqrt(.Machine$double.eps)
   z_proj <- max(abs((mean_proj[idx_var] - mu[idx_var]) / se_mean[idx_var]))
   z_eig <- max(abs((mean_eig[idx_var] - mu[idx_var]) / se_mean[idx_var]))
   alpha <- 1e-3

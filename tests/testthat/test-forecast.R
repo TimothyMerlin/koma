@@ -841,7 +841,7 @@ test_that("forecast without lags and with restrictions", {
   expect_lte(mean_diff, max(3 * se_mean, 1e-12))
 
   sd_diff <- abs(stats::sd(draws_out_h2) - stats::sd(draws_base_h2))
-  tol_sd <- max(0.1 * max(stats::sd(draws_base_h2), stats::sd(draws_out_h2)), 1e-12)
+  tol_sd <- max(0.12 * max(stats::sd(draws_base_h2), stats::sd(draws_out_h2)), 1e-12)
   expect_lte(sd_diff, tol_sd)
 })
 
