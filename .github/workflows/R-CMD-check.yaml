@@ -21,7 +21,7 @@ jobs:
             matrix:
                 config:
                     - { os: macos-latest, r: "release" }
-                    - { os: windows-latest, r: "release" }
+                    - { os: windows-latest, r: "4.4.2" }
                     - {
                           os: ubuntu-latest,
                           r: "devel",
