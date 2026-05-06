@@ -1,6 +1,14 @@
+# koma 0.2.2
+
 # koma development
 
-* Added support for single-frequency monthly and yearly data across estimation, forecasting, evaluation, weighting, and summary utilities.
+# koma 0.2.2
+
+* Fixed frequency-dependent forecasting, estimation, evaluation, weighting, and plotting paths so single-frequency monthly and yearly data work correctly.
+* Fixed forecast plotting labels for non-quarterly data.
+* Fixed `estimate_sem()` for multisession futures.
+* Improved input validation for forecasting and `system_of_equations()`.
+* Improved `koma_ts` metadata handling for attribute preservation across transformations.
 
 # koma 0.2.1
 
