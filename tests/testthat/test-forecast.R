@@ -840,8 +840,14 @@ test_that("forecast without lags and with restrictions", {
   )
   expect_lte(mean_diff, max(3 * se_mean, 1e-12))
 
-  sd_diff <- abs(stats::sd(draws_out_h2) - stats::sd(draws_base_h2))
-  tol_sd <- max(0.12 * max(stats::sd(draws_base_h2), stats::sd(draws_out_h2)), 1e-12)
+  sd_base_h2 <- stats::sd(draws_base_h2)
+  sd_out_h2 <- stats::sd(draws_out_h2)
+  sd_diff <- abs(sd_out_h2 - sd_base_h2)
+  # For approximately Gaussian draws, the sample-SD SE is sigma/sqrt(2(n-1)).
+  # Use a loose 3*SE envelope for the difference between two independent draws
+  # from the same h=2 distribution.
+  se_sd <- sqrt(sd_base_h2^2 / (2 * (n_draws - 1)) + sd_out_h2^2 / (2 * (n_draws - 1)))
+  tol_sd <- max(3 * se_sd, 1e-12)
   expect_lte(sd_diff, tol_sd)
 })
 
