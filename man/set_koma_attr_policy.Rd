@@ -33,3 +33,4 @@ The registered policy, invisibly.
 \description{
 Register metadata behavior for a koma_ts attribute
 }
+\keyword{internal}

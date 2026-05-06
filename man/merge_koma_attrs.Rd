@@ -21,3 +21,4 @@ A named list of merged custom attributes.
 \description{
 Merge custom metadata from two koma_ts objects
 }
+\keyword{internal}

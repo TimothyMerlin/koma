@@ -15,3 +15,4 @@ A plain \code{ts} object when \code{x} is \code{koma_ts}, otherwise \code{x}.
 \description{
 Remove custom metadata from a koma_ts object
 }
+\keyword{internal}

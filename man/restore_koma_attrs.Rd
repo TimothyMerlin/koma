@@ -17,3 +17,4 @@ A \code{koma_ts} object.
 \description{
 Restore custom metadata onto a time series
 }
+\keyword{internal}

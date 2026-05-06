@@ -412,6 +412,7 @@ rebuild_ts_like <- function(result, template) {
 #' @param na_omit Optional `na.omit` handler with signature
 #'   `function(value, attr, template = NULL, ...)`.
 #' @return The registered policy, invisibly.
+#' @keywords internal
 #' @export
 set_koma_attr_policy <- function(attr, merge = NULL, lag = NULL, window = NULL, na_omit = NULL) {
   stopifnot(is.character(attr), length(attr) == 1L, nzchar(attr))
@@ -430,6 +431,7 @@ set_koma_attr_policy <- function(attr, merge = NULL, lag = NULL, window = NULL, 
 #' @param attr Name of the attribute to align. Only used when `x` is `koma_ts`.
 #' @param template A time series whose `tsp` should be used.
 #' @return The aligned attribute value.
+#' @keywords internal
 #' @export
 align_koma_attr <- function(x, attr = NULL, template) {
   stopifnot(stats::is.ts(template))
@@ -451,6 +453,7 @@ align_koma_attr <- function(x, attr = NULL, template) {
 #' @param op Name of the operation.
 #' @param template Result template used for alignment.
 #' @return A named list of merged custom attributes.
+#' @keywords internal
 #' @export
 merge_koma_attrs <- function(e1, e2 = NULL, op = NULL, template = NULL) {
   attrs_e1 <- collect_koma_attrs(e1)
@@ -486,6 +489,7 @@ merge_koma_attrs <- function(e1, e2 = NULL, op = NULL, template = NULL) {
 #'
 #' @param x A time series object.
 #' @return A plain `ts` object when `x` is `koma_ts`, otherwise `x`.
+#' @keywords internal
 #' @export
 strip_koma_attrs <- function(x) {
   if (!is_ets(x)) {
@@ -500,6 +504,7 @@ strip_koma_attrs <- function(x) {
 #' @param x A time series object.
 #' @param attrs A named list of custom attributes.
 #' @return A `koma_ts` object.
+#' @keywords internal
 #' @export
 restore_koma_attrs <- function(x, attrs) {
   stopifnot(stats::is.ts(x), is.list(attrs))

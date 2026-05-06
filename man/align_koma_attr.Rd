@@ -19,3 +19,4 @@ The aligned attribute value.
 \description{
 Align a koma_ts attribute or metadata series to another time series
 }
+\keyword{internal}
