@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@
       <h1>Extended Time Series (ets)</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/vignettes/koma-extended-timeseries.Rmd" class="external-link"><code>vignettes/koma-extended-timeseries.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/main/vignettes/koma-extended-timeseries.Rmd" class="external-link"><code>vignettes/koma-extended-timeseries.Rmd</code></a></small>
       <div class="d-none name"><code>koma-extended-timeseries.Rmd</code></div>
     </div>
 
@@ -82,7 +82,13 @@ through common operations.</p>
 <span>  method <span class="op">=</span> <span class="st">"diff_log"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="va">x</span></span>
-<span><span class="co">#&gt; level, real, diff_log</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "level"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;      Qtr1 Qtr2 Qtr3 Qtr4</span></span>
 <span><span class="co">#&gt; 2019    1    2    3    4</span></span>
 <span><span class="co">#&gt; 2020    5    6    7    8</span></span>
@@ -106,14 +112,26 @@ and <code>extend = TRUE</code> allows leading or trailing
 <code>NA</code> values for future merges.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">x</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2019</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; level, real, diff_log</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "level"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;      Qtr1 Qtr2 Qtr3 Qtr4</span></span>
 <span><span class="co">#&gt; 2019                   4</span></span>
 <span><span class="co">#&gt; 2020    5    6    7    8</span></span>
 <span><span class="co">#&gt; 2021    9   10</span></span>
 <span></span>
 <span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">x</span>, start <span class="op">=</span> <span class="fl">2018</span>, extend <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; level, real, diff_log</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "level"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;      Qtr1 Qtr2 Qtr3 Qtr4</span></span>
 <span><span class="co">#&gt; 2018   NA   NA   NA   NA</span></span>
 <span><span class="co">#&gt; 2019    1    2    3    4</span></span>
@@ -121,7 +139,13 @@ and <code>extend = TRUE</code> allows leading or trailing
 <span><span class="co">#&gt; 2021    9   10</span></span>
 <span></span>
 <span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/na.fail.html" class="external-link">na.omit</a></span><span class="op">(</span><span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">x</span>, start <span class="op">=</span> <span class="fl">2018</span>, extend <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; level, real, diff_log</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "level"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;      Qtr1 Qtr2 Qtr3 Qtr4</span></span>
 <span><span class="co">#&gt; 2019    1    2    3    4</span></span>
 <span><span class="co">#&gt; 2020    5    6    7    8</span></span>
@@ -136,7 +160,14 @@ does, it stores an <code>anker</code> attribute used by
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_rate</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/rate.html">rate</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
 <span><span class="va">x_rate</span></span>
-<span><span class="co">#&gt; rate, real, diff_log, c(1, 2019)</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "rate"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt;   anker:  num [1:2] 1 2019</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;          Qtr1     Qtr2     Qtr3     Qtr4</span></span>
 <span><span class="co">#&gt; 2019          69.31472 40.54651 28.76821</span></span>
 <span><span class="co">#&gt; 2020 22.31436 18.23216 15.41507 13.35314</span></span>
@@ -146,7 +177,13 @@ does, it stores an <code>anker</code> attribute used by
 <span></span>
 <span><span class="va">rate_window</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">x_rate</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2019</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/level.html">level</a></span><span class="op">(</span><span class="va">rate_window</span><span class="op">)</span></span>
-<span><span class="co">#&gt; level, real, diff_log</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "level"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;      Qtr1 Qtr2 Qtr3 Qtr4</span></span>
 <span><span class="co">#&gt; 2019              3    4</span></span>
 <span><span class="co">#&gt; 2020    5    6    7    8</span></span>
@@ -156,7 +193,14 @@ series.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">x_rate_lag</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/stats/lag.html" class="external-link">lag</a></span><span class="op">(</span><span class="va">x_rate</span>, k <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span></span>
 <span><span class="va">x_rate_lag</span></span>
-<span><span class="co">#&gt; rate, real, diff_log, c(1, 2019.25)</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "rate"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt;   anker:  num [1:2] 1 2019</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;          Qtr1     Qtr2     Qtr3     Qtr4</span></span>
 <span><span class="co">#&gt; 2019                   69.31472 40.54651</span></span>
 <span><span class="co">#&gt; 2020 28.76821 22.31436 18.23216 15.41507</span></span>
@@ -170,13 +214,25 @@ series.</p>
 <p>Rebase a series to a base period with <code><a href="../reference/rebase.html">rebase()</a></code>.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/rebase.html">rebase</a></span><span class="op">(</span><span class="va">x</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2020</span>, <span class="fl">1</span><span class="op">)</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2020</span>, <span class="fl">1</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; level, real, diff_log</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "level"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;      Qtr1 Qtr2 Qtr3 Qtr4</span></span>
 <span><span class="co">#&gt; 2019   20   40   60   80</span></span>
 <span><span class="co">#&gt; 2020  100  120  140  160</span></span>
 <span><span class="co">#&gt; 2021  180  200</span></span>
 <span><span class="fu"><a href="../reference/rebase.html">rebase</a></span><span class="op">(</span><span class="va">x</span>, start <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2020</span>, <span class="fl">1</span><span class="op">)</span>, end <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2020</span>, <span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="co">#&gt; level, real, diff_log</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "level"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;           Qtr1      Qtr2      Qtr3      Qtr4</span></span>
 <span><span class="co">#&gt; 2019  15.38462  30.76923  46.15385  61.53846</span></span>
 <span><span class="co">#&gt; 2020  76.92308  92.30769 107.69231 123.07692</span></span>
@@ -187,7 +243,13 @@ series.</p>
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"tempdisagg"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
 <span>  <span class="fu">tempdisagg</span><span class="fu">::</span><span class="fu"><a href="http://cynkra.github.io/tempdisagg/reference/ta.html" class="external-link">ta</a></span><span class="op">(</span><span class="va">x</span>, conversion <span class="op">=</span> <span class="st">"sum"</span>, to <span class="op">=</span> <span class="st">"annual"</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
-<span><span class="co">#&gt; level, real, diff_log</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "level"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt; Time Series:</span></span>
 <span><span class="co">#&gt; Start = 2019 </span></span>
 <span><span class="co">#&gt; End = 2020 </span></span>
@@ -201,19 +263,37 @@ series.</p>
 in <code>koma</code> without losing metadata.</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span><span class="co">#&gt; level, real, diff_log</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "level"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;           Qtr1      Qtr2      Qtr3      Qtr4</span></span>
 <span><span class="co">#&gt; 2019 0.0000000 0.6931472 1.0986123 1.3862944</span></span>
 <span><span class="co">#&gt; 2020 1.6094379 1.7917595 1.9459101 2.0794415</span></span>
 <span><span class="co">#&gt; 2021 2.1972246 2.3025851</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/diff.html" class="external-link">diff</a></span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span>
-<span><span class="co">#&gt; level, real, diff_log</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "level"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;      Qtr1 Qtr2 Qtr3 Qtr4</span></span>
 <span><span class="co">#&gt; 2019         1    1    1</span></span>
 <span><span class="co">#&gt; 2020    1    1    1    1</span></span>
 <span><span class="co">#&gt; 2021    1    1</span></span>
 <span><span class="va">x</span> <span class="op">*</span> <span class="fl">10</span></span>
-<span><span class="co">#&gt; level, real, diff_log</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "level"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;      Qtr1 Qtr2 Qtr3 Qtr4</span></span>
 <span><span class="co">#&gt; 2019   10   20   30   40</span></span>
 <span><span class="co">#&gt; 2020   50   60   70   80</span></span>
@@ -221,7 +301,13 @@ in <code>koma</code> without losing metadata.</p>
 <span><span class="va">x</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">2</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] 1 2</span></span>
 <span><span class="va">x</span> <span class="op">/</span> <span class="va">x</span></span>
-<span><span class="co">#&gt; level, real, diff_log</span></span>
+<span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
+<span><span class="co">#&gt; attributes:</span></span>
+<span><span class="co">#&gt;   series_type:  chr "level"</span></span>
+<span><span class="co">#&gt;   value_type:  chr "real"</span></span>
+<span><span class="co">#&gt;   method:  chr "diff_log"</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;      Qtr1 Qtr2 Qtr3 Qtr4</span></span>
 <span><span class="co">#&gt; 2019    1    1    1    1</span></span>
 <span><span class="co">#&gt; 2020    1    1    1    1</span></span>

@@ -8,7 +8,7 @@ of dates (`dates`) to compute and update weights dynamically.
 ## Usage
 
 ``` r
-get_seq_weights(ts_data, identities, dates)
+get_seq_weights(ts_data, identities, dates, frequency = 4)
 ```
 
 ## Arguments

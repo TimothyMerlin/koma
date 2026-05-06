@@ -1,6 +1,7 @@
 # MCMC Diagnostics for Estimated SEM
 
 ``` r
+
 library(koma)
 ```
 
@@ -19,6 +20,7 @@ This vignette shows how to inspect MCMC diagnostics for a
 ## Build a Small Model
 
 ``` r
+
 equations <- "consumption ~ gdp + consumption.L(1) + interest_rate,
 investment ~ gdp + investment.L(1) + interest_rate,
 gdp == (consumption/gdp)*consumption + (investment/gdp)*investment"
@@ -39,6 +41,7 @@ dates <- list(
 ## Prepare Data and Estimate
 
 ``` r
+
 data("small_open_economy")
 
 series <- unique(c(sys_eq$endogenous_variables, sys_eq$exogenous_variables))
@@ -68,6 +71,7 @@ Trace plots help detect non-stationary behavior and abrupt jumps in the
 chain.
 
 ``` r
+
 if (requireNamespace("ggplot2", quietly = TRUE)) {
     trace_plot(
         estimates,
@@ -85,6 +89,7 @@ Running means make long-run stabilization of posterior draws easier to
 assess.
 
 ``` r
+
 if (requireNamespace("ggplot2", quietly = TRUE)) {
     running_mean_plot(
         estimates,
@@ -100,6 +105,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 ACF plots highlight serial dependence in posterior draws by lag.
 
 ``` r
+
 if (requireNamespace("ggplot2", quietly = TRUE)) {
     acf_plot(
         estimates,
@@ -116,6 +122,7 @@ If `plotly` is installed, all diagnostic plots can be returned as
 interactive objects by setting `interactive = TRUE`.
 
 ``` r
+
 if (requireNamespace("ggplot2", quietly = TRUE) &&
     requireNamespace("plotly", quietly = TRUE)) {
     acf_plot(

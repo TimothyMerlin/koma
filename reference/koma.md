@@ -3,6 +3,14 @@
 Tools for estimating and forecasting large-scale macroeconomic models,
 including extended time series utilities used throughout the package.
 
+## See also
+
+Useful links:
+
+- <https://timothymerlin.github.io/koma>
+
+- <https://github.com/timothymerlin/koma>
+
 ## Author
 
 **Maintainer**: Merlin Scherer <scherer@kof.ethz.ch>

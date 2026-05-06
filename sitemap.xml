@@ -17,6 +17,7 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/acf_plot.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/add_draws.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/adjust_constant_vector.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/align_koma_attr.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/as_list.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/as_mets.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/attach_color_code.html</loc></url>
@@ -105,6 +106,7 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/koma.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/koma_ts.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/level.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/merge_koma_attrs.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/model_evaluation.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/model_identification.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/multivariate_norm.html</loc></url>
@@ -130,6 +132,7 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/quantiles_from_forecasts.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/rate.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/rebase.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/restore_koma_attrs.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/riwish.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/running_mean.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/running_mean_plot.html</loc></url>
@@ -137,8 +140,10 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/set_alpha.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/set_gibbs_settings.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/set_gibbs_spec.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/set_koma_attr_policy.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/set_restrictions.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/small_open_economy.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/strip_koma_attrs.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/summary.koma_estimate.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/summary.koma_estimate_hdi.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/summary.koma_estimate_hdr.html</loc></url>

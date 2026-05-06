@@ -15,7 +15,7 @@ method - "percentage", "diff_log", "none", or an expression
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -37,7 +37,7 @@ method - "percentage", "diff_log", "none", or an expression
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Compute the rate of change for a time series</h1>
-      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/R/time_series.R" class="external-link"><code>R/time_series.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/main/R/time_series.R" class="external-link"><code>R/time_series.R</code></a></small>
       <div class="d-none name"><code>rate.Rd</code></div>
     </div>
 
@@ -73,7 +73,13 @@ method - "percentage", "diff_log", "none", or an expression
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="koma_ts.html">ets</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">10</span>, series_type <span class="op">=</span> <span class="st">"level"</span>, method <span class="op">=</span> <span class="st">"diff_log"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu">rate</span><span class="op">(</span><span class="va">x</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> rate, diff_log, c(1, 1)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> &lt;koma_ts&gt;</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attributes:</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   series_type:  chr "rate"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   method:  chr "diff_log"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   anker:  num [1:2] 1 1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> series:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Time Series:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Start = 2 </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> End = 10 </span>

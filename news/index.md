@@ -1,5 +1,21 @@
 # Changelog
 
+## koma 0.2.2
+
+## koma 0.2.2
+
+- Fixed frequency-dependent forecasting, estimation, evaluation,
+  weighting, and plotting paths so single-frequency monthly and yearly
+  data work correctly.
+- Fixed forecast plotting labels for non-quarterly data.
+- Fixed
+  [`estimate_sem()`](https://timothymerlin.github.io/koma/reference/estimate_sem.md)
+  for multisession futures.
+- Improved input validation for forecasting and
+  [`system_of_equations()`](https://timothymerlin.github.io/koma/reference/system_of_equations.md).
+- Improved `koma_ts` metadata handling for attribute preservation across
+  transformations.
+
 ## koma 0.2.1
 
 - Fix pkgdown site build by adding package URL and completing

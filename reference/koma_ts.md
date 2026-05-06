@@ -57,7 +57,9 @@ is_ets(x)
 - ts.eps:
 
   time series comparison tolerance. Frequencies are considered equal if
-  their absolute difference is less than `ts.eps`.
+  their absolute difference is less than `ts.eps`. It is also used to
+  check consistency of `end - start`, `frequency`, and the length of the
+  time-series.
 
 - ...:
 
@@ -74,6 +76,13 @@ A koma_ts object.
 A koma_ts object.
 
 TRUE if the object is of class `koma_ts`, otherwise FALSE.
+
+## Details
+
+Mixed arithmetic between `koma_ts` and plain `ts` objects currently
+follows base R's group generic dispatch and may emit an "Incompatible
+methods" warning even when the resulting values are valid. Coercing both
+operands to `koma_ts` avoids that warning.
 
 ## See also
 

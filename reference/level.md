@@ -32,7 +32,12 @@ An `ets` object.
 ``` r
 x <- ets(c(0.3, 0.1, 0.2, -0.1), series_type = "rate", method = "percentage")
 level(x)
-#> level, percentage
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   method:  chr "percentage"
+#> 
+#> series:
 #> Time Series:
 #> Start = 0 
 #> End = 4 

@@ -1,6 +1,7 @@
 # Executing \`koma\` in Parallel
 
 ``` r
+
 library(koma)
 ```
 
@@ -19,6 +20,7 @@ For more details, see the future package documentation:
 Install the `future` and `parallelly` packages:
 
 ``` r
+
 install.packages("future")
 install.packages("parallelly")
 ```
@@ -28,6 +30,7 @@ of [`future::plan`](https://future.futureverse.org/reference/plan.html).
 The setup is the following:
 
 ``` r
+
 library(koma)
 
 equations <- "consumption ~ gdp + consumption.L(1),
@@ -71,6 +74,7 @@ ts_data$interest_rate_germany <- as_ets(small_open_economy$interest_rate_germany
 By default, R executes code sequentially. For example:
 
 ``` r
+
 estimates <- estimate(ts_data, sys_eq, dates)
 ```
 
@@ -87,6 +91,7 @@ You need to define the number of workers that your parallel job to run
 on. Here we use all cores except one.
 
 ``` r
+
 # Get the available workers
 workers <- parallelly::availableCores(omit = 1)
 ```
@@ -96,6 +101,7 @@ workers <- parallelly::availableCores(omit = 1)
 For Windows, you can use **multisession**:
 
 ``` r
+
 future::plan("future::multisession", workers = workers)
 
 estimates <- estimate(ts_data, sys_eq, dates)
@@ -106,6 +112,7 @@ estimates <- estimate(ts_data, sys_eq, dates)
 For Unix-like systems, you can use **multicore**:
 
 ``` r
+
 future::plan("future::multicore", workers = workers)
 
 estimates <- estimate(ts_data, sys_eq, dates)

@@ -1,6 +1,7 @@
 # Highest Probability Density (HPD): HDR and HDI
 
 ``` r
+
 library(koma)
 ```
 
@@ -28,6 +29,7 @@ when you want a single concise interval. For full function details, see
 We start from a synthetic bimodal sample to highlight the difference.
 
 ``` r
+
 set.seed(123)
 
 draws <- c(
@@ -40,6 +42,7 @@ plot(stats::density(draws))
 ![](koma-hpd_files/figure-html/unnamed-chunk-2-1.png)
 
 ``` r
+
 
 hdr_res <- hdr(
     draws,
@@ -71,6 +74,7 @@ HDRs are based on a kernel density estimate, so you can adjust
 bandwidth, kernel choice, or the integration strategy:
 
 ``` r
+
 hdr_tuned <- hdr(
     draws,
     probs = 0.9,
@@ -90,6 +94,7 @@ coefficient and variance draws. The helpers return nested lists indexed
 by variable, parameter block, coefficient name, and probability level.
 
 ``` r
+
 # Define a small system
 
 equations <- "y ~ x + y.L(1)"
@@ -152,6 +157,7 @@ hdi_est$intervals$y$beta$x$level_99
 You can also visualize HDR results directly:
 
 ``` r
+
 plot(hdr_est)
 ```
 

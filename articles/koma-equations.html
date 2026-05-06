@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@
       <h1>Equation Syntax Reference</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/vignettes/koma-equations.Rmd" class="external-link"><code>vignettes/koma-equations.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/main/vignettes/koma-equations.Rmd" class="external-link"><code>vignettes/koma-equations.Rmd</code></a></small>
       <div class="d-none name"><code>koma-equations.Rmd</code></div>
     </div>
 
@@ -117,10 +117,62 @@ notation. Ranges and combinations are supported.</p>
 <div class="section level3">
 <h3 id="priors">5. Priors<a class="anchor" aria-label="anchor" href="#priors"></a>
 </h3>
-<p>Specify priors before coefficients using curly braces
-<code><a href="https://rdrr.io/r/base/Paren.html" class="external-link">{}</a></code>.</p>
-<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="co"># normal(1,0.1):</span></span>
-<span id="cb5-2"><a href="#cb5-2" tabindex="-1"></a>{<span class="dv">1</span>, <span class="fl">0.1</span>} x3</span></code></pre></div>
+<p>There are two kinds of priors in <code>koma</code> equations:</p>
+<ul>
+<li>coefficient priors, written in front of a term</li>
+<li>the error-term prior, written at the end of the equation</li>
+</ul>
+<p>Coefficient priors are written in front of the term they belong
+to:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a>{mean, variance} variable</span></code></pre></div>
+<p>For example:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" tabindex="-1"></a>consumption <span class="sc">~</span> {<span class="fl">0.4</span>, <span class="fl">0.1</span>} gdp <span class="sc">+</span> <span class="fu">consumption.L</span>(<span class="dv">1</span>)</span></code></pre></div>
+<p>This sets a prior with mean <code>0.4</code> and variance
+<code>0.1</code> on the coefficient of <code>gdp</code>.</p>
+<p>You can use priors on:</p>
+<ul>
+<li>the intercept, written as <code>1</code> or
+<code>constant</code>
+</li>
+<li>exogenous variables</li>
+<li>lagged variables</li>
+<li>contemporaneous endogenous variables</li>
+</ul>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a>consumption <span class="sc">~</span></span>
+<span id="cb7-2"><a href="#cb7-2" tabindex="-1"></a>  {<span class="dv">0</span>, <span class="dv">1000</span>} <span class="dv">1</span> <span class="sc">+</span></span>
+<span id="cb7-3"><a href="#cb7-3" tabindex="-1"></a>  {<span class="fl">0.4</span>, <span class="fl">0.1</span>} gdp <span class="sc">+</span></span>
+<span id="cb7-4"><a href="#cb7-4" tabindex="-1"></a>  {<span class="fl">0.9</span>, <span class="dv">10</span>} <span class="fu">consumption.L</span>(<span class="dv">1</span>) <span class="sc">+</span></span>
+<span id="cb7-5"><a href="#cb7-5" tabindex="-1"></a>  {<span class="fl">0.2</span>, <span class="fl">0.5</span>} service</span></code></pre></div>
+<p>The error-term prior is different. It is written as a final prior
+with no variable name:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" tabindex="-1"></a>consumption <span class="sc">~</span> gdp <span class="sc">+</span> <span class="fu">consumption.L</span>(<span class="dv">1</span>) <span class="sc">+</span> {<span class="dv">3</span>, <span class="fl">0.001</span>}</span></code></pre></div>
+<p>In the error-term prior, the two values specify:</p>
+<ul>
+<li>degrees of freedom</li>
+<li>scale</li>
+</ul>
+<p>Some valid examples for priors are:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Prior on the intercept</span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>consumption <span class="sc">~</span> {<span class="dv">0</span>, <span class="dv">1000</span>} <span class="dv">1</span> <span class="sc">+</span> gdp</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co"># Prior on a lagged term</span></span>
+<span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>consumption <span class="sc">~</span> gdp <span class="sc">+</span> {<span class="fl">0.9</span>, <span class="dv">10</span>} <span class="fu">consumption.L</span>(<span class="dv">1</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co"># Prior on an endogenous regressor</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>consumption <span class="sc">~</span> {<span class="fl">0.2</span>, <span class="fl">0.5</span>} service <span class="sc">+</span> gdp</span>
+<span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co"># Error-term prior: {df, scale}</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>consumption <span class="sc">~</span> gdp <span class="sc">+</span> <span class="fu">consumption.L</span>(<span class="dv">1</span>) <span class="sc">+</span> {<span class="dv">3</span>, <span class="fl">0.001</span>}</span></code></pre></div>
+<p>Rules:</p>
+<ul>
+<li>Priors are only supported in stochastic equations.</li>
+<li>Coefficient priors have the form
+<code>{mean, variance} variable</code>.</li>
+<li>The error-term prior has the form <code>{df, scale}</code> and
+appears without a variable name.</li>
+<li>The dependent variable cannot have a prior.</li>
+<li>The error-term prior must be the last prior in the equation.</li>
+</ul>
 </div>
 <div class="section level3">
 <h3 id="equation-specific-tau">6. Equation-specific Tau<a class="anchor" aria-label="anchor" href="#equation-specific-tau"></a>
@@ -129,7 +181,7 @@ notation. Ranges and combinations are supported.</p>
 for a single equation by appending <code>[tau = value]</code> after its
 equation. If the acceptance rate falls outside 30%-60 %, a warning is
 emitted.</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="st">"consumption ~ constant + gdp + consumption.L(1) + consumption.L(2) [tau = 1.2]"</span></span></code></pre></div>
 </div>
 </div>

@@ -32,7 +32,13 @@ An `ets` object.
 ``` r
 x <- ets(1:10, series_type = "level", method = "diff_log")
 rate(x)
-#> rate, diff_log, c(1, 1)
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "rate"
+#>   method:  chr "diff_log"
+#>   anker:  num [1:2] 1 1
+#> 
+#> series:
 #> Time Series:
 #> Start = 2 
 #> End = 10 

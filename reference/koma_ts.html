@@ -13,7 +13,7 @@ series and test whether an object is a time series of class koma_ts."></head><bo
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,7 +35,7 @@ series and test whether an object is a time series of class koma_ts."></head><bo
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Extended Time-Series Object</h1>
-      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/0.2.1/R/time_series.R" class="external-link"><code>R/time_series.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/main/R/time_series.R" class="external-link"><code>R/time_series.R</code></a></small>
       <div class="d-none name"><code>koma_ts.Rd</code></div>
     </div>
 
@@ -99,7 +99,8 @@ series and test whether an object is a time series of class <code>koma_ts</code>
 <dt id="arg-ts-eps">ts.eps<a class="anchor" aria-label="anchor" href="#arg-ts-eps"></a></dt>
 <dd><p>time series comparison tolerance.  Frequencies are
     considered equal if their absolute difference is less than
-    <code>ts.eps</code>.</p></dd>
+    <code>ts.eps</code>.  It is also used to check consistency of <code>end - start</code>,
+    <code>frequency</code>, and the length of the time-series.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -115,6 +116,13 @@ series and test whether an object is a time series of class <code>koma_ts</code>
     <p>A koma_ts object.</p>
 <p>A koma_ts object.</p>
 <p>TRUE if the object is of class <code>koma_ts</code>, otherwise FALSE.</p>
+    </div>
+    <div class="section level2">
+    <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
+    <p>Mixed arithmetic between <code>koma_ts</code> and plain <code>ts</code> objects currently
+follows base R's group generic dispatch and may emit an
+"Incompatible methods" warning even when the resulting values are valid.
+Coercing both operands to <code>koma_ts</code> avoids that warning.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

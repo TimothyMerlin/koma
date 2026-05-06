@@ -1,6 +1,7 @@
 # Estimating and Forecasting with the koma Package
 
 ``` r
+
 library(koma)
 ```
 
@@ -17,14 +18,18 @@ vignette](https://timothymerlin.github.io/koma/koma-extended-timeseries.md).
 
 We start with four stochastic equations and two identities that mirror a
 small open economy. The interest rate, world GDP, and the exchange rate
-are treated as exogenous in this example.
+are treated as exogenous in this example. To keep the setup minimal, the
+GDP identity below uses fixed illustrative weights. For an example with
+time-varying weights computed from nominal series, see the [Klein
+vignette](https://timothymerlin.github.io/koma/koma-klein.md).
 
 ``` r
+
 equations <- "consumption ~ gdp + consumption.L(1) + interest_rate,
 investment ~ gdp + investment.L(1) + interest_rate,
 exports ~ world_gdp + exchange_rate + exports.L(1),
 imports ~ gdp + exchange_rate + imports.L(1),
-gdp == (consumption/gdp)*consumption + (investment/gdp)*investment + (exports/gdp)*exports - (imports/gdp)*imports"
+gdp == 0.55*consumption + 0.20*investment + 0.30*exports - 0.05*imports"
 
 exogenous_variables <- c("interest_rate", "world_gdp", "exchange_rate")
 ```
@@ -32,6 +37,7 @@ exogenous_variables <- c("interest_rate", "world_gdp", "exchange_rate")
 ## Build the system
 
 ``` r
+
 sys_eq <- system_of_equations(
     equations = equations,
     exogenous_variables = exogenous_variables
@@ -44,20 +50,21 @@ print(sys_eq)
 #>  investment ~  constant + gdp + investment.L(1) + interest_rate
 #>     exports ~  constant + world_gdp + exchange_rate + exports.L(1)
 #>     imports ~  constant + gdp + exchange_rate + imports.L(1)
-#>         gdp == (consumption/gdp) * consumption + (investment/gdp) * investment + (exports/gdp) * exports-(imports/gdp) * imports
+#>         gdp == 0.55 * consumption + 0.20 * investment + 0.30 * exports-0.05 * imports
 ```
 
 ## Pick estimation and forecast ranges
 
 We use the last year of the dataset as a short out-of-sample forecast
-period. The identity weights are computed from level shares over the
-estimation window.
+period. For this introductory example, the identity already contains
+fixed numeric weights, so only estimation and forecast ranges are
+needed.
 
 ``` r
+
 dates <- list(
     estimation = list(start = c(1996, 1), end = c(2019, 4)),
-    forecast = list(start = c(2023, 1), end = c(2023, 4)),
-    dynamic_weights = list(start = c(1996, 1), end = c(2019, 4))
+    forecast = list(start = c(2023, 1), end = c(2023, 4))
 )
 ```
 
@@ -67,6 +74,7 @@ We use the `small_open_economy` dataset, which is a list of `ts`
 objects. We’ll keep only the variables that appear in the system.
 
 ``` r
+
 data("small_open_economy")
 series <- unique(c(sys_eq$endogenous_variables, sys_eq$exogenous_variables))
 ts_data <- small_open_economy[series]
@@ -79,6 +87,7 @@ For example, we override the defaults to use level/diff_log and keep
 `interest_rate` as a rate series:
 
 ``` r
+
 estimates <- estimate(ts_data, sys_eq, dates)
 #> Some of the time series in `ts_data` are not `ets`.
 #> They will be automatically converted with `as_ets` using the defaults:
@@ -99,6 +108,7 @@ In this vignette we convert explicitly to keep the example
 non-interactive:
 
 ``` r
+
 ts_data <- lapply(ts_data, function(x) {
     as_ets(x, series_type = "level", method = "diff_log")
 })
@@ -112,6 +122,7 @@ ts_data$interest_rate <- as_ets(
 ## Estimate the model
 
 ``` r
+
 estimates <- estimate(
     ts_data,
     sys_eq,
@@ -143,7 +154,7 @@ print(estimates)
 #>  investment ~  - 0.29  +  1.99 * gdp - 0.02 * investment.L(1) - 0.14 * interest_rate
 #>     exports ~  - 0.09  +  2.98 * world_gdp  +  0.28 * exchange_rate - 0.28 * exports.L(1)
 #>     imports ~  0.01  +  2.2 * gdp - 0.19 * exchange_rate - 0.14 * imports.L(1)
-#>         gdp == (consumption/gdp) * consumption  +  (investment/gdp) * investment  +  (exports/gdp) * exports - (imports/gdp) * imports
+#>         gdp == 0.55 * consumption  +  0.20 * investment  +  0.30 * exports - 0.05 * imports
 summary(estimates)
 #> 
 #> ==============================================================================
@@ -178,6 +189,7 @@ Before forecasting, truncate endogenous series so they end in the
 quarter before the forecast start date.
 
 ``` r
+
 estimates$ts_data[sys_eq$endogenous_variables] <-
     lapply(sys_eq$endogenous_variables, function(x) {
         stats::window(estimates$ts_data[[x]], end = c(2022, 4))
@@ -185,15 +197,23 @@ estimates$ts_data[sys_eq$endogenous_variables] <-
 ```
 
 ``` r
+
 forecasts <- forecast(estimates, dates)
 #> 
 #> ── Forecast ────────────────────────────────────────────────────────────────────
 print(forecasts)
+#> <koma_ts>
+#> attributes:
+#>   series_type: list[8]
+#>   method: list[8]
+#>   anker: list[8]
+#> 
+#> series:
 #>         consumption investment exports imports    gdp interest_rate world_gdp
-#> 2023 Q1      0.3989     0.8350  1.4131  1.3520 0.6384        1.1009    0.4827
-#> 2023 Q2      0.4152    -0.1407  0.3795  0.4908 0.2083        1.5227    0.4083
-#> 2023 Q3      0.4284    -0.0777  0.5249  0.7429 0.1960        1.7075    0.4259
-#> 2023 Q4      0.4387    -0.0304  0.3685  0.5198 0.2329        1.7006    0.2906
+#> 2023 Q1      0.3983     1.1411  1.4131  1.6923 0.7866        1.1009    0.4827
+#> 2023 Q2      0.4141     0.0788  0.3795  0.6664 0.3241        1.5227    0.4083
+#> 2023 Q3      0.4250     0.3424  0.5249  1.1760 0.4009        1.7075    0.4259
+#> 2023 Q4      0.4376     0.1941  0.3685  0.7114 0.3545        1.7006    0.2906
 #>         exchange_rate
 #> 2023 Q1        0.9217
 #> 2023 Q2       -1.3863
@@ -201,37 +221,49 @@ print(forecasts)
 #> 2023 Q4       -0.7502
 
 rate(forecasts$mean$gdp)
-#> rate, diff_log, c(191668.860623222, 2022.75)
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "rate"
+#>   method:  chr "diff_log"
+#>   anker:  num [1:2] 191669 2023
+#> 
+#> series:
 #>           Qtr1      Qtr2      Qtr3      Qtr4
-#> 2023 0.6384174 0.2083174 0.1959766 0.2328886
+#> 2023 0.7865677 0.3240562 0.4008722 0.3544575
 level(forecasts$mean$gdp)
-#> level, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #>          Qtr1     Qtr2     Qtr3     Qtr4
 #> 2022                            191668.9
-#> 2023 192896.4 193298.7 193677.9 194129.4
+#> 2023 193182.4 193809.4 194587.9 195278.9
 ```
 
 You can also summarize forecast horizons with mean/median and quantiles:
 
 ``` r
+
 summary(forecasts)
 #> =========================================
 #> consumption  Mean   Median  5%      95%  
 #> -----------------------------------------
-#> 2023 Q1      0.399   0.409  -0.034  0.789
-#> 2023 Q2      0.415   0.414   0.003  0.843
-#> 2023 Q3      0.428   0.434   0.037  0.843
-#> 2023 Q4      0.439   0.437  -0.004  0.881
+#> 2023 Q1      0.398   0.409  -0.036  0.786
+#> 2023 Q2      0.414    0.41   0.008  0.841
+#> 2023 Q3      0.425   0.429   0.027  0.839
+#> 2023 Q4      0.438   0.439  -0.008  0.874
 #> =========================================
 #> 
-#> =========================================
-#> investment  Mean    Median  5%      95%  
-#> -----------------------------------------
-#> 2023 Q1      0.835   0.795   -3.62  5.269
-#> 2023 Q2     -0.141  -0.129  -5.131  4.645
-#> 2023 Q3     -0.078  -0.087  -5.036  4.598
-#> 2023 Q4      -0.03   0.009  -5.005  4.899
-#> =========================================
+#> ========================================
+#> investment  Mean   Median  5%      95%  
+#> ----------------------------------------
+#> 2023 Q1     1.141   1.098  -3.367  5.648
+#> 2023 Q2     0.079   0.169  -5.048  5.026
+#> 2023 Q3     0.342   0.341  -4.778  5.396
+#> 2023 Q4     0.194   0.238  -4.954  5.389
+#> ========================================
 #> 
 #> =====================================
 #> exports  Mean   Median  5%      95%  
@@ -245,19 +277,19 @@ summary(forecasts)
 #> =====================================
 #> imports  Mean   Median  5%      95%  
 #> -------------------------------------
-#> 2023 Q1  1.352   1.392  -1.803  4.605
-#> 2023 Q2  0.491   0.504  -2.952  3.907
-#> 2023 Q3  0.743   0.806  -3.049  4.298
-#> 2023 Q4   0.52   0.489  -2.811  4.053
+#> 2023 Q1  1.692   1.651  -2.404  6.283
+#> 2023 Q2  0.666   0.693  -4.141   5.25
+#> 2023 Q3  1.176   1.242  -3.758  6.184
+#> 2023 Q4  0.711   0.719  -4.063  5.269
 #> =====================================
 #> 
 #> =====================================
 #> gdp      Mean   Median  5%      95%  
 #> -------------------------------------
-#> 2023 Q1  0.638   0.622   -0.95   2.33
-#> 2023 Q2  0.208   0.189  -1.575  2.043
-#> 2023 Q3  0.196   0.198  -1.526  1.992
-#> 2023 Q4  0.233   0.262  -1.601  2.145
+#> 2023 Q1  0.787   0.795   -0.84  2.486
+#> 2023 Q2  0.324   0.326  -1.421  2.146
+#> 2023 Q3  0.401   0.404  -1.539  2.283
+#> 2023 Q4  0.354   0.408  -1.431  2.199
 #> =====================================
 #> 
 #> ==========================================
@@ -292,14 +324,15 @@ summary(forecasts, variables = "gdp", horizon = 2)
 #> =====================================
 #> gdp      Mean   Median  5%      95%  
 #> -------------------------------------
-#> 2023 Q1  0.638   0.622   -0.95   2.33
-#> 2023 Q2  0.208   0.189  -1.575  2.043
+#> 2023 Q1  0.787   0.795   -0.84  2.486
+#> 2023 Q2  0.324   0.326  -1.421  2.146
 #> =====================================
 #> 
 #> Mean, Median, Quantiles
 ```
 
 ``` r
+
 if (requireNamespace("plotly", quietly = TRUE)) {
     plot(forecasts, variables = c("gdp", "consumption"))
 }

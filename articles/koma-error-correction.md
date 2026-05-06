@@ -1,6 +1,7 @@
 # Error Correction in a Small Open Economy Model
 
 ``` r
+
 library(koma)
 ```
 
@@ -37,29 +38,55 @@ the deviation from the long-run equilibrium in the previous period. The
 coefficient on this term measures the speed at which exports adjust back
 toward the long-run relationship following a shock.
 
-If exports $x_{t}$, world GDP $y_{t}$, and the exchange rate $q_{t}$ are
+If exports $`x_t`$, world GDP $`y_t`$, and the exchange rate $`q_t`$ are
 cointegrated, the long-run equilibrium relationship can be written as
-$$x_{t} = \alpha + \beta_{y}y_{t} + \beta_{q}q_{t} + u_{t}.$$
+``` math
+x_t = \alpha + \beta_y y_t + \beta_q q_t + u_t .
+```
 
 The deviation from this equilibrium in the previous period defines the
 error-correction term,
-$${ECT}_{t - 1} = x_{t - 1} - \alpha - \beta_{y}y_{t - 1} - \beta_{q}q_{t - 1}.$$
+``` math
+\mathrm{ECT}_{t-1}
+= x_{t-1} - \alpha - \beta_y y_{t-1} - \beta_q q_{t-1} .
+```
 
 A minimal one-lag ECM for export growth is then
-$$\Delta x_{t} = \gamma + \phi\,\Delta x_{t - 1} + \theta\,\Delta y_{t} + \lambda\,{ECT}_{t - 1} + \varepsilon_{t}.$$
+``` math
+\Delta x_t
+= \gamma
++ \phi\,\Delta x_{t-1}
++ \theta\,\Delta y_t
++ \lambda\,\mathrm{ECT}_{t-1}
++ \varepsilon_t .
+```
 
 Substituting the error-correction term into the ECM and expanding yields
-$$\begin{aligned}
-{\Delta x_{t}} & {= \gamma + \phi\,\Delta x_{t - 1} + \theta\,\Delta y_{t}} \\
- & {\quad + \lambda x_{t - 1} - \lambda\alpha - \lambda\beta_{y}y_{t - 1} - \lambda\beta_{q}q_{t - 1} + \varepsilon_{t}.}
-\end{aligned}$$
+``` math
+\begin{aligned}
+\Delta x_t
+&= \gamma
++ \phi\,\Delta x_{t-1}
++ \theta\,\Delta y_t \\
+&\quad
++ \lambda x_{t-1}
+- \lambda\alpha
+- \lambda\beta_y y_{t-1}
+- \lambda\beta_q q_{t-1}
++ \varepsilon_t .
+\end{aligned}
+```
 
 This is the form estimated in the model, where lagged levels enter
-directly. The coefficient $\lambda$ is the speed of adjustment toward
+directly. The coefficient $`\lambda`$ is the speed of adjustment toward
 the long-run equilibrium.
 
 The long-run coefficients are recovered as
-$$\beta_{y} = - \frac{\text{coef}\left( y_{t - 1} \right)}{\lambda},\qquad\beta_{q} = - \frac{\text{coef}\left( q_{t - 1} \right)}{\lambda}.$$
+``` math
+\beta_y = -\frac{\text{coef}(y_{t-1})}{\lambda},
+\qquad
+\beta_q = -\frac{\text{coef}(q_{t-1})}{\lambda}.
+```
 
 ## Define the SEM
 
@@ -71,6 +98,7 @@ expansion above and allows the speed-of-adjustment and long-run
 relationships to be recovered from the estimated coefficients.
 
 ``` r
+
 equations <- "consumption ~ gdp + consumption.L(1),
 investment ~ investment.L(1),
 exports ~ world_gdp + exports.L(1) + exports_level.L(1) + world_gdp_level.L(1) + exchange_rate_level.L(1),
@@ -87,6 +115,7 @@ exogenous_variables <- c("world_gdp", "exchange_rate")
 ## Create the SEM
 
 ``` r
+
 sys_eq <- system_of_equations(
     equations = equations,
     exogenous_variables = exogenous_variables
@@ -117,6 +146,7 @@ leaves them unchanged during estimation.
 We use `small_open_economy`, which provides the needed series in levels.
 
 ``` r
+
 ?small_open_economy
 ```
 
@@ -130,6 +160,7 @@ by 100 keeps the level terms on the same scale as `diff_log`, which also
 returns percent changes.
 
 ``` r
+
 ts_data <- small_open_economy[c(
     "consumption", "investment", "exports", "imports",
     "gdp", "domestic_demand", "world_gdp", "exchange_rate"
@@ -159,6 +190,7 @@ ts_data$exchange_rate_level <- as_ets(log(ts_data$exchange_rate) * 100,
 With the data prepared, define the estimation and forecast windows.
 
 ``` r
+
 dates <- list(
     estimation = list(start = c(1996, 1), end = c(2019, 4)),
     forecast = list(start = c(2023, 1), end = c(2024, 4))
@@ -168,6 +200,7 @@ dates <- list(
 ## Estimating the Model
 
 ``` r
+
 estimates <- estimate(
     sys_eq,
     ts_data = ts_data,
@@ -200,6 +233,7 @@ print(estimates)
 ```
 
 ``` r
+
 summary(estimates, variables = "exports")
 #> 
 #> =============================================
@@ -223,6 +257,7 @@ summary(estimates, variables = "exports")
 ```
 
 ``` r
+
 ecm_stats <- summary(estimates, variables = "exports")
 ecm_coef <- ecm_stats[["exports"]]@coef
 adjustment_speed <- ecm_coef["exports_level.L(1)"]
@@ -249,6 +284,7 @@ the index is defined the other way).
 ## Forecasting
 
 ``` r
+
 estimates$ts_data[sys_eq$endogenous_variables] <-
     lapply(sys_eq$endogenous_variables, function(x) {
         stats::window(estimates$ts_data[[x]], end = c(2022, 4))
@@ -261,6 +297,13 @@ forecasts <- forecast(
 #> 
 #> ── Forecast ────────────────────────────────────────────────────────────────────
 print(forecasts)
+#> <koma_ts>
+#> attributes:
+#>   series_type: list[11]
+#>   method: list[11]
+#>   anker: list[11]
+#> 
+#> series:
 #>         consumption investment exports imports    gdp domestic_demand
 #> 2023 Q1      0.3747     0.3695  0.8578  1.0266 0.4666          0.3726
 #> 2023 Q2      0.3810     0.4639  0.7363  0.7798 0.5333          0.4141
@@ -291,13 +334,25 @@ print(forecasts)
 ```
 
 ``` r
+
 rate(forecasts$mean$exports)
-#> rate, diff_log, c(118297.572909318, 2022.75)
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "rate"
+#>   method:  chr "diff_log"
+#>   anker:  num [1:2] 118298 2023
+#> 
+#> series:
 #>           Qtr1      Qtr2      Qtr3      Qtr4
 #> 2023 0.8577540 0.7362662 0.6503629 0.2972050
 #> 2024 0.8627210 0.6635003 1.3581153 0.5355779
 level(forecasts$mean$exports)
-#> level, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #>          Qtr1     Qtr2     Qtr3     Qtr4
 #> 2022                            118297.6
 #> 2023 119316.6 120198.4 120982.6 121342.7

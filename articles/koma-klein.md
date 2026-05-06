@@ -4,37 +4,49 @@
 
 ### Stochastic equations
 
-$$\begin{aligned}
-{\text{consumption}\quad C_{t}} & {= \beta_{0} + \alpha_{1}P_{t} + \alpha_{2}P_{t - 1} + \alpha_{3}(W_{t}^{p} + W_{t}^{g}) + \varepsilon_{1t},} \\
-{\text{investment}\quad I_{t}} & {= \beta_{0} + \beta_{1}P_{t} + \beta_{2}P_{t - 1} + \beta_{3}K_{t - 1} + \varepsilon_{2t},} \\
-{\text{private wages}\quad W_{t}^{p}} & {= \gamma_{0} + \gamma_{1}Y_{t} + \gamma_{2}Y_{t - 1} + \gamma_{3}A_{t} + \varepsilon_{3t}.}
-\end{aligned}$$
+``` math
+\begin{aligned}
+\text{consumption}\quad   C_t     &= \beta_0 + \alpha_1 P_t + \alpha_2 P_{t-1}
+                                   + \alpha_3\bigl(W^p_t + W^g_t\bigr)
+                                   + \varepsilon_{1t},\\
+\text{investment}\quad    I_t     &= \beta_0  + \beta_1 P_t + \beta_2 P_{t-1}
+                                   + \beta_3 K_{t-1}
+                                   + \varepsilon_{2t},\\
+\text{private wages}\quad W^p_t   &= \gamma_0 + \gamma_1 Y_t + \gamma_2 Y_{t-1}
+                                   + \gamma_3 A_t
+                                   + \varepsilon_{3t}.
+\end{aligned}
+```
 
-The $\alpha$’s, $\beta$’s, and $\gamma$’s are the coefficients of the
-model. $P_{t}$ is the private profits, $W_{t}^{p}$ is the private wages,
-$W_{t}^{g}$ is the government wages, $K_{t - 1}$ is the capital stock at
-time $t - 1$, and $A_{t}$ is a time trend. The $\varepsilon_{it}$ are
-stochastic error terms.
+The $`\alpha`$’s, $`\beta`$’s, and $`\gamma`$’s are the coefficients of
+the model. $`P_t`$ is the private profits, $`W^p_t`$ is the private
+wages, $`W^g_t`$ is the government wages, $`K_{t-1}`$ is the capital
+stock at time $`t-1`$, and $`A_t`$ is a time trend. The
+$`\varepsilon_{it}`$ are stochastic error terms.
 
 ### Equilibrium condition
 
-$$\begin{aligned}
-{\text{equilibrium demand}\quad Y_{t}} & {= C_{t} + I_{t} + G_{t}}
-\end{aligned}$$
+``` math
+\begin{aligned}
+\text{equilibrium demand}\quad Y_t &= C_t + I_t + G_t
+\end{aligned}
+```
 
-$Y_{t}$ is the equilibrium demand, $C_{t}$ is the consumption, $I_{t}$
-is the investment, and $G_{t}$ is the government spending.
+$`Y_t`$ is the equilibrium demand, $`C_t`$ is the consumption, $`I_t`$
+is the investment, and $`G_t`$ is the government spending.
 
 ### Identities
 
-$$\begin{aligned}
-{\text{equilibrium demand}\quad Y_{t}} & {= C_{t} + I_{t} + G_{t}} \\
-{\text{private profits}\quad P_{t}} & {= Y_{t} - T_{t} - W_{t}^{p}} \\
-{\text{capital stock}\quad K_{t}} & {= K_{t - 1} + I_{t}}
-\end{aligned}$$
+``` math
+\begin{aligned}
+\text{equilibrium demand}\quad Y_t &= C_t + I_t + G_t\\
+\text{private profits}\quad P_t &= Y_t - T_t - W^p_t\\
+\text{capital stock}\quad K_t &= K_{t-1} + I_t
+\end{aligned}
+```
 
-Here, $T_{t}$ represents taxes, $K_{t}$ denotes the capital stock at
-time $t$, and $G_{t}$ signifies government spending.
+Here, $`T_t`$ represents taxes, $`K_t`$ denotes the capital stock at
+time $`t`$, and $`G_t`$ signifies government spending.
 
 ## Defining Klein’s Model in R
 
@@ -43,6 +55,7 @@ the exogenous variables, and the date ranges for estimation and
 forecasting.
 
 ``` r
+
 equations <- "consumption ~ profits + profits.L(1) + total_wages,
 investment ~ profits + profits.L(1) + capital_stock.L(1),
 wages ~ gdp + gdp.L(1) + time_trend,
@@ -66,6 +79,7 @@ The `system_of_equations` function is used to create a system of
 equations object, which can then be used for estimation and forecasting.
 
 ``` r
+
 library(koma)
 
 sys_eq <- system_of_equations(
@@ -90,6 +104,7 @@ print(sys_eq)
 Now, we need to specify the dates for estimation and forecasting.
 
 ``` r
+
 dates <- list(
   estimation = list(start = c(1990, 1), end = c(2020, 4)),
   forecast = list(start = c(2021, 1), end = c(2023, 4)),
@@ -107,6 +122,7 @@ can explore the dataset by using the
 command to view its documentation and structure.
 
 ``` r
+
 ?klein
 ```
 
@@ -121,6 +137,7 @@ any additional attributes. Below we use this feature to save the series’
 value_type (real or nominal).
 
 ``` r
+
 # Some series in the klein dataset are nominal. We need to deflate them using the GDP deflator.
 klein$profits <- klein$n_profits / (klein$d_gdp / 100)
 klein$capital_stock <- klein$n_capital_stock / (klein$d_gdp / 100)
@@ -175,6 +192,7 @@ forecasting, however, we need to truncate the endogenous variables to
 ensure they only include data up to the forecast start date.
 
 ``` r
+
 ts_data[sys_eq$endogenous_variables] <-
   lapply(sys_eq$endogenous_variables, function(x) {
     stats::window(ts_data[[x]], end = c(2020, 4))
@@ -188,6 +206,7 @@ the equations. Now, we can estimate the model using the `estimate`
 function.
 
 ``` r
+
 estimates <- estimate(
   sys_eq,
   ts_data = ts_data,
@@ -218,6 +237,7 @@ print(estimates)
 ```
 
 ``` r
+
 summary(estimates)
 ## 
 ## =================================================================
@@ -253,6 +273,7 @@ To forecast the model, we can use the `forecast` function. This function
 will generate forecasts for the specified date range.
 
 ``` r
+
 forecasts <- forecast(
   estimates,
   dates = dates
@@ -260,6 +281,14 @@ forecasts <- forecast(
 ## 
 ## ── Forecast ────────────────────────────────────────────────────────────────────
 print(forecasts)
+## <koma_ts>
+## attributes:
+##   series_type: list[11]
+##   method: list[11]
+##   value_type: list[11]
+##   anker: list[11]
+## 
+## series:
 ##         consumption investment   wages     gdp profits capital_stock
 ## 2021 Q1     -1.5696    -0.9364 -0.4585 -0.9971 -8.6728        2.5034
 ## 2021 Q2     -0.3184     2.0125 -0.4641 -0.0393  0.5787        2.5063
@@ -289,5 +318,6 @@ print(forecasts)
 ```
 
 ``` r
+
 plot(forecasts, variables = "gdp")
 ```

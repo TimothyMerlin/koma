@@ -1,6 +1,7 @@
 # Extended Time Series (ets)
 
 ``` r
+
 library(koma)
 ```
 
@@ -14,6 +15,7 @@ keeping those attributes through common operations.
 ## Create an ets
 
 ``` r
+
 x <- ets(
   data = 1:10,
   start = c(2019, 1),
@@ -23,7 +25,13 @@ x <- ets(
   method = "diff_log"
 )
 x
-#> level, real, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #>      Qtr1 Qtr2 Qtr3 Qtr4
 #> 2019    1    2    3    4
 #> 2020    5    6    7    8
@@ -47,15 +55,28 @@ attributes, and `extend = TRUE` allows leading or trailing `NA` values
 for future merges.
 
 ``` r
+
 stats::window(x, start = c(2019, 4))
-#> level, real, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #>      Qtr1 Qtr2 Qtr3 Qtr4
 #> 2019                   4
 #> 2020    5    6    7    8
 #> 2021    9   10
 
 stats::window(x, start = 2018, extend = TRUE)
-#> level, real, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #>      Qtr1 Qtr2 Qtr3 Qtr4
 #> 2018   NA   NA   NA   NA
 #> 2019    1    2    3    4
@@ -63,7 +84,13 @@ stats::window(x, start = 2018, extend = TRUE)
 #> 2021    9   10
 
 stats::na.omit(stats::window(x, start = 2018, extend = TRUE))
-#> level, real, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #>      Qtr1 Qtr2 Qtr3 Qtr4
 #> 2019    1    2    3    4
 #> 2020    5    6    7    8
@@ -79,9 +106,17 @@ converts a level series to growth rates. When it does, it stores an
 rebuild a level series later.
 
 ``` r
+
 x_rate <- rate(x)
 x_rate
-#> rate, real, diff_log, c(1, 2019)
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "rate"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#>   anker:  num [1:2] 1 2019
+#> 
+#> series:
 #>          Qtr1     Qtr2     Qtr3     Qtr4
 #> 2019          69.31472 40.54651 28.76821
 #> 2020 22.31436 18.23216 15.41507 13.35314
@@ -91,7 +126,13 @@ attr(x_rate, "anker")
 
 rate_window <- stats::window(x_rate, start = c(2019, 4))
 level(rate_window)
-#> level, real, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #>      Qtr1 Qtr2 Qtr3 Qtr4
 #> 2019              3    4
 #> 2020    5    6    7    8
@@ -102,9 +143,17 @@ level(rate_window)
 automatically for rate series.
 
 ``` r
+
 x_rate_lag <- lag(x_rate, k = -1)
 x_rate_lag
-#> rate, real, diff_log, c(1, 2019.25)
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "rate"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#>   anker:  num [1:2] 1 2019
+#> 
+#> series:
 #>          Qtr1     Qtr2     Qtr3     Qtr4
 #> 2019                   69.31472 40.54651
 #> 2020 28.76821 22.31436 18.23216 15.41507
@@ -119,14 +168,27 @@ Rebase a series to a base period with
 [`rebase()`](https://timothymerlin.github.io/koma/reference/rebase.md).
 
 ``` r
+
 rebase(x, start = c(2020, 1), end = c(2020, 1))
-#> level, real, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #>      Qtr1 Qtr2 Qtr3 Qtr4
 #> 2019   20   40   60   80
 #> 2020  100  120  140  160
 #> 2021  180  200
 rebase(x, start = c(2020, 1), end = c(2020, 4))
-#> level, real, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #>           Qtr1      Qtr2      Qtr3      Qtr4
 #> 2019  15.38462  30.76923  46.15385  61.53846
 #> 2020  76.92308  92.30769 107.69231 123.07692
@@ -136,10 +198,17 @@ rebase(x, start = c(2020, 1), end = c(2020, 4))
 If you have `tempdisagg` installed, you can aggregate with `ta()`.
 
 ``` r
+
 if (requireNamespace("tempdisagg", quietly = TRUE)) {
   tempdisagg::ta(x, conversion = "sum", to = "annual")
 }
-#> level, real, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #> Time Series:
 #> Start = 2019 
 #> End = 2020 
@@ -153,20 +222,39 @@ Common transformations preserve attributes, so you can keep working in
 `koma` without losing metadata.
 
 ``` r
+
 log(x)
-#> level, real, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #>           Qtr1      Qtr2      Qtr3      Qtr4
 #> 2019 0.0000000 0.6931472 1.0986123 1.3862944
 #> 2020 1.6094379 1.7917595 1.9459101 2.0794415
 #> 2021 2.1972246 2.3025851
 diff(x)
-#> level, real, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #>      Qtr1 Qtr2 Qtr3 Qtr4
 #> 2019         1    1    1
 #> 2020    1    1    1    1
 #> 2021    1    1
 x * 10
-#> level, real, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #>      Qtr1 Qtr2 Qtr3 Qtr4
 #> 2019   10   20   30   40
 #> 2020   50   60   70   80
@@ -174,7 +262,13 @@ x * 10
 x[1:2]
 #> [1] 1 2
 x / x
-#> level, real, diff_log
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   value_type:  chr "real"
+#>   method:  chr "diff_log"
+#> 
+#> series:
 #>      Qtr1 Qtr2 Qtr3 Qtr4
 #> 2019    1    1    1    1
 #> 2020    1    1    1    1

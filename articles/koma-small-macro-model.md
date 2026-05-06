@@ -4,52 +4,64 @@
 
 **Stochastic equations**
 
-$$\begin{aligned}
-{\text{Consumption}\quad C_{t}} & {= \beta_{1} + \beta_{1,2}C_{t - 1} + \gamma_{1,7}Y_{t} + \varepsilon_{1t},} \\
-{\text{Investment}\quad I_{t}} & {= \beta_{2} + \beta_{2,3}I_{t - 1} + \varepsilon_{2t},} \\
-{\text{Exports}\quad X_{t}} & {= \beta_{3} + \beta_{3,4}X_{t - 1} + \beta_{3,7}WGDP_{t} + \varepsilon_{3t},} \\
-{\text{Imports}\quad M_{t}} & {= \beta_{4} + \gamma_{4,8}D_{t} + \beta_{4,5}I_{t - 1} + \varepsilon_{4t},} \\
-{\text{Prices}\quad P_{t}} & {= \beta_{5} + \beta_{5,9}ER_{t} + \beta_{5,10}OP_{t} + \beta_{5,6}P_{t - 1} + \varepsilon_{5t},} \\
-{\text{Interest Rate}\quad R_{t}} & {= \beta_{6} + \beta_{6,6}P_{t - 1} + \beta_{6,8}R_{GE,t} + \gamma_{6,5}P_{t} + \varepsilon_{6t}.}
-\end{aligned}$$
+``` math
+\begin{aligned}
+\text{Consumption}\quad C_t &= \beta_1 + \beta_{1,2} C_{t-1} + \gamma_{1,7} Y_t + \varepsilon_{1t},\\
+\text{Investment}\quad I_t &= \beta_2 + \beta_{2,3} I_{t-1} + \varepsilon_{2t},\\
+\text{Exports}\quad X_t &= \beta_3 + \beta_{3,4} X_{t-1} + \beta_{3,7} WGDP_t + \varepsilon_{3t},\\
+\text{Imports}\quad M_t &= \beta_4 + \gamma_{4,8} D_t + \beta_{4,5} I_{t-1} + \varepsilon_{4t},\\
+\text{Prices}\quad P_t &= \beta_5 + \beta_{5,9} ER_t + \beta_{5,10} OP_t 
+     + \beta_{5,6} P_{t-1} + \varepsilon_{5t},\\
+\text{Interest Rate}\quad R_t &= \beta_6 + \beta_{6,6} P_{t-1} + \beta_{6,8} R_{GE,t} 
+     + \gamma_{6,5} P_t + \varepsilon_{6t}.
+\end{aligned}
+```
 
 **Equilibrium condition**
 
-$$\begin{aligned}
-{\text{Equilibrium Ouput}\quad GDP_{t}} & {= 0.6*C_{t} + 0.6*D_{t} + 0.5*X_{t} - 0.4*I_{t}}
-\end{aligned}$$
+``` math
+\begin{aligned}
+\text{Equilibrium Ouput}\quad GDP_t &= 0.6*C_t + 0.6*D_t + 0.5*X_t - 0.4*I_t
+\end{aligned}
+```
 
 **Identities**
 
-$$\begin{aligned}
-{\text{Domestic Demand}\quad D_{t}} & {= 0.6*C_{t} + 0.4*I_{t}}
-\end{aligned}$$
+``` math
+\begin{aligned}
+\text{Domestic Demand}\quad D_t &= 0.6*C_t + 0.4*I_t
+\end{aligned}
+```
 
 **Coefficients**  
-- The $\beta$’s and $\gamma$’s are structural coefficients to be
+- The $`\beta`$’s and $`\gamma`$’s are structural coefficients to be
 estimated.
 
 **Endogenous variables**
 
-{C_t}{Consumption at time .} {I_t}{Gross fixed capital formation
-(investment) at time .} {X_t}{Exports at time .} {M_t}{Imports at time
-.} {P_t}{Price level at time .} {R_t}{Short-term interest rate at time
-.} {D_t}{Domestic demand, defined by .}
-
-{GDP_t}{Equilibrium output (demand), defined by .}
+- $`C_t`$: Consumption at time $`t`$.
+- $`I_t`$: Gross fixed capital formation (investment) at time $`t`$.
+- $`X_t`$: Exports at time $`t`$.
+- $`M_t`$: Imports at time $`t`$.
+- $`P_t`$: Price level at time $`t`$.
+- $`R_t`$: Short-term interest rate at time $`t`$.
+- $`D_t`$: Domestic demand, defined by $`D_t = 0.6 * C_t + 0.4 * I_t`$.
+- $`GDP_t`$: Equilibrium output (demand), defined by
+  $`GDP_t = 0.6 * C_t + 0.6 * D_t + 0.5 * X_t - 0.4 * I_t`$.
 
 **Exogenous variables**
 
-{WGDP_t}{World GDP at time .} {ER_t}{Exchange rate at time .} {OP_t}{Oil
-price at time .}
-
-{}{German interest rate at time }.
+- $`WGDP_t`$: World GDP at time $`t`$.
+- $`ER_t`$: Exchange rate at time $`t`$.
+- $`OP_t`$: Oil price at time $`t`$.
+- $`R_{GE,t}`$: German interest rate at time $`t`$.
 
 **Other variables**
 
-{G_t}{Government spending at time .} {T_t}{Taxes at time .}
-
-{epsilon_it}{Stochastic error term for equation at time .}
+- $`G_t`$: Government spending at time $`t`$.
+- $`T_t`$: Taxes at time $`t`$.
+- $`\varepsilon_{it}`$: Stochastic error term for equation $`i`$ at time
+  $`t`$.
 
 ## Defining the SEM in R
 
@@ -58,6 +70,7 @@ the exogenous variables, and the date ranges for estimation and
 forecasting.
 
 ``` r
+
 equations <- "consumption ~ gdp + consumption.L(1),
 investment ~ investment.L(1),
 exports ~ world_gdp + exports.L(1),
@@ -82,6 +95,7 @@ The `system_of_equations` function is used to create a system of
 equations object, which can then be used for estimation and forecasting.
 
 ``` r
+
 library(koma)
 
 sys_eq <- system_of_equations(
@@ -107,6 +121,7 @@ print(sys_eq)
 Now, we need to specify the dates for estimation and forecasting.
 
 ``` r
+
 dates <- list(
   estimation = list(start = c(1996, 1), end = c(2019, 4)),
   forecast = list(start = c(2023, 1), end = c(2023, 4))
@@ -123,6 +138,7 @@ in the model. You can explore the dataset by using the
 command to view its documentation and structure.
 
 ``` r
+
 ?small_open_economy
 ```
 
@@ -137,6 +153,7 @@ accept any additional attributes. Below we use this feature to save the
 series’ value_type (real or nominal).
 
 ``` r
+
 series <- names(small_open_economy)
 series <- series[!series %in% c("interest_rate", "interest_rate_germany")]
 
@@ -160,6 +177,7 @@ forecasting, however, we need to truncate the endogenous variables to
 ensure they only include data up to the forecast start date.
 
 ``` r
+
 ts_data[sys_eq$endogenous_variables] <-
   lapply(sys_eq$endogenous_variables, function(x) {
     stats::window(ts_data[[x]], end = c(2019, 4))
@@ -173,6 +191,7 @@ the equations. Now, we can estimate the model using the `estimate`
 function.
 
 ``` r
+
 estimates <- estimate(
   sys_eq,
   ts_data = ts_data,
@@ -210,6 +229,7 @@ print(estimates)
 ```
 
 ``` r
+
 summary(estimates)
 ## 
 ## ===============================================================================================================
@@ -247,6 +267,7 @@ summary(estimates)
 ```
 
 ``` r
+
 summary(estimates, variables = "investment")
 ## 
 ## =============================
@@ -270,6 +291,7 @@ You can visualize MCMC diagnostics for coefficient draws using
 [`trace_plot()`](https://timothymerlin.github.io/koma/reference/trace_plot.md).
 
 ``` r
+
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   trace_plot(estimates, variables = c("consumption", "investment"))
 }
@@ -279,6 +301,7 @@ You can also inspect running means (cumulative averages) with
 [`running_mean_plot()`](https://timothymerlin.github.io/koma/reference/running_mean_plot.md).
 
 ``` r
+
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   running_mean_plot(estimates, variables = c("consumption", "investment"))
 }
@@ -288,6 +311,7 @@ You can inspect autocorrelation diagnostics with
 [`acf_plot()`](https://timothymerlin.github.io/koma/reference/acf_plot.md).
 
 ``` r
+
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   acf_plot(estimates, variables = c("consumption", "investment"))
 }
@@ -299,6 +323,7 @@ To forecast the model, we can use the `forecast` function. This function
 will generate forecasts for the specified date range.
 
 ``` r
+
 forecasts <- forecast(
   estimates,
   dates = dates
@@ -312,6 +337,13 @@ forecasts <- forecast(
 ## Missing values will be conditionally filled up to "2022 Q4" before forecasting.
 ## ✔ Forecasting completed.
 print(forecasts)
+## <koma_ts>
+## attributes:
+##   series_type: list[12]
+##   method: list[12]
+##   anker: list[12]
+## 
+## series:
 ##         consumption investment exports imports  prices interest_rate    gdp
 ## 2023 Q1      0.3940     0.4953  1.2033  1.0677 -0.0587        0.8385 0.6717
 ## 2023 Q2      0.3821     0.4917  0.6258  0.9778 -0.0703        1.2689 0.4066
@@ -325,12 +357,24 @@ print(forecasts)
 ```
 
 ``` r
+
 rate(forecasts$mean$gdp)
-## rate, diff_log, c(192510.114596192, 2022.75)
+## <koma_ts>
+## attributes:
+##   series_type:  chr "rate"
+##   method:  chr "diff_log"
+##   anker:  num [1:2] 192510 2023
+## 
+## series:
 ##           Qtr1      Qtr2      Qtr3      Qtr4
 ## 2023 0.6716659 0.4066033 0.4921892 0.2921809
 level(forecasts$mean$gdp)
-## level, diff_log
+## <koma_ts>
+## attributes:
+##   series_type:  chr "level"
+##   method:  chr "diff_log"
+## 
+## series:
 ##          Qtr1     Qtr2     Qtr3     Qtr4
 ## 2022                            192510.1
 ## 2023 193807.5 194597.1 195557.3 196129.5
@@ -344,6 +388,7 @@ for scenario analysis and policy evaluation, as the forecasts will
 reflect these user-defined conditions.
 
 ``` r
+
 fig <- plot(forecasts, variables = "prices")
 fig
 

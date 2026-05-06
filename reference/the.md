@@ -10,4 +10,4 @@ the
 
 ## Format
 
-An object of class `environment` of length 1.
+An object of class `environment` of length 2.

@@ -18,6 +18,7 @@ Carlo (MCMC) methods.
 To install the latest **release** of the KOMA package from GitHub:
 
 ``` r
+
 # Install from GitHub
 devtools::install_github("timothymerlin/koma@latest")
 
@@ -32,6 +33,7 @@ To install the latest **development version** of the KOMA package from
 GitHub:
 
 ``` r
+
 # Install from GitHub
 devtools::install_github("timothymerlin/koma")
 
@@ -64,6 +66,7 @@ planned to be released on CRAN.
 Increment the package version using `usethis`:
 
 ``` r
+
 # Increment the version number (patch/minor/major)
 usethis::use_version()
 ```

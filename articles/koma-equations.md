@@ -11,6 +11,7 @@ Stochastic (regression) equations model a dependent variable with an
 error term. An intercept is included by default.
 
 ``` r
+
 # With default intercept:
 consumption ~ gdp + consumption.L(1)
 
@@ -26,6 +27,7 @@ consumption ~ 1 + gdp + consumption.L(1)
 Identity equations enforce exact relationships.
 
 ``` r
+
 # Identity equations with explicitly defined weights:
 # To aggregate the component growth rates into a growth rate for GDP we need to define weights.
 # This is done by specifying the weights in the equation. 
@@ -36,6 +38,7 @@ gdp == 0.7*consumption + 0.2*investment + 0.2*government - 0.1*net_exports
 ### 3. Injected Parameters
 
 ``` r
+
 # Ratios computed from data:
 gdp == (nom_cons/nom_gdp) * cons
 ```
@@ -47,6 +50,7 @@ Lags are specified with `L()` or
 combinations are supported.
 
 ``` r
+
 # Single lag:
 x.L(1)
 lag(x, 1)
@@ -61,13 +65,77 @@ x.L(1:3, 5)
 
 ### 5. Priors
 
-Specify priors before coefficients using curly braces
-[`{}`](https://rdrr.io/r/base/Paren.html).
+There are two kinds of priors in `koma` equations:
+
+- coefficient priors, written in front of a term
+- the error-term prior, written at the end of the equation
+
+Coefficient priors are written in front of the term they belong to:
 
 ``` r
-# normal(1,0.1):
-{1, 0.1} x3
+{mean, variance} variable
 ```
+
+For example:
+
+``` r
+consumption ~ {0.4, 0.1} gdp + consumption.L(1)
+```
+
+This sets a prior with mean `0.4` and variance `0.1` on the coefficient
+of `gdp`.
+
+You can use priors on:
+
+- the intercept, written as `1` or `constant`
+- exogenous variables
+- lagged variables
+- contemporaneous endogenous variables
+
+``` r
+consumption ~
+  {0, 1000} 1 +
+  {0.4, 0.1} gdp +
+  {0.9, 10} consumption.L(1) +
+  {0.2, 0.5} service
+```
+
+The error-term prior is different. It is written as a final prior with
+no variable name:
+
+``` r
+consumption ~ gdp + consumption.L(1) + {3, 0.001}
+```
+
+In the error-term prior, the two values specify:
+
+- degrees of freedom
+- scale
+
+Some valid examples for priors are:
+
+``` r
+# Prior on the intercept
+consumption ~ {0, 1000} 1 + gdp
+
+# Prior on a lagged term
+consumption ~ gdp + {0.9, 10} consumption.L(1)
+
+# Prior on an endogenous regressor
+consumption ~ {0.2, 0.5} service + gdp
+
+# Error-term prior: {df, scale}
+consumption ~ gdp + consumption.L(1) + {3, 0.001}
+```
+
+Rules:
+
+- Priors are only supported in stochastic equations.
+- Coefficient priors have the form `{mean, variance} variable`.
+- The error-term prior has the form `{df, scale}` and appears without a
+  variable name.
+- The dependent variable cannot have a prior.
+- The error-term prior must be the last prior in the equation.
 
 ### 6. Equation-specific Tau
 
@@ -76,5 +144,6 @@ equation by appending `[tau = value]` after its equation. If the
 acceptance rate falls outside 30%-60 %, a warning is emitted.
 
 ``` r
+
 "consumption ~ constant + gdp + consumption.L(1) + consumption.L(2) [tau = 1.2]"
 ```
