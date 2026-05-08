@@ -150,6 +150,9 @@ new_system_of_equations <- function(equations, exogenous_variables, priors, equa
 #'
 #' @return Logical. Returns `TRUE` if the object inherits from the class
 #' `koma_seq`, and `FALSE` otherwise.
+#' @examples
+#' sys <- system_of_equations("y ~ x", exogenous_variables = "x")
+#' is_system_of_equations(sys)
 #' @export
 is_system_of_equations <- function(x) {
   inherits(x, "koma_seq")

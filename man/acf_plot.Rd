@@ -52,3 +52,18 @@ The red dashed horizontal lines show approximate significance bounds
 \eqn{\alpha = 1 - \code{conf_level}} and \eqn{n} is the number of retained
 draws for the corresponding coefficient series.
 }
+\examples{
+\dontrun{
+data("simulated_sem")
+set.seed(11)
+
+fit <- estimate(
+  ts_data = simulated_sem$ts_data,
+  sys_eq = simulated_sem$sys_eq,
+  dates = simulated_sem$dates,
+  options = list(gibbs = list(ndraws = 200))
+)
+acf_plot(fit, params = "beta", max_lag = 12)
+}
+
+}

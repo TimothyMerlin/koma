@@ -39,6 +39,22 @@ list of \code{texreg} objects.
 Builds one or more \pkg{texreg} objects from a \code{koma_estimate}, so results
 can be rendered with \code{texreg::screenreg()} or similar helpers.
 }
+\examples{
+\dontrun{
+if (requireNamespace("texreg", quietly = TRUE)) {
+  data("simulated_sem")
+  set.seed(11)
+
+  fit <- estimate(
+    ts_data = simulated_sem$ts_data,
+    sys_eq = simulated_sem$sys_eq,
+    dates = simulated_sem$dates,
+    options = list(gibbs = list(ndraws = 200))
+  )
+  extract(fit, variables = "consumption")
+}
+}
+}
 \seealso{
 \code{\link[=summary.koma_estimate]{summary.koma_estimate}} for
 summary output with optional \pkg{texreg} formatting.

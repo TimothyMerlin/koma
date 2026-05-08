@@ -64,3 +64,25 @@ continues until \code{dates$forecast$start + horizon} equals \code{dates$forecas
 In each iteration, a quarter is added to both the in-sample data and to
 \code{dates$forecast$start}.
 }
+\examples{
+\dontrun{
+data("simulated_sem")
+
+dates <- list(
+  estimation = list(start = c(1977, 1), end = c(2018, 4)),
+  forecast = list(start = c(2023, 2), end = c(2025, 4))
+)
+
+rmse <- model_evaluation(
+  sys_eq = simulated_sem$sys_eq,
+  variables = c("consumption", "investment"),
+  horizon = 4,
+  ts_data = simulated_sem$ts_data,
+  dates = dates,
+  evaluate_on_levels = TRUE,
+  options = list(gibbs = list(ndraws = 20), summary = "mean")
+)
+head(rmse)
+}
+
+}

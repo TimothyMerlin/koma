@@ -51,3 +51,19 @@
 #' }
 #' @source \url{https://www.seco.admin.ch/}, \url{https://kof.ethz.ch/}
 "small_open_economy"
+
+#' Simulated SEM example data
+#'
+#' A compact simulated example bundle for documentation and quick-start
+#' workflows with \code{estimate()}, \code{forecast()}, and diagnostic plots.
+#'
+#' @format A \code{list} with three elements:
+#' \describe{
+#'   \item{ts_data}{A named list of `ets` time-series objects.}
+#'   \item{sys_eq}{A \code{koma_seq} object defining the simulated system of equations.}
+#'   \item{dates}{A named list of date ranges for estimation examples.}
+#' }
+#'
+#' @source Simulated within the package from the SEM data generator in
+#'   \code{data-raw/DATASET.R}.
+"simulated_sem"

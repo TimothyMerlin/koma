@@ -89,6 +89,37 @@ For a detailed example on executing \code{estimate} in parallel, see the vignett
 For more details, see the \href{https://cran.r-project.org/web/packages/future/future.pdf}{future package documentation}.
 }
 
+\examples{
+\dontrun{
+data("simulated_sem")
+
+dates <- list(
+  current = c(2024, 4),
+  estimation = simulated_sem$dates$estimation,
+  forecast = list(start = c(2025, 1), end = c(2025, 4))
+)
+
+ts_data <- simulated_sem$ts_data
+# Endogenous series must stop at the last observed quarter before forecasting.
+ts_data[simulated_sem$sys_eq$endogenous_variables] <- lapply(
+  simulated_sem$sys_eq$endogenous_variables,
+  function(x) {
+    stats::window(ts_data[[x]], end = dates$current)
+  }
+)
+
+set.seed(11)
+fit <- estimate(
+  ts_data = ts_data,
+  sys_eq = simulated_sem$sys_eq,
+  dates = dates,
+  options = list(gibbs = list(ndraws = 200))
+)
+fc <- forecast(fit, dates = dates)
+print(fc)
+}
+
+}
 \seealso{
 \itemize{
 \item For a comprehensive example of using \code{forecast}, see

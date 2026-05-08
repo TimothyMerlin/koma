@@ -17,3 +17,7 @@ Logical. Returns \code{TRUE} if the object inherits from the class
 This function checks if the given object inherits from the class \code{koma_seq},
 indicating that it represents a system of equations.
 }
+\examples{
+sys <- system_of_equations("y ~ x", exogenous_variables = "x")
+is_system_of_equations(sys)
+}

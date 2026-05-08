@@ -16,6 +16,23 @@
 #'
 #' @return NULL. This function is used for side effects, stopping execution
 #'   if model identification conditions are not met.
+#'
+#' @examples
+#' equations <- "consumption ~ gdp + consumption.L(1) + consumption.L(2),
+#' investment ~ gdp + investment.L(1) + real_interest_rate,
+#' current_account ~ current_account.L(1) + world_gdp,
+#' manufacturing ~ manufacturing.L(1) + world_gdp,
+#' service ~ service.L(1) + population + gdp,
+#' gdp == 0.5*manufacturing + 0.5*service"
+#'
+#' exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
+#' sys_eq <- system_of_equations(equations, exogenous_variables)
+#'
+#' model_identification(
+#'   sys_eq$character_gamma_matrix,
+#'   sys_eq$character_beta_matrix,
+#'   sys_eq$identities
+#' )
 #' @export
 model_identification <- function(character_gamma_matrix,
                                  character_beta_matrix, identity_weights,

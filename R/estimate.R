@@ -59,6 +59,20 @@
 #'   \item{dates}{The date ranges used during estimation.}
 #' }
 #'
+#' @examples
+#' \dontrun{
+#' data("simulated_sem")
+#' set.seed(11)
+#'
+#' fit <- estimate(
+#'   ts_data = simulated_sem$ts_data,
+#'   sys_eq = simulated_sem$sys_eq,
+#'   dates = simulated_sem$dates,
+#'   options = list(gibbs = list(ndraws = 200))
+#' )
+#' print(fit)
+#' }
+#'
 #' @seealso
 #' - To create a `koma_seq` object see \code{\link{system_of_equations}}.
 #' - For a comprehensive example of using `estimate`, see
@@ -589,6 +603,22 @@ print.koma_estimate <- function(x,
 #'
 #' @return A `texreg` object when one variable is requested, otherwise a named
 #'   list of `texreg` objects.
+#'
+#' @examples
+#' \dontrun{
+#' if (requireNamespace("texreg", quietly = TRUE)) {
+#'   data("simulated_sem")
+#'   set.seed(11)
+#'
+#'   fit <- estimate(
+#'     ts_data = simulated_sem$ts_data,
+#'     sys_eq = simulated_sem$sys_eq,
+#'     dates = simulated_sem$dates,
+#'     options = list(gibbs = list(ndraws = 200))
+#'   )
+#'   extract(fit, variables = "consumption")
+#' }
+#' }
 #' @seealso \code{\link[=summary.koma_estimate]{summary.koma_estimate}} for
 #'   summary output with optional \pkg{texreg} formatting.
 #' @export

@@ -26,3 +26,4 @@
 ^scripts$
 ^stages\.yml$
 ^AGENTS\.md$
+^cran-comments\.md$

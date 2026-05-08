@@ -95,6 +95,14 @@ transparent) to 1 (fully opaque).
 }
 }}
 }
+\value{
+A named list containing the theme settings.
+}
 \description{
 Initiate default theme used to plot forecasts.
+}
+\examples{
+theme <- init_koma_theme()
+names(theme)
+
 }

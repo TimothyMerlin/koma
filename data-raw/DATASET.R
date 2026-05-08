@@ -169,6 +169,7 @@ estimates <- vector(
 names(estimates) <- endogenous_variables[-ix]
 
 for (jx in seq_along(endogenous_variables[-ix])) {
+  eq_name <- names(estimates)[jx]
   estimates[[jx]] <- withr::with_seed(
     seed,
     draw_parameters_j(
@@ -176,7 +177,8 @@ for (jx in seq_along(endogenous_variables[-ix])) {
       generated_data$x_matrix,
       character_gamma_matrix,
       character_beta_matrix,
-      jx
+      jx,
+      the$gibbs_sampler[[eq_name]]
     )
   )
 }
@@ -204,3 +206,16 @@ simulated_data$the <- the
 simulated_data$sys_eq <- sys_eq
 
 usethis::use_data(simulated_data, overwrite = TRUE, internal = TRUE)
+
+simulated_sem <- list(
+  ts_data = ts_data,
+  sys_eq = sys_eq,
+  dates = list(
+    estimation = list(
+      start = c(1977, 1),
+      end = c(2024, 4)
+    )
+  )
+)
+
+usethis::use_data(simulated_sem, overwrite = TRUE, internal = FALSE)

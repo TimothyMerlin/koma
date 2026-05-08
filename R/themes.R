@@ -51,6 +51,12 @@
 #'     - `in_sample`: Text color for in-sample data bars.
 #'     - `forecast`: Text color for forecast data bars.
 #'
+#' @return A named list containing the theme settings.
+#'
+#' @examples
+#' theme <- init_koma_theme()
+#' names(theme)
+#'
 #' @export
 init_koma_theme <- function(index = list(start = NULL, end = NULL),
                             title = list(

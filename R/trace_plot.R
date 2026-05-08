@@ -29,6 +29,20 @@
 #' @return A ggplot object, or a plotly object when `interactive = TRUE` and
 #'   plotly is available.
 #'
+#' @examples
+#' \dontrun{
+#' data("simulated_sem")
+#' set.seed(11)
+#'
+#' fit <- estimate(
+#'   ts_data = simulated_sem$ts_data,
+#'   sys_eq = simulated_sem$sys_eq,
+#'   dates = simulated_sem$dates,
+#'   options = list(gibbs = list(ndraws = 200))
+#' )
+#' trace_plot(fit, params = "beta", max_draws = 100)
+#' }
+#'
 #' @export
 trace_plot <- function(x, ...) {
   UseMethod("trace_plot")

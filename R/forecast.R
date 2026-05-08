@@ -46,6 +46,36 @@
 #'   \item{x_matrix}{The X matrix used for forecasting.}
 #' }
 #'
+#' @examples
+#' \dontrun{
+#' data("simulated_sem")
+#'
+#' dates <- list(
+#'   current = c(2024, 4),
+#'   estimation = simulated_sem$dates$estimation,
+#'   forecast = list(start = c(2025, 1), end = c(2025, 4))
+#' )
+#'
+#' ts_data <- simulated_sem$ts_data
+#' # Endogenous series must stop at the last observed quarter before forecasting.
+#' ts_data[simulated_sem$sys_eq$endogenous_variables] <- lapply(
+#'   simulated_sem$sys_eq$endogenous_variables,
+#'   function(x) {
+#'     stats::window(ts_data[[x]], end = dates$current)
+#'   }
+#' )
+#'
+#' set.seed(11)
+#' fit <- estimate(
+#'   ts_data = ts_data,
+#'   sys_eq = simulated_sem$sys_eq,
+#'   dates = dates,
+#'   options = list(gibbs = list(ndraws = 200))
+#' )
+#' fc <- forecast(fit, dates = dates)
+#' print(fc)
+#' }
+#'
 #' @details
 #' The `forecast` function for SEM uses the estimates from the `koma_estimate`
 #' object to produce point forecasts and, optionally, quantile forecasts.

@@ -92,6 +92,21 @@ Default is 1.1.
 }
 }
 
+\examples{
+\dontrun{
+data("simulated_sem")
+set.seed(11)
+
+fit <- estimate(
+  ts_data = simulated_sem$ts_data,
+  sys_eq = simulated_sem$sys_eq,
+  dates = simulated_sem$dates,
+  options = list(gibbs = list(ndraws = 200))
+)
+print(fit)
+}
+
+}
 \seealso{
 \itemize{
 \item To create a \code{koma_seq} object see \code{\link{system_of_equations}}.
