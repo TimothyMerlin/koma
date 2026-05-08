@@ -235,6 +235,40 @@ test_that("summary.koma_estimate_hdr errors on missing variables", {
   )
 })
 
+test_that("summary.koma_estimate_hdr prints when source estimate has ts_data", {
+  sys_eq <- list(
+    endogenous_variables = c("y"),
+    total_exogenous_variables = c("x"),
+    character_beta_matrix = matrix(1, nrow = 1),
+    character_gamma_matrix = matrix(1, nrow = 1)
+  )
+
+  beta_draws <- replicate(50, rnorm(1, 0.2, 0.1), simplify = FALSE)
+  gamma_draws <- replicate(50, rnorm(1, -0.3, 0.1), simplify = FALSE)
+
+  estimates <- list(
+    y = list(
+      beta_jw = beta_draws,
+      gamma_jw = gamma_draws,
+      omega_tilde_jw = list()
+    )
+  )
+
+  obj <- structure(
+    list(
+      estimates = estimates,
+      sys_eq = sys_eq,
+      ts_data = list(y = stats::ts(1:12, start = c(2000, 1), frequency = 4)),
+      dates = list(estimation = list(start = c(2000, 1), end = c(2002, 4)))
+    ),
+    class = "koma_estimate"
+  )
+
+  res <- hdr(obj, probs = 0.8, n_grid = 256)
+
+  expect_silent(capture.output(summary(res)))
+})
+
 test_that("summary.koma_forecast_hdr prints without error", {
   mode_ts <- stats::ts(c(0.5, 1.5), start = c(2020, 1), frequency = 4)
   time_labels <- format(stats::time(mode_ts), trim = TRUE)

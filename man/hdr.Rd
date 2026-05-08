@@ -83,6 +83,24 @@ disjoint intervals.
 The Monte Carlo integration option follows the approach described by
 Hyndman (1996) for computing HDRs from an estimated density.
 }
+\examples{
+x <- c(rnorm(500, -2, 0.5), rnorm(500, 2, 0.5))
+hdr(x, probs = c(0.5, 0.9))
+
+\dontrun{
+data("simulated_sem")
+set.seed(11)
+
+fit <- estimate(
+  ts_data = simulated_sem$ts_data,
+  sys_eq = simulated_sem$sys_eq,
+  dates = simulated_sem$dates,
+  options = list(gibbs = list(ndraws = 200))
+)
+hdr_fit <- hdr(fit, probs = c(0.5, 0.9))
+names(hdr_fit$intervals)
+}
+}
 \references{
 Hyndman, R. J. (1996). Computing and graphing highest density regions.
 The American Statistician, 50(2), 120–126. \doi{10.2307/2684423}
