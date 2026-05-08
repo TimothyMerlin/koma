@@ -601,6 +601,13 @@ test_that("concatenate koma time series", {
   )
   expect_equal(result, expected_result)
 
+  # concat also works for untyped koma_ts inputs already on the level scale
+  x <- as_ets(stats::ts(1:10, start = c(2019, 1), frequency = 4))
+  y <- as_ets(stats::ts(11:20, start = c(2021, 3), frequency = 4))
+  result <- concat(x, y)
+  expected_result <- as_ets(stats::ts(1:20, start = c(2019, 1), frequency = 4))
+  expect_equal(result, expected_result)
+
   # arguments in ... must be used
   expect_error(concat(x, y, unused = TRUE))
 
@@ -791,31 +798,65 @@ test_that("get type", {
   x_2 <- rate(x)
   x_3 <- level(x_2)
 
-  expect_equal(names(type(x, type = "nominal")), c("Series 2", "Series 3"))
   expect_equal(
-    names(type(x, type = "nominal", var = c("Series 2"))),
+    names(filter_by_attribute(x, attribute = "value_type", value = "nominal")),
+    c("Series 2", "Series 3")
+  )
+  expect_equal(
+    names(filter_by_attribute(
+      x,
+      attribute = "value_type",
+      value = "nominal",
+      var = c("Series 2")
+    )),
     c("Series 2")
   )
 
   y <- as_list(x)
-  expect_equal(names(type(y, type = "nominal")), c("Series 2", "Series 3"))
   expect_equal(
-    names(type(y, type = "nominal", var = c("Series 2"))),
+    names(filter_by_attribute(y, attribute = "value_type", value = "nominal")),
+    c("Series 2", "Series 3")
+  )
+  expect_equal(
+    names(filter_by_attribute(
+      y,
+      attribute = "value_type",
+      value = "nominal",
+      var = c("Series 2")
+    )),
     c("Series 2")
   )
   expect_equal(
-    names(type(y, type = "nominal", var = c("Series 2", "Series 3"))),
+    names(filter_by_attribute(
+      y,
+      attribute = "value_type",
+      value = "nominal",
+      var = c("Series 2", "Series 3")
+    )),
     c("Series 2", "Series 3")
   )
-  expect_equal(names(type(y, type = "rate")), "Series 2")
+  expect_equal(
+    names(filter_by_attribute(y, attribute = "series_type", value = "rate")),
+    "Series 2"
+  )
 
-  expect_error(type(y, type = c("level", "nominal")))
+  expect_error(
+    filter_by_attribute(y, attribute = "series_type", value = c("level", "nominal"))
+  )
 
-  z <- type(y, type = "level")
-  expect_equal(names(type(z, type = "nominal")), "Series 3")
+  z <- filter_by_attribute(y, attribute = "series_type", value = "level")
+  expect_equal(
+    names(filter_by_attribute(z, attribute = "value_type", value = "nominal")),
+    "Series 3"
+  )
 
   # arguments in ... must be used
-  expect_error(type(x, type = "level", unused = TRUE))
+  expect_error(filter_by_attribute(
+    x,
+    attribute = "series_type",
+    value = "level",
+    unused = TRUE
+  ))
 })
 
 test_that("rate and level throw error on missing type and method", {

@@ -17,3 +17,10 @@ A list with ets koma_ts objects.
 \description{
 Convert an mets koma_ts object to a list
 }
+\examples{
+x <- as_mets(list(
+  y = as_ets(ts(1:8, start = c(2020, 1), frequency = 4)),
+  z = as_ets(ts(11:18, start = c(2020, 1), frequency = 4))
+))
+as_list(x)
+}

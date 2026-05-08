@@ -28,3 +28,7 @@ Calculates a rebased time series using a given date range as the base
 period. The base period average is set to 100, and all other values are
 scaled accordingly.
 }
+\examples{
+x <- as_ets(ts(c(90, 95, 100, 105), start = c(2020, 1), frequency = 4))
+rebase(x, start = c(2020, 2), end = c(2020, 3))
+}

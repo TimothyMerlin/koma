@@ -70,6 +70,18 @@ follows base R's group generic dispatch and may emit an
 "Incompatible methods" warning even when the resulting values are valid.
 Coercing both operands to \code{koma_ts} avoids that warning.
 }
+\examples{
+x <- ets(ts(1:8, start = c(2020, 1), frequency = 4),
+  series_type = "level",
+  method = "diff_log"
+)
+x
+
+x <- ts(1:8, start = c(2020, 1), frequency = 4)
+as_ets(x, series_type = "level", method = "diff_log")
+x <- as_ets(ts(1:8, start = c(2020, 1), frequency = 4))
+is_ets(x)
+}
 \seealso{
 \code{\link[stats]{ts}}
 }

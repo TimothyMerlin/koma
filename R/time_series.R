@@ -13,6 +13,13 @@
 #' @inheritParams stats::ts
 #' @return A koma_ts object.
 #'
+#' @examples
+#' x <- ets(ts(1:8, start = c(2020, 1), frequency = 4),
+#'   series_type = "level",
+#'   method = "diff_log"
+#' )
+#' x
+#'
 #' @seealso \code{\link[stats]{ts}}
 #' @name koma_ts
 #' @export
@@ -104,6 +111,9 @@ new_ets.mts <- function(x = stats::ts(), ...) {
 #' @param x A time series object (default is an empty time series).
 #' @param ... Additional attributes.
 #' @return A koma_ts object.
+#' @examples
+#' x <- ts(1:8, start = c(2020, 1), frequency = 4)
+#' as_ets(x, series_type = "level", method = "diff_log")
 #' @rdname koma_ts
 #' @export
 as_ets <- function(x = stats::ts(), ...) {
@@ -118,6 +128,9 @@ as_ets <- function(x = stats::ts(), ...) {
 #'
 #' @param x An object to be coerced / checked.
 #' @return TRUE if the object is of class `koma_ts`, otherwise FALSE.
+#' @examples
+#' x <- as_ets(ts(1:8, start = c(2020, 1), frequency = 4))
+#' is_ets(x)
 #' @rdname koma_ts
 #' @export
 is_ets <- function(x) {
@@ -129,6 +142,12 @@ is_ets <- function(x) {
 #' @param x An object to be converted.
 #' @param ... Additional arguments.
 #' @return A list with ets koma_ts objects.
+#' @examples
+#' x <- as_mets(list(
+#'   y = as_ets(ts(1:8, start = c(2020, 1), frequency = 4)),
+#'   z = as_ets(ts(11:18, start = c(2020, 1), frequency = 4))
+#' ))
+#' as_list(x)
 #' @export
 as_list <- function(x, ...) {
   UseMethod("as_list")
@@ -206,6 +225,12 @@ as_list.list <- function(x, ...) {
 #' @param x An object to be converted.
 #' @param ... Additional arguments.
 #' @return A koma_ts multivariate time series object.
+#' @examples
+#' x <- list(
+#'   y = as_ets(ts(1:8, start = c(2020, 1), frequency = 4)),
+#'   z = as_ets(ts(11:18, start = c(2020, 1), frequency = 4))
+#' )
+#' as_mets(x)
 #' @export
 as_mets <- function(x, ...) {
   UseMethod("as_mets")
@@ -413,7 +438,6 @@ rebuild_ts_like <- function(result, template) {
 #'   `function(value, attr, template = NULL, ...)`.
 #' @return The registered policy, invisibly.
 #' @keywords internal
-#' @export
 set_koma_attr_policy <- function(attr, merge = NULL, lag = NULL, window = NULL, na_omit = NULL) {
   stopifnot(is.character(attr), length(attr) == 1L, nzchar(attr))
   handlers <- list(merge = merge, lag = lag, window = window, na_omit = na_omit)
@@ -432,7 +456,6 @@ set_koma_attr_policy <- function(attr, merge = NULL, lag = NULL, window = NULL, 
 #' @param template A time series whose `tsp` should be used.
 #' @return The aligned attribute value.
 #' @keywords internal
-#' @export
 align_koma_attr <- function(x, attr = NULL, template) {
   stopifnot(stats::is.ts(template))
 
@@ -454,7 +477,6 @@ align_koma_attr <- function(x, attr = NULL, template) {
 #' @param template Result template used for alignment.
 #' @return A named list of merged custom attributes.
 #' @keywords internal
-#' @export
 merge_koma_attrs <- function(e1, e2 = NULL, op = NULL, template = NULL) {
   attrs_e1 <- collect_koma_attrs(e1)
   attrs_e2 <- collect_koma_attrs(e2)
@@ -490,7 +512,6 @@ merge_koma_attrs <- function(e1, e2 = NULL, op = NULL, template = NULL) {
 #' @param x A time series object.
 #' @return A plain `ts` object when `x` is `koma_ts`, otherwise `x`.
 #' @keywords internal
-#' @export
 strip_koma_attrs <- function(x) {
   if (!is_ets(x)) {
     return(x)
@@ -505,7 +526,6 @@ strip_koma_attrs <- function(x) {
 #' @param attrs A named list of custom attributes.
 #' @return A `koma_ts` object.
 #' @keywords internal
-#' @export
 restore_koma_attrs <- function(x, attrs) {
   stopifnot(stats::is.ts(x), is.list(attrs))
 
@@ -957,7 +977,14 @@ level.list <- function(x, ...) {
 #'
 #' @param x A `koma_ts` object.
 #' @param y A `koma_ts` object to be concatenated to x.
-#' @param ...	arguments passed to methods (unused for the default method).
+#' @param ... arguments passed to methods (unused for the default method).
+#'
+#' @return A `koma_ts` object containing `x` followed by `y`.
+#'
+#' @examples
+#' x <- as_ets(ts(c(100, 101, 102), start = c(2020, 1), frequency = 4))
+#' y <- as_ets(ts(c(103, 104), start = c(2020, 4), frequency = 4))
+#' concat(x, y)
 #' @export
 concat <- function(x, y, ...) {
   rlang::check_dots_used()
@@ -981,8 +1008,20 @@ concat.ts <- function(x, y, ...) {
     ))
   }
 
-  x <- level(stats::na.omit(x))
-  y <- level(stats::na.omit(y))
+  normalize_concat_input <- function(z) {
+    z <- stats::na.omit(z)
+    series_type <- attr(z, "series_type")
+
+    # Treat untyped koma_ts inputs as already being on the level scale.
+    if (is.null(series_type) || identical(series_type, "level")) {
+      return(z)
+    }
+
+    level(z)
+  }
+
+  x <- normalize_concat_input(x)
+  y <- normalize_concat_input(y)
 
   custom_attrs_x <- get_custom_attributes(x)
   custom_attrs_y <- get_custom_attributes(y)
@@ -1075,6 +1114,9 @@ concat.mts <- function(x, y, ...) {
 #' @inheritParams stats::ts
 #' @param ...	arguments passed to methods (unused for the default method).
 #' @return An ets object with the level computed.
+#' @examples
+#' x <- as_ets(ts(c(90, 95, 100, 105), start = c(2020, 1), frequency = 4))
+#' rebase(x, start = c(2020, 2), end = c(2020, 3))
 #' @export
 rebase <- function(x, start, end, ...) {
   rlang::check_dots_used()
@@ -1120,22 +1162,34 @@ rebase.mts <- function(x, start, end, ...) {
 }
 
 
-#' Get the type of a koma_ts object
+#' Filter a koma_ts object by attribute value
 #'
-#' @param x A koma_ts object.
-#' @param type The type to filter by.
+#' @param x A koma_ts object or a list of koma_ts objects.
+#' @param attribute The attribute name to filter by.
+#' @param value The attribute value to match.
 #' @param var An optional variable to filter by.
-#' @param ...	arguments passed to methods (unused for the default method).
-#' @return A koma_ts object with the specified type.
+#' @param ... arguments passed to methods (unused for the default method).
+#' @return A koma_ts object or list with the matching series.
+#' @examples
+#' x <- as_ets(
+#'   ts(1:8, start = c(2020, 1), frequency = 4),
+#'   series_type = "level",
+#'   method = "diff_log"
+#' )
+#' filter_by_attribute(
+#'   list(x = x),
+#'   attribute = "series_type",
+#'   value = "level"
+#' )
 #' @export
-type <- function(x, type, var = NULL, ...) {
+filter_by_attribute <- function(x, attribute, value, var = NULL, ...) {
   rlang::check_dots_used()
 
-  UseMethod("type")
+  UseMethod("filter_by_attribute")
 }
 
 #' @export
-type.mts <- function(x, type, var = NULL, ...) {
+filter_by_attribute.mts <- function(x, attribute, value, var = NULL, ...) {
   # Ensure `x` is of the expected type `koma_ts`
   if (!is_ets(x)) {
     cli::cli_abort(c(
@@ -1147,28 +1201,31 @@ type.mts <- function(x, type, var = NULL, ...) {
 
   y <- as_list(x)
 
-  type(y, type, var)
+  filter_by_attribute(y, attribute, value, var)
 }
 
 #' @export
-type.list <- function(x, type, var = NULL, ...) {
-  if (length(type) != 1) {
+filter_by_attribute.list <- function(x, attribute, value, var = NULL, ...) {
+  if (length(attribute) != 1) {
     cli::cli_abort(c(
-      "x" = "'type' must be a single value, not a vector.",
-      "i" = "You provided a vector of length {length(type)}.",
-      "i" = "Please ensure that 'type' is a single value."
+      "x" = "`attribute` must be a single value, not a vector.",
+      "i" = "You provided a vector of length {length(attribute)}."
+    ))
+  }
+  if (length(value) != 1) {
+    cli::cli_abort(c(
+      "x" = "`value` must be a single value, not a vector.",
+      "i" = "You provided a vector of length {length(value)}."
     ))
   }
 
-  y <- x[
-    sapply(x, function(series) attr(series, "series_type") == type)
-  ]
-  z <- x[
-    sapply(x, function(series) attr(series, "value_type") == type)
-  ]
-  result <- c(y, z)
+  keep <- vapply(
+    x,
+    function(series) identical(attr(series, attribute), value),
+    logical(1)
+  )
+  result <- x[keep]
 
-  # If var is provided, filter nominal series for that specific variable
   if (!is.null(var)) {
     result <- result[sapply(names(result), function(series) series %in% var)]
   }

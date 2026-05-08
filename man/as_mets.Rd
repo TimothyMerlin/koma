@@ -19,3 +19,10 @@ A koma_ts multivariate time series object.
 Convert a list object with ets koma_ts objects to a koma_ts multivariate
 time series (mets)
 }
+\examples{
+x <- list(
+  y = as_ets(ts(1:8, start = c(2020, 1), frequency = 4)),
+  z = as_ets(ts(11:18, start = c(2020, 1), frequency = 4))
+)
+as_mets(x)
+}

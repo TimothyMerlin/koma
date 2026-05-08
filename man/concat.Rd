@@ -13,6 +13,14 @@ concat(x, y, ...)
 
 \item{...}{arguments passed to methods (unused for the default method).}
 }
+\value{
+A \code{koma_ts} object containing \code{x} followed by \code{y}.
+}
 \description{
 Concatenate two time series
+}
+\examples{
+x <- as_ets(ts(c(100, 101, 102), start = c(2020, 1), frequency = 4))
+y <- as_ets(ts(c(103, 104), start = c(2020, 4), frequency = 4))
+concat(x, y)
 }
