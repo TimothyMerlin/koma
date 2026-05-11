@@ -104,8 +104,7 @@ get_x_ticks <- function(df_long, fig = NULL) {
 #' @keywords internal
 #' @references
 #' Implements the gridline-alignment approach described by Victor Bezak in the
-#' GitHub repository:
-#' https://github.com/VictorBezak/Plotly_Multi-Axes_Gridlines
+#' GitHub repository \url{https://github.com/VictorBezak/Plotly_Multi-Axes_Gridlines}.
 get_y_ticks <- function(extremas, num_ticks, center_around) {
   axes <- list(y = NULL, y2 = NULL)
 

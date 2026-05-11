@@ -31,7 +31,6 @@ points.
 }
 \references{
 Implements the gridline-alignment approach described by Victor Bezak in the
-GitHub repository:
-https://github.com/VictorBezak/Plotly_Multi-Axes_Gridlines
+GitHub repository \url{https://github.com/VictorBezak/Plotly_Multi-Axes_Gridlines}.
 }
 \keyword{internal}
