@@ -40,7 +40,6 @@ Note: \code{sigma} values are based on \code{omega_tilde_jw} and use only
 variances (no covariances) from each covariance draw.
 }
 \examples{
-\dontrun{
 data("simulated_sem")
 set.seed(11)
 
@@ -48,10 +47,9 @@ fit <- estimate(
   ts_data = simulated_sem$ts_data,
   sys_eq = simulated_sem$sys_eq,
   dates = simulated_sem$dates,
-  options = list(gibbs = list(ndraws = 200))
+  options = list(gibbs = list(ndraws = 10))
 )
 rm_df <- running_mean(fit, params = "beta", max_draws = 100)
 head(rm_df)
-}
 
 }

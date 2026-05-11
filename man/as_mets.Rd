@@ -2,10 +2,13 @@
 % Please edit documentation in R/time_series.R
 \name{as_mets}
 \alias{as_mets}
+\alias{as_mets.list}
 \title{Convert a list object with ets koma_ts objects to a koma_ts multivariate
 time series (mets)}
 \usage{
 as_mets(x, ...)
+
+\method{as_mets}{list}(x, ...)
 }
 \arguments{
 \item{x}{An object to be converted.}

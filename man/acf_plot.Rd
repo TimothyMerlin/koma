@@ -53,17 +53,17 @@ The red dashed horizontal lines show approximate significance bounds
 draws for the corresponding coefficient series.
 }
 \examples{
-\dontrun{
-data("simulated_sem")
-set.seed(11)
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  data("simulated_sem")
+  set.seed(11)
 
-fit <- estimate(
-  ts_data = simulated_sem$ts_data,
-  sys_eq = simulated_sem$sys_eq,
-  dates = simulated_sem$dates,
-  options = list(gibbs = list(ndraws = 200))
-)
-acf_plot(fit, params = "beta", max_lag = 12)
+  fit <- estimate(
+    ts_data = simulated_sem$ts_data,
+    sys_eq = simulated_sem$sys_eq,
+    dates = simulated_sem$dates,
+    options = list(gibbs = list(ndraws = 10))
+  )
+  acf_plot(fit, params = "beta", max_lag = 12)
 }
 
 }

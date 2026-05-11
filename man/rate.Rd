@@ -2,9 +2,18 @@
 % Please edit documentation in R/time_series.R
 \name{rate}
 \alias{rate}
+\alias{rate.ts}
+\alias{rate.list}
+\alias{rate.mts}
 \title{Compute the rate of change for a time series}
 \usage{
 rate(x, ...)
+
+\method{rate}{ts}(x, ...)
+
+\method{rate}{list}(x, ...)
+
+\method{rate}{mts}(x, ...)
 }
 \arguments{
 \item{x}{A time series object. Supported classes are \code{ts} and

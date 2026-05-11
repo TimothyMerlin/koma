@@ -37,7 +37,6 @@ defined as the shortest interval containing a target probability mass.
 x <- rnorm(1000)
 hdi(x, probs = c(0.5, 0.9))
 
-\dontrun{
 data("simulated_sem")
 set.seed(11)
 
@@ -45,9 +44,8 @@ fit <- estimate(
   ts_data = simulated_sem$ts_data,
   sys_eq = simulated_sem$sys_eq,
   dates = simulated_sem$dates,
-  options = list(gibbs = list(ndraws = 200))
+  options = list(gibbs = list(ndraws = 10))
 )
 hdi_fit <- hdi(fit, probs = c(0.5, 0.9))
 names(hdi_fit$intervals)
-}
 }

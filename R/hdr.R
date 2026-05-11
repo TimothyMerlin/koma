@@ -31,7 +31,6 @@
 #' x <- c(rnorm(500, -2, 0.5), rnorm(500, 2, 0.5))
 #' hdr(x, probs = c(0.5, 0.9))
 #'
-#' \dontrun{
 #' data("simulated_sem")
 #' set.seed(11)
 #'
@@ -39,11 +38,10 @@
 #'   ts_data = simulated_sem$ts_data,
 #'   sys_eq = simulated_sem$sys_eq,
 #'   dates = simulated_sem$dates,
-#'   options = list(gibbs = list(ndraws = 200))
+#'   options = list(gibbs = list(ndraws = 10))
 #' )
 #' hdr_fit <- hdr(fit, probs = c(0.5, 0.9))
 #' names(hdr_fit$intervals)
-#' }
 #' @export
 hdr <- function(x, ...) {
   UseMethod("hdr")

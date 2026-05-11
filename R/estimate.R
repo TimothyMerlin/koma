@@ -60,7 +60,6 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
 #' data("simulated_sem")
 #' set.seed(11)
 #'
@@ -68,10 +67,9 @@
 #'   ts_data = simulated_sem$ts_data,
 #'   sys_eq = simulated_sem$sys_eq,
 #'   dates = simulated_sem$dates,
-#'   options = list(gibbs = list(ndraws = 200))
+#'   options = list(gibbs = list(ndraws = 10))
 #' )
 #' print(fit)
-#' }
 #'
 #' @seealso
 #' - To create a `koma_seq` object see \code{\link{system_of_equations}}.
@@ -104,6 +102,7 @@ estimate <- function(ts_data, sys_eq, dates,
   UseMethod("estimate")
 }
 
+#' @rdname estimate
 #' @export
 estimate.list <- function(ts_data, sys_eq, dates,
                           ...,
@@ -605,7 +604,6 @@ print.koma_estimate <- function(x,
 #'   list of `texreg` objects.
 #'
 #' @examples
-#' \dontrun{
 #' if (requireNamespace("texreg", quietly = TRUE)) {
 #'   data("simulated_sem")
 #'   set.seed(11)
@@ -614,10 +612,9 @@ print.koma_estimate <- function(x,
 #'     ts_data = simulated_sem$ts_data,
 #'     sys_eq = simulated_sem$sys_eq,
 #'     dates = simulated_sem$dates,
-#'     options = list(gibbs = list(ndraws = 200))
+#'     options = list(gibbs = list(ndraws = 10))
 #'   )
-#'   extract(fit, variables = "consumption")
-#' }
+#'   texreg::extract(fit, variables = "consumption")
 #' }
 #' @seealso \code{\link[=summary.koma_estimate]{summary.koma_estimate}} for
 #'   summary output with optional \pkg{texreg} formatting.

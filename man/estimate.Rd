@@ -2,9 +2,19 @@
 % Please edit documentation in R/estimate.R
 \name{estimate}
 \alias{estimate}
+\alias{estimate.list}
 \title{Estimate the Simultaneous Equations Model (SEM)}
 \usage{
 estimate(
+  ts_data,
+  sys_eq,
+  dates,
+  ...,
+  options = list(gibbs = list(), fill = list(method = "mean")),
+  estimates = NULL
+)
+
+\method{estimate}{list}(
   ts_data,
   sys_eq,
   dates,
@@ -93,7 +103,6 @@ Default is 1.1.
 }
 
 \examples{
-\dontrun{
 data("simulated_sem")
 set.seed(11)
 
@@ -101,10 +110,9 @@ fit <- estimate(
   ts_data = simulated_sem$ts_data,
   sys_eq = simulated_sem$sys_eq,
   dates = simulated_sem$dates,
-  options = list(gibbs = list(ndraws = 200))
+  options = list(gibbs = list(ndraws = 10))
 )
 print(fit)
-}
 
 }
 \seealso{

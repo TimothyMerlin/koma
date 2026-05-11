@@ -47,7 +47,6 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
 #' data("simulated_sem")
 #'
 #' dates <- list(
@@ -70,11 +69,10 @@
 #'   ts_data = ts_data,
 #'   sys_eq = simulated_sem$sys_eq,
 #'   dates = dates,
-#'   options = list(gibbs = list(ndraws = 200))
+#'   options = list(gibbs = list(ndraws = 10))
 #' )
 #' fc <- forecast(fit, dates = dates)
 #' print(fc)
-#' }
 #'
 #' @details
 #' The `forecast` function for SEM uses the estimates from the `koma_estimate`
@@ -113,6 +111,7 @@ forecast <- function(estimates, dates, ...,
   UseMethod("forecast")
 }
 
+#' @rdname forecast
 #' @export
 forecast.koma_estimate <- function(estimates, dates, ...,
                                    restrictions = NULL,

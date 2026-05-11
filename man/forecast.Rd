@@ -2,9 +2,19 @@
 % Please edit documentation in R/forecast.R
 \name{forecast}
 \alias{forecast}
+\alias{forecast.koma_estimate}
 \title{Forecast the Simultaneous Equations Model (SEM)}
 \usage{
 forecast(
+  estimates,
+  dates,
+  ...,
+  restrictions = NULL,
+  options = list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
+    conditional_innov_method = "projection")
+)
+
+\method{forecast}{koma_estimate}(
   estimates,
   dates,
   ...,
@@ -90,7 +100,6 @@ For more details, see the \href{https://cran.r-project.org/web/packages/future/f
 }
 
 \examples{
-\dontrun{
 data("simulated_sem")
 
 dates <- list(
@@ -113,11 +122,10 @@ fit <- estimate(
   ts_data = ts_data,
   sys_eq = simulated_sem$sys_eq,
   dates = dates,
-  options = list(gibbs = list(ndraws = 200))
+  options = list(gibbs = list(ndraws = 10))
 )
 fc <- forecast(fit, dates = dates)
 print(fc)
-}
 
 }
 \seealso{

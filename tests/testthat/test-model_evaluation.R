@@ -151,6 +151,8 @@ test_that("calculate_error", {
   variables <- c("Series 1", "Series 2")
   result <- calculate_error(forecasts, realized, variables)
 
+  expect_equal(result, expected_errors)
+})
 
 test_that("calculate_error preserves shape for a single variable", {
   realized <- ts(
@@ -169,6 +171,4 @@ test_that("calculate_error preserves shape for a single variable", {
   expect_equal(ncol(result), 1)
   expect_equal(colnames(result), variables)
   expect_equal(result[[1]], c(100, 400, 100, 100))
-})
-  expect_equal(result, expected_errors)
 })

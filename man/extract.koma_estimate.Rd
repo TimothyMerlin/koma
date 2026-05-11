@@ -40,7 +40,6 @@ Builds one or more \pkg{texreg} objects from a \code{koma_estimate}, so results
 can be rendered with \code{texreg::screenreg()} or similar helpers.
 }
 \examples{
-\dontrun{
 if (requireNamespace("texreg", quietly = TRUE)) {
   data("simulated_sem")
   set.seed(11)
@@ -49,10 +48,9 @@ if (requireNamespace("texreg", quietly = TRUE)) {
     ts_data = simulated_sem$ts_data,
     sys_eq = simulated_sem$sys_eq,
     dates = simulated_sem$dates,
-    options = list(gibbs = list(ndraws = 200))
+    options = list(gibbs = list(ndraws = 10))
   )
-  extract(fit, variables = "consumption")
-}
+  texreg::extract(fit, variables = "consumption")
 }
 }
 \seealso{

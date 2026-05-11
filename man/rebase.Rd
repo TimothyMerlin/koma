@@ -2,9 +2,18 @@
 % Please edit documentation in R/time_series.R
 \name{rebase}
 \alias{rebase}
+\alias{rebase.ts}
+\alias{rebase.list}
+\alias{rebase.mts}
 \title{Rebase Time Series Data Relative to a Base Period}
 \usage{
 rebase(x, start, end, ...)
+
+\method{rebase}{ts}(x, start, end, ...)
+
+\method{rebase}{list}(x, start, end, ...)
+
+\method{rebase}{mts}(x, start, end, ...)
 }
 \arguments{
 \item{x}{An ets object.}

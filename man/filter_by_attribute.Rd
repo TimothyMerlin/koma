@@ -2,9 +2,15 @@
 % Please edit documentation in R/time_series.R
 \name{filter_by_attribute}
 \alias{filter_by_attribute}
+\alias{filter_by_attribute.mts}
+\alias{filter_by_attribute.list}
 \title{Filter a koma_ts object by attribute value}
 \usage{
 filter_by_attribute(x, attribute, value, var = NULL, ...)
+
+\method{filter_by_attribute}{mts}(x, attribute, value, var = NULL, ...)
+
+\method{filter_by_attribute}{list}(x, attribute, value, var = NULL, ...)
 }
 \arguments{
 \item{x}{A koma_ts object or a list of koma_ts objects.}

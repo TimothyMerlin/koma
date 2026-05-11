@@ -2,9 +2,18 @@
 % Please edit documentation in R/time_series.R
 \name{concat}
 \alias{concat}
+\alias{concat.ts}
+\alias{concat.list}
+\alias{concat.mts}
 \title{Concatenate two time series}
 \usage{
 concat(x, y, ...)
+
+\method{concat}{ts}(x, y, ...)
+
+\method{concat}{list}(x, y, ...)
+
+\method{concat}{mts}(x, y, ...)
 }
 \arguments{
 \item{x}{A \code{koma_ts} object.}

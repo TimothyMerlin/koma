@@ -2,9 +2,18 @@
 % Please edit documentation in R/time_series.R
 \name{level}
 \alias{level}
+\alias{level.ts}
+\alias{level.mts}
+\alias{level.list}
 \title{Compute the level for a time series}
 \usage{
 level(x, ...)
+
+\method{level}{ts}(x, ...)
+
+\method{level}{mts}(x, ...)
+
+\method{level}{list}(x, ...)
 }
 \arguments{
 \item{x}{A time series object. Supported classes are \code{ts} and

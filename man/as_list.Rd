@@ -2,9 +2,15 @@
 % Please edit documentation in R/time_series.R
 \name{as_list}
 \alias{as_list}
+\alias{as_list.mts}
+\alias{as_list.list}
 \title{Convert an mets koma_ts object to a list}
 \usage{
 as_list(x, ...)
+
+\method{as_list}{mts}(x, ...)
+
+\method{as_list}{list}(x, ...)
 }
 \arguments{
 \item{x}{An object to be converted.}

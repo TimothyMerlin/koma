@@ -153,6 +153,7 @@ as_list <- function(x, ...) {
   UseMethod("as_list")
 }
 
+#' @rdname as_list
 #' @export
 as_list.mts <- function(x, ...) {
   # Ensure `x` is of the expected type `koma_ts`
@@ -214,6 +215,7 @@ as_list.mts <- function(x, ...) {
   out
 }
 
+#' @rdname as_list
 #' @export
 as_list.list <- function(x, ...) {
   x
@@ -236,6 +238,7 @@ as_mets <- function(x, ...) {
   UseMethod("as_mets")
 }
 
+#' @rdname as_mets
 #' @export
 as_mets.list <- function(x, ...) {
   rlang::check_dots_used()
@@ -732,6 +735,7 @@ rate <- function(x, ...) {
   UseMethod("rate")
 }
 
+#' @rdname rate
 #' @export
 rate.ts <- function(x, ...) {
   stopifnot(is_ets(x))
@@ -797,6 +801,7 @@ rate.ts <- function(x, ...) {
   out
 }
 
+#' @rdname rate
 #' @export
 rate.list <- function(x, ...) {
   all_elements_are_koma_ts <- all(sapply(x, is_ets))
@@ -823,6 +828,7 @@ rate.list <- function(x, ...) {
   out
 }
 
+#' @rdname rate
 #' @export
 rate.mts <- function(x, ...) {
   # Ensure `x` is of the expected type `koma_ts`
@@ -863,6 +869,7 @@ level <- function(x, ...) {
   UseMethod("level")
 }
 
+#' @rdname level
 #' @export
 level.ts <- function(x, ...) {
   stopifnot(is_ets(x))
@@ -932,6 +939,7 @@ level.ts <- function(x, ...) {
   out
 }
 
+#' @rdname level
 #' @export
 level.mts <- function(x, ...) {
   # Ensure `x` is of the expected type `koma_ts`
@@ -948,6 +956,7 @@ level.mts <- function(x, ...) {
   as_mets(z)
 }
 
+#' @rdname level
 #' @export
 level.list <- function(x, ...) {
   all_elements_are_koma_ts <- all(sapply(x, is_ets))
@@ -992,6 +1001,7 @@ concat <- function(x, y, ...) {
   UseMethod("concat")
 }
 
+#' @rdname concat
 #' @export
 concat.ts <- function(x, y, ...) {
   # Ensure both x and y are of type 'koma_ts'
@@ -1058,6 +1068,7 @@ concat.ts <- function(x, y, ...) {
   out
 }
 
+#' @rdname concat
 #' @export
 concat.list <- function(x, y, ...) {
   stopifnot(inherits(x, "list"), inherits(y, "list"))
@@ -1086,6 +1097,7 @@ concat.list <- function(x, y, ...) {
   out
 }
 
+#' @rdname concat
 #' @export
 concat.mts <- function(x, y, ...) {
   # Ensure `x` is of the expected type `koma_ts`
@@ -1124,12 +1136,14 @@ rebase <- function(x, start, end, ...) {
   UseMethod("rebase")
 }
 
+#' @rdname rebase
 #' @export
 rebase.ts <- function(x, start, end, ...) {
   base <- as.numeric(mean(stats::window(x, start = start, end = end)))
   x / base * 100
 }
 
+#' @rdname rebase
 #' @export
 rebase.list <- function(x, start, end, ...) {
   stopifnot(inherits(x, "list"))
@@ -1145,6 +1159,7 @@ rebase.list <- function(x, start, end, ...) {
   lapply(x, function(k) rebase(k, start, end))
 }
 
+#' @rdname rebase
 #' @export
 rebase.mts <- function(x, start, end, ...) {
   # Ensure `x` is of the expected type `koma_ts`
@@ -1188,6 +1203,7 @@ filter_by_attribute <- function(x, attribute, value, var = NULL, ...) {
   UseMethod("filter_by_attribute")
 }
 
+#' @rdname filter_by_attribute
 #' @export
 filter_by_attribute.mts <- function(x, attribute, value, var = NULL, ...) {
   # Ensure `x` is of the expected type `koma_ts`
@@ -1204,6 +1220,7 @@ filter_by_attribute.mts <- function(x, attribute, value, var = NULL, ...) {
   filter_by_attribute(y, attribute, value, var)
 }
 
+#' @rdname filter_by_attribute
 #' @export
 filter_by_attribute.list <- function(x, attribute, value, var = NULL, ...) {
   if (length(attribute) != 1) {

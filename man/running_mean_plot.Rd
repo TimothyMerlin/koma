@@ -32,17 +32,17 @@ interactive plot via \code{plotly::ggplotly}. Default is FALSE.}
 }
 }
 \examples{
-\dontrun{
-data("simulated_sem")
-set.seed(11)
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  data("simulated_sem")
+  set.seed(11)
 
-fit <- estimate(
-  ts_data = simulated_sem$ts_data,
-  sys_eq = simulated_sem$sys_eq,
-  dates = simulated_sem$dates,
-  options = list(gibbs = list(ndraws = 200))
-)
-running_mean_plot(fit, params = "beta", max_draws = 100)
+  fit <- estimate(
+    ts_data = simulated_sem$ts_data,
+    sys_eq = simulated_sem$sys_eq,
+    dates = simulated_sem$dates,
+    options = list(gibbs = list(ndraws = 10))
+  )
+  running_mean_plot(fit, params = "beta", max_draws = 100)
 }
 
 }
