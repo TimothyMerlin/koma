@@ -28,8 +28,8 @@
 #' the `future::plan()` function.
 #' For a detailed example on executing `estimate` in parallel, see the vignette:
 #' \code{vignette("parallel")}.
-#' For more details, see the [future package
-#' documentation](https://cran.r-project.org/web/packages/future/future.pdf).
+#' For more details, see the
+#' [future package documentation](https://CRAN.R-project.org/package=future).
 #'
 #' @inheritSection get_default_gibbs_spec Gibbs Sampler Specifications
 #'

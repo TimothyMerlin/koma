@@ -29,7 +29,7 @@
 #'   \item{gdp_deflator}{GDP implicit price deflator (2017=100, SAAR;
 #'     FRED: GDPDEF)}
 #' }
-#' @source \url{https://fred.stlouisfed.org/}
+#' @source Federal Reserve Economic Data (FRED), Federal Reserve Bank of St. Louis.
 "klein"
 
 #' Quarterly time series of key macro variables for a small open economy (Switzerland)

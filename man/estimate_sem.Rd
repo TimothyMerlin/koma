@@ -32,6 +32,6 @@ either a single thread or parallel computing.
 \details{
 This function provides the option for parallel computing through
 the \code{future::plan()} function. For more details, see the
-\href{https://cran.r-project.org/web/packages/future/future.pdf}{future package documentation}.
+\href{https://CRAN.R-project.org/package=future}{future package documentation}.
 }
 \keyword{internal}

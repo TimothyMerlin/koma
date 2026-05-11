@@ -86,7 +86,8 @@ This function provides the option for parallel computing through
 the \code{future::plan()} function.
 For a detailed example on executing \code{estimate} in parallel, see the vignette:
 \code{vignette("parallel")}.
-For more details, see the \href{https://cran.r-project.org/web/packages/future/future.pdf}{future package documentation}.
+For more details, see the
+\href{https://CRAN.R-project.org/package=future}{future package documentation}.
 }
 
 \section{Gibbs Sampler Specifications}{

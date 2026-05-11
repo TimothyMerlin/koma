@@ -34,7 +34,7 @@ FRED: GDPDEF)}
 }
 }
 \source{
-\url{https://fred.stlouisfed.org/}
+Federal Reserve Economic Data (FRED), Federal Reserve Bank of St. Louis.
 }
 \usage{
 klein

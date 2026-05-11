@@ -3,7 +3,7 @@ KOMA - Large Macroeconomic Model
 
 [![Lifecycle:
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
-[![codecov](https://codecov.io/gh/TimothyMerlin/koma/branch/main/graph/badge.svg?token=8X0PR1F6TP)](https://codecov.io/gh/TimothyMerlin/koma)
+[![codecov](https://codecov.io/gh/TimothyMerlin/koma/branch/main/graph/badge.svg?token=8X0PR1F6TP)](https://app.codecov.io/gh/TimothyMerlin/koma)
 
 **koma** is an R package for Bayesian estimation of simultaneous
 equation models (SEMs) using Metropolis-within-Gibbs Markov Chain Monte

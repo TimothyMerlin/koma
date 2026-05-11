@@ -12,7 +12,7 @@ including extended time series utilities used throughout the package.
 \seealso{
 Useful links:
 \itemize{
-  \item \url{https://timothymerlin.github.io/koma}
+  \item \url{https://timothymerlin.github.io/koma/}
   \item \url{https://github.com/timothymerlin/koma}
 }
 

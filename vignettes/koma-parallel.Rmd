@@ -24,8 +24,7 @@ This vignette demonstrates how to use the `future::plan` function to run `koma`
 package functions either sequentially or in parallel, depending on your
 operating system and other preferences.
 
-For more details, see the future package documentation:
-https://cran.r-project.org/web/packages/future/future.pdf
+For more details, see the [future package documentation](https://CRAN.R-project.org/package=future).
 
 ## Preliminaries
 
