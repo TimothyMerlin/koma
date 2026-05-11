@@ -1,7 +1,13 @@
+# Adapted in part from the CRAN package MASS.
+# Copyright holders for the adapted code: Bill Venables and Brian D. Ripley.
+# Upstream license as declared on CRAN: GPL-2 | GPL-3.
+# See LICENSE.note for bundled-code licensing details.
+
 #' Simulate from a Multivariate Normal Distribution
 #'
 #' Produces one or more samples from the specified multivariate normal
-#' distribution.
+#' distribution. Adapted from \code{MASS::mvrnorm} in the CRAN package
+#' \pkg{MASS}, licensed \code{GPL-2 | GPL-3} as declared on CRAN.
 #'
 #' @param n The number of samples required.
 #' @param mu A vector giving the means of the variables.
@@ -22,14 +28,6 @@
 #' Venables, W. N. & Ripley, B. D. (2002) Modern Applied Statistics
 #' with S.  Fourth Edition. Springer, New York. ISBN 0-387-95457-0
 #'
-#' @examples
-#' #'
-#' \dontrun{
-#' sigma <- matrix(c(10, 3, 3, 2), 2, 2)
-#' sigma
-#' var(multivariate_norm(n = 1000, rep(0, 2), sigma))
-#' var(multivariate_norm(n = 1000, rep(0, 2), sigma, empirical = TRUE))
-#' }
 #' @seealso [rnorm()]
 #' @importFrom stats rnorm
 #' @keywords internal

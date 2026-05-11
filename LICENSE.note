@@ -1,0 +1,32 @@
+This package is distributed under GPL (>= 3).
+
+The file R/mcmcpack.R contains adapted code from the CRAN package MCMCpack
+for the functions rwish() and riwish().
+
+Upstream package:
+  MCMCpack
+
+Upstream authors for the adapted code:
+  Andrew D. Martin
+  Kevin M. Quinn
+  Jong Hee Park
+
+Upstream license as declared on CRAN:
+  GPL-3
+
+The adapted code remains subject to the terms of GPL-3.
+
+The file R/mass.R contains adapted code from the CRAN package MASS
+for the function multivariate_norm(), adapted from MASS::mvrnorm().
+
+Upstream package:
+  MASS
+
+Upstream authors for the adapted code:
+  William N. Venables
+  Brian D. Ripley
+
+Upstream license as declared on CRAN:
+  GPL-2 | GPL-3
+
+The adapted code remains subject to the terms of the upstream MASS license.

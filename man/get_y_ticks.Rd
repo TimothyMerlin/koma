@@ -30,8 +30,8 @@ axes. It avoids reducing the axis range maximum to prevent cutting off data
 points.
 }
 \references{
-Adapted from the methodology outlined by Victor Bezak in the GitHub
-repository:
+Implements the gridline-alignment approach described by Victor Bezak in the
+GitHub repository:
 https://github.com/VictorBezak/Plotly_Multi-Axes_Gridlines
 }
 \keyword{internal}

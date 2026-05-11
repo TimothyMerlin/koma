@@ -26,20 +26,12 @@ an \code{n} by \code{length(mu)} matrix with one sample in each row.
 }
 \description{
 Produces one or more samples from the specified multivariate normal
-distribution.
+distribution. Adapted from \code{MASS::mvrnorm} in the CRAN package
+\pkg{MASS}, licensed \code{GPL-2 | GPL-3} as declared on CRAN.
 }
 \details{
 The matrix decomposition is done vai \code{eigen}; although a Choleski
 decomposition might be faster, the eigendecomposition is stabler.
-}
-\examples{
-#'
-\dontrun{
-sigma <- matrix(c(10, 3, 3, 2), 2, 2)
-sigma
-var(multivariate_norm(n = 1000, rep(0, 2), sigma))
-var(multivariate_norm(n = 1000, rep(0, 2), sigma, empirical = TRUE))
-}
 }
 \references{
 Venables, W. N. & Ripley, B. D. (2002) Modern Applied Statistics

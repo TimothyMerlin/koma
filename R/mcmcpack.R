@@ -1,3 +1,9 @@
+# Adapted in part from the CRAN package MCMCpack.
+# Copyright holders for the adapted code: Andrew D. Martin,
+# Kevin M. Quinn, and Jong Hee Park.
+# Upstream license as declared on CRAN: GPL-3.
+# See LICENSE.note for bundled-code licensing details.
+
 #' Random Wishart Draw
 #'
 #' Generates a random draw from the Wishart distribution.

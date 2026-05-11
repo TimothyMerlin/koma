@@ -4,7 +4,17 @@ Version: 0.2.2
 Authors@R: c(
     person("Samad", "Sarferaz", , "sarferaz@kof.ethz.ch", role = c("aut", "cph")),
     person("Laurent", "Florin", , "florin@kof.ethz.ch", role = c("aut")),
-    person("Merlin", "Scherer", , "scherer@kof.ethz.ch", role = c("aut", "cre"), comment = c(ORCID = "0009-0005-7479-168X")))
+    person("Merlin", "Scherer", , "scherer@kof.ethz.ch", role = c("aut", "cre"), comment = c(ORCID = "0009-0005-7479-168X")),
+    person("Andrew D.", "Martin", role = c("ctb", "cph"),
+      comment = "Adapted rwish/riwish code from MCMCpack"),
+    person("Kevin M.", "Quinn", role = c("ctb", "cph"),
+      comment = "Adapted rwish/riwish code from MCMCpack"),
+    person("Jong Hee", "Park", role = c("ctb", "cph"),
+      comment = "Adapted rwish/riwish code from MCMCpack"),
+    person("Bill", "Venables", role = c("ctb", "cph"),
+      comment = "Adapted multivariate_norm code from MASS::mvrnorm"),
+    person("Brian D.", "Ripley", role = c("ctb", "cph"),
+      comment = "Adapted multivariate_norm code from MASS::mvrnorm"))
 Description: A Bayesian Simultaneous Equations Model for Forecasting.
 URL: https://timothymerlin.github.io/koma, https://github.com/timothymerlin/koma
 License: GPL (>= 3)

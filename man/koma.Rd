@@ -26,4 +26,13 @@ Authors:
   \item Laurent Florin \email{florin@kof.ethz.ch}
 }
 
+Other contributors:
+\itemize{
+  \item Andrew D. Martin (Adapted rwish/riwish code from MCMCpack) [contributor, copyright holder]
+  \item Kevin M. Quinn (Adapted rwish/riwish code from MCMCpack) [contributor, copyright holder]
+  \item Jong Hee Park (Adapted rwish/riwish code from MCMCpack) [contributor, copyright holder]
+  \item Bill Venables (Adapted multivariate_norm code from MASS::mvrnorm) [contributor, copyright holder]
+  \item Brian D. Ripley (Adapted multivariate_norm code from MASS::mvrnorm) [contributor, copyright holder]
+}
+
 }
