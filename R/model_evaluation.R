@@ -268,8 +268,8 @@ run_model_iteration <- function(param, summary, approximate,
 #' @return List of errors
 #' @keywords internal
 calculate_error <- function(forecasts, realized, variables) {
-  realized <- realized[, variables]
-  forecasts <- forecasts[, variables]
+  realized <- realized[, variables, drop = FALSE]
+  forecasts <- forecasts[, variables, drop = FALSE]
   errors <- as.data.frame((realized - forecasts)^2)
   colnames(errors) <- variables
 
