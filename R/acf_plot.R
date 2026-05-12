@@ -36,7 +36,7 @@
 #'
 #' The red dashed horizontal lines show approximate significance bounds
 #' \eqn{\pm z_{1-\alpha/2}/\sqrt{n}} for zero autocorrelation, where
-#' \eqn{\alpha = 1 - \code{conf_level}} and \eqn{n} is the number of retained
+#' \eqn{\alpha = 1 - \mathrm{conf\_level}} and \eqn{n} is the number of retained
 #' draws for the corresponding coefficient series.
 #'
 #' @return A ggplot object, or a plotly object when `interactive = TRUE` and
