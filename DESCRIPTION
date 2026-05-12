@@ -1,5 +1,5 @@
 Package: koma
-Title: A Large Scale Macroeconomic Model 
+Title: Bayesian Simultaneous Equation Models for Forecasting
 Version: 0.2.2
 Authors@R: c(
     person("Samad", "Sarferaz", , "sarferaz@kof.ethz.ch", role = c("aut", "cph")),
@@ -15,7 +15,7 @@ Authors@R: c(
       comment = "Adapted multivariate_norm code from MASS::mvrnorm"),
     person("Brian D.", "Ripley", role = c("ctb", "cph"),
       comment = "Adapted multivariate_norm code from MASS::mvrnorm"))
-Description: A Bayesian Simultaneous Equations Model for Forecasting.
+Description: Estimate and forecast Bayesian simultaneous equation models for macroeconomic time series. Provides tools to specify systems of behavioral equations and accounting identities, transform and manage time series, simulate from the posterior using a Metropolis-within-Gibbs sampler, and generate unconditional and conditional forecasts with user-defined priors and restrictions.
 URL: https://timothymerlin.github.io/koma/, https://github.com/TimothyMerlin/koma
 License: GPL (>= 3)
 Suggests:

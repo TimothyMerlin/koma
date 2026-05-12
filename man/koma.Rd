@@ -13,7 +13,8 @@ including extended time series utilities used throughout the package.
 Useful links:
 \itemize{
   \item \url{https://timothymerlin.github.io/koma/}
-  \item \url{https://github.com/timothymerlin/koma}
+  \item \url{https://github.com/TimothyMerlin/koma}
+  \item Report bugs at \url{https://github.com/TimothyMerlin/koma/issues}
 }
 
 }
