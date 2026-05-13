@@ -86,7 +86,7 @@ exogenous_variables <- c("world_gdp", "interest_rate_germany", "exchange_rate", 
 ```
 
 The `equations` string contains the model equations, while `exogenous_variables` lists the exogenous variables. The `.L(1)` notation indicates a lag of one period.
-For further details on the syntax, please refer to the [equation syntax documentation](../equations.html).
+For further details on the syntax, please refer to the [equation syntax documentation](koma-equations.html).
 
 # Creating the SEM
 
@@ -178,7 +178,7 @@ summary(estimates)
 summary(estimates, variables = "investment")
 ```
 
-To see how to run the estimation in parallel, refer to the [parallel estimation vignette](../parallel.html).
+To see how to run the estimation in parallel, refer to the [parallel estimation vignette](koma-parallel.html).
 
 # Diagnostics
 
