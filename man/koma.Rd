@@ -19,7 +19,7 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Merlin Scherer \email{scherer@kof.ethz.ch} (\href{https://orcid.org/0009-0005-7479-168X}{ORCID})
+\strong{Maintainer}: Merlin Scherer \email{scherer@kof.ethz.ch} (\href{https://orcid.org/0009-0005-7479-168X}{ORCID}) [copyright holder]
 
 Authors:
 \itemize{
