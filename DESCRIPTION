@@ -1,6 +1,6 @@
 Package: koma
 Title: Bayesian Simultaneous Equation Models for Forecasting
-Version: 0.2.2
+Version: 0.3.0
 Authors@R: c(
     person("Samad", "Sarferaz", , "sarferaz@kof.ethz.ch", role = c("aut", "cph"), comment = c(ORCID = "0000-0001-9283-3293")),
     person("Laurent", "Florin", , "florin@kof.ethz.ch", role = c("aut")),
