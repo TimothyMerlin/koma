@@ -16,21 +16,13 @@ Carlo (MCMC) methods.
 
 ## Installation
 
-To install the latest **release** of the KOMA package from GitHub:
+Install the released version from CRAN:
 
 ``` r
-# Install from GitHub
-devtools::install_github("timothymerlin/koma@latest")
-
-# Or using renv
-renv::install("github::timothymerlin/koma@latest", rebuild = TRUE)
-
-# Or using remotes
-remotes::install_github("timothymerlin/koma@latest")
+install.packages("koma")
 ```
 
-To install the latest **development version** of the KOMA package from
-GitHub:
+Or install the latest **development version** from GitHub:
 
 ``` r
 # Install from GitHub
@@ -39,9 +31,6 @@ devtools::install_github("timothymerlin/koma")
 # Or using renv
 renv::install("github::timothymerlin/koma", rebuild = TRUE)
 ```
-
-Once the package is more mature and has been peer-reviewed, it is
-planned to be released on CRAN.
 
 ## Documentation
 
