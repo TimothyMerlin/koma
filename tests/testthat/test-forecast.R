@@ -110,6 +110,80 @@ test_that("forecast works correctly for density forecasts", {
   expect_equal(formatted0, expected0)
 })
 
+test_that("approximate forecast: mean bias grows with horizon, median stays close", {
+  skip_on_cran()
+
+  y <- as_ets(
+    stats::ts(
+      seq(1, 4.9, by = 0.1),
+      start = c(2019, 1),
+      frequency = 4
+    ),
+    series_type = "rate",
+    method = "none"
+  )
+  x <- as_ets(
+    stats::ts(
+      seq(2, 9.8, by = 0.2),
+      start = c(2019, 1),
+      frequency = 4
+    ),
+    series_type = "rate",
+    method = "none"
+  )
+
+  sys_eq <- system_of_equations("y ~ y.L(1) + x", exogenous_variables = "x")
+  ts_data <- list(
+    y = stats::window(y, end = c(2022, 4)),
+    x = x
+  )
+  dates <- list(
+    estimation = list(start = c(2019, 2), end = c(2022, 4)),
+    forecast = list(start = c(2023, 1), end = c(2024, 4))
+  )
+
+  # Use enough draws so the full posterior mean is stable
+  phi_draws <- seq(0.50, 0.95, length.out = 500)
+  x_draws <- seq(0.10, 0.25, length.out = 500)
+  beta_jw <- Map(
+    function(phi, x_coef) c(constant = 0.2, `y.L(1)` = phi, x = x_coef),
+    phi_draws,
+    x_draws
+  )
+  gamma_jw <- lapply(phi_draws, function(...) 0)
+  omega_tilde_jw <- lapply(phi_draws, function(...) 0)
+  estimates <- structure(
+    list(
+      ts_data = ts_data,
+      sys_eq = sys_eq,
+      estimates = list(y = list(
+        beta_jw = beta_jw,
+        gamma_jw = gamma_jw,
+        omega_tilde_jw = omega_tilde_jw
+      ))
+    ),
+    class = "koma_estimate"
+  )
+
+  full <- withr::with_seed(
+    7,
+    forecast(estimates, dates, options = list(approximate = FALSE))
+  )
+  approx <- forecast(estimates, dates, options = list(approximate = TRUE))
+
+  mean_diffs <- abs(as.numeric(approx$mean$y) - as.numeric(full$mean$y))
+  median_diffs <- abs(as.numeric(approx$median$y) - as.numeric(full$median$y))
+
+  # One-step-ahead mean is exact: E[phi^1] = E[phi]^1
+  expect_equal(mean_diffs[1], 0)
+
+  # Mean bias grows with horizon due to Jensen's inequality: E[phi^h] != E[phi]^h for h > 1
+  expect_true(all(diff(mean_diffs) > 0))
+
+  # Median stays close throughout: median(phi^h) ≈ median(phi)^h for monotone forecasts
+  expect_true(all(median_diffs < 1e-3))
+})
+
 test_that("estimate and forecast support monthly single-frequency data", {
   y <- as_ets(
     stats::ts(
