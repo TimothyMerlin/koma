@@ -11,6 +11,11 @@
 
 \item{...}{Additional arguments passed to or from other methods.}
 }
+\value{
+No return value, called for side effects. Prints a formatted
+representation of the system of equations to the console, with a
+section header followed by each equation on its own line.
+}
 \description{
 This function prints an object of class \code{koma_seq}
 to ensure the equations are displayed in a readable format.

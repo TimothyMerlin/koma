@@ -22,6 +22,12 @@ quantile.}
 \item{digits}{Optional. Integer number of decimal digits to round the
 printed output. Default is 4.}
 }
+\value{
+Invisibly returns \code{x}, the original \code{koma_forecast} object (a list
+of \code{koma_ts} objects, one per forecasted variable). Called primarily for
+its side effect of printing the selected forecast as a multivariate time
+series (\code{mts}) to the console.
+}
 \description{
 This function prints the forecasts contained in a \code{koma_forecast} object as
 a multivariate time series (mts). Users can specify which variables to print

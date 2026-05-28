@@ -205,6 +205,9 @@ split_eq <- function(eq) {
 #'
 #' @param x An object of class `koma_seq`.
 #' @param ... Additional arguments passed to or from other methods.
+#' @return No return value, called for side effects. Prints a formatted
+#'   representation of the system of equations to the console, with a
+#'   section header followed by each equation on its own line.
 #' @export
 print.koma_seq <- function(x, ...) {
   cli::cli_h1("System of Equations")

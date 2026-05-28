@@ -455,6 +455,11 @@ validate_forecast_output <- function(x, ...) {
 #' Printing converts the selected forecast list to an `mts` for readability; the
 #' underlying `koma_forecast` object remains a list of `koma_ts`.
 #'
+#' @return Invisibly returns `x`, the original `koma_forecast` object (a list
+#'   of `koma_ts` objects, one per forecasted variable). Called primarily for
+#'   its side effect of printing the selected forecast as a multivariate time
+#'   series (`mts`) to the console.
+#'
 #' @export
 print.koma_forecast <- function(x, ..., variables = NULL,
                                 central_tendency = NULL,
