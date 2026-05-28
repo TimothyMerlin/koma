@@ -1,3 +1,9 @@
+## Resubmission
+
+This is a resubmission. The following change was made in response to reviewer feedback:
+
+* Added `\value` tags to `print.koma_forecast.Rd` and `print.koma_seq.Rd` describing the return value and side effects of each print method.
+
 ## R CMD check results
 
 0 errors | 0 warnings | 1 note

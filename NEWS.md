@@ -1,3 +1,7 @@
+# koma 0.3.1
+
+* Added `\value` documentation tags to `print.koma_forecast` and `print.koma_seq` to comply with CRAN policy.
+
 # koma 0.3.0
 
 # koma 0.2.2
