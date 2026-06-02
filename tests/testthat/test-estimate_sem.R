@@ -127,6 +127,32 @@ test_that("estimate_sem error in equation j", {
   expect_equal(result$consumption, NULL)
 })
 
+test_that("estimate_sem warns when multicore is used on macOS", {
+  skip_on_os(c("windows", "linux", "solaris"))
+  skip_if_not_installed(c("future", "doFuture"))
+  skip_if_not(future::supportsMulticore())
+
+  old_plan <- future::plan()
+  on.exit(future::plan(old_plan), add = TRUE)
+
+  future::plan(future::multicore, workers = 2)
+
+  sys_eq <- simulated_data$sys_eq
+  x_matrix <- simulated_data$x_matrix
+  y_matrix <- simulated_data$y_matrix
+
+  set_gibbs_settings(
+    settings = list(ndraws = 10),
+    simulated_data$sys_eq$equation_settings
+  )
+
+  expect_error(
+    estimate_sem(sys_eq, y_matrix, x_matrix),
+    "multicore.*not safe on macOS",
+    ignore.case = TRUE
+  )
+})
+
 test_that("estimate_sem works with multisession futures", {
   skip_if_not_installed(c("future", "doFuture"))
 

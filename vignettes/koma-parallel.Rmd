@@ -106,12 +106,26 @@ future::plan("future::multisession", workers = workers)
 estimates <- estimate(ts_data, sys_eq, dates)
 ```
 
-### Unix-like systems
+### Linux
 
-For Unix-like systems, you can use **multicore**:
+On Linux, you can use **multicore** (fork-based, lower overhead):
 
 ```{R multicore, eval=FALSE}
 future::plan("future::multicore", workers = workers)
+
+estimates <- estimate(ts_data, sys_eq, dates)
+```
+
+### macOS
+
+On macOS, **do not use `multicore`**. Apple's Accelerate framework (the BLAS/LAPACK
+backend used by `eigen()`) relies on Grand Central Dispatch internally, which is not
+fork-safe. Forked workers will segfault with "invalid permissions" inside `eigen()`.
+
+Use **multisession** instead — it spawns fresh R processes rather than forking:
+
+```{R multisession-macos, eval=FALSE}
+future::plan("future::multisession", workers = workers)
 
 estimates <- estimate(ts_data, sys_eq, dates)
 ```

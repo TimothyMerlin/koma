@@ -23,6 +23,15 @@
 estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
   stopifnot(inherits(sys_eq, "koma_seq"))
 
+  if (Sys.info()[["sysname"]] == "Darwin" &&
+      inherits(future::plan(), "multicore")) {
+    cli::cli_abort(c(
+      "!" = "{.code future::multicore} is not safe on macOS.",
+      "i" = "Apple's Accelerate framework (used by {.fn eigen}) is not fork-safe and will cause a segfault.",
+      "i" = "Switch to {.code future::plan(\"future::multisession\", workers = workers)} before calling {.fn estimate}."
+    ))
+  }
+
   stochastic_equations <- sys_eq$stochastic_equations
   character_gamma_matrix <- sys_eq$character_gamma_matrix
   character_beta_matrix <- sys_eq$character_beta_matrix

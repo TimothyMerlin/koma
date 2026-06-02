@@ -55,18 +55,14 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
     exogenous_variables, sys_eq$predetermined_variables
   )
 
-  # use future::plan for parallel execution
   workers <- parallelly::availableCores(omit = 1)
+  old_plan <- future::plan()
+  on.exit(future::plan(old_plan), add = TRUE)
 
-  if (.Platform$OS.type == "unix") {
-    # Unix: Will fork the current R session for each parallel worker.
-    # This is memory-efficient because child processes can share memory
-    # with the parent process.
-    future::plan(future::multicore, workers = workers)
-  } else {
-    # Windows: Since Windows does not support forking, multisession
-    # will spawn new R sessions for each parallel worker.
+  if (Sys.info()[["sysname"]] == "Darwin" || .Platform$OS.type != "unix") {
     future::plan(future::multisession, workers = workers)
+  } else {
+    future::plan(future::multicore, workers = workers)
   }
 
   result <- fill_ragged_edge(
