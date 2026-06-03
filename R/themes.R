@@ -100,3 +100,28 @@ init_koma_theme <- function(index = list(start = NULL, end = NULL),
                             )) {
   as.list(environment())[names(formals())]
 }
+
+#' Merge a Partial Theme with the Default Theme
+#'
+#' Recursively merges a user-supplied (possibly incomplete) theme list with the
+#' defaults from [init_koma_theme()], so that any omitted fields fall back to
+#' their default values.
+#'
+#' @param user_theme A (possibly partial) named list of theme overrides.
+#'
+#' @return A complete theme list equivalent to [init_koma_theme()] with the
+#'   user's values applied on top.
+#' @keywords internal
+merge_theme <- function(user_theme) {
+  deep_merge <- function(base, over) {
+    for (key in names(over)) {
+      if (is.list(base[[key]]) && is.list(over[[key]])) {
+        base[[key]] <- deep_merge(base[[key]], over[[key]])
+      } else {
+        base[[key]] <- over[[key]]
+      }
+    }
+    base
+  }
+  deep_merge(init_koma_theme(), user_theme)
+}

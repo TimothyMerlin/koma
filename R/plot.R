@@ -67,9 +67,7 @@ new_plot <- function(x, ...) {
   fan <- isTRUE(args$fan)
   fan_quantiles <- args$fan_quantiles
 
-  if (is.null(theme)) {
-    theme <- init_koma_theme()
-  }
+  theme <- if (is.null(theme)) init_koma_theme() else merge_theme(theme)
 
   # sanity checks
   stopifnot(

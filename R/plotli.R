@@ -21,9 +21,7 @@
 #' @keywords internal
 plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL,
                    whisker_data = NULL, ...) {
-  if (is.null(theme)) {
-    theme <- init_koma_theme()
-  }
+  theme <- if (is.null(theme)) init_koma_theme() else merge_theme(theme)
 
   frequency <- attr(df_long, "frequency")
   if (is.null(frequency)) {

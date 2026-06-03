@@ -219,6 +219,67 @@ test_that("plotli", {
   expect_true(all(grepl(pattern = "2023-Q1", trace_names[5:8])))
 })
 
+test_that("plotli merges incomplete theme with defaults", {
+  ts_growth <- ets(
+    c(5, 5.4, -4.3, 3.8, -4.8, -3.4, 4.5, 5.1, -3.4, 2.5, 4.5, -6.7),
+    start = 2020, frequency = 4,
+    method = "percentage", series_type = "rate"
+  )
+  ts_level <- level(ts_growth)
+  ts_growth_annual <- rate(
+    tempdisagg::ta(ts_level, conversion = "sum", to = "annual")
+  )
+  df_long <- structure(list(
+    dates = c(
+      stats::time(ts_growth),
+      stats::time(ts_growth_annual),
+      stats::time(ts_level)
+    ),
+    sample_status = factor(
+      c(
+        rep("in_sample", length(ts_growth) - 4),
+        rep("base_forecast", 4),
+        rep("in_sample", length(ts_growth_annual) - 1),
+        rep("base_forecast", 1),
+        rep("in_sample", length(ts_level) - 4),
+        rep("base_forecast", 4)
+      ),
+      levels = c("base_forecast", "in_sample", "conditional_forecast")
+    ),
+    frames = rep("2023-Q2", 27),
+    variable = rep("consumption", 27),
+    value = c(ts_growth, ts_growth_annual, ts_level),
+    data_type = factor(
+      c(
+        rep("growth", length(ts_growth)),
+        rep("growth_annual", length(ts_growth_annual)),
+        rep("level", length(ts_level))
+      ),
+      levels = c("growth", "growth_annual", "level")
+    )
+  ), row.names = c(NA, -27L), class = c("tbl_df", "tbl", "data.frame"))
+
+  partial_theme <- list(title = list(text = "Custom Title"))
+  fig <- plotli(df_long, theme = partial_theme)
+
+  expect_true(inherits(fig, "plotly"))
+
+  built <- plotly::plotly_build(fig)
+  layout <- built$x$layout
+  defaults <- init_koma_theme()
+
+  # custom value is applied
+  expect_equal(layout$title$text, "Custom Title")
+
+  # defaults are preserved for unspecified fields
+  expect_equal(layout$yaxis$title$text, defaults$yaxis$y$title$text)
+  expect_equal(layout$yaxis2$title$text, defaults$yaxis$y2$title$text)
+  expect_equal(
+    unique(built$x$data[[1]]$marker$color),
+    defaults$color$marker$in_sample
+  )
+})
+
 test_that("plotli default trace names support monthly and yearly frequencies", {
   build_df_long <- function(freq, frame, growth_vals, annual_vals, level_vals, start) {
     df_long <- structure(list(
