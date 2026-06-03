@@ -256,10 +256,7 @@ plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL,
     plotly::layout(
       fig,
       title = list(
-        text = ifelse(
-          !is.null(theme$title$text), theme$title$text,
-          unique(df_long$variable)
-        ),
+        text = if (!is.null(theme$title$text)) theme$title$text else as.character(unique(df_long$variable)),
         font = theme$title$font
       ),
       font = theme$font,
