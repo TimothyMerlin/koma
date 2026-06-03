@@ -27,7 +27,8 @@ test_that("plot point forecasts", {
     options = list(approximate = TRUE)
   )
 
-  fig <- plot(x, variables = "gdp")
+  var <- "gdp"
+  fig <- plot(x, variables = var)
   # Test Type Checks
   expect_true(inherits(fig, "plotly"))
 
@@ -39,6 +40,8 @@ test_that("plot point forecasts", {
 
   expected_x_axis_tickvals <- 1977:2025
   expect_equal(x_axis_tickvals, expected_x_axis_tickvals)
+
+  expect_equal(fig_layout$title$text, var)
 
   # plot another variable in the same figure
   fig <- plot(x, variables = "service", fig = fig)
