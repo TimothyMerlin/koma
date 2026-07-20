@@ -1,4 +1,5 @@
 test_that("fill_ragged_edge with one-step ahead conditional forecasts", {
+  skip_on_cran()
   # mock readline function always return "y"
   responses <- c("y", "median")
   response_ix <- 0
@@ -105,6 +106,7 @@ test_that("fill_ragged_edge - no observations to fill", {
 })
 
 test_that("conditional_fill fills up edge correctly", {
+  skip_on_cran()
   # Case: test shortens current account data, which sem will fill with
   # conditional forecast
   dates <- list(estimation = list(), forecast = list(), current = NULL)
@@ -176,6 +178,7 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
 })
 
 test_that("conditional_fill fills up edge correctly", {
+  skip_on_cran()
   # Case: test shortens current account data, which sem will fill with
   # conditional forecast
   dates <- list(estimation = list(), forecast = list(), current = NULL)

@@ -45,6 +45,7 @@ test_that("validate_estimation_dates stops on invalid estimation date format", {
 })
 
 test_that("estimate correctly estimates model", {
+  skip_on_cran()
   dates <- list(estimation = list(
     start = c(1977, 1),
     end = c(2019, 4)
@@ -138,6 +139,7 @@ test_that("estimate correctly estimates model", {
 })
 
 test_that("estimate correctly returns when parallel", {
+  skip_on_cran()
   skip_if_not_installed(c("parallelly", "future"))
 
   dates <- list(estimation = list(
@@ -186,6 +188,7 @@ test_that("estimate correctly returns when parallel", {
 })
 
 test_that("estimate works for ragged edge", {
+  skip_on_cran()
   # mock readline function always return "y"
   responses <- c("y", "median")
   response_ix <- 0
@@ -313,6 +316,7 @@ test_that("summary works correctly", {
 })
 
 test_that("estimate throws error", {
+  skip_on_cran()
   dates <- list(estimation = list(
     start = c(1977, 1),
     end = c(2019, 4)
@@ -469,6 +473,7 @@ test_that("print", {
 })
 
 test_that("estimate correctly reestimates model", {
+  skip_on_cran()
   dates <- list(estimation = list(
     start = c(1977, 1),
     end = c(2019, 4)
@@ -592,6 +597,7 @@ test_that("estimate correctly reestimates model", {
 })
 
 test_that("estimate correctly estimates model with informative priors", {
+  skip_on_cran()
   dates <- list(estimation = list(
     start = c(1977, 1),
     end = c(2019, 4)
@@ -636,6 +642,7 @@ test_that("estimate correctly estimates model with informative priors", {
 })
 
 test_that("estimate with informative priors, that are too far from true value", {
+  skip_on_cran()
   dates <- list(estimation = list(
     start = c(1977, 1),
     end = c(2019, 4)
@@ -801,6 +808,7 @@ test_that("estimate with only one equation", {
 })
 
 test_that("estimate an AR(1) model", {
+  skip_on_cran()
   # Case: AR(1) model
   equations <- "manufacturing ~ -1 + manufacturing.L(1)"
   exogenous_variables <- c()
@@ -884,6 +892,7 @@ test_that("estimate an AR(1) model", {
 })
 
 test_that("estimate with equation specific tau", {
+  skip_on_cran()
   dates <- list(estimation = list(
     start = c(1977, 1),
     end = c(2019, 4)
@@ -939,6 +948,7 @@ test_that("estimate with equation specific tau", {
 })
 
 test_that("estimate with equation specific gibbs options", {
+  skip_on_cran()
   dates <- list(estimation = list(
     start = c(1977, 1),
     end = c(2019, 4)
@@ -979,6 +989,7 @@ test_that("estimate with equation specific gibbs options", {
 })
 
 test_that("estimate, accpetance probability", {
+  skip_on_cran()
   dates <- list(estimation = list(
     start = c(1977, 1),
     end = c(2019, 4)
@@ -1019,6 +1030,7 @@ test_that("estimate, accpetance probability", {
 })
 
 test_that("estimate, ts provided instead of ets", {
+  skip_on_cran()
   dates <- list(estimation = list(
     start = c(1977, 1),
     end = c(2019, 4)
@@ -1061,6 +1073,7 @@ test_that("estimate, ts provided instead of ets", {
 })
 
 test_that("estimate, ts provided instead of ets", {
+  skip_on_cran()
   dates <- list(estimation = list(
     start = c(1977, 1),
     end = c(2019, 4)

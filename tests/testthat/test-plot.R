@@ -1,4 +1,5 @@
 test_that("plot point forecasts", {
+  skip_on_cran()
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2020, 4)),
     forecast = list(start = c(2023, 2), end = c(2025, 4)),
@@ -56,6 +57,7 @@ test_that("plot point forecasts", {
 })
 
 test_that("plot density forecasts", {
+  skip_on_cran()
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2020, 4)),
     forecast = list(start = c(2023, 2), end = c(2025, 4)),

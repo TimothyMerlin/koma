@@ -1,4 +1,5 @@
 test_that("model_evaluation", {
+  skip_on_cran()
   horizon <- 4
   variables <- c("consumption", "investment")
   options <- list(ndraws = 200)
@@ -75,6 +76,7 @@ test_that("model_evaluation", {
 })
 
 test_that("run_model_iteration", {
+  skip_on_cran()
   horizon <- 4
   # global variables
   summary <- "mean"

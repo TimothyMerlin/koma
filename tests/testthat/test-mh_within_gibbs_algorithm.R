@@ -1,4 +1,5 @@
 test_that("draw_parameters returns correct parameters for equation 1", {
+  skip_on_cran()
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix
   character_gamma_matrix <- simulated_data$character_gamma_matrix
@@ -81,6 +82,7 @@ test_that("draw_parameters returns correct parameters for equation 1", {
 test_that("draw_parameters returns correct structure for gamma for an equation
 without endogenous variables, that is when there are only lagged variables or
 exogenous variables in the equation", {
+  skip_on_cran()
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix
   character_gamma_matrix <- simulated_data$character_gamma_matrix

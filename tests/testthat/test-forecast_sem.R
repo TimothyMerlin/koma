@@ -1,4 +1,5 @@
 test_that("forecast_sem", {
+  skip_on_cran()
   sys_eq <- simulated_data$sys_eq
   exogenous_variables <- simulated_data$exogenous_variables
   estimates <- simulated_data$estimates

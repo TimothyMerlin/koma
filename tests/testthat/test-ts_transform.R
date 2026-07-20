@@ -1,4 +1,5 @@
 test_that("prepare_data_to_plot", {
+  skip_on_cran()
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2020, 4)),
     forecast = list(start = c(2022, 2), end = c(2025, 4)),

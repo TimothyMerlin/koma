@@ -1,4 +1,5 @@
 test_that("forecast works correctly for density forecasts", {
+  skip_on_cran()
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2018, 4)),
     forecast = list(start = c(2023, 2), end = c(2025, 4))
@@ -299,6 +300,7 @@ test_that("estimate and forecast support yearly single-frequency data", {
 })
 
 test_that("forecast conditional innovation methods", {
+  skip_on_cran()
   # yield approximatively equal distributions
   dates <- list(estimation = list(), forecast = list())
   dates$current <- c(2023, 2)
@@ -408,6 +410,7 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
 })
 
 test_that("forecast conditionally fills ragged edge", {
+  skip_on_cran()
   dates <- list(estimation = list(), forecast = list())
   dates$current <- c(2023, 2)
   dates$estimation$start <- c(1996, 1)
@@ -588,6 +591,7 @@ test_that("forecast stops when endogenous series longer than forecast start", {
 })
 
 test_that("forecast stops when exogenous series don't extend to forecast end", {
+  skip_on_cran()
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2018, 4)),
     forecast = list(start = c(2023, 2), end = c(2025, 4))
@@ -713,6 +717,7 @@ test_that("forecast with one equation", {
 })
 
 test_that("forecast with one exogenous", {
+  skip_on_cran()
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2019, 4)),
     forecast = list(start = c(2023, 2), end = c(2025, 4))
@@ -814,6 +819,7 @@ test_that("forecast works when exogenous variables are omitted", {
 })
 
 test_that("forecast without lags and with restrictions", {
+  skip_on_cran()
   # no-lag restrictions do not propagate to later horizons #
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2019, 4)),
@@ -926,6 +932,7 @@ test_that("forecast without lags and with restrictions", {
 })
 
 test_that("restricting aggregate alone keeps identity intact", {
+  skip_on_cran()
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2019, 4)),
     forecast = list(start = c(2023, 2), end = c(2025, 4))
@@ -978,6 +985,7 @@ test_that("restricting aggregate alone keeps identity intact", {
 })
 
 test_that("conflicting restrictions on identity error", {
+  skip_on_cran()
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2019, 4)),
     forecast = list(start = c(2023, 2), end = c(2025, 4))
@@ -1024,6 +1032,7 @@ test_that("conflicting restrictions on identity error", {
 })
 
 test_that("forecast with restrictions for variables that are not in SEM", {
+  skip_on_cran()
   dates <- list(
     estimation = list(start = c(1976, 1), end = c(2019, 4)),
     forecast = list(start = c(2023, 2), end = c(2025, 4))
@@ -1069,6 +1078,7 @@ test_that("forecast with restrictions for variables that are not in SEM", {
 
 
 test_that("estimate an AR(1) model", {
+  skip_on_cran()
   # Case: AR(1) model
   equations <- "manufacturing ~ manufacturing.L(1) -1,
                 service ~ service.L(1) -1"
@@ -1140,6 +1150,7 @@ test_that("estimate an AR(1) model", {
 })
 
 test_that("forecast dates incomplete", {
+  skip_on_cran()
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2018, 4)),
     forecast = list(start = c(2023, 2))

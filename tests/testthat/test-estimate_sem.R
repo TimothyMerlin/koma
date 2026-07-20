@@ -1,4 +1,5 @@
 test_that("estimate_sem", {
+  skip_on_cran()
   sys_eq <- simulated_data$sys_eq
   weights <- list(gdp = list(manufacturing = -1.5, service = 0.5))
   sys_eq$identities <-
@@ -42,6 +43,7 @@ test_that("estimate_sem", {
 })
 
 test_that("estimate_sem with priors", {
+  skip_on_cran()
   equations <-
     "consumption ~ {0,1000}constant + {2,0.01}gdp + {3,0.001}consumption.L(1) + {0,1000}consumption.L(2) + {3,0.001},
    investment ~ gdp + investment.L(1) + real_interest_rate,
@@ -101,6 +103,7 @@ test_that("estimate_sem with priors", {
 })
 
 test_that("estimate_sem error in equation j", {
+  skip_on_cran()
   # when not using witr::local_* covr::package_coverage() fails for
   # multiple tests. This test seems to somehow interfere / have adverse effects
   # on other tests (possible due to global variables).
@@ -154,6 +157,7 @@ test_that("estimate_sem warns when multicore is used on macOS", {
 })
 
 test_that("estimate_sem works with multisession futures", {
+  skip_on_cran()
   skip_if_not_installed(c("future", "doFuture"))
 
   old_plan <- future::plan()
