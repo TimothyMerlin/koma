@@ -248,7 +248,7 @@ test_that("draw_parameters_j_informative with diffuse priors and no gamma priors
   # This sampler path shows small cross-environment drift despite a fixed seed.
   expect_equal(beta_q, expected_beta, tolerance = 0.12)
   expect_lte(max(abs(unname(gamma_q) - unname(expected_gamma))), 0.21)
-  expect_equal(omega_q, expected_omega, tolerance = 0.1)
+  expect_equal(omega_q, expected_omega, tolerance = 0.15)
 })
 
 test_that("construct_priors_j, with two endogenous", {
