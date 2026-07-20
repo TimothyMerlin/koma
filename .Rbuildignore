@@ -4,6 +4,7 @@
 ^Meta$
 ^README\.Rmd$
 ^\.Rproj\.user$
+^\.claude$
 ^\.drone\.yaml$
 ^\.github$
 ^\.gitlab-ci\.yml$
