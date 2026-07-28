@@ -142,6 +142,69 @@ model_identification <- function(character_gamma_matrix,
   return(TRUE)
 }
 
+#' Validate that x_matrix has full column rank
+#'
+#' Detects exact linear dependence between columns of `x_matrix`, the
+#' \eqn{(T \times k)} matrix of observations on exogenous and predetermined
+#' variables used during estimation. Such dependence can arise, for example,
+#' when a lagged identity variable (e.g. `gdp.L(1)`, where
+#' `gdp == 0.5*manufacturing + 0.5*service`) is used alongside lags of its own
+#' identity components elsewhere in the system: since an identity holds
+#' exactly (no error term), its lag is then an exact linear combination of
+#' other columns already in `x_matrix`. Left uncaught, this surfaces later as
+#' an opaque `"computationally singular"` error from `Matrix::solve()` deep
+#' inside the Gibbs sampler.
+#'
+#' @param x_matrix A \eqn{(T \times k)} matrix \eqn{X} of observations on
+#' \eqn{k} exogenous variables.
+#' @param tol Numerical tolerance for detecting rank deficiency, passed to
+#' [base::qr()] and used (relative to the largest singular value) to
+#' identify the columns responsible.
+#' @param call The environment from which the error is called.
+#' @keywords internal
+validate_full_rank <- function(x_matrix, tol = 1e-7, call = rlang::caller_env()) {
+  n <- ncol(x_matrix)
+  rank <- qr(x_matrix, tol = tol)$rank
+
+  if (rank == n) {
+    return(invisible(TRUE))
+  }
+
+  dependent <- find_dependent_columns(x_matrix, tol = tol)
+
+  cli::cli_abort(
+    c(
+      "!" = "x_matrix is not full column rank ({rank} of {n} columns).",
+      "x" = "The following variables are exactly linearly dependent: {.val {dependent}}.",
+      "i" = "This often happens when a lagged identity variable (e.g. {.code x.L(1)}) is
+      used alongside lags of its own identity components elsewhere in the system.",
+      ">" = "Remove one of the dependent variables, or avoid lagging both the identity
+      and its components in the same system."
+    ),
+    call = call
+  )
+}
+
+#' Identify columns involved in an exact linear dependency
+#'
+#' Uses the singular value decomposition of `x_matrix` to find near-zero
+#' singular values (rank-deficient directions) and reports the columns with
+#' non-negligible loadings on the corresponding right singular vectors, i.e.
+#' the columns actually involved in the dependency.
+#'
+#' @inheritParams validate_full_rank
+#' @return A character vector of column names involved in at least one exact
+#' linear dependency.
+#' @keywords internal
+find_dependent_columns <- function(x_matrix, tol = 1e-7) {
+  s <- svd(as.matrix(x_matrix))
+  null_idx <- which(s$d < tol * max(s$d))
+  loadings <- abs(s$v[, null_idx, drop = FALSE])
+  involved <- rowSums(loadings > tol) > 0
+
+  colnames(x_matrix)[involved]
+}
+
 #' Vectorize Gamma Matrix
 #'
 #' Converts the character representation of the gamma matrix into

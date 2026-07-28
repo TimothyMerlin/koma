@@ -138,6 +138,62 @@ test_that("estimate correctly estimates model", {
   }
 })
 
+test_that("estimate with a lagged identity series", {
+  skip_on_cran()
+  dates <- list(estimation = list(
+    start = c(1977, 1),
+    end = c(2019, 4)
+  ))
+
+  # gdp is an identity (defined via `==`), but consumption references it as
+  # a lag, i.e. gdp.L(1) instead of the contemporaneous gdp.
+  # Note: manufacturing and service (the identity's components) deliberately
+  # don't use their own lag elsewhere in the system - since gdp is an exact
+  # (noise-free) linear combination of them, doing so would make gdp.L(1)
+  # perfectly collinear with manufacturing.L(1)/service.L(1) in x_matrix.
+  equations <-
+    "consumption ~ gdp.L(1) + consumption.L(1),
+    investment ~ investment.L(1) + real_interest_rate,
+    current_account ~ current_account.L(1) + world_gdp,
+    manufacturing ~ world_gdp,
+    service ~ population,
+    gdp == 0.5*manufacturing + 0.5*service"
+
+  exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
+
+  sys_eq <- system_of_equations(equations, exogenous_variables)
+
+  # gdp remains an identity, and its lag is picked up as predetermined
+  expect_true("gdp" %in% names(sys_eq$identities))
+  expect_true("gdp.L(1)" %in% sys_eq$predetermined_variables)
+
+  ts_data <- simulated_data$ts_data
+
+  out <- withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
+  )
+
+  expect_true(inherits(out, "koma_estimate"))
+  expect_identical(
+    names(out$estimates),
+    c(
+      "consumption", "investment", "current_account", "manufacturing",
+      "service"
+    )
+  )
+  # constant + gdp.L(1) + consumption.L(1) = 3 coefficients
+  expect_equal(length(out$estimates$consumption[["beta_jw"]][[1]]), 3)
+
+  # the identity's series was correctly lagged: x_matrix's gdp.L(1) at time t
+  # matches y_matrix's gdp at time t - 1
+  n <- nrow(out$y_matrix)
+  expect_equal(
+    unname(out$x_matrix[2:n, "gdp.L(1)"]),
+    unname(out$y_matrix[1:(n - 1), "gdp"])
+  )
+})
+
 test_that("estimate correctly returns when parallel", {
   skip_on_cran()
   skip_if_not_installed(c("parallelly", "future"))
