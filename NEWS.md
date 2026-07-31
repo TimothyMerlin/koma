@@ -2,6 +2,7 @@
 
 * Exported `set_koma_attr_policy()`, previously internal-only, since the error raised when merging mismatched `koma_ts` attributes (e.g. `anker`) directs users to call it.
 * Added `get_koma_attr_policy()` to inspect a registered attribute policy, and `reset_koma_attr_policy()` to remove one (or all) registered policies, since policies are shared for the whole R session.
+* Rank-deficient `x_matrix` caused by a lagged identity coinciding with lags of its own components (e.g. `gdp.L(1)` alongside lags of all of `gdp`'s components) is now caught early with an informative error identifying the collinear variables, instead of surfacing later as an opaque `"computationally singular"` error inside the Gibbs sampler (#135).
 
 # koma 0.3.1
 
