@@ -157,7 +157,92 @@ test_that("koma_ts class operations", {
   expect_true(is.matrix(mat_conv))
 })
 
+test_that("get_koma_attr_policy returns NULL when nothing is registered", {
+  withr::defer(reset_koma_attr_policy("unregistered_attr_xyz"))
+
+  expect_null(get_koma_attr_policy("unregistered_attr_xyz"))
+})
+
+test_that("get_koma_attr_policy returns the handlers passed to set_koma_attr_policy", {
+  withr::defer(reset_koma_attr_policy("test_attr_get"))
+
+  merge_fn <- function(left, right, attr, op = NULL, template = NULL) NA
+  lag_fn <- function(value, attr, template = NULL, ...) value
+
+  set_koma_attr_policy("test_attr_get", merge = merge_fn, lag = lag_fn)
+
+  policy <- get_koma_attr_policy("test_attr_get")
+  expect_identical(policy$merge, merge_fn)
+  expect_identical(policy$lag, lag_fn)
+  expect_null(policy$window)
+  expect_null(policy$na_omit)
+})
+
+test_that("reset_koma_attr_policy removes a single registered policy", {
+  set_koma_attr_policy(
+    "test_attr_reset_single",
+    merge = function(left, right, attr, op = NULL, template = NULL) NA
+  )
+  expect_false(is.null(get_koma_attr_policy("test_attr_reset_single")))
+
+  removed <- reset_koma_attr_policy("test_attr_reset_single")
+
+  expect_null(get_koma_attr_policy("test_attr_reset_single"))
+  expect_false(is.null(removed$merge))
+})
+
+test_that("reset_koma_attr_policy(NULL) removes every registered policy", {
+  set_koma_attr_policy(
+    "test_attr_reset_all_1",
+    merge = function(left, right, attr, op = NULL, template = NULL) NA
+  )
+  set_koma_attr_policy(
+    "test_attr_reset_all_2",
+    merge = function(left, right, attr, op = NULL, template = NULL) NA
+  )
+
+  reset_koma_attr_policy()
+
+  expect_null(get_koma_attr_policy("test_attr_reset_all_1"))
+  expect_null(get_koma_attr_policy("test_attr_reset_all_2"))
+})
+
+test_that("resetting a policy restores the default merge behavior", {
+  withr::defer(reset_koma_attr_policy("anker"))
+
+  base <- ets(
+    1:4,
+    start = c(2020, 1),
+    frequency = 4,
+    series_type = "level",
+    method = "none",
+    anker = c(100, 2019.75)
+  )
+  mismatched <- ets(
+    4:1,
+    start = c(2020, 1),
+    frequency = 4,
+    series_type = "level",
+    method = "none",
+    anker = c(50, 2019.75)
+  )
+
+  expect_error(base + mismatched, "Cannot merge")
+
+  set_koma_attr_policy(
+    "anker",
+    merge = function(left, right, attr, op = NULL, template = NULL) NA
+  )
+  expect_no_error(base + mismatched)
+
+  reset_koma_attr_policy("anker")
+
+  expect_error(base + mismatched, "Cannot merge")
+})
+
 test_that("koma_ts supports user-defined metadata policies", {
+  withr::defer(reset_koma_attr_policy("aligned_flag"))
+
   set_koma_attr_policy(
     "aligned_flag",
     merge = function(left, right, attr, op = NULL, template = NULL) {

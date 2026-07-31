@@ -313,10 +313,80 @@ if (is.null(the$koma_attr_policies)) {
   the$koma_attr_policies <- list()
 }
 
+#' Look up the registered policy for a koma_ts attribute
+#'
+#' @param attr Name of the attribute.
+#' @return The list of handlers (`merge`, `lag`, `window`, `na_omit`)
+#'   registered via [set_koma_attr_policy()] for `attr`, or `NULL` if no
+#'   policy has been registered -- in which case merges fall back to
+#'   [default_koma_attr_merge()] and `lag`/`window`/`na_omit` leave the
+#'   attribute value unchanged.
+#' @examples
+#' set_koma_attr_policy(
+#'   "anker",
+#'   merge = function(left, right, attr, op = NULL, template = NULL) NA
+#' )
+#' get_koma_attr_policy("anker")
+#' get_koma_attr_policy("some_other_attribute") # NULL: nothing registered
+#' @export
 get_koma_attr_policy <- function(attr) {
   the$koma_attr_policies[[attr]]
 }
 
+#' Remove a registered koma_ts attribute policy
+#'
+#' Undoes a previous [set_koma_attr_policy()] call, restoring the default
+#' behavior (see [default_koma_attr_merge()]) for `attr`. Since policies are
+#' registered globally for the session, this is the only way to undo one
+#' short of restarting R.
+#'
+#' @param attr Name of the attribute to reset. If `NULL`, every registered
+#'   policy is removed.
+#' @return The removed policy/policies, invisibly (as returned by
+#'   [get_koma_attr_policy()]), or `NULL` if nothing was registered for
+#'   `attr`.
+#' @examples
+#' set_koma_attr_policy(
+#'   "anker",
+#'   merge = function(left, right, attr, op = NULL, template = NULL) NA
+#' )
+#' reset_koma_attr_policy("anker")
+#' get_koma_attr_policy("anker") # NULL again
+#' @export
+reset_koma_attr_policy <- function(attr = NULL) {
+  if (is.null(attr)) {
+    removed <- the$koma_attr_policies
+    the$koma_attr_policies <- list()
+    return(invisible(removed))
+  }
+
+  stopifnot(is.character(attr), length(attr) == 1L, nzchar(attr))
+
+  removed <- the$koma_attr_policies[[attr]]
+  the$koma_attr_policies[[attr]] <- NULL
+  invisible(removed)
+}
+
+#' Default merge behavior for a koma_ts attribute
+#'
+#' Used by [merge_koma_attrs()] for any attribute without a policy
+#' registered via [set_koma_attr_policy()]. `NULL` operands are passed
+#' through unchanged; otherwise the two values must be identical (per
+#' [base::all.equal()]) or the merge errors, since there is no generic way
+#' to combine two different metadata values (e.g. two different `anker`
+#' anchors) without attribute-specific knowledge of what the operation
+#' means.
+#'
+#' @param left The first operand's attribute value, or `NULL` if absent.
+#' @param right The second operand's attribute value, or `NULL` if absent.
+#' @param attr Name of the attribute, used in the error message.
+#' @param op Name of the arithmetic operation being performed (e.g. `"-"`),
+#'   used in the error message.
+#' @param template Unused; accepted for signature compatibility with
+#'   handlers registered via [set_koma_attr_policy()].
+#' @return `left` (or `right`, when `left` is `NULL`) if the values match or
+#'   one side is absent. Errors otherwise.
+#' @keywords internal
 default_koma_attr_merge <- function(left, right, attr, op = NULL, template = NULL) {
   if (is.null(left)) {
     return(right)
@@ -430,6 +500,23 @@ rebuild_ts_like <- function(result, template) {
 
 #' Register metadata behavior for a koma_ts attribute
 #'
+#' Custom `koma_ts` attributes (e.g. `anker`) are combined using
+#' [default_koma_attr_merge()] unless a policy is registered here. The
+#' default policy requires both operands' values to be identical and errors
+#' otherwise -- use this function to define how an attribute should behave
+#' under arithmetic (`merge`), [stats::lag()], [stats::window()], and
+#' [stats::na.omit()].
+#'
+#' Policies are registered globally, for the current R session: once set,
+#' `attr` is handled the same way for *every* `koma_ts` operation, for every
+#' pair of series, not just the ones that prompted the call. There is no
+#' `unset`/reset function, so a policy stays in effect until it is
+#' overwritten or the session ends. A permissive `merge` handler (e.g. one
+#' that silently drops a mismatch) can mask a genuine bug in an unrelated
+#' part of the codebase where that same mismatch should have raised an
+#' error -- register the narrowest handler that solves your actual case,
+#' not a blanket "never error" one.
+#'
 #' @param attr Name of the attribute.
 #' @param merge Optional binary merge handler with signature
 #'   `function(left, right, attr, op = NULL, template = NULL)`.
@@ -440,7 +527,23 @@ rebuild_ts_like <- function(result, template) {
 #' @param na_omit Optional `na.omit` handler with signature
 #'   `function(value, attr, template = NULL, ...)`.
 #' @return The registered policy, invisibly.
-#' @keywords internal
+#' @examples
+#' # By default, koma_ts arithmetic errors if an attribute's values differ
+#' # between operands (see `default_koma_attr_merge()`) -- e.g. subtracting
+#' # two "rate" series to build an identity like an inflation spread, where
+#' # each side carries its own (different) base-level anchor. A linear
+#' # combination of two series' rates has no single base level to invert
+#' # back to, so here dropping the anchor on mismatch is the right call.
+#' #
+#' # This changes how *all* koma_ts arithmetic handles "anker" for the rest
+#' # of the session (see Details) -- only register this once you've decided
+#' # that "anker" values are never meant to be compared for equality
+#' # elsewhere in your workflow.
+#' set_koma_attr_policy(
+#'   "anker",
+#'   merge = function(left, right, attr, op = NULL, template = NULL) NA
+#' )
+#' @export
 set_koma_attr_policy <- function(attr, merge = NULL, lag = NULL, window = NULL, na_omit = NULL) {
   stopifnot(is.character(attr), length(attr) == 1L, nzchar(attr))
   handlers <- list(merge = merge, lag = lag, window = window, na_omit = na_omit)

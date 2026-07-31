@@ -1,3 +1,8 @@
+# koma 0.3.1.9000
+
+* Exported `set_koma_attr_policy()`, previously internal-only, since the error raised when merging mismatched `koma_ts` attributes (e.g. `anker`) directs users to call it.
+* Added `get_koma_attr_policy()` to inspect a registered attribute policy, and `reset_koma_attr_policy()` to remove one (or all) registered policies, since policies are shared for the whole R session.
+
 # koma 0.3.1
 
 * Added `\value` documentation tags to `print.koma_forecast` and `print.koma_seq` to comply with CRAN policy.
