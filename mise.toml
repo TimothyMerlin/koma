@@ -1,0 +1,5 @@
+[tools]
+pandoc = "3.8.2.1"
+
+[vars]
+r_version = "4.5.2"
