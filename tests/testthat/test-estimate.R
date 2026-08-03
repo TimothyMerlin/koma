@@ -71,7 +71,7 @@ test_that("estimate correctly estimates model", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 7)
+  expect_length(out, 8)
   expect_identical(
     names(out$estimates),
     c(
@@ -232,7 +232,7 @@ test_that("estimate correctly returns when parallel", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 7)
+  expect_length(out, 8)
   expect_identical(
     names(out$estimates),
     c(
@@ -679,7 +679,7 @@ test_that("estimate correctly estimates model with informative priors", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 7)
+  expect_length(out, 8)
   expect_identical(
     names(out$estimates),
     c(
@@ -725,7 +725,7 @@ test_that("estimate with informative priors, that are too far from true value", 
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 7)
+  expect_length(out, 8)
   expect_identical(
     names(out$estimates),
     c(
@@ -760,7 +760,7 @@ test_that("estimate with no gamma parameters", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 7)
+  expect_length(out, 8)
   expect_identical(
     names(out$estimates),
     c("manufacturing", "service")
@@ -791,7 +791,7 @@ test_that("estimate with only one exogenous variable", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 7)
+  expect_length(out, 8)
   expect_identical(
     names(out$estimates),
     c("manufacturing", "service")
@@ -813,7 +813,7 @@ test_that("estimate with only one exogenous variable", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 7)
+  expect_length(out, 8)
   expect_identical(
     names(out$estimates),
     c("manufacturing", "service")
@@ -842,7 +842,7 @@ test_that("estimate with only one equation", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 7)
+  expect_length(out, 8)
   expect_identical(names(out$estimates), c("manufacturing"))
   expect_true(inherits(out, "koma_estimate"))
   expect_length(out$estimates$manufacturing[["beta_jw"]], 100)
@@ -857,7 +857,7 @@ test_that("estimate with only one equation", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 7)
+  expect_length(out, 8)
   expect_identical(names(out$estimates), c("manufacturing"))
   expect_true(inherits(out, "koma_estimate"))
   expect_length(out$estimates$manufacturing[["beta_jw"]], 100)
@@ -1106,29 +1106,20 @@ test_that("estimate, ts provided instead of ets", {
 
   ts_data <- lapply(simulated_data$ts_data, as.ts)
 
-  # mock response to YES with y
-  expect_error(
-    testthat::with_mocked_bindings(
-      {
-        withr::with_seed(
-          7,
-          estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
-        )
-      },
-      readline = local({
-        responses <- c("y", "n")
-        i <- 0
-        function(...) {
-          i <<- i + 1
-          responses[i]
-        }
-      }),
-      .package = "base"
-    ), NA
+  expect_warning(
+    result <- withr::with_seed(
+      7,
+      estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
+    ),
+    "rate/level transformation is applied"
   )
+
+  expect_s3_class(result, "koma_estimate")
+  expect_setequal(result$plain_ts_names, names(ts_data))
+  expect_true(all(sapply(result$ts_data, inherits, "koma_ts")))
 })
 
-test_that("estimate, ts provided instead of ets", {
+test_that("estimate leaves koma_ts input untouched and reports no plain ts names", {
   skip_on_cran()
   dates <- list(estimation = list(
     start = c(1977, 1),
@@ -1147,56 +1138,37 @@ test_that("estimate, ts provided instead of ets", {
 
   sys_eq <- system_of_equations(equations, exogenous_variables)
 
-  ts_data <- lapply(simulated_data$ts_data, as.ts)
+  ts_data <- simulated_data$ts_data
 
-  # mock response NO with n,
-  # set series type to level and method to percentage
-  expect_error(
-    testthat::with_mocked_bindings(
-      {
-        withr::with_seed(
-          7,
-          estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
-        )
-      },
-      readline = local({
-        responses <- c("n", "level", "percentage", "n")
-        i <- 0
-        function(...) {
-          i <<- i + 1
-          responses[i]
-        }
-      }),
-      .package = "base"
-    ), NA
+  result <- withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
+
+  expect_length(result$plain_ts_names, 0)
 })
 
-test_that("convert_ts_data_to_ets applies defaults and exceptions", {
+test_that("convert_ts_data_to_ets tags plain ts as rate/none and warns", {
   ts_data <- lapply(simulated_data$ts_data[c("consumption", "manufacturing", "service")], as.ts)
 
-  result <- testthat::with_mocked_bindings(
-    {
-      koma:::convert_ts_data_to_ets(ts_data)
-    },
-    readline = local({
-      responses <- c("n", "level", "diff_log", "y", "manufacturing", "rate", "none", "y", "service", "level", "percentage", "n")
-      i <- 0
-      function(...) {
-        i <<- i + 1
-        responses[i]
-      }
-    }),
-    .package = "base"
+  expect_warning(
+    result <- koma:::convert_ts_data_to_ets(ts_data),
+    "rate/level transformation is applied"
   )
 
   expect_true(all(sapply(result, inherits, "koma_ts")))
-  expect_identical(attr(result$consumption, "series_type"), "level")
-  expect_identical(attr(result$consumption, "method"), "diff_log")
-  expect_identical(attr(result$manufacturing, "series_type"), "rate")
-  expect_identical(attr(result$manufacturing, "method"), "none")
-  expect_identical(attr(result$service, "series_type"), "level")
-  expect_identical(attr(result$service, "method"), "percentage")
+  for (series in result) {
+    expect_identical(attr(series, "series_type"), "rate")
+    expect_identical(attr(series, "method"), "none")
+  }
+})
+
+test_that("convert_ts_data_to_ets leaves koma_ts elements untouched", {
+  ts_data <- simulated_data$ts_data[c("consumption", "manufacturing")]
+
+  result <- koma:::convert_ts_data_to_ets(ts_data)
+
+  expect_identical(result, ts_data)
 })
 
 test_that("extract.koma_estimate returns texreg objects", {

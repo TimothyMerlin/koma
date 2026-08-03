@@ -57,7 +57,29 @@
 #'   \item{gibbs_specifications}{The specifications used for the Gibbs
 #'   sampling.}
 #'   \item{dates}{The date ranges used during estimation.}
+#'   \item{plain_ts_names}{Character vector of series names that were
+#'   supplied as plain `ts` (not `koma_ts`) in `ts_data`. These are assumed to
+#'   already be in rates and tagged accordingly; see the "Plain ts input"
+#'   section below.}
 #' }
+#'
+#' @section Plain ts input:
+#' If any element of `ts_data` is a plain `ts` rather than a `koma_ts`
+#' (see \code{\link{ets}}), it is assumed to already be in rates, the
+#' form the model estimates on, and is converted to `koma_ts` with
+#' `series_type = "rate"`, `method = "none"`: the values are used as-is, no
+#' rate/level transformation is applied. A warning lists the affected
+#' series, and the same list is stored in the returned object as
+#' `plain_ts_names` (also surfaced when the `koma_estimate` is printed). If a
+#' series actually needs to be converted from levels (e.g. via a percentage
+#' or diff_log growth rate), convert it first with \code{\link{ets}} or
+#' \code{\link{as_ets}}; see \code{vignette("koma-extended-timeseries")}.
+#'
+#' `koma_ts` objects may carry custom attributes beyond `series_type`/
+#' `method` (e.g. a project-specific `value_type`). Since all series in
+#' `ts_data` must share the same attribute names (see \code{\link{as_mets}}),
+#' any such extra attributes found on sibling `koma_ts` series are set to
+#' `NA` on the converted series.
 #'
 #' @examples
 #' data("simulated_sem")
@@ -127,7 +149,11 @@ estimate.list <- function(ts_data, sys_eq, dates,
   if (!inherits(ts_data, "list")) {
     cli::cli_abort("`ts_data` must be a list. You provided a {class(ts_data)}.")
   }
-  if (!all(sapply(ts_data, function(x) inherits(x, "koma_ts")))) {
+  plain_ts_names <- names(ts_data)[sapply(
+    ts_data,
+    function(x) inherits(x, "ts") && !inherits(x, "koma_ts")
+  )]
+  if (length(plain_ts_names) > 0) {
     ts_data <- convert_ts_data_to_ets(ts_data)
   }
   if (!all(sapply(ts_data, function(x) inherits(x, "koma_ts")))) {
@@ -187,86 +213,58 @@ estimate.list <- function(ts_data, sys_eq, dates,
       y_matrix = pre$y_matrix,
       x_matrix = pre$x_matrix,
       gibbs_specifications = get_gibbs_settings(),
-      dates = dates
+      dates = dates,
+      plain_ts_names = plain_ts_names
     ),
     class = "koma_estimate"
   )
 }
 
 convert_ts_data_to_ets <- function(ts_data) {
-  series_type <- "level"
-  method <- "percentage"
-
-  cli::cli_text(
-    "Some of the time series in `ts_data` are not `ets`.",
-    "They will be automatically converted with `as_ets` using the defaults:"
-  )
-  cli::cli_h2("Default settings")
-  cli::cli_text("series_type: {series_type}")
-  cli::cli_text("method: {method}")
-
-  user_input <- readline("Are these correct? (y/n): ")
-  if (tolower(user_input) != "y") {
-    series_type <- readline("Enter series_type: ")
-    method <- readline("Enter method: ")
-  }
-
   non_koma_names <- names(ts_data)[sapply(
     ts_data,
     function(x) inherits(x, "ts") && !inherits(x, "koma_ts")
   )]
-  exceptions <- list()
+
+  # Sibling koma_ts series may carry custom attributes beyond series_type/
+  # method (e.g. value_type). as_mets() requires every series in ts_data to
+  # share the same attribute names, so any such extras are backfilled as NA
+  # on the converted series.
+  koma_attr_names <- unique(unlist(lapply(
+    ts_data[setdiff(names(ts_data), non_koma_names)],
+    function(x) attr(x, "ets_attributes")
+  )))
+  extra_attr_names <- setdiff(koma_attr_names, c("series_type", "method"))
+
   if (length(non_koma_names) > 0) {
-    repeat {
-      add_exception <- readline("Specify exception to default settings? (y/n): ")
-      if (tolower(add_exception) != "y") {
-        break
-      }
-      series_name <- readline("Enter series name: ")
-      if (!nzchar(series_name) || !(series_name %in% non_koma_names)) {
-        cli::cli_alert_warning(
-          "Unknown series: {series_name}. Expected one of: {toString(non_koma_names)}."
-        )
-        next
-      }
-      series_prompt <- paste0(
-        "Enter series_type for ", series_name, " (default ", series_type, "): "
-      )
-      method_prompt <- paste0(
-        "Enter method for ", series_name, " (default ", method, "): "
-      )
-      series_type_input <- readline(series_prompt)
-      method_input <- readline(method_prompt)
-
-      if (!nzchar(series_type_input)) {
-        series_type_input <- series_type
-      }
-      if (!nzchar(method_input)) {
-        method_input <- method
-      }
-
-      exceptions[[series_name]] <- list(
-        series_type = series_type_input,
-        method = method_input
-      )
-    }
+    cli::cli_warn(c(
+      "!" = "The following series are plain {.cls ts} objects, not {.cls koma_ts}: {.val {non_koma_names}}.",
+      "i" = "They are assumed to already be in rates, the form the model
+      estimates on, and are converted to {.cls koma_ts} with
+      {.code series_type = \"rate\"}, {.code method = \"none\"}. The values
+      are used as-is; no rate/level transformation is applied.",
+      if (length(extra_attr_names) > 0) {
+        c("i" = "Other series in {.arg ts_data} also carry {.val {extra_attr_names}};
+        these are set to {.code NA} on the converted series.")
+      },
+      "i" = "To convert a series from levels (e.g. a percentage or diff_log
+      growth rate), wrap it first with {.fn ets} or {.fn as_ets}. See
+      {.code vignette(\"koma-extended-timeseries\")} for details."
+    ))
   }
+
+  extra_attrs <- stats::setNames(
+    as.list(rep(NA, length(extra_attr_names))),
+    extra_attr_names
+  )
 
   ts_names <- names(ts_data)
   ts_data <- lapply(seq_along(ts_data), function(ix) {
-    name <- ts_names[ix]
     x <- ts_data[[ix]]
     if (inherits(x, "ts") && !inherits(x, "koma_ts")) {
-      settings <- exceptions[[name]]
-      if (is.null(settings)) {
-        x <- as_ets(x, series_type = series_type, method = method)
-      } else {
-        x <- as_ets(
-          x,
-          series_type = settings$series_type,
-          method = settings$method
-        )
-      }
+      x <- do.call(as_ets, c(
+        list(x, series_type = "rate", method = "none"), extra_attrs
+      ))
     }
     if (!inherits(x, "koma_ts")) {
       cli::cli_abort("All elements must be koma_ts after conversion")
@@ -578,6 +576,12 @@ print.koma_estimate <- function(x,
                                 ci_up = 95,
                                 digits = 2) {
   cli::cli_h1("Estimates")
+  if (length(x$plain_ts_names) > 0) {
+    cli::cli_alert_warning(
+      "Series treated as already in rates (plain {.cls ts} input, no
+      transformation applied): {.val {x$plain_ts_names}}."
+    )
+  }
   formatted_equations <- format(
     x,
     ...,

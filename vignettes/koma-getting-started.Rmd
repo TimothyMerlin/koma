@@ -79,28 +79,29 @@ series <- unique(c(sys_eq$endogenous_variables, sys_eq$exogenous_variables))
 ts_data <- small_open_economy[series]
 ```
 
-If you pass `ts` objects directly, `estimate()` will prompt you for default
-conversion settings and optional exceptions. For example, we override the
-defaults to use level/diff_log and keep `interest_rate` as a rate series:
+If you pass `ts` objects directly, `estimate()` assumes they are already in
+rates (the form the model estimates on) and converts them with
+`series_type = "rate"`, `method = "none"` (no transformation applied),
+emitting a warning that lists the affected series:
 
 ```{R, eval=FALSE}
 estimates <- estimate(ts_data, sys_eq, dates)
-#> Some of the time series in `ts_data` are not `ets`.
-#> They will be automatically converted with `as_ets` using the defaults:
-#> Default settings
-#> series_type = level
-#> method = percentage
-#> Are these correct? (y/n): n
-#> Enter series_type: level
-#> Enter method: diff_log
-#> Specify exception to default settings? (y/n): y
-#> Enter series name: interest_rate
-#> Enter series_type for interest_rate (default level): rate
-#> Enter method for interest_rate (default diff_log): none
-#> Specify exception to default settings? (y/n): n
+#> ! The following series are plain <ts> objects, not <koma_ts>: "consumption",
+#>   "investment", "exports", "imports", "gdp", "interest_rate", "world_gdp",
+#>   and "exchange_rate".
+#> i They are assumed to already be in rates, the form the model estimates on,
+#>   and are converted to <koma_ts> with `series_type = "rate"`, `method =
+#>   "none"`. The values are used as-is; no rate/level transformation is
+#>   applied.
+#> i To convert a series from levels (e.g. a percentage or diff_log growth
+#>   rate), wrap it first with `ets()` or `as_ets()`. See
+#>   `vignette("koma-extended-timeseries")` for details.
 ```
 
-In this vignette we convert explicitly to keep the example non-interactive:
+Most of these series are actually in levels and need a diff_log transform
+to become growth rates, and `interest_rate` is a rate that needs no
+transform, so here we convert explicitly instead of relying on the
+`rate`/`none` default:
 
 ```{R}
 ts_data <- lapply(ts_data, function(x) {

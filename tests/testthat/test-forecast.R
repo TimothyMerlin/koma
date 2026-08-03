@@ -716,6 +716,53 @@ test_that("forecast with one equation", {
   expect_equal(names(out$mean), c("manufacturing", "world_gdp"))
 })
 
+test_that("forecast returns koma_ts for series originally supplied as plain ts", {
+  dates <- list(
+    estimation = list(start = c(1977, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
+  )
+
+  equations <- "manufacturing ~ world_gdp"
+  exogenous_variables <- c("world_gdp")
+
+  sys_eq <- system_of_equations(equations, exogenous_variables)
+
+  ts_data <- simulated_data$ts_data
+  dates_current <- c(2023, 1)
+  # shorten endogenous data to end before forecast start
+  ts_data[sys_eq$endogenous_variables] <-
+    lapply(sys_eq$endogenous_variables, function(x) {
+      stats::window(ts_data[[x]], end = dates_current)
+    })
+  # supply the endogenous series as plain ts, keep the exogenous as koma_ts
+  ts_data$manufacturing <- as.ts(ts_data$manufacturing)
+
+  expect_warning(
+    est <- withr::with_seed(
+      7,
+      estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
+    ),
+    "rate/level transformation is applied"
+  )
+  expect_identical(est$plain_ts_names, "manufacturing")
+
+  out <- forecast(est, dates)
+
+  # forecast() output stays koma_ts for every series regardless of whether
+  # the corresponding estimate() input was plain ts, since print()/format()/
+  # plot() require mean/median/quantiles to be uniformly koma_ts (as_mets()
+  # requires every series in a list to share the same attribute names).
+  expect_true(inherits(out$mean$manufacturing, "koma_ts"))
+  expect_identical(attr(out$mean$manufacturing, "series_type"), "rate")
+  expect_identical(attr(out$mean$manufacturing, "method"), "none")
+  expect_true(inherits(out$mean$world_gdp, "koma_ts"))
+  expect_true(inherits(out$median$manufacturing, "koma_ts"))
+
+  # regression test: printing a forecast that mixes plain-ts-origin and
+  # genuine koma_ts series must not error.
+  print(out)
+})
+
 test_that("forecast with one exogenous", {
   skip_on_cran()
   dates <- list(

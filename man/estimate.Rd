@@ -67,6 +67,10 @@ the estimation process.}
 \item{gibbs_specifications}{The specifications used for the Gibbs
 sampling.}
 \item{dates}{The date ranges used during estimation.}
+\item{plain_ts_names}{Character vector of series names that were
+supplied as plain \code{ts} (not \code{koma_ts}) in \code{ts_data}. These are assumed to
+already be in rates and tagged accordingly; see the "Plain ts input"
+section below.}
 }
 }
 \description{
@@ -88,6 +92,26 @@ For a detailed example on executing \code{estimate} in parallel, see the vignett
 \code{vignette("parallel")}.
 For more details, see the
 \href{https://CRAN.R-project.org/package=future}{future package documentation}.
+}
+
+\section{Plain ts input}{
+
+If any element of \code{ts_data} is a plain \code{ts} rather than a \code{koma_ts}
+(see \code{\link{ets}}), it is assumed to already be in rates, the
+form the model estimates on, and is converted to \code{koma_ts} with
+\code{series_type = "rate"}, \code{method = "none"}: the values are used as-is, no
+rate/level transformation is applied. A warning lists the affected
+series, and the same list is stored in the returned object as
+\code{plain_ts_names} (also surfaced when the \code{koma_estimate} is printed). If a
+series actually needs to be converted from levels (e.g. via a percentage
+or diff_log growth rate), convert it first with \code{\link{ets}} or
+\code{\link{as_ets}}; see \code{vignette("koma-extended-timeseries")}.
+
+\code{koma_ts} objects may carry custom attributes beyond \code{series_type}/
+\code{method} (e.g. a project-specific \code{value_type}). Since all series in
+\code{ts_data} must share the same attribute names (see \code{\link{as_mets}}),
+any such extra attributes found on sibling \code{koma_ts} series are set to
+\code{NA} on the converted series.
 }
 
 \section{Gibbs Sampler Specifications}{
