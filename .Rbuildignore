@@ -13,7 +13,7 @@
 ^\.r-test-coverage\.gitlab-ci\.yml$
 ^\.r_cmd_check\.sh$
 ^\.renvignore$
-^\.tool-versions$
+^mise\.toml$
 ^\.vscode$
 ^_pkgdown\.yml$
 ^data-raw$
