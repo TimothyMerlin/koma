@@ -36,7 +36,7 @@ Custom \code{koma_ts} attributes (e.g. \code{anker}) are combined using
 default policy requires both operands' values to be identical and errors
 otherwise -- use this function to define how an attribute should behave
 under arithmetic (\code{merge}), \code{\link[stats:lag]{stats::lag()}}, \code{\link[stats:window]{stats::window()}}, and
-\code{\link[stats:na.omit]{stats::na.omit()}}.
+\code{\link[stats:na.fail]{stats::na.omit()}}.
 }
 \details{
 Policies are registered globally, for the current R session: once set,
