@@ -3,8 +3,8 @@ Title: Bayesian Simultaneous Equation Models for Forecasting
 Version: 0.3.1
 Authors@R: c(
     person("Samad", "Sarferaz", , "sarferaz@kof.ethz.ch", role = c("aut", "cph"), comment = c(ORCID = "0000-0001-9283-3293")),
-    person("Laurent", "Florin", , "florin@kof.ethz.ch", role = c("aut")),
     person("Merlin", "Scherer", , "scherer@kof.ethz.ch", role = c("aut", "cre", "cph"), comment = c(ORCID = "0009-0005-7479-168X")),
+    person("Laurent", "Florin", , "florin@kof.ethz.ch", role = c("ctb")),
     person("Andrew D.", "Martin", role = c("ctb", "cph"),
       comment = "Adapted rwish/riwish code from MCMCpack"),
     person("Kevin M.", "Quinn", role = c("ctb", "cph"),

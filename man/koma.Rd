@@ -24,11 +24,11 @@ Useful links:
 Authors:
 \itemize{
   \item Samad Sarferaz \email{sarferaz@kof.ethz.ch} (\href{https://orcid.org/0000-0001-9283-3293}{ORCID}) [copyright holder]
-  \item Laurent Florin \email{florin@kof.ethz.ch}
 }
 
 Other contributors:
 \itemize{
+  \item Laurent Florin \email{florin@kof.ethz.ch} [contributor]
   \item Andrew D. Martin (Adapted rwish/riwish code from MCMCpack) [contributor, copyright holder]
   \item Kevin M. Quinn (Adapted rwish/riwish code from MCMCpack) [contributor, copyright holder]
   \item Jong Hee Park (Adapted rwish/riwish code from MCMCpack) [contributor, copyright holder]
