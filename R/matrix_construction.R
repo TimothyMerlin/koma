@@ -95,7 +95,7 @@ construct_beta_hat_j_matrix <- function(x_matrix, z_matrix_j,
   } else {
     x_b <- x_matrix # Keep the original matrix if no matches are found
   }
-  beta_hat_b <- Matrix::solve(t(x_b) %*% x_b) %*% t(x_b) %*% z_matrix_j[, 1]
+  beta_hat_b <- Matrix::solve(crossprod(x_b), crossprod(x_b, z_matrix_j[, 1]))
 
   beta_hat_j <- matrix(0, number_of_exogenous, 1)
   beta_hat_j[grep("^0", character_beta_matrix[, jx], invert = TRUE)] <-
@@ -117,9 +117,16 @@ construct_beta_hat_j_matrix <- function(x_matrix, z_matrix_j,
 #' @return \eqn{\hat{\Pi_0}} with dimensions \eqn{(k \times n_j)}.
 #' @keywords internal
 construct_pi_hat_0 <- function(x_matrix, z_matrix_j) {
-  # Compute pi_hat_0 matrix
-  pi_hat_0 <- Matrix::solve(t(x_matrix) %*% x_matrix) %*%
-    t(x_matrix) %*% z_matrix_j[, -1]
+  rhs <- z_matrix_j[, -1]
+
+  # Equation j has no other endogenous variables: Pi_0 is a (k x 0) matrix.
+  # solve(A, B) errors on a zero-column B, so skip it rather than falling
+  # back to the slower solve(A) %*% B for every call.
+  if (NCOL(rhs) == 0) {
+    return(matrix(nrow = ncol(x_matrix), ncol = 0))
+  }
+
+  pi_hat_0 <- Matrix::solve(crossprod(x_matrix), crossprod(x_matrix, rhs))
 
   return(pi_hat_0)
 }
@@ -141,7 +148,7 @@ construct_pi_hat_0 <- function(x_matrix, z_matrix_j) {
 #' @keywords internal
 construct_theta_hat_j <- function(x_matrix, z_matrix_j) {
   theta_hat <-
-    Matrix::solve(t(x_matrix) %*% x_matrix) %*% t(x_matrix) %*% z_matrix_j
+    Matrix::solve(crossprod(x_matrix), crossprod(x_matrix, z_matrix_j))
 
   return(theta_hat)
 }
@@ -173,16 +180,15 @@ construct_theta_bar_j <- function(x_matrix, z_matrix_j, priors_j,
                                   omega_tilde_jw) {
   # c() vectorizes matrix
   theta_hat <- c(construct_theta_hat_j(x_matrix, z_matrix_j))
-  xi_bar <- Matrix::solve(
-    Matrix::kronecker(
-      Matrix::solve(omega_tilde_jw),
-      t(x_matrix) %*% x_matrix
-    ) + Matrix::solve(priors_j[["theta_vcv"]])
+  omega_kron_xtx <- Matrix::kronecker(
+    Matrix::solve(omega_tilde_jw),
+    crossprod(x_matrix)
   )
-  theta_bar <- xi_bar %*% (Matrix::kronecker(
-    Matrix::solve(omega_tilde_jw), t(x_matrix) %*% x_matrix
-  ) %*% theta_hat + Matrix::solve(priors_j[["theta_vcv"]]) %*%
-    priors_j[["theta_mean"]])
+  xi_bar <- Matrix::solve(
+    omega_kron_xtx + Matrix::solve(priors_j[["theta_vcv"]])
+  )
+  theta_bar <- xi_bar %*% (omega_kron_xtx %*% theta_hat +
+    Matrix::solve(priors_j[["theta_vcv"]]) %*% priors_j[["theta_mean"]])
 
   return(list(
     theta_bar = theta_bar,
