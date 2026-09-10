@@ -27,10 +27,10 @@ Or install the latest **development version** from GitHub:
 
 ```r
 # Install from GitHub
-devtools::install_github("timothymerlin/koma")
+pak::pak("TimothyMerlin/koma")
 
 # Or using renv
-renv::install("github::timothymerlin/koma", rebuild = TRUE)
+renv::install("github::TimothyMerlin/koma", rebuild = TRUE)
 ```
 
 ## Documentation
