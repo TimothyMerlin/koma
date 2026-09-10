@@ -84,11 +84,19 @@ model_identification <- function(character_gamma_matrix,
   number_of_exogenous <- number_of_exogenous - 1
   number_of_identities <- length(identity_weights)
 
+  identity_positions <- which(
+    colnames(character_beta_matrix) %in% names(identity_weights)
+  )
+  stochastic_positions <- setdiff(
+    seq_len(number_of_endogenous), identity_positions
+  )
+
   # Check identification all stochastic equations
   rank_all <- list()
   order_all <- list()
 
-  for (j in seq(1, (number_of_endogenous - number_of_identities))) {
+  for (i in seq_along(stochastic_positions)) {
+    j <- stochastic_positions[i]
     # Sort Gamma and B such that Gamma = [1,-gamma_j,0] and B=[beta_j 0]
     gammas <- rbind(
       gamma_matrix[gamma_matrix[, j] == 1, ],
@@ -102,11 +110,11 @@ model_identification <- function(character_gamma_matrix,
 
     rr <- rbind(gammas, betas)
     r <- rr[rr[, j] == 0, -j, drop = FALSE]
-    rank_all[[j]] <- list(
+    rank_all[[i]] <- list(
       "Fullfilled" = qr(r)$rank == (number_of_endogenous - 1),
       "Rank" = qr(r)$rank
     )
-    order_all[[j]] <- list(
+    order_all[[i]] <- list(
       "Fullfilled" = dim(r)[2] <= dim(r)[1],
       "# included endogenous" = dim(r)[2],
       "# excluded exogenous" = dim(r)[1]

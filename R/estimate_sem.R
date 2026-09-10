@@ -39,12 +39,18 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
 
   `%dofuture%` <- doFuture::`%dofuture%`
 
+  stochastic_positions <- which(
+    !sys_eq$endogenous_variables %in% names(sys_eq$identities)
+  )
+
   if (is.null(eq_jx)) {
     eq_jx <- seq_along(stochastic_equations)
   } else {
     # Verify eq_jx is a vector with numerics
     stopifnot(is.vector(eq_jx), all(sapply(eq_jx, is.numeric)))
   }
+  col_positions <- stochastic_positions[eq_jx]
+  equation_names <- colnames(character_gamma_matrix)
 
   set_progress_handler(operation = "estimation")
   p <- progressr::progressor(
@@ -72,12 +78,12 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
   globals_to_export <- c(
     "p",
     "safe_draw_parameters",
-    "stochastic_equations"
+    "equation_names"
   )
 
   suppressPackageStartupMessages(
     estimates <- foreach::foreach(
-      eq_jx = eq_jx,
+      eq_jx = col_positions,
       .options.future = list(
         packages = c("koma"),
         globals = globals_to_export,
@@ -86,7 +92,7 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
     ) %dofuture% {
       p(
         amount = 0,
-        message = stochastic_equations[eq_jx]
+        message = equation_names[eq_jx]
       )
       out <- safe_draw_parameters(eq_jx)
       p(amount = 1)
@@ -94,7 +100,7 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
     }
   )
 
-  names(estimates) <- stochastic_equations[eq_jx]
+  names(estimates) <- equation_names[col_positions]
   out <- purrr::map(estimates, "result")
 
   if (all(sapply(out, is.null))) {

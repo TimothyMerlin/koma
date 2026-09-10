@@ -1469,3 +1469,69 @@ test_that("format.koma_estimate avoids substring replacement", {
     formatted
   ))
 })
+
+test_that("identity equations can be placed anywhere in the system, not only last", {
+  skip_on_cran()
+  dates <- list(estimation = list(start = c(1977, 1), end = c(2019, 4)))
+  exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
+  ts_data <- simulated_data$ts_data
+  stochastic_vars <- c(
+    "consumption", "investment", "current_account", "manufacturing", "service"
+  )
+
+  identity_last <-
+    "consumption ~ gdp + consumption.L(1:2),
+    investment ~ gdp + investment.L(1) + real_interest_rate,
+    current_account ~ current_account.L(1) + world_gdp,
+    manufacturing ~ manufacturing.L(1) + world_gdp,
+    service ~ service.L(1) + population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
+
+  identity_interleaved <-
+    "consumption ~ gdp + consumption.L(1:2),
+    gdp == 0.5*manufacturing + 0.5*service,
+    investment ~ gdp + investment.L(1) + real_interest_rate,
+    current_account ~ current_account.L(1) + world_gdp,
+    manufacturing ~ manufacturing.L(1) + world_gdp,
+    service ~ service.L(1) + population + gdp"
+
+  sys_eq_last <- system_of_equations(identity_last, exogenous_variables)
+  sys_eq_interleaved <-
+    system_of_equations(identity_interleaved, exogenous_variables)
+
+  expect_setequal(sys_eq_last$stochastic_equations, stochastic_vars)
+  expect_setequal(sys_eq_interleaved$stochastic_equations, stochastic_vars)
+  expect_identical(names(sys_eq_last$identities), "gdp")
+  expect_identical(names(sys_eq_interleaved$identities), "gdp")
+
+  expect_true(model_identification(
+    sys_eq_interleaved$character_gamma_matrix,
+    sys_eq_interleaved$character_beta_matrix,
+    sys_eq_interleaved$identities
+  ))
+
+  fit_last <- withr::with_seed(
+    7,
+    estimate(
+      ts_data, sys_eq_last, dates,
+      options = list(gibbs = list(ndraws = 200))
+    )
+  )
+  fit_interleaved <- withr::with_seed(
+    7,
+    estimate(
+      ts_data, sys_eq_interleaved, dates,
+      options = list(gibbs = list(ndraws = 200))
+    )
+  )
+
+  expect_identical(names(fit_interleaved$estimates), stochastic_vars)
+  expect_false(any(vapply(fit_interleaved$estimates, is.null, logical(1))))
+
+  expect_equal(fit_interleaved$estimates, fit_last$estimates)
+
+  summary_last <- summary(fit_last, use_texreg = FALSE)
+  summary_interleaved <- summary(fit_interleaved, use_texreg = FALSE)
+  expect_s3_class(summary_interleaved, "koma_summary")
+  expect_equal(summary_interleaved$stats, summary_last$stats)
+})

@@ -69,7 +69,7 @@ extract_estimates_from_draws <- function(sys_eq, estimates,
       next
     }
 
-    estimates_var <- estimates[[kx]]
+    estimates_var <- estimates[[varname]]
 
     beta_estimate <- extract_estimate(
       estimates_var, jx, central_tendency, "beta_jw"
