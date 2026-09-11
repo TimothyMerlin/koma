@@ -2,17 +2,12 @@ KOMA - Large Macroeconomic Model
 ================
 
 [![Lifecycle:
-experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
 [![codecov](https://codecov.io/gh/TimothyMerlin/koma/branch/main/graph/badge.svg?token=8X0PR1F6TP)](https://app.codecov.io/gh/TimothyMerlin/koma)
 
 **koma** is an R package for Bayesian estimation of simultaneous
 equation models (SEMs) using Metropolis-within-Gibbs Markov Chain Monte
 Carlo (MCMC) methods.
-
-> **⚠️ Beta Release**: `koma` is under active development. The
-> user-facing API may still change before the first CRAN release. Core
-> features are working but exported functions may change and bugs are
-> possible. Please report issues on GitHub.
 
 ## Installation
 
@@ -25,11 +20,7 @@ install.packages("koma")
 Or install the latest **development version** from GitHub:
 
 ``` r
-# Install from GitHub
 pak::pak("TimothyMerlin/koma")
-
-# Or using renv
-renv::install("github::TimothyMerlin/koma", rebuild = TRUE)
 ```
 
 ## Documentation
@@ -46,50 +37,20 @@ renv::install("github::TimothyMerlin/koma", rebuild = TRUE)
   I](https://timothymerlin.github.io/koma/articles/koma-klein.html)
 - **Example: small macro model** → [Estimating small macro model for
   Switzerland](https://timothymerlin.github.io/koma/articles/koma-small-macro-model.html)
+- **Example: error correction** → [Error correction in a small open
+  economy model](https://timothymerlin.github.io/koma/articles/koma-error-correction.html)
+- **Diagnostics** → [MCMC diagnostics for an estimated
+  SEM](https://timothymerlin.github.io/koma/articles/koma-diagnostics.html)
+- **HPD intervals** → [Highest probability density (HDR and
+  HDI)](https://timothymerlin.github.io/koma/articles/koma-hpd.html)
 
-## Development
+See the [full documentation site](https://timothymerlin.github.io/koma/)
+for the complete function reference.
 
-### Creating a new Version
+## Contributing
 
-Increment the package version using `usethis`:
-
-``` r
-# Increment the version number (patch/minor/major)
-usethis::use_version()
-```
-
-This updates the `DESCRIPTION` file.
-
-#### Commit changes and tag the release
-
-After updating the version:
-
-``` bash
-# Stage all changes
-git add .
-
-# Commit with a clear message
-git commit -m "Incrementing version to x.x.x"
-
-# Tag the release (protected)
-git tag x.x.x
-
-# Tag the latest release (unprotected, movable)
-git tag -f latest
-```
-
-- `x.x.x` is the new semantic version (e.g. `0.1.0`).
-- Protected tags (like `x.x.x`) are immutable to ensure release
-  integrity.
-- `latest` is an uprotected tag that can be moved to point to the newest
-  release.
-
-#### Push branch and tags
-
-``` bash
-# Push commits
-git push
-
-# Push both tags
-git push origin --tags
-```
+Contributions are welcome! See
+[CONTRIBUTING.md](https://github.com/TimothyMerlin/koma/blob/main/CONTRIBUTING.md)
+for the development setup and pull request process. Bug reports and feature
+requests are welcome via
+[GitHub issues](https://github.com/TimothyMerlin/koma/issues).
