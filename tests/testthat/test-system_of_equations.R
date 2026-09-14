@@ -1002,3 +1002,17 @@ test_that("extract_settings, not parsable throws error", {
   equation <- "y~x1[a=foo,b=1]"
   expect_error(extract_settings(equation))
 })
+
+test_that("extract_settings ignores a bracketed term without '=' (not a
+setting)", {
+  equation <- "y~x1+covid[1:3]"
+  expect_equal(extract_settings(equation), list())
+})
+
+test_that("system_of_equations errors instead of silently dropping a
+bracketed term at the end of the RHS", {
+  equation <- "consp~ydispbr+covid[1:3]"
+  expect_error(
+    system_of_equations(equation, exogenous_variables = c("ydispbr", "covid"))
+  )
+})

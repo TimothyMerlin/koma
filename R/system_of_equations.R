@@ -243,8 +243,11 @@ parse_equation <- function(equation) {
   if (operator == "~") {
     # Strip all priors to prevent false 0 matches inside them
     rhs <- gsub("\\{[^}]*\\}", "", rhs)
-    # Strip all equation specific settings
-    rhs <- gsub("\\[.*?\\]$", "", rhs)
+    # Strip trailing equation specific settings, e.g. "[tau=1.2]".
+    # Requires a "=" inside the brackets so a non-setting bracketed term
+    # (e.g. a typo'd "var[1:3]") is left alone and fails validation instead
+    # of being silently discarded.
+    rhs <- gsub("\\[[^][]*=[^][]*\\]$", "", rhs)
 
     # Remove explicit zero (0) to drop the constant
     if (grepl("(?<!\\.L\\()\\b0\\b(?!\\))", rhs, perl = TRUE)) {
@@ -844,8 +847,9 @@ extract_priors <- function(equation) {
 
 extract_settings <- function(equation) {
   equation <- trimws(equation)
-  # pull out “[key=val,…]” if present
-  match <- regexec("\\[(.*?)\\]", equation)
+  # pull out "[key=val,...]" if present. Requires a "=" inside the brackets
+  # so a non-setting bracketed term isn't misread as settings.
+  match <- regexec("\\[([^][]*=[^][]*)\\]", equation)
   content <- regmatches(equation, match)[[1]][2]
 
   if (!is.na(content) && nzchar(content)) {

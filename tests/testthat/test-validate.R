@@ -426,3 +426,9 @@ many components separated by '*'", {
   equation <- c("consumption~constant+2*income*gdp")
   expect_error(validate_equation(equation))
 })
+
+test_that("validate_equation throws error for a bracket-indexed variable
+(indexed-variable syntax is not supported)", {
+  equation <- c("consumption~constant+gdp+covid[1:3]")
+  expect_error(validate_equation(equation))
+})
