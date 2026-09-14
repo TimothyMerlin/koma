@@ -232,9 +232,8 @@ is_valid_var <- function(name) {
   name <- gsub("\\([^)]*\\)\\*", "", name)
   name <- gsub("\\{[^}]*\\}", "", name)
 
-  # Pattern for standard syntax: var, var.L(1), var[1:4]
-  pattern1 <- "^[a-zA-Z][a-zA-Z0-9_]*((\\.L\\([0-9:,]+\\))|"
-  pattern1 <- paste0(pattern1, "(\\[[0-9:,]+\\]))?$")
+  # Pattern for standard syntax: var, var.L(1)
+  pattern1 <- "^[a-zA-Z][a-zA-Z0-9_]*(\\.L\\([0-9:,]+\\))?$"
 
   # Pattern for lag() syntax, e.g. lag(investment,2:3)
   pattern2 <- "^lag\\([[:space:]]*[a-zA-Z][a-zA-Z0-9_]*[[:space:]]*,[[:space:]]*"
@@ -270,8 +269,6 @@ validate_completeness <- function(equations, exogenous_variables) {
       ))
     } else if (grepl("\\.L\\(", var)) {
       return(sub("^(.*?)\\.L\\(.*", "\\1", var))
-    } else if (grepl("\\[[0-9:,]+\\]$", var)) {
-      return(sub("^(.*?)\\[[0-9:,]+\\]$", "\\1", var))
     } else {
       return(var)
     }
@@ -297,8 +294,7 @@ validate_completeness <- function(equations, exogenous_variables) {
   # Remove lag
   missing_variables <- missing_variables[
     !grepl("\\.L\\(", missing_variables) &
-      !grepl("^lag\\(", missing_variables) &
-      !grepl("\\[[0-9:,]+\\]$", missing_variables)
+      !grepl("^lag\\(", missing_variables)
   ]
 
   if (length(missing_variables) != 0) {
