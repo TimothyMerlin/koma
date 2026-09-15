@@ -26,6 +26,13 @@
 #'   - `range`: Sets the range of this axis. List with `start` and `end`.
 #'   - `tickfont`: Sets this axis' tick font, including tickfont for annual
 #'                 growth rates.
+#' @param digits A list specifying the number of decimal places shown for
+#' plotted values.
+#'   - `quarterly`: Digits for the quarterly growth-rate hover values.
+#'                  Defaults to 2.
+#'   - `level`: Digits for the level hover values. Defaults to 2.
+#'   - `annual`: Digits for the annual growth-rate annotations below the
+#'               x-axis. Defaults to 2.
 #' @param yaxis A list with custom labels for the y-axes `y` (left) and
 #'            `y2` (right).
 #'   - `y`: A list with custom labels for the y-axis.
@@ -68,6 +75,11 @@ init_koma_theme <- function(index = list(start = NULL, end = NULL),
                             xaxis = list(
                               tickfont = NULL,
                               range = list(start = NULL, end = NULL)
+                            ),
+                            digits = list(
+                              quarterly = 2,
+                              level = 2,
+                              annual = 2
                             ),
                             yaxis = list(
                               y = list(

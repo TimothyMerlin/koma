@@ -11,6 +11,7 @@
 * Identity (`==`) equations can now appear anywhere in the system of equations, not only after every stochastic (`~`) equation. Previously, an identity placed before a stochastic equation caused that equation's column to be estimated in its place, leaving the real equation unestimated and surfacing only later as an opaque `<variable> not found in the estimates` error (#137).
 * Added `dummies(prefix, spec)` equation syntax, e.g. `dummies(covid, 1:8)`, as shorthand for a set of dummy variables (`covid_1+covid_2+...+covid_8`). `spec` uses the same range/list syntax as lag notation. It's expanded before validation, so the expanded names must still be declared in `exogenous_variables` like any other regressor; see `vignette("koma-equations")`.
 * Fixed `plot()`/`plotli()` coloring the current year's annual growth-rate annotation grey (in-sample) even when some of its quarters are still forecasted. `to_long()` now classifies an observation as in-sample only once its full period (not just its start) has elapsed by the forecast start date, which matters for `growth_annual` data since an annual timestamp only marks the start of the year.
+* Added `digits` to `init_koma_theme()`, a list with `quarterly`, `level`, and `annual` elements controlling the decimal places shown in quarterly growth-rate hover values, level hover values, and annual growth-rate annotations respectively (previously hardcoded to 2, 2, and 1 decimal place; the annual default is now 2 as well).
 
 # koma 0.3.1
 

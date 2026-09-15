@@ -10,6 +10,7 @@ init_koma_theme(
   font = NULL,
   trace_name = NULL,
   xaxis = list(tickfont = NULL, range = list(start = NULL, end = NULL)),
+  digits = list(quarterly = 2, level = 2, annual = 2),
   yaxis = list(y = list(title = list(text = "QoQ, in \%"), tick_center = 0), y2 =
     list(title = list(text = "Level"), tick_center = 100), tickfont = NULL, number_ticks
     = 5),
@@ -52,6 +53,16 @@ The list can have four elements:
 \item \code{range}: Sets the range of this axis. List with \code{start} and \code{end}.
 \item \code{tickfont}: Sets this axis' tick font, including tickfont for annual
 growth rates.
+}}
+
+\item{digits}{A list specifying the number of decimal places shown for
+plotted values.
+\itemize{
+\item \code{quarterly}: Digits for the quarterly growth-rate hover values.
+Defaults to 2.
+\item \code{level}: Digits for the level hover values. Defaults to 2.
+\item \code{annual}: Digits for the annual growth-rate annotations below the
+x-axis. Defaults to 2.
 }}
 
 \item{yaxis}{A list with custom labels for the y-axes \code{y} (left) and

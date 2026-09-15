@@ -418,13 +418,16 @@ get_y_position_for_annotations <- function(fig) {
 #' optional `family` and `size` components to customize the font family and
 #' size, respectively. If not specified, default Plotly text properties are
 #' used.
+#' @param digits Number of decimal places to round the annotation value to.
+#' Defaults to 1.
 #'
 #' @return A list of lists, where each inner list represents an annotation in
 #' the format required by Plotly. Each annotation includes properties such as
 #' position, text, and formatting.
 #' @keywords internal
 create_annotations <- function(x_ticks, y_position,
-                               font = list(family = NULL, size = NULL)) {
+                               font = list(family = NULL, size = NULL),
+                               digits = 1) {
   annotations_list <- list()
 
   for (i in seq_len(nrow(x_ticks))) {
@@ -436,7 +439,7 @@ create_annotations <- function(x_ticks, y_position,
     annotations_list[[length(annotations_list) + 1]] <- list(
       x = x_ticks$year[i],
       y = y_position,
-      text = paste0("<b>", round(x_ticks$value[i], 1), "</b>%"),
+      text = paste0("<b>", round(x_ticks$value[i], digits), "</b>%"),
       showarrow = FALSE,
       xref = "x",
       yref = "paper",

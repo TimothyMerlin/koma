@@ -7,7 +7,8 @@
 create_annotations(
   x_ticks,
   y_position,
-  font = list(family = NULL, size = NULL)
+  font = list(family = NULL, size = NULL),
+  digits = 1
 )
 }
 \arguments{
@@ -22,6 +23,9 @@ annotations, typically in paper coordinates (0 to 1).}
 optional \code{family} and \code{size} components to customize the font family and
 size, respectively. If not specified, default Plotly text properties are
 used.}
+
+\item{digits}{Number of decimal places to round the annotation value to.
+Defaults to 1.}
 }
 \value{
 A list of lists, where each inner list represents an annotation in

@@ -115,17 +115,21 @@ plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL,
   annotations_in_sample <- create_annotations(
     x_ticks = x_ticks_in_sample,
     y_position = y_position_for_annotations,
-    font = theme$xaxis$tickfont
+    font = theme$xaxis$tickfont,
+    digits = theme$digits$annual
   )
   annotations_oos <- create_annotations(
     x_ticks = x_ticks_oos,
     y_position = y_position_for_annotations,
-    font = theme$xaxis$tickfont
+    font = theme$xaxis$tickfont,
+    digits = theme$digits$annual
   )
   annotations <- c(annotations_in_sample, annotations_oos)
 
   # Get optimal ticks
   optimal_y_ticks <- get_optimal_ticks(df_long, theme$xaxis$range, whisker_data)
+  growth_hovertemplate <- sprintf("%%{customdata}: %%{y:.%df}", theme$digits$quarterly)
+  level_hovertemplate <- sprintf("%%{text}: %%{y:.%df}", theme$digits$level)
   ## plot
   # add growth bars for in sample data
   fig <-
@@ -141,7 +145,7 @@ plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL,
       color = ~data_type,
       text = ~period_label,
       textfont = list(color = theme$color$bar_textfont$in_sample),
-      hovertemplate = "%{customdata}: %{y:.2f}",
+      hovertemplate = growth_hovertemplate,
       name = theme$trace_name$in_sample_growth,
       type = "bar",
       marker = list(color = ~color_code, width = 4),
@@ -195,7 +199,7 @@ plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL,
       color = ~data_type,
       text = ~period_label,
       textfont = list(color = theme$color$bar_textfont$forecast),
-      hovertemplate = "%{customdata}: %{y:.2f}",
+      hovertemplate = growth_hovertemplate,
       name = theme$trace_name$forecast_growth,
       type = "bar",
       marker = list(color = ~color_code, width = 4),
@@ -222,7 +226,7 @@ plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL,
       y = ~value,
       color = ~data_type,
       text = ~dates_formatted,
-      hovertemplate = "%{text}: %{y:.2f}",
+      hovertemplate = level_hovertemplate,
       name = theme$trace_name$in_sample_level,
       yaxis = "y2",
       type = "scatter",
@@ -242,7 +246,7 @@ plotli <- function(df_long, fig = NULL, theme = NULL, fan_data = NULL,
       y = ~value,
       color = ~data_type,
       text = ~dates_formatted,
-      hovertemplate = "%{text}: %{y:.2f}",
+      hovertemplate = level_hovertemplate,
       name = theme$trace_name$forecast_level,
       yaxis = "y2",
       type = "scatter",
