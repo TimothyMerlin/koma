@@ -245,9 +245,12 @@ test_that("draw_parameters_j_informative with diffuse priors and no gamma priors
     0.308866327509242, 0.360646340961647, 0.415597362863418
   ), dim = c(3L, 2L, 2L), dimnames = list(c("5%", "50%", "95%"), NULL, NULL))
 
-  # This sampler path shows small cross-environment drift despite a fixed seed.
+  # This sampler path shows small cross-environment drift despite a fixed seed
+  # (BLAS/LAPACK-level floating point differences compounding over 200
+  # iterations). CRAN's tests-MKL flavor exceeded the previous gamma bound
+  # (0.2136 vs. 0.21); widen it with more headroom.
   expect_equal(beta_q, expected_beta, tolerance = 0.12)
-  expect_lte(max(abs(unname(gamma_q) - unname(expected_gamma))), 0.21)
+  expect_lte(max(abs(unname(gamma_q) - unname(expected_gamma))), 0.28)
   expect_equal(omega_q, expected_omega, tolerance = 0.15)
 })
 
