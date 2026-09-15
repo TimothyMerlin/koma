@@ -188,9 +188,13 @@ test_that("plot point forecasts supports monthly single-frequency data", {
 })
 
 test_that("plot point forecasts supports yearly single-frequency data", {
+  # Small perturbation avoids a perfect (zero-residual) fit of y on y.L(1)
+  # and x, which otherwise starves the Gibbs sampler's variance draw of
+  # degrees of freedom and makes it flaky across BLAS backends.
   y <- as_ets(
     stats::ts(
-      cumsum(seq(1, 8, by = 1)),
+      cumsum(seq(1, 8, by = 1)) +
+        c(0, 0.4, -0.3, 0.2, -0.4, 0.3, -0.2, 0.1),
       start = 2015,
       frequency = 1
     ),
