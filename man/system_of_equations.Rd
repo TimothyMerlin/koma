@@ -45,6 +45,12 @@ by commas if provided as a single string.
 \item Identity equations use \code{==} (e.g. \code{y == 0.5*x1 + 0.5*x2}).
 \item Lagged variables are denoted by \code{X.L(x)} for variable \code{X} and lag \code{L(x)}
 (e.g. \code{.L(1)}, \code{.L(2)}).
+\item A run of indexed dummy variables can be written as
+\code{dummies(prefix, spec)}, e.g. \code{dummies(covid, 1:8)} expands to
+\code{covid_1+covid_2+...+covid_8}. \code{spec} follows the same syntax as lag
+ranges (a single index, a \code{lower:upper} range, or a comma-separated mix).
+Expansion happens before validation, so every expanded name must still be
+declared in \code{exogenous_variables}, just like a hand-typed variable.
 \item Intercept are included by default, you can also explicitly specify the
 constant by adding \code{constant} to the equation (e.g. \code{y ~ constant + x1}).
 To exclude the intercept, add \code{+0} or \code{-1} to the equation

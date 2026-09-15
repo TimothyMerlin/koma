@@ -12,6 +12,12 @@
 #' - Identity equations use `==` (e.g. `y == 0.5*x1 + 0.5*x2`).
 #' - Lagged variables are denoted by `X.L(x)` for variable `X` and lag `L(x)`
 #'  (e.g. `.L(1)`, `.L(2)`).
+#' - A run of indexed dummy variables can be written as
+#' `dummies(prefix, spec)`, e.g. `dummies(covid, 1:8)` expands to
+#' `covid_1+covid_2+...+covid_8`. `spec` follows the same syntax as lag
+#' ranges (a single index, a `lower:upper` range, or a comma-separated mix).
+#' Expansion happens before validation, so every expanded name must still be
+#' declared in `exogenous_variables`, just like a hand-typed variable.
 #' - Intercept are included by default, you can also explicitly specify the
 #' constant by adding `constant` to the equation (e.g. `y ~ constant + x1`).
 #' To exclude the intercept, add `+0` or `-1` to the equation
@@ -80,6 +86,11 @@ system_of_equations <- function(equations = vector(),
       "i" = "Pass at least one stochastic equation to {.fun system_of_equations}."
     ))
   }
+
+  # Shorthand expansion passes: each rewrites equation-string sugar into
+  # syntax the rest of the pipeline already understands, before priors,
+  # settings, or validation ever see the equation.
+  equations <- expand_dummies(equations)
 
   priors <- lapply(equations, extract_priors)
   equation_settings <- lapply(equations, extract_settings)
@@ -754,19 +765,32 @@ extract_lagged_vars <- function(equations, pattern) {
   list(variables = unique(all_vars), equations = all_equations)
 }
 
-parse_lag_spec <- function(lag_spec) {
-  parts <- strsplit(lag_spec, ",")[[1]]
-  lags <- c()
+#' Parse an Index Specification
+#'
+#' @description
+#' Parses a comma-separated specification of integer indices, where each
+#' component is either a single integer or a `lower:upper` range, into the
+#' full integer vector it denotes. Shared by lag notation (`.L()`/`lag()`)
+#' and `dummies()` indexed-variable expansion, since both use the same
+#' "single value or range, comma-separated" spec syntax.
+#'
+#' @param spec A single string, e.g. `"1"`, `"1:4"`, or `"1:3,5"`.
+#'
+#' @return An integer vector of unique indices, e.g. `c(1L, 2L, 3L, 5L)`.
+#' @keywords internal
+parse_index_spec <- function(spec) {
+  parts <- strsplit(spec, ",")[[1]]
+  indices <- c()
   for (part in parts) {
     part <- trimws(part)
     if (grepl(":", part)) {
       bounds <- as.integer(strsplit(part, ":")[[1]])
-      lags <- c(lags, seq(bounds[1], bounds[2]))
+      indices <- c(indices, seq(bounds[1], bounds[2]))
     } else {
-      lags <- c(lags, as.integer(part))
+      indices <- c(indices, as.integer(part))
     }
   }
-  unique(lags)
+  unique(indices)
 }
 
 extract_from_matches <- function(equation, pattern) {
@@ -782,7 +806,7 @@ extract_from_matches <- function(equation, pattern) {
 
     var_name <- parts[pattern$var_pos + 1]
     lag_spec <- parts[pattern$lag_spec_pos + 1]
-    lags <- parse_lag_spec(lag_spec)
+    lags <- parse_index_spec(lag_spec)
 
     vars <- paste0(var_name, ".L(", lags, ")")
     new_str <- paste(vars, collapse = "+")
@@ -796,6 +820,73 @@ extract_from_matches <- function(equation, pattern) {
   }
 
   list(variables = all_vars, equation = equation)
+}
+
+#' Expand Indexed Dummy-Variable Shorthand
+#'
+#' @description
+#' Rewrites `dummies(prefix, spec)` calls into an additive series of plain
+#' variable names `prefix_1+prefix_2+...`, where the indices come from
+#' `spec` (parsed by `parse_index_spec()`, the same "single value or range,
+#' comma-separated" grammar used by lag notation). For example,
+#' `dummies(covid, 1:8)` becomes `covid_1+covid_2+...+covid_8`.
+#'
+#' This runs before any other equation processing (priors, settings,
+#' validation), so the expanded terms are indistinguishable from terms the
+#' user typed by hand for every downstream step - including
+#' `validate_completeness()`, which will require each expanded name (e.g.
+#' `covid_1`) to be declared in `exogenous_variables` like any other
+#' regressor. Unlike lagged variables, there is no separate "base variable"
+#' backing a dummy family to validate instead, so no such exemption exists.
+#'
+#' Any `dummies(...)` call is matched loosely first (so a malformed one is
+#' actually caught here, rather than left untouched to fail later as an
+#' unhelpful generic "invalid variable"), then the prefix and spec are
+#' validated strictly, raising `cli::cli_abort()` with the offending call
+#' shown verbatim if either is invalid.
+#'
+#' @param equations A character vector of equation strings.
+#'
+#' @return A character vector of equations with every `dummies(...)` call
+#' expanded.
+#' @keywords internal
+expand_dummies <- function(equations) {
+  loose_pattern <- "dummies\\(([^,()]*),([^()]*)\\)"
+  prefix_pattern <- "^[a-zA-Z][a-zA-Z0-9_]*$"
+  spec_pattern <- "^[0-9:,]+$"
+
+  vapply(equations, function(equation) {
+    matches <- gregexpr(loose_pattern, equation, perl = TRUE)
+    raw_matches <- regmatches(equation, matches)[[1]]
+
+    for (expr in raw_matches) {
+      m <- regexec(loose_pattern, expr, perl = TRUE)
+      parts <- regmatches(expr, m)[[1]]
+      prefix <- trimws(parts[2])
+      spec <- trimws(gsub(" ", "", parts[3]))
+
+      indices <- if (grepl(prefix_pattern, prefix) && grepl(spec_pattern, spec)) {
+        tryCatch(parse_index_spec(spec), error = function(e) integer(0))
+      } else {
+        integer(0)
+      }
+
+      if (length(indices) == 0 || anyNA(indices)) {
+        cli::cli_abort(c(
+          "!" = "Invalid {.code dummies()} call: {.code {expr}}.",
+          "i" = "Expected {.code dummies(prefix, spec)}, where {.arg prefix} is
+          a variable name and {.arg spec} is a comma-separated list of
+          integers or {.code lower:upper} ranges, e.g.
+          {.code dummies(covid, 1:8)}."
+        ))
+      }
+
+      replacement <- paste(paste0(prefix, "_", indices), collapse = "+")
+      equation <- sub(expr, replacement, equation, fixed = TRUE)
+    }
+
+    equation
+  }, character(1), USE.NAMES = FALSE)
 }
 
 extract_priors <- function(equation) {
