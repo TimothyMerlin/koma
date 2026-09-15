@@ -12,7 +12,7 @@
 #' - Identity equations use `==` (e.g. `y == 0.5*x1 + 0.5*x2`).
 #' - Lagged variables are denoted by `X.L(x)` for variable `X` and lag `L(x)`
 #'  (e.g. `.L(1)`, `.L(2)`).
-#' - A run of indexed dummy variables can be written as
+#' - Dummy variables can be written as
 #' `dummies(prefix, spec)`, e.g. `dummies(covid, 1:8)` expands to
 #' `covid_1+covid_2+...+covid_8`. `spec` follows the same syntax as lag
 #' ranges (a single index, a `lower:upper` range, or a comma-separated mix).

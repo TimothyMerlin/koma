@@ -140,11 +140,11 @@ If the acceptance rate falls outside 30%-60 %, a warning is emitted.
 "consumption ~ constant + gdp + consumption.L(1) + consumption.L(2) [tau = 1.2]"
 ```
 
-## 7. Indexed Dummy Variables
+## 7. Dummy Variables
 
-A run of indexed dummy variables can be written as `dummies(prefix, spec)`
-instead of spelling out every term. `spec` follows the same syntax as lag
-ranges (a single index, a `lower:upper` range, or a comma-separated mix).
+Dummy variables can be written as `dummies(prefix, spec)` instead of
+spelling out every term. `spec` follows the same syntax as lag ranges (a
+single index, a `lower:upper` range, or a comma-separated mix).
 
 ```r
 # Shorthand:

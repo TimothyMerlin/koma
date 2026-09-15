@@ -45,7 +45,7 @@ by commas if provided as a single string.
 \item Identity equations use \code{==} (e.g. \code{y == 0.5*x1 + 0.5*x2}).
 \item Lagged variables are denoted by \code{X.L(x)} for variable \code{X} and lag \code{L(x)}
 (e.g. \code{.L(1)}, \code{.L(2)}).
-\item A run of indexed dummy variables can be written as
+\item Dummy variables can be written as
 \code{dummies(prefix, spec)}, e.g. \code{dummies(covid, 1:8)} expands to
 \code{covid_1+covid_2+...+covid_8}. \code{spec} follows the same syntax as lag
 ranges (a single index, a \code{lower:upper} range, or a comma-separated mix).
