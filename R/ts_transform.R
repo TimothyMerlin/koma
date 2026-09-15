@@ -68,7 +68,7 @@ prepare_data_to_plot <- function(mts_list, start) {
 to_long <- function(mts, start) {
   frequency <- stats::frequency(mts)
   sample_status <-
-    ifelse(stats::time(mts) < start,
+    ifelse(stats::time(mts) + 1 / frequency <= start,
       "in_sample", "forecast"
     )
 

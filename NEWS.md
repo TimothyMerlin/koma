@@ -10,6 +10,7 @@
 * Sped up estimation by using `crossprod()`/`tcrossprod()` and the two-argument `solve(A, b)` instead of `t(X) %*% X` and `solve(A) %*% b` in the OLS helpers called on every Gibbs sampler draw.
 * Identity (`==`) equations can now appear anywhere in the system of equations, not only after every stochastic (`~`) equation. Previously, an identity placed before a stochastic equation caused that equation's column to be estimated in its place, leaving the real equation unestimated and surfacing only later as an opaque `<variable> not found in the estimates` error (#137).
 * Added `dummies(prefix, spec)` equation syntax, e.g. `dummies(covid, 1:8)`, as shorthand for a set of dummy variables (`covid_1+covid_2+...+covid_8`). `spec` uses the same range/list syntax as lag notation. It's expanded before validation, so the expanded names must still be declared in `exogenous_variables` like any other regressor; see `vignette("koma-equations")`.
+* Fixed `plot()`/`plotli()` coloring the current year's annual growth-rate annotation grey (in-sample) even when some of its quarters are still forecasted. `to_long()` now classifies an observation as in-sample only once its full period (not just its start) has elapsed by the forecast start date, which matters for `growth_annual` data since an annual timestamp only marks the start of the year.
 
 # koma 0.3.1
 

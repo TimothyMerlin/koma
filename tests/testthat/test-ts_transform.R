@@ -147,3 +147,23 @@ test_that("to_long supports monthly and yearly frames", {
     rep("forecast", 3)
   )
 })
+
+test_that("to_long classifies a partially-forecasted year as forecast", {
+  # `start` is expressed at quarterly frequency (as it is when growth_annual
+  # is passed through plot.koma_forecast()), while `mts` is annual. The
+  # current year (2025) has 3 of its 4 quarters forecasted and must not be
+  # classified as "in_sample" merely because the year began before `start`.
+  mts_yearly <- stats::ts(
+    matrix(1:3, ncol = 1),
+    start = 2023,
+    frequency = 1
+  )
+  forecast_start <- dates_to_num(c(2025, 2), frequency = 4)
+
+  result <- to_long(mts_yearly, forecast_start)
+
+  expect_identical(
+    as.character(result$sample_status),
+    c("in_sample", "in_sample", "forecast")
+  )
+})
