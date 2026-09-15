@@ -133,9 +133,32 @@ Rules:
 
 ## 6. Equation-specific Tau
 
-You can override the default tau in your `gibbs_settings` for a single equation by appending `[tau = value]` after its equation. 
+You can override the default tau in your `gibbs_settings` for a single equation by appending `[tau = value]` after its equation.
 If the acceptance rate falls outside 30%-60 %, a warning is emitted.
 
 ```r
 "consumption ~ constant + gdp + consumption.L(1) + consumption.L(2) [tau = 1.2]"
+```
+
+## 7. Indexed Dummy Variables
+
+A run of indexed dummy variables can be written as `dummies(prefix, spec)`
+instead of spelling out every term. `spec` follows the same syntax as lag
+ranges (a single index, a `lower:upper` range, or a comma-separated mix).
+
+```r
+# Shorthand:
+consp ~ ydispbr + consp.L(1) + dummies(covid, 1:8)
+
+# Equivalent to:
+consp ~ ydispbr + consp.L(1) +
+  covid_1 + covid_2 + covid_3 + covid_4 + covid_5 + covid_6 + covid_7 + covid_8
+```
+
+`dummies()` is expanded before validation, so the expanded names are treated
+exactly like any hand-typed variable: each one (`covid_1`, `covid_2`, ...)
+must still be declared in `exogenous_variables`.
+
+```r
+exogenous_variables <- c("ydispbr", paste0("covid_", 1:8))
 ```

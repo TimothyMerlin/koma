@@ -954,6 +954,84 @@ test_that("extract_lagged_vars returns the correct lagged variables", {
   expect_equal(sort(result), sort(expected))
 })
 
+test_that("expand_dummies expands a range spec", {
+  equation <- "consp~ydispbr+consp.L(1)+dummies(covid,1:8)"
+  expected <- paste0(
+    "consp~ydispbr+consp.L(1)+",
+    paste(paste0("covid_", 1:8), collapse = "+")
+  )
+  expect_equal(expand_dummies(equation), expected)
+})
+
+test_that("expand_dummies expands a range + list spec", {
+  equation <- "y~x1+dummies(season,1:3,5)"
+  expect_equal(expand_dummies(equation), "y~x1+season_1+season_2+season_3+season_5")
+})
+
+test_that("expand_dummies handles a dummies() call at the start, middle, and
+end of the RHS", {
+  expect_equal(expand_dummies("y~dummies(covid,1:2)+x1"), "y~covid_1+covid_2+x1")
+  expect_equal(expand_dummies("y~x1+dummies(covid,1:2)+x2"), "y~x1+covid_1+covid_2+x2")
+  expect_equal(expand_dummies("y~x1+dummies(covid,1:2)"), "y~x1+covid_1+covid_2")
+})
+
+test_that("expand_dummies expands multiple dummies() calls in one equation", {
+  equation <- "y~x1+dummies(covid,1:2)+dummies(season,1:2)"
+  expect_equal(expand_dummies(equation), "y~x1+covid_1+covid_2+season_1+season_2")
+})
+
+test_that("expand_dummies leaves equations without dummies() unchanged", {
+  equation <- "y~x1+x2"
+  expect_equal(expand_dummies(equation), equation)
+})
+
+test_that("expand_dummies throws a clear error for an empty spec", {
+  expect_error(expand_dummies("y~x1+dummies(covid,)"), "Invalid.*dummies")
+})
+
+test_that("expand_dummies throws a clear error for a non-numeric spec", {
+  expect_error(expand_dummies("y~x1+dummies(covid,abc)"), "Invalid.*dummies")
+})
+
+test_that("expand_dummies throws a clear error for an invalid prefix", {
+  expect_error(expand_dummies("y~x1+dummies(1covid,1:8)"), "Invalid.*dummies")
+})
+
+test_that("system_of_equations expands dummies() and requires the expanded
+names to be declared as exogenous", {
+  equation <- "consp~ydispbr+consp.L(1)+dummies(covid,1:8)"
+  exogenous_variables <- c("ydispbr", paste0("covid_", 1:8))
+
+  result <- system_of_equations(equation, exogenous_variables)
+
+  expected_eq <- paste0(
+    "consp~constant+ydispbr+consp.L(1)+",
+    paste(paste0("covid_", 1:8), collapse = "+")
+  )
+  expect_equal(result$equations, expected_eq)
+})
+
+test_that("system_of_equations does not auto-register dummies() variables:
+a missing declaration still errors", {
+  equation <- "consp~ydispbr+dummies(covid,1:8)"
+  # covid_5 deliberately left out
+  exogenous_variables <- c("ydispbr", paste0("covid_", c(1:4, 6:8)))
+
+  expect_error(
+    system_of_equations(equation, exogenous_variables),
+    "covid_5"
+  )
+})
+
+test_that("dummies() at the end of the RHS still allows a trailing
+equation-specific setting", {
+  equation <- "y~x1+dummies(covid,1:2)[tau=1.2]"
+  result <- system_of_equations(equation, exogenous_variables = c("x1", "covid_1", "covid_2"))
+
+  expect_equal(result$equations, "y~constant+x1+covid_1+covid_2")
+  expect_equal(result$equation_settings$y$tau, 1.2)
+})
+
 test_that("no settings yields empty list", {
   equation <- "y~x1+x2"
   expect_equal(extract_settings(equation), list())
