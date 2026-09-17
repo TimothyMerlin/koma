@@ -41,7 +41,6 @@ Imports:
     doFuture (>= 1.0.0),
     foreach (>= 1.5.2),
     glue (>= 1.8.0),
-    Matrix (>= 1.5.4.1),
     methods,
     progressr (>= 0.15.0),
     purrr (>= 1.0.4),

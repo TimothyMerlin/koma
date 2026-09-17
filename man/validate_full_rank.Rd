@@ -25,7 +25,7 @@ when a lagged identity variable (e.g. \code{gdp.L(1)}, where
 identity components elsewhere in the system: since an identity holds
 exactly (no error term), its lag is then an exact linear combination of
 other columns already in \code{x_matrix}. Left uncaught, this surfaces later as
-an opaque \code{"computationally singular"} error from \code{Matrix::solve()} deep
-inside the Gibbs sampler.
+an opaque \code{"computationally singular"} error from \code{solve()} deep inside
+the Gibbs sampler.
 }
 \keyword{internal}

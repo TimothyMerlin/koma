@@ -160,8 +160,8 @@ model_identification <- function(character_gamma_matrix,
 #' identity components elsewhere in the system: since an identity holds
 #' exactly (no error term), its lag is then an exact linear combination of
 #' other columns already in `x_matrix`. Left uncaught, this surfaces later as
-#' an opaque `"computationally singular"` error from `Matrix::solve()` deep
-#' inside the Gibbs sampler.
+#' an opaque `"computationally singular"` error from `solve()` deep inside
+#' the Gibbs sampler.
 #'
 #' @param x_matrix A \eqn{(T \times k)} matrix \eqn{X} of observations on
 #' \eqn{k} exogenous variables.
