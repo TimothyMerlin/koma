@@ -52,6 +52,17 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
   out$omega_tilde_jw <- vector("list", gibbs_sampler$nsave)
   count_accepted <- matrix(0, gibbs_sampler$ndraws, 1)
 
+  # x_matrix is fixed across all draws of this equation, so x'x (and the
+  # restricted-column x_b'x_b used for beta_hat) are invariant across the
+  # whole loop below. Compute them once here instead of on every call.
+  xtx <- crossprod(x_matrix)
+  indices_to_remove <- grep("\\b0\\b", character_beta_matrix[, jx])
+  if (length(indices_to_remove) > 0) {
+    xbtxb <- crossprod(x_matrix[, -indices_to_remove, drop = FALSE])
+  } else {
+    xbtxb <- xtx
+  }
+
   ##### 1. Initialize sampler:
   # get starting value for Metropolis-Hastings algorithm
   initial_parameter <- initialize_sampler_informative(
@@ -59,7 +70,9 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
     x_matrix,
     character_gamma_matrix,
     character_beta_matrix,
-    jx
+    jx,
+    xtx,
+    xbtxb
   )
 
   gamma_jw <- initial_parameter$gamma_jw
@@ -70,7 +83,7 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
   # Get additional starting value for the first step for omega_jw
   omega_jw <- initial_omega_j(
     y_matrix, x_matrix, character_gamma_matrix,
-    character_beta_matrix, jx, gamma_jw
+    character_beta_matrix, jx, gamma_jw, xtx, xbtxb
   )
 
   gx <- 1 # initial value for saved draws
@@ -80,7 +93,7 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
     ##### 2. Draw Theta_j from multivariate normal distribution
     results_draw_theta_j <- draw_theta_j_informative(
       y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
-      jx, gamma_jw, omega_jw, priors_j
+      jx, gamma_jw, omega_jw, priors_j, xtx
     )
 
     # Get theta matrix
@@ -146,6 +159,13 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
 #' algorithm.
 #'
 #' @inheritParams draw_parameters_j_informative
+#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
+#' invariant across Gibbs draws, so callers that iterate can compute it once
+#' and pass it in to avoid recomputing it on every call. If `NULL` (the
+#' default), it is computed internally.
+#' @param xbtxb Optional precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
+#' \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
+#' rationale as `xtx`. If `NULL` (the default), it is computed internally.
 #'
 #' @return A list containing the initial parameters for gamma
 #' (`gamma_jw`) and the Cholesky factor of the
@@ -155,7 +175,8 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
 #' @keywords internal
 initialize_sampler_informative <- function(y_matrix, x_matrix,
                                            character_gamma_matrix,
-                                           character_beta_matrix, jx) {
+                                           character_beta_matrix, jx,
+                                           xtx = NULL, xbtxb = NULL) {
   number_endogenous_in_j <-
     length(grep("gamma", character_gamma_matrix[, jx]))
   if (number_endogenous_in_j == 0) {
@@ -173,6 +194,8 @@ initialize_sampler_informative <- function(y_matrix, x_matrix,
       character_gamma_matrix = character_gamma_matrix,
       character_beta_matrix = character_beta_matrix,
       jx = jx,
+      xtx = xtx,
+      xbtxb = xbtxb,
       hessian = TRUE,
       method = "BFGS"
     )
@@ -180,9 +203,9 @@ initialize_sampler_informative <- function(y_matrix, x_matrix,
     # Use maximum as initial condition
     gamma_jw <- optimize_residuals$par
     # Use inverse of Hessian to approximate dispersion of target function
-    inverse_hessian <- Matrix::solve(optimize_residuals$hessian)
+    inverse_hessian <- solve(optimize_residuals$hessian)
     # Cholesky factor of inverse of Hessian
-    cholesky_of_inverse_hessian <- t(Matrix::chol(inverse_hessian))
+    cholesky_of_inverse_hessian <- t(chol(inverse_hessian))
 
     list(
       gamma_jw = gamma_jw,
@@ -307,9 +330,9 @@ draw_omega_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
   }
 
   # Compute scale parameter matrix
-  omega_hat <- t(Matrix::solve(a_matrix_j)) %*%
+  omega_hat <- t(solve(a_matrix_j)) %*%
     t(z_matrix_j - x_matrix %*% theta_jw) %*%
-    (z_matrix_j - x_matrix %*% theta_jw) %*% Matrix::solve(a_matrix_j)
+    (z_matrix_j - x_matrix %*% theta_jw) %*% solve(a_matrix_j)
 
   omega_bar <- omega_hat + priors_j[["omega_scale"]]
 
@@ -334,12 +357,16 @@ draw_omega_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
 #'
 #' @inheritParams draw_parameters_j_informative
 #' @inheritParams draw_gamma_j_informative
+#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
+#' invariant across Gibbs draws, so callers that iterate can compute it once
+#' and pass it in to avoid recomputing it on every call. If `NULL` (the
+#' default), it is computed internally.
 #'
 #' @return List containing theta_jw and beta_jw
 #' @keywords internal
 draw_theta_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
                                      character_beta_matrix, jx, gamma_jw,
-                                     omega_jw, priors_j) {
+                                     omega_jw, priors_j, xtx = NULL) {
   number_endogenous_in_j <-
     length(grep("gamma", character_gamma_matrix[, jx]))
   number_of_exogenous <- nrow(character_beta_matrix)
@@ -362,7 +389,7 @@ draw_theta_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
 
   # Compute posterior mean and VCV for theta
   theta_mat <- c(
-    construct_theta_bar_j(x_matrix, z_matrix_j, priors_j, omega_tilde_jw)
+    construct_theta_bar_j(x_matrix, z_matrix_j, priors_j, omega_tilde_jw, xtx)
   )
   theta_bar <- theta_mat$theta_bar
   xi_bar <- theta_mat$xi_bar
@@ -426,8 +453,9 @@ draw_theta_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
       drop = FALSE
     ]
     # Compute update of posterior mean and posterior variance
-    theta_tilde <- theta_p1 - xi_p12 %*% Matrix::solve(xi_p22) %*% theta_p2
-    xi_tilde <- xi_p11 - xi_p12 %*% Matrix::solve(xi_p22) %*% xi_p21
+    inverse_xi_p22 <- solve(xi_p22)
+    theta_tilde <- theta_p1 - xi_p12 %*% inverse_xi_p22 %*% theta_p2
+    xi_tilde <- xi_p11 - xi_p12 %*% inverse_xi_p22 %*% xi_p21
   } else {
     theta_tilde <- theta_p1
     xi_tilde <- xi_p11
@@ -512,18 +540,18 @@ target_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
         )
       )
     +
-      0.5 * sum(diag(t(Matrix::solve(a_matrix_j)) %*%
+      0.5 * sum(diag(t(solve(a_matrix_j)) %*%
       t(z_matrix_j - x_matrix %*% theta_jw) %*%
       (z_matrix_j - x_matrix %*% theta_jw) %*%
-      Matrix::solve(a_matrix_j) %*% Matrix::solve(omega_jw)))
+      solve(a_matrix_j) %*% solve(omega_jw)))
   } else {
     # Evaluate log of target function
     # (multiply by -1: maximize instead of minimize)
     target_result <-
-      0.5 * sum(diag(t(Matrix::solve(a_matrix_j)) %*%
+      0.5 * sum(diag(t(solve(a_matrix_j)) %*%
         t(z_matrix_j - x_matrix %*% theta_jw) %*%
         (z_matrix_j - x_matrix %*% theta_jw) %*%
-        Matrix::solve(a_matrix_j) %*% Matrix::solve(omega_jw)))
+        solve(a_matrix_j) %*% solve(omega_jw)))
   }
   target_result
 }
@@ -537,6 +565,13 @@ target_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
 #'
 #' @inheritParams draw_parameters_j_informative
 #' @inheritParams draw_gamma_j_informative
+#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
+#' invariant across Gibbs draws, so callers that iterate can compute it once
+#' and pass it in to avoid recomputing it on every call. If `NULL` (the
+#' default), it is computed internally.
+#' @param xbtxb Optional precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
+#' \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
+#' rationale as `xtx`. If `NULL` (the default), it is computed internally.
 #'
 #' @return The function returns the evaluation of the target function,
 #' which is used to decide whether to accept or reject proposed states
@@ -544,7 +579,8 @@ target_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
 #' @keywords internal
 target_j_informative_initial <- function(y_matrix, x_matrix,
                                          character_gamma_matrix,
-                                         character_beta_matrix, jx, gamma_jw) {
+                                         character_beta_matrix, jx, gamma_jw,
+                                         xtx = NULL, xbtxb = NULL) {
   y_matrix_j <- construct_y_matrix_j(y_matrix, character_gamma_matrix, jx)
   if (anyNA(y_matrix_j)) {
     return(NA)
@@ -581,10 +617,10 @@ target_j_informative_initial <- function(y_matrix, x_matrix,
   }
 
   beta_hat_j <- construct_beta_hat_j_matrix(
-    x_matrix, z_matrix_j, character_beta_matrix, jx
+    x_matrix, z_matrix_j, character_beta_matrix, jx, xbtxb
   )
 
-  pi_hat_0 <- construct_pi_hat_0(x_matrix, z_matrix_j)
+  pi_hat_0 <- construct_pi_hat_0(x_matrix, z_matrix_j, xtx)
 
   # Compute theta_hat matrix
   theta_hat <- cbind(beta_hat_j, pi_hat_0)
@@ -594,12 +630,12 @@ target_j_informative_initial <- function(y_matrix, x_matrix,
   #
   # Evaluate log of target function
   # (multiply by -1: maximize instead of minimize)
-  # target_result <- -dnorm(gamma_jw, mean = 0, sd = 100, log = TRUE) + 0.5*sum(diag(t(Matrix::solve(a_matrix_j))%*%t(z_matrix_j - x_matrix %*% theta_hat) %*%
-  #                                 (z_matrix_j - x_matrix %*% theta_hat)%*%Matrix::solve(a_matrix_j)%*%
-  #                             Matrix::solve(omega_hat)))
+  # target_result <- -dnorm(gamma_jw, mean = 0, sd = 100, log = TRUE) + 0.5*sum(diag(t(solve(a_matrix_j))%*%t(z_matrix_j - x_matrix %*% theta_hat) %*%
+  #                                 (z_matrix_j - x_matrix %*% theta_hat)%*%solve(a_matrix_j)%*%
+  #                             solve(omega_hat)))
   #
   target_result <- ((number_of_observations - number_of_exogenous) / 2) *
-    log(Matrix::det(t(z_matrix_j - x_matrix %*% theta_hat) %*%
+    log(det(t(z_matrix_j - x_matrix %*% theta_hat) %*%
       (z_matrix_j - x_matrix %*% theta_hat)))
   target_result
 }
@@ -611,13 +647,21 @@ target_j_informative_initial <- function(y_matrix, x_matrix,
 #'
 #' @inheritParams draw_parameters_j_informative
 #' @inheritParams draw_gamma_j_informative
+#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
+#' invariant across Gibbs draws, so callers that iterate can compute it once
+#' and pass it in to avoid recomputing it on every call. If `NULL` (the
+#' default), it is computed internally.
+#' @param xbtxb Optional precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
+#' \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
+#' rationale as `xtx`. If `NULL` (the default), it is computed internally.
 #'
 #' @return The function returns the evaluation of the target function,
 #' which is used to decide whether to accept or reject proposed states
 #' in the MH algorithm. Returns NA if there are no gamma parameters.
 #' @keywords internal
 initial_omega_j <- function(y_matrix, x_matrix, character_gamma_matrix,
-                            character_beta_matrix, jx, gamma_jw) {
+                            character_beta_matrix, jx, gamma_jw,
+                            xtx = NULL, xbtxb = NULL) {
   gamma_count <- sum(grepl("gamma", character_gamma_matrix[, jx]))
 
   if (gamma_count == 0) {
@@ -641,10 +685,10 @@ initial_omega_j <- function(y_matrix, x_matrix, character_gamma_matrix,
     )
   }
   beta_hat_j <- construct_beta_hat_j_matrix(
-    x_matrix, z_matrix_j, character_beta_matrix, jx
+    x_matrix, z_matrix_j, character_beta_matrix, jx, xbtxb
   )
 
-  pi_hat_0 <- construct_pi_hat_0(x_matrix, z_matrix_j)
+  pi_hat_0 <- construct_pi_hat_0(x_matrix, z_matrix_j, xtx)
 
   # Compute theta_hat matrix
   theta_hat <- cbind(beta_hat_j, pi_hat_0)

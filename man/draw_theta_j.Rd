@@ -11,7 +11,8 @@ draw_theta_j(
   character_beta_matrix,
   jx,
   gamma_parameters_j,
-  omega_tilde_jw
+  omega_tilde_jw,
+  xtx = NULL
 )
 }
 \arguments{
@@ -37,6 +38,11 @@ exogenous variables and \eqn{n} the number of equations.}
 \item{gamma_parameters_j}{A \eqn{(n_j \times 1)} matrix with the parameters
 of the gamma matrix, where \eqn{n_j} is the number of endogenous variables in
 equation \eqn{j}.}
+
+\item{xtx}{Optional precomputed \eqn{x_matrix'x_matrix}. This is
+invariant across Gibbs draws, so callers that iterate can compute it once
+and pass it in to avoid recomputing it on every call. If \code{NULL} (the
+default), it is computed internally.}
 }
 \value{
 List containing theta_jw and beta_jw

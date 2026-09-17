@@ -14,7 +14,8 @@ draw_theta_j_informative(
   jx,
   gamma_jw,
   omega_jw,
-  priors_j
+  priors_j,
+  xtx = NULL
 )
 }
 \arguments{
@@ -42,6 +43,11 @@ of the gamma matrix, where \eqn{n_j} is the number of endogenous variables in
 equation \eqn{j}.}
 
 \item{omega_jw}{\eqn{{\Omega}_j^{(w)}}}
+
+\item{xtx}{Optional precomputed \eqn{x_matrix'x_matrix}. This is
+invariant across Gibbs draws, so callers that iterate can compute it once
+and pass it in to avoid recomputing it on every call. If \code{NULL} (the
+default), it is computed internally.}
 }
 \value{
 List containing theta_jw and beta_jw

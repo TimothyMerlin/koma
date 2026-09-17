@@ -81,11 +81,18 @@ construct_z_matrix_j <- function(gamma_parameters_j, y_matrix, y_matrix_j, jx) {
 #' matrix are \eqn{(k \times n)}, where \eqn{k} is the number of
 #' exogenous variables and \eqn{n} the number of equations.
 #' @param jx The index of equation \eqn{j}.
+#' @param xbtxb Optional precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
+#' \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. This
+#' is invariant across Gibbs draws for a given equation, so callers that
+#' iterate (e.g. the Gibbs sampler) can compute it once and pass it in to
+#' avoid recomputing it on every call. If `NULL` (the default), it is
+#' computed internally.
 #'
 #' @return \eqn{\hat{\beta_j}} with dimensions \eqn{k \times 1}.
 #' @keywords internal
 construct_beta_hat_j_matrix <- function(x_matrix, z_matrix_j,
-                                        character_beta_matrix, jx) {
+                                        character_beta_matrix, jx,
+                                        xbtxb = NULL) {
   number_of_exogenous <- nrow(character_beta_matrix)
 
   indices_to_remove <- grep("\\b0\\b", character_beta_matrix[, jx])
@@ -95,7 +102,10 @@ construct_beta_hat_j_matrix <- function(x_matrix, z_matrix_j,
   } else {
     x_b <- x_matrix # Keep the original matrix if no matches are found
   }
-  beta_hat_b <- Matrix::solve(crossprod(x_b), crossprod(x_b, z_matrix_j[, 1]))
+  if (is.null(xbtxb)) {
+    xbtxb <- crossprod(x_b)
+  }
+  beta_hat_b <- solve(xbtxb, crossprod(x_b, z_matrix_j[, 1]))
 
   beta_hat_j <- matrix(0, number_of_exogenous, 1)
   beta_hat_j[grep("^0", character_beta_matrix[, jx], invert = TRUE)] <-
@@ -113,10 +123,14 @@ construct_beta_hat_j_matrix <- function(x_matrix, z_matrix_j,
 #' @param x_matrix A \eqn{(T \times k)} matrix \eqn{X} of observations on
 #' \eqn{k} exogenous variables.
 #' @param z_matrix_j A \eqn{Z_j = y_j - Y_j * \gamma_j} matrix.
+#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
+#' invariant across Gibbs draws, so callers that iterate can compute it once
+#' and pass it in to avoid recomputing it on every call. If `NULL` (the
+#' default), it is computed internally.
 #'
 #' @return \eqn{\hat{\Pi_0}} with dimensions \eqn{(k \times n_j)}.
 #' @keywords internal
-construct_pi_hat_0 <- function(x_matrix, z_matrix_j) {
+construct_pi_hat_0 <- function(x_matrix, z_matrix_j, xtx = NULL) {
   rhs <- z_matrix_j[, -1]
 
   # Equation j has no other endogenous variables: Pi_0 is a (k x 0) matrix.
@@ -126,7 +140,10 @@ construct_pi_hat_0 <- function(x_matrix, z_matrix_j) {
     return(matrix(nrow = ncol(x_matrix), ncol = 0))
   }
 
-  pi_hat_0 <- Matrix::solve(crossprod(x_matrix), crossprod(x_matrix, rhs))
+  if (is.null(xtx)) {
+    xtx <- crossprod(x_matrix)
+  }
+  pi_hat_0 <- solve(xtx, crossprod(x_matrix, rhs))
 
   return(pi_hat_0)
 }
@@ -143,12 +160,18 @@ construct_pi_hat_0 <- function(x_matrix, z_matrix_j) {
 #' @param x_matrix A \eqn{(T \times k)} matrix \eqn{X} of observations on
 #' \eqn{k} exogenous variables.
 #' @param z_matrix_j A \eqn{Z_j = y_j - Y_j * \gamma_j} matrix.
+#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
+#' invariant across Gibbs draws, so callers that iterate can compute it once
+#' and pass it in to avoid recomputing it on every call. If `NULL` (the
+#' default), it is computed internally.
 #'
 #' @return \eqn{\hat{\Theta}_j} with dimensions \eqn{(k \times (1 + n_j))}.
 #' @keywords internal
-construct_theta_hat_j <- function(x_matrix, z_matrix_j) {
-  theta_hat <-
-    Matrix::solve(crossprod(x_matrix), crossprod(x_matrix, z_matrix_j))
+construct_theta_hat_j <- function(x_matrix, z_matrix_j, xtx = NULL) {
+  if (is.null(xtx)) {
+    xtx <- crossprod(x_matrix)
+  }
+  theta_hat <- solve(xtx, crossprod(x_matrix, z_matrix_j))
 
   return(theta_hat)
 }
@@ -173,22 +196,30 @@ construct_theta_hat_j <- function(x_matrix, z_matrix_j) {
 #' @param z_matrix_j A \eqn{Z_j = y_j - Y_j * \gamma_j} matrix.
 #' @param omega_tilde_jw A variance-covariance matrix
 #'   \eqn{\tilde{\Omega}_j = A'_j \Omega_j A_j} for row \eqn{j}.
+#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
+#' invariant across Gibbs draws, so callers that iterate can compute it once
+#' and pass it in to avoid recomputing it on every call. If `NULL` (the
+#' default), it is computed internally.
 #'
 #' @return \eqn{\hat{\Theta}_j} with dimensions \eqn{(k \times (1 + n_j))}.
 #' @keywords internal
 construct_theta_bar_j <- function(x_matrix, z_matrix_j, priors_j,
-                                  omega_tilde_jw) {
+                                  omega_tilde_jw, xtx = NULL) {
+  if (is.null(xtx)) {
+    xtx <- crossprod(x_matrix)
+  }
   # c() vectorizes matrix
-  theta_hat <- c(construct_theta_hat_j(x_matrix, z_matrix_j))
-  omega_kron_xtx <- Matrix::kronecker(
-    Matrix::solve(omega_tilde_jw),
-    crossprod(x_matrix)
+  theta_hat <- c(construct_theta_hat_j(x_matrix, z_matrix_j, xtx))
+  omega_kron_xtx <- kronecker(
+    solve(omega_tilde_jw),
+    xtx
   )
-  xi_bar <- Matrix::solve(
-    omega_kron_xtx + Matrix::solve(priors_j[["theta_vcv"]])
+  inverse_theta_vcv <- solve(priors_j[["theta_vcv"]])
+  xi_bar <- solve(
+    omega_kron_xtx + inverse_theta_vcv
   )
   theta_bar <- xi_bar %*% (omega_kron_xtx %*% theta_hat +
-    Matrix::solve(priors_j[["theta_vcv"]]) %*% priors_j[["theta_mean"]])
+    inverse_theta_vcv %*% priors_j[["theta_mean"]])
 
   return(list(
     theta_bar = theta_bar,

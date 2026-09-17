@@ -12,7 +12,9 @@ draw_gamma_j(
   jx,
   gamma_parameters_j,
   tau,
-  cholesky_of_inverse_hessian
+  cholesky_of_inverse_hessian,
+  xtx = NULL,
+  xbtxb = NULL
 )
 }
 \arguments{
@@ -43,6 +45,15 @@ equation \eqn{j}.}
 
 \item{cholesky_of_inverse_hessian}{The Cholesky factor \eqn{L} of the
 inverse Hessian matrix \eqn{M^{-1}} used to generate candidate draws.}
+
+\item{xtx}{Optional precomputed \eqn{x_matrix'x_matrix}. This is
+invariant across Gibbs draws, so callers that iterate can compute it once
+and pass it in to avoid recomputing it on every call. If \code{NULL} (the
+default), it is computed internally.}
+
+\item{xbtxb}{Optional precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
+\eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
+rationale as \code{xtx}. If \code{NULL} (the default), it is computed internally.}
 }
 \value{
 A \eqn{(n_j \times 1)} matrix with the either accepted candidate or
