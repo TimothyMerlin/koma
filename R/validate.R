@@ -1,3 +1,61 @@
+#' Validate that Endogenous Variables Are Declared Only Once
+#'
+#' An endogenous variable may be defined by exactly one equation: either a
+#' stochastic equation (`~`) or an identity (`==`), never both, and never
+#' twice. This is checked eagerly, right after `endogenous_variables` is
+#' derived from `equations` and before the gamma/beta matrices and identities
+#' are built from them, because a duplicate at that stage does not fail
+#' cleanly -- it produces mismatched matrix dimensions and surfaces later as
+#' an unrelated, low-level internal error deep in identity/weight
+#' construction.
+#'
+#' @param equations A character vector of equations, positionally aligned
+#' with `endogenous_variables` (i.e. `endogenous_variables[i]` is the LHS
+#' variable of `equations[i]`), as is the case right after
+#' [get_endogenous_variables()] has been applied to `equations`.
+#' @param endogenous_variables A character vector of endogenous variable
+#' names, as returned by [get_endogenous_variables()].
+#' @param call The environment from which the error is called.
+#'
+#' @return Invisibly `TRUE` if no conflicting or duplicate declarations are
+#' found.
+#' @keywords internal
+validate_unique_endogenous_variables <- function(equations, endogenous_variables,
+                                                  call = rlang::caller_env()) {
+  duplicated_vars <- unique(endogenous_variables[duplicated(endogenous_variables)])
+
+  if (length(duplicated_vars) == 0) {
+    return(invisible(TRUE))
+  }
+
+  for (var in duplicated_vars) {
+    conflicting_equations <- equations[endogenous_variables == var]
+    is_stochastic <- grepl("~", conflicting_equations)
+
+    if (any(is_stochastic) && any(!is_stochastic)) {
+      cli::cli_abort(
+        c(
+          "!" = "{.val {var}} is declared as both a stochastic equation and an identity.",
+          "x" = paste(conflicting_equations, collapse = " and "),
+          "i" = "A variable can either be estimated with an error term
+          ({.code ~}) or defined exactly by an identity ({.code ==}), not both.",
+          ">" = "Remove one of the two equations for {.val {var}}."
+        ),
+        call = call
+      )
+    }
+  }
+
+  cli::cli_abort(
+    c(
+      "Declared endogenous variables are not unique.",
+      "x" = paste(duplicated_vars, collapse = ", "),
+      "i" = "Ensure that each endogenous variable is declared only once."
+    ),
+    call = call
+  )
+}
+
 #' Validate Equations
 #'
 #' This function validates a character vector of equations, ensuring that they

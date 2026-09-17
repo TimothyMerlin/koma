@@ -185,6 +185,65 @@ test_that("system_of_equation throws error when exogenous not declared", {
   )
 })
 
+test_that("system_of_equation errors clearly when a variable is both a
+stochastic equation and an identity", {
+  # "gdp" is declared both as a stochastic equation and as an identity.
+  # This is nonsensical (a variable can't simultaneously be estimated with
+  # an error term and hold exactly as a deterministic combination of other
+  # variables) and must be rejected before the gamma/beta matrices and
+  # identities are built from it -- otherwise it produces mismatched matrix
+  # dimensions and surfaces as an unrelated, low-level internal error deep in
+  # identity/weight construction instead of an understandable message.
+  equations <- c(
+    "gdp~consumption+investment",
+    "gdp==0.6*consumption+0.4*investment"
+  )
+  exogenous_variables <- c("consumption", "investment")
+
+  expect_error(
+    system_of_equations(equations, exogenous_variables),
+    "declared as both a stochastic equation and an identity"
+  )
+})
+
+test_that("validate_unique_endogenous_variables allows unique endogenous
+variables", {
+  expect_true(validate_unique_endogenous_variables(
+    c("gdp~consumption", "consumption==0.5*investment"),
+    c("gdp", "consumption")
+  ))
+})
+
+test_that("validate_unique_endogenous_variables gives a specific message when
+a variable is both a stochastic equation and an identity", {
+  expect_error(
+    validate_unique_endogenous_variables(
+      c("gdp~consumption+investment", "gdp==0.6*consumption+0.4*investment"),
+      c("gdp", "gdp")
+    ),
+    "declared as both a stochastic equation and an identity"
+  )
+})
+
+test_that("validate_unique_endogenous_variables falls back to the generic
+duplicate message for same-type duplicates", {
+  expect_error(
+    validate_unique_endogenous_variables(
+      c("gdp~consumption", "gdp~investment"),
+      c("gdp", "gdp")
+    ),
+    "Declared endogenous variables are not unique"
+  )
+
+  expect_error(
+    validate_unique_endogenous_variables(
+      c("gdp==0.5*consumption", "gdp==0.5*investment"),
+      c("gdp", "gdp")
+    ),
+    "Declared endogenous variables are not unique"
+  )
+})
+
 test_that("system_of_equations", {
   equations <- c(
     "consumption~gdp+consumption.L(1:2)+lag(investment, 2:3)",

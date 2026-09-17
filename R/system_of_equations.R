@@ -116,6 +116,7 @@ new_system_of_equations <- function(equations, exogenous_variables, priors, equa
   stopifnot(is.character(equations))
 
   endogenous_variables <- get_endogenous_variables(equations)
+  validate_unique_endogenous_variables(equations, endogenous_variables)
 
   out <- parse_lags(equations)
   predetermined_variables <- out$variables
