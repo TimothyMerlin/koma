@@ -1153,3 +1153,119 @@ bracketed term at the end of the RHS", {
     system_of_equations(equation, exogenous_variables = c("ydispbr", "covid"))
   )
 })
+
+test_that("system_of_equations rejects a malformed prior instead of silently
+turning it into NA", {
+  # extract_priors() runs on the raw equation and validate_priors() (which
+  # already knows how to reject a ';' separator, see test-validate.R) is only
+  # ever called on the equation *after* parse_equation() has stripped all
+  # "{...}" prior syntax out of it -- so a malformed prior never reaches a
+  # validator at all. Today this silently sets the prior's mean/variance to
+  # NA (with only a generic base-R coercion warning) instead of failing
+  # loudly at parse time, and the NA would otherwise only surface much later,
+  # deep inside estimation.
+  equation <- "consumption~{0;1000}constant+{0.4,0.1}gdp"
+
+  expect_error(
+    system_of_equations(equation, exogenous_variables = "gdp")
+  )
+})
+
+test_that("system_of_equations rejects a stochastic equation that references
+its own dependent variable on the right-hand side", {
+  # construct_gamma_matrix() explicitly excludes the equation's own
+  # endogenous variable when matching RHS terms against endogenous variables
+  # (it searches endogenous_variables[-ix]), and construct_beta_matrix() only
+  # matches against exogenous variables -- so a bare, un-lagged self
+  # reference like "gdp" on the RHS of the "gdp" equation matches nothing and
+  # is silently dropped from both matrices instead of raising an error. This
+  # is almost always a typo for a lagged self reference, e.g. "gdp.L(1)".
+  equations <- c(
+    "gdp~gdp+x1",
+    "y~gdp+x2"
+  )
+  exogenous_variables <- c("x1", "x2")
+
+  expect_error(
+    system_of_equations(equations, exogenous_variables)
+  )
+})
+
+test_that("system_of_equations rejects a lag/index spec with a stray extra
+colon instead of silently truncating it", {
+  # is_valid_var()'s lag pattern ("\\.L\\([0-9:,]+\\)") accepts any run of
+  # digits/colons/commas, so a malformed spec like "1:2:3" passes equation
+  # validation. parse_index_spec() then does
+  # `bounds <- as.integer(strsplit(part, ":")[[1]])` and only ever reads
+  # bounds[1] and bounds[2], so the "3" is silently dropped and the equation
+  # parses as if the user had written ".L(1:2)". dummies() guards the same
+  # style of spec with a strict regex plus a tryCatch (see
+  # "expand_dummies throws a clear error for a non-numeric spec" above); lag
+  # notation has no equivalent guard.
+  equation <- "y~gdp.L(1:2:3)+x1"
+
+  expect_error(
+    system_of_equations(equation, exogenous_variables = c("gdp", "x1"))
+  )
+})
+
+test_that("system_of_equations still accepts a negative prior mean", {
+  # Regression test: making validate_priors() actually run against real
+  # equations (above) initially broke this, because validate_priors() used
+  # to tokenize via get_variables(), whose split regex treats "-" as a term
+  # separator irrespective of "{}" boundaries, tearing a negative-mean prior
+  # like "{-0.4,0.1}" apart before the format check ever saw it whole.
+  result <- system_of_equations(
+    "consumption~{-0.4,0.1}gdp", exogenous_variables = "gdp"
+  )
+
+  expect_equal(result$priors, list(list(gdp = list(-0.4, 0.1))))
+})
+
+test_that("parse_equation errors clearly on a missing right-hand side", {
+  # A trailing operator with nothing after it (e.g. "y ~") used to leave
+  # `rhs` as NA, which paste0() then silently stringified into the literal
+  # text "NA", surfacing far downstream as a baffling
+  # "Undeclared exogenous variable: NA" instead of pointing at the actual
+  # problem.
+  expect_error(parse_equation("y~"), "no right-hand side")
+  expect_error(parse_equation("y ~"), "no right-hand side")
+  expect_error(
+    system_of_equations("y~", exogenous_variables = character(0)),
+    "no right-hand side"
+  )
+})
+
+test_that("parse_equation errors clearly on a missing left-hand side", {
+  expect_error(parse_equation("~x1"), "no left-hand side")
+})
+
+test_that("validate_thetas_exist reports which theta is missing", {
+  # get_identities()'s theta/matrix consistency check used to give a single
+  # generic message ("Not all thetas in weights list exist also in
+  # character matrices.") with no indication of which theta or equation was
+  # at fault. This is a defensive invariant check -- under normal pipeline
+  # use, every theta it validates was extracted directly from the very
+  # matrices it checks against, so it should never actually fire on real
+  # user input (validate_completeness() already rules out undeclared or
+  # mismatched variables earlier in the pipeline). It exists in case a
+  # future change to construct_gamma_matrix()/construct_beta_matrix() ever
+  # desynchronizes the two, so the test constructs a mismatch directly
+  # rather than trying to reach it through system_of_equations().
+  expect_no_error(
+    validate_thetas_exist(
+      c("theta1_2"),
+      matrix("theta1_2", 1, 1),
+      matrix(character(0), 0, 0)
+    )
+  )
+
+  expect_error(
+    validate_thetas_exist(
+      c("theta1_2", "theta9_9"),
+      matrix("theta1_2", 1, 1),
+      matrix(character(0), 0, 0)
+    ),
+    "theta9_9"
+  )
+})

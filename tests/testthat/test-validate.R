@@ -338,6 +338,31 @@ test_that("validate_priors", {
   expect_error(validate_priors(equation))
 })
 
+test_that("validate_priors accepts a negative prior mean", {
+  # validate_priors() used to extract terms via get_variables(), whose split
+  # regex treats "-" as a term separator with no regard for "{}" boundaries,
+  # so "{-0.4,0.1}gdp" was torn into "{" and "0.4,0.1}gdp" before the prior
+  # format was ever checked, and a legitimate negative-mean prior -- which
+  # extract_priors() has always supported -- was wrongly rejected.
+  expect_no_error(validate_priors("consumption~{-0.4,0.1}gdp"))
+  # leading-dot decimal without an integer part, also supported by
+  # extract_priors()
+  expect_no_error(validate_priors("consumption~{-.4,.1}gdp"))
+})
+
+test_that("validate_priors reports the full malformed prior, not a
+fragment truncated at a '-'", {
+  # Same root cause as above: get_variables()'s hyphen-splitting used to cut
+  # "{0-1000}constant" into "{0" and "1000}constant" before the format check
+  # ran, so the abort message showed only the truncated fragment "{0" instead
+  # of the user's actual (invalid) input.
+  expect_error(
+    validate_priors("consumption~{0-1000}constant+{0.4,0.1}gdp"),
+    "\\{0-1000\\}",
+    fixed = FALSE
+  )
+})
+
 # Validate single equations
 test_that("validate_equation processes valid R variable names correctly", {
   equation <- c("consumption123~constant+0.5*manufacturing+gdp")

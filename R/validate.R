@@ -239,6 +239,28 @@ validate_equation <- function(equation) {
     validate_var_term(rv, error_msg)
   })
 
+  # Reject an un-lagged self reference to the equation's own dependent
+  # variable, e.g. "gdp ~ gdp + x1". construct_gamma_matrix() excludes the
+  # equation's own endogenous variable when matching RHS terms against
+  # endogenous variables, so a bare self reference like this matches nothing
+  # and is silently dropped from the gamma/beta matrices instead of erroring.
+  # This is almost always a typo for a lagged self reference like
+  # "gdp.L(1)".
+  left_var_base <- gsub("\\([^)]*\\)\\*", "", left_var)
+  lapply(right_vars, function(rv) {
+    var_name <- rv$split[length(rv$split)]
+    if (identical(var_name, left_var_base)) {
+      error_msg(
+        rv$original,
+        paste0(
+          "Equation for '", left_var_base, "' references itself on the ",
+          "right-hand side without a lag; did you mean '", left_var_base,
+          ".L(1)'?"
+        )
+      )
+    }
+  })
+
   canon <- sapply(right_vars, function(rv) {
     gsub("\\s+", "", rv$original)
   })
@@ -377,29 +399,8 @@ validate_completeness <- function(equations, exogenous_variables) {
 }
 
 validate_priors <- function(equation) {
-  variables <- get_variables(equation)[[1]]
-  dependent_variable <- variables[1]
-  variables <- variables[2:length(variables)]
-
-  # extract priors and variable names
-  priors <- ifelse(
-    grepl("\\{[0-9]+(\\.[0-9]*)?,[0-9]+(\\.[0-9]*)?\\}", variables),
-    sub(".*(\\{[0-9]+(\\.[0-9]*)?,[0-9]+(\\.[0-9]*)?\\}).*", "\\1", variables),
-    # Keep "" if no prior exists, else FALSE
-    ifelse(grepl("\\{", variables), FALSE, "")
-  )
-
-  # Check for invalid priors and print warnings/errors using cli
-  if (any(priors == FALSE)) {
-    invalid_vars <- variables[priors == FALSE]
-    invalid_vars <- gsub("\\{", "{{", invalid_vars)
-    invalid_vars <- gsub("\\}", "}}", invalid_vars)
-
-    cli::cli_abort(c(
-      "!" = "Invalid priors detected for these variables:",
-      "x" = invalid_vars
-    ))
-  }
+  parts <- unlist(strsplit(equation, "==|~"))
+  dependent_variable <- trimws(parts[1])
 
   # Check if the dependent variable contains invalid characters
   if (grepl("[{}()]", dependent_variable)) {
@@ -412,6 +413,33 @@ validate_priors <- function(equation) {
         "' must not include {{}} or ()."
       ),
       "i" = "Ensure the name is plain without special characters."
+    ))
+  }
+
+  rhs <- if (length(parts) >= 2) parts[2] else ""
+
+  # Every "{...}" on the right-hand side must contain exactly two
+  # comma-separated numbers (mean, variance) -- the same format
+  # extract_priors() itself parses, including a leading "-" and decimals
+  # without a leading digit (e.g. "-.4"). Brace groups are matched directly
+  # on the raw right-hand side (not via get_variables(), whose splitting
+  # regex treats "-" as a term separator and would tear a negative-mean
+  # prior like "{-0.4,0.1}" apart before it could ever be checked).
+  # Anything that isn't exactly two such numbers -- wrong separator, missing
+  # separator, extra values -- is rejected here with the offending brace
+  # group shown verbatim, rather than left to silently coerce to NA further
+  # down the pipeline.
+  brace_groups <- regmatches(rhs, gregexpr("\\{[^}]*\\}", rhs))[[1]]
+  number <- "-?(?:[0-9]+\\.?[0-9]*|\\.[0-9]+)"
+  valid_prior_pattern <- paste0("^\\{", number, ",", number, "\\}$")
+
+  invalid_groups <- brace_groups[!grepl(valid_prior_pattern, brace_groups)]
+  if (length(invalid_groups) > 0) {
+    invalid_groups <- gsub("\\{", "{{", invalid_groups)
+    invalid_groups <- gsub("\\}", "}}", invalid_groups)
+    cli::cli_abort(c(
+      "!" = "Invalid priors detected for these variables:",
+      "x" = invalid_groups
     ))
   }
 }
