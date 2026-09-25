@@ -31,9 +31,10 @@ construct_balanced_data <- function(ts_data, endogenous_variables,
   freq <- stats::frequency(truncated_ts_data)
 
   if (start_edge$date > start && is.null(state$warning_issued)) {
+    late_series <- late_starting_series(ts_data, start, end)
     cli::cli_warn(c(
       "Estimation start moved to {.val {dates_to_str(num_to_dates(start_edge$date, freq), freq)}}.",
-      "i" = "Periods removed due to missing or lag-induced NAs."
+      "i" = "Periods removed due to missing or lag-induced NAs in: {.var {late_series}}."
     ))
   }
   ##### Construct Y and X matrix
@@ -64,6 +65,14 @@ construct_balanced_data <- function(ts_data, endogenous_variables,
     edge = end_edge,
     freq = freq
   )
+}
+
+late_starting_series <- function(ts_data, start, end) {
+  is_late <- vapply(ts_data, function(x) {
+    w <- suppressWarnings(stats::window(x, start = start, end = end))
+    stats::tsp(stats::na.omit(w))[1] > start + 0.5 / stats::frequency(x)
+  }, logical(1))
+  names(ts_data)[is_late]
 }
 
 validate_matrices <- function(x_matrix, y_matrix) {

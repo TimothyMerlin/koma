@@ -69,6 +69,14 @@ test_that("construct_balanced_data works", {
     ),
     "Estimation start moved to"
   )
+  expect_warning(
+    construct_balanced_data(
+      ts_data, endogenous_variables,
+      total_exogenous_variables, start, end
+    ),
+    "consumption.L(2)",
+    fixed = TRUE
+  )
 
   expect_identical(result$number_of_observations, 174L)
   expect_identical(names(result), c(
