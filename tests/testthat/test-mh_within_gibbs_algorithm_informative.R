@@ -58,6 +58,39 @@ test_that("draw_parameters_j_informative returns parameters for equation 1", {
   expect_equal(beta_q[[2, 3]], 5, tolerance = 0.05)
 })
 
+test_that("draw_parameters_j_informative keeps every nstore-th draw after burn-in", {
+  y_matrix <- simulated_data$y_matrix
+  x_matrix <- simulated_data$x_matrix
+  character_gamma_matrix <- simulated_data$character_gamma_matrix
+  character_beta_matrix <- simulated_data$character_beta_matrix
+  jx <- 1
+  priors <- list(list(), list(), list(), list(), list(), list())
+
+  run_sampler <- function(nstore) {
+    withr::with_seed(
+      7,
+      draw_parameters_j_informative(
+        y_matrix,
+        x_matrix,
+        character_gamma_matrix,
+        character_beta_matrix,
+        jx,
+        set_gibbs_spec(ndraws = 25, burnin_ratio = 0.2, nstore = nstore),
+        priors
+      )
+    )
+  }
+
+  unthinned <- run_sampler(1)
+  thinned <- run_sampler(3)
+
+  # burnin = 5, nsave = floor(20 / 3) = 6
+  expect_length(unthinned$beta_jw, 20)
+  expect_length(thinned$beta_jw, 6)
+  expect_length(thinned$gamma_jw, 6)
+  expect_identical(thinned$beta_jw, unthinned$beta_jw[seq(3, 18, by = 3)])
+})
+
 test_that("draw_parameters_j_informative with diffuse priors", {
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix

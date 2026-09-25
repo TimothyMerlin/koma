@@ -44,6 +44,35 @@ test_that("set_gibbs_spec, error on non-integer", {
   )
 })
 
+test_that("set_gibbs_spec, nsave rounds down when not divisible by nstore", {
+  result <- set_gibbs_spec(ndraws = 5001, burnin_ratio = 0, nstore = 2)
+  expect_equal(result$burnin, 0L)
+  expect_equal(result$nsave, 2500L)
+})
+
+test_that("set_gibbs_spec, tolerates floating point burn-in", {
+  result <- set_gibbs_spec(ndraws = 100, burnin_ratio = 0.29)
+  expect_equal(result$burnin, 29L)
+  expect_equal(result$nsave, 71L)
+})
+
+test_that("set_gibbs_spec, error on fractional burn-in", {
+  expect_error(
+    set_gibbs_spec(ndraws = 25, burnin_ratio = 0.5),
+    "whole number of burn-in draws"
+  )
+})
+
+test_that("set_gibbs_spec, error on invalid burnin_ratio", {
+  expect_error(set_gibbs_spec(burnin_ratio = 1), "burnin_ratio must be in")
+  expect_error(set_gibbs_spec(burnin_ratio = -0.1), "burnin_ratio must be in")
+  expect_error(set_gibbs_spec(burnin_ratio = NA), "burnin_ratio must be in")
+})
+
+test_that("set_gibbs_spec, error on zero nstore", {
+  expect_error(set_gibbs_spec(nstore = 0), "nstore must be a positive integer")
+})
+
 test_that("validate_integerish, integer", {
   x <- 20
   name <- "ndraws"

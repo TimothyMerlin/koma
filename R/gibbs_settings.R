@@ -33,7 +33,8 @@ set_gibbs_spec <- function(
 #'    2000.
 #' - `burnin_ratio`: Numeric specifying the ratio for the burn-in period.
 #'    Default is 0.5.
-#' - `nstore`: Integer specifying the frequency of stored draws. Default is 1.
+#' - `nstore`: Integer specifying the frequency of stored draws. Every
+#'    `nstore`-th draw after the burn-in is kept. Default is 1.
 #' - `tau`: Numeric tuning parameter for enforcing an acceptance rate.
 #'    Default is 1.1.
 #' @keywords internal
@@ -51,6 +52,17 @@ new_gibbs_spec <- function(ndraws, burnin_ratio, nstore, tau, ...) {
 
   validate_integerish(ndraws, "ndraws")
   validate_integerish(nstore, "nstore")
+  if (any(nstore < 1)) {
+    cli::cli_abort("nstore must be a positive integer",
+      call = rlang::caller_env()
+    )
+  }
+  if (!is.numeric(burnin_ratio) || anyNA(burnin_ratio) ||
+    any(burnin_ratio < 0 | burnin_ratio >= 1)) {
+    cli::cli_abort("burnin_ratio must be in [0, 1)",
+      call = rlang::caller_env()
+    )
+  }
 
   ## check that each arg is length 1 or same as the longest
   lens <- lengths(list(ndraws, burnin_ratio, nstore, tau))
@@ -65,7 +77,15 @@ new_gibbs_spec <- function(ndraws, burnin_ratio, nstore, tau, ...) {
   if (length(tau) == 1) tau <- rep(tau, maxlen)
 
   burnin <- ndraws * burnin_ratio
-  nsave <- (ndraws - burnin) / nstore
+  # tolerate floating point error, e.g. 1000 * 0.3
+  if (any(abs(burnin - round(burnin)) > sqrt(.Machine$double.eps))) {
+    cli::cli_abort(
+      "ndraws * burnin_ratio must be a whole number of burn-in draws.",
+      call = rlang::caller_env()
+    )
+  }
+  burnin <- round(burnin)
+  nsave <- floor((ndraws - burnin) / nstore)
 
   structure(
     list(

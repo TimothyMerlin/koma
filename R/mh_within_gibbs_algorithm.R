@@ -108,7 +108,8 @@ draw_parameters_j <- function(y_matrix, x_matrix, character_gamma_matrix,
     )
 
     ##### Save draws
-    if (wx > gibbs_sampler$burnin) {
+    if (wx > gibbs_sampler$burnin &&
+      (wx - gibbs_sampler$burnin) %% gibbs_sampler$nstore == 0) {
       out$beta_jw[[gx]] <- results_draw_theta_j$beta_jw
       out$theta_jw[[gx]] <- results_draw_theta_j$theta_jw
       out$gamma_jw[[gx]] <- gamma_jw

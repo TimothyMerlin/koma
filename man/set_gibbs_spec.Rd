@@ -37,7 +37,8 @@ environment variable \code{the$gibbs_sampler}.
 2000.
 \item \code{burnin_ratio}: Numeric specifying the ratio for the burn-in period.
 Default is 0.5.
-\item \code{nstore}: Integer specifying the frequency of stored draws. Default is 1.
+\item \code{nstore}: Integer specifying the frequency of stored draws. Every
+\code{nstore}-th draw after the burn-in is kept. Default is 1.
 \item \code{tau}: Numeric tuning parameter for enforcing an acceptance rate.
 Default is 1.1.
 }

@@ -112,6 +112,39 @@ exogenous variables in the equation", {
   expect_identical(result$gamma_jw, expected_gamma)
 })
 
+test_that("draw_parameters_j keeps every nstore-th draw after burn-in", {
+  y_matrix <- simulated_data$y_matrix
+  x_matrix <- simulated_data$x_matrix
+  character_gamma_matrix <- simulated_data$character_gamma_matrix
+  character_beta_matrix <- simulated_data$character_beta_matrix
+  jx <- 1
+
+  run_sampler <- function(nstore) {
+    withr::with_seed(
+      7,
+      draw_parameters_j(
+        y_matrix,
+        x_matrix,
+        character_gamma_matrix,
+        character_beta_matrix,
+        jx,
+        set_gibbs_spec(ndraws = 25, burnin_ratio = 0.2, nstore = nstore)
+      )
+    )
+  }
+
+  unthinned <- run_sampler(1)
+  thinned <- run_sampler(3)
+
+  # burnin = 5, nsave = floor(20 / 3) = 6
+  expect_length(unthinned$beta_jw, 20)
+  expect_length(thinned$beta_jw, 6)
+  expect_length(thinned$gamma_jw, 6)
+  expect_length(thinned$omega_tilde_jw, 6)
+  expect_identical(thinned$beta_jw, unthinned$beta_jw[seq(3, 18, by = 3)])
+  expect_identical(thinned$gamma_jw, unthinned$gamma_jw[seq(3, 18, by = 3)])
+})
+
 # Test Initialize Sampler
 test_that("initialize_sampler correctly maximizes the target target function
 when there is one endogenous variable", {
