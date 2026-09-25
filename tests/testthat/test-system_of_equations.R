@@ -570,6 +570,88 @@ test_that("extract_priors works when no priors supplied", {
   expect_equal(result, expected_result)
 })
 
+test_that("extract_priors applies a prior to every lag in .L() shorthand", {
+  # comma-separated lags
+  result <- extract_priors("y~{0,1000}x.L(1,3,5)")
+  expect_equal(result, list(
+    "x.L(1)" = list(0, 1000),
+    "x.L(3)" = list(0, 1000),
+    "x.L(5)" = list(0, 1000)
+  ))
+
+  # range
+  result <- extract_priors("y~{0.5,2}x.L(1:3)")
+  expect_equal(result, list(
+    "x.L(1)" = list(0.5, 2),
+    "x.L(2)" = list(0.5, 2),
+    "x.L(3)" = list(0.5, 2)
+  ))
+
+  # mixed range and single lags
+  result <- extract_priors("y~{0.5,2}x.L(1:2,4)")
+  expect_equal(result, list(
+    "x.L(1)" = list(0.5, 2),
+    "x.L(2)" = list(0.5, 2),
+    "x.L(4)" = list(0.5, 2)
+  ))
+})
+
+test_that("extract_priors applies a prior to every lag in lag() shorthand", {
+  result <- extract_priors("y~{0,1000}lag(x,1,3)")
+  expect_equal(result, list(
+    "x.L(1)" = list(0, 1000),
+    "x.L(3)" = list(0, 1000)
+  ))
+
+  result <- extract_priors("y~{0,1000}lag(x,1:2)")
+  expect_equal(result, list(
+    "x.L(1)" = list(0, 1000),
+    "x.L(2)" = list(0, 1000)
+  ))
+})
+
+test_that("extract_priors does not leak lag shorthand priors to the unlagged variable", {
+  result <- extract_priors("y~{0.2,0.1}x+{0,1000}x.L(1,2)")
+  expect_equal(result, list(
+    x = list(0.2, 0.1),
+    "x.L(1)" = list(0, 1000),
+    "x.L(2)" = list(0, 1000)
+  ))
+})
+
+test_that("extract_priors keeps order and error term with lag shorthand", {
+  equation <- "y~{.1,1000}1+{0,1000}y.L(1:2)+{.3,.1}x+{4,.002}"
+  result <- extract_priors(equation)
+  expect_equal(result, list(
+    constant = list(0.1, 1000),
+    "y.L(1)" = list(0, 1000),
+    "y.L(2)" = list(0, 1000),
+    x = list(0.3, 0.1),
+    epsilon = list(4, 0.002)
+  ))
+})
+
+test_that("lag shorthand priors reach every lagged coefficient in construct_priors_j", {
+  equations <- "consumption ~ {0.2,0.1}gdp + {0.9,10}consumption.L(1,3),
+  gdp == consumption + investment"
+  sys_eq <- system_of_equations(equations, c("investment"))
+
+  priors_j <- construct_priors_j(
+    sys_eq$priors, sys_eq$character_gamma_matrix,
+    sys_eq$character_beta_matrix, 1
+  )
+
+  beta_rows <- rownames(sys_eq$character_beta_matrix)
+  for (lagged in c("consumption.L(1)", "consumption.L(3)")) {
+    pos <- which(beta_rows == lagged)
+    expect_equal(priors_j$theta_mean[pos], 0.9, label = lagged)
+    expect_equal(priors_j$theta_vcv[pos, pos], 10, label = lagged)
+  }
+  # the endogenous gdp prior is untouched by the lag shorthand
+  expect_equal(priors_j$gamma_mean[1], 0.2)
+  expect_equal(priors_j$gamma_vcv[1, 1], 0.1)
+})
+
 test_that("get_endogenous_variables returns the correct endogenous variables", {
   # Test case 1
   equations_1 <- c("x == y", "y == z")

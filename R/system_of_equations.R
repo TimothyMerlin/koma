@@ -951,7 +951,15 @@ expand_dummies <- function(equations) {
 extract_priors <- function(equation) {
   # only extract priors if the equation is stochastic
   if (grepl("~", equation)) {
-    pattern <- "\\{([^}]+)\\}((?:[A-Za-z_][A-Za-z_0-9]*(?:\\.L\\([0-9:]+\\))?)|1)?"
+    # The term following a prior may use lag shorthand, either
+    # `var.L(spec)` or `lag(var, spec)`, where spec is anything
+    # parse_index_spec() accepts (e.g. "1", "1:3", "1,3,5").
+    pattern <- paste0(
+      "\\{([^}]+)\\}(",
+      "lag\\([A-Za-z0-9_.]+,[^)]+\\)|",
+      "[A-Za-z_][A-Za-z_0-9]*(?:\\.L\\([^)]+\\))?|",
+      "1)?"
+    )
     matches <- regmatches(equation, gregexpr(pattern, equation, perl = TRUE))[[1]]
 
     prior_vals <- sub(pattern, "\\1", matches, perl = TRUE)
@@ -968,7 +976,13 @@ extract_priors <- function(equation) {
     if (length(priors) == 0) {
       return(list())
     }
-    names(priors) <- var_names
+
+    # A prior in front of lag shorthand applies to every lag it expands to,
+    # e.g. "{0,1000}x.L(1,3)" sets the same prior on x.L(1) and x.L(3).
+    expanded_names <- lapply(var_names, expand_lag_term)
+    priors <- rep(priors, lengths(expanded_names))
+    matches <- rep(matches, lengths(expanded_names))
+    names(priors) <- unlist(expanded_names)
 
     # Ensure the epsilon (error term) prior ("epsilon") is the last element.
     # If a error term prior exists but is not last, remove it and warn.
@@ -993,6 +1007,22 @@ extract_priors <- function(equation) {
   } else {
     list()
   }
+}
+
+# Expand a single term in lag shorthand (`var.L(spec)` or `lag(var, spec)`)
+# into its standardized `var.L(k)` names; any other term is returned as is.
+expand_lag_term <- function(term) {
+  lag_patterns <- c(
+    "^([A-Za-z0-9_]+)\\.L\\(([^)]+)\\)$",
+    "^lag\\(([A-Za-z0-9_.]+),([^)]+)\\)$"
+  )
+  for (lag_pattern in lag_patterns) {
+    parts <- regmatches(term, regexec(lag_pattern, term, perl = TRUE))[[1]]
+    if (length(parts) == 3) {
+      return(paste0(parts[2], ".L(", parse_index_spec(parts[3]), ")"))
+    }
+  }
+  term
 }
 
 # Functions/operators allowed inside an equation's "[key=val,...]" settings

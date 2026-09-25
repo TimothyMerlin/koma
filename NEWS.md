@@ -1,5 +1,6 @@
 # koma 0.3.1.9000
 
+* Fixed priors in front of lag shorthand. `{0,1000}x.L(1,3,5)` now sets the prior on `x.L(1)`, `x.L(3)` and `x.L(5)`, and the same applies to ranges (`x.L(1:3)`) and `lag(x, 1:3)`. Previously the comma form silently attached the prior to the unlagged `x` instead, and the range and `lag()` forms silently dropped the prior.
 * `estimate()` now aborts with an informative error if `future::plan(future::multicore)` is active on macOS, instead of risking a silent segfault: Apple's Accelerate framework (used by `eigen()`) is not fork-safe. Switch to `future::plan(future::multisession)` instead.
 * Fixed `plot()`/`plotli()` plotly titles: an `ifelse()` silently coerced a factor variable name to its underlying integer code instead of showing the variable name; replaced with `if`/`else`.
 * Fixed `plot()`/`plotli()` so a partial `theme` argument (missing some fields) no longer drops straight to `init_koma_theme()`'s defaults for every field; missing fields are now recursively filled in from the defaults via a new internal `merge_theme()` helper.

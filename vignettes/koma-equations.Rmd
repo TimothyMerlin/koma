@@ -116,6 +116,9 @@ consumption ~ {0, 1000} 1 + gdp
 # Prior on a lagged term
 consumption ~ gdp + {0.9, 10} consumption.L(1)
 
+# Same prior on several lags (applies to consumption.L(1), .L(2) and .L(4))
+consumption ~ gdp + {0, 1000} consumption.L(1:2, 4)
+
 # Prior on an endogenous regressor
 consumption ~ {0.2, 0.5} service + gdp
 
@@ -128,6 +131,7 @@ Rules:
 - Priors are only supported in stochastic equations.
 - Coefficient priors have the form `{mean, variance} variable`.
 - The error-term prior has the form `{df, scale}` and appears without a variable name.
+- A prior in front of lag shorthand (`x.L(1:3)`, `x.L(1, 3)`, `lag(x, 1:3)`) applies to every lag it expands to.
 - The dependent variable cannot have a prior.
 - The error-term prior must be the last prior in the equation.
 
