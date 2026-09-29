@@ -107,6 +107,89 @@ test_that("plot density forecasts", {
   expect_true(any(fan_traces))
 })
 
+fan_test_forecast <- function() {
+  dates <- list(
+    estimation = list(start = c(1977, 1), end = c(2020, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
+  )
+  dates_current <- c(2023, 1)
+
+  sys_eq <- simulated_data$sys_eq
+
+  ts_data <- simulated_data$ts_data
+  ts_data[sys_eq$endogenous_variables] <-
+    lapply(sys_eq$endogenous_variables, function(x) {
+      stats::window(ts_data[[x]], end = dates_current)
+    })
+
+  estimates <- withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates,
+      options = list(gibbs = list(ndraws = 40))
+    )
+  )
+  x <- withr::with_seed(7, forecast(estimates, dates))
+
+  tsl <- lapply(x$ts_data[names(x$mean)], function(s) {
+    suppressWarnings(stats::window(s, end = dates_current))
+  })
+
+  list(x = x, tsl = tsl, forecast_start = dates$forecast$start)
+}
+
+test_that("fan bands are quantiles of per-draw level paths", {
+  skip_on_cran()
+  setup <- fan_test_forecast()
+  x <- setup$x
+  tsl <- setup$tsl
+
+  fan <- build_fan_data(
+    x, tsl, setup$forecast_start, "gdp",
+    fan_quantiles = c(0.05, 0.95)
+  )
+
+  expect_equal(unique(fan$band), "q_5-q_95")
+
+  # gdp uses the "percentage" method: compound each draw from the last level
+  last_level <- utils::tail(as.numeric(level(tsl$gdp)), 1)
+  level_draws <- vapply(x$forecasts, function(draw) {
+    last_level * cumprod(1 + draw[, "gdp"] / 100)
+  }, numeric(nrow(x$forecasts[[1]])))
+  expected <- apply(level_draws, 1, stats::quantile, probs = c(0.05, 0.95))
+
+  expect_equal(fan$lower, unname(expected[1, ]))
+  expect_equal(fan$upper, unname(expected[2, ]))
+})
+
+test_that("growth whiskers are per-horizon quantiles of growth draws", {
+  skip_on_cran()
+  setup <- fan_test_forecast()
+  x <- setup$x
+
+  growth_draws <- vapply(
+    x$forecasts,
+    function(draw) as.numeric(draw[, "gdp"]),
+    numeric(nrow(x$forecasts[[1]]))
+  )
+
+  # q_5/q_95 are stored on the forecast; q_10/q_90 are computed from draws
+  for (probs in list(c(0.05, 0.95), c(0.1, 0.9))) {
+    whiskers <- build_whisker_data(
+      x, setup$tsl, setup$forecast_start, "gdp",
+      fan_quantiles = probs
+    )
+    expected <- apply(growth_draws, 1, stats::quantile, probs = probs)
+
+    expect_equal(whiskers$lower, unname(expected[1, ]))
+    expect_equal(whiskers$upper, unname(expected[2, ]))
+  }
+})
+
+test_that("get_fan_pairs() does not duplicate complementary quantiles", {
+  pairs <- get_fan_pairs(c("q_5", "q_95"), c(0.05, 0.95))
+  expect_equal(pairs, list(list(lower = "q_5", upper = "q_95")))
+})
+
 test_that("plot.koma_forecast() errors cleanly when plotly is missing", {
   skip_if(
     requireNamespace("plotly", quietly = TRUE),

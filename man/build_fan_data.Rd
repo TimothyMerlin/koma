@@ -2,7 +2,7 @@
 % Please edit documentation in R/utils_plot.R
 \name{build_fan_data}
 \alias{build_fan_data}
-\title{Build Fan Chart Data from Forecast Quantiles}
+\title{Build Fan Chart Data from Forecast Draws}
 \usage{
 build_fan_data(x, tsl, forecast_start, variables, fan_quantiles)
 }
@@ -15,7 +15,8 @@ build_fan_data(x, tsl, forecast_start, variables, fan_quantiles)
 
 \item{variables}{Character vector of variables to include.}
 
-\item{fan_quantiles}{Numeric probabilities for the fan chart.}
+\item{fan_quantiles}{Numeric probabilities for the fan chart. Defaults to
+the quantiles stored in \code{x}.}
 }
 \value{
 A data frame with band values for plotting or \code{NULL} when no bands
@@ -23,6 +24,9 @@ can be constructed.
 }
 \description{
 Constructs a long data frame with lower/upper band values for fan charts.
-If requested quantiles are missing, they are computed from forecast draws.
+Each forecast draw is first converted to a level path, and the bands are
+the quantiles of these level paths per horizon. Compounding growth-rate
+quantiles instead would describe a path where every period sits at the
+same extreme quantile, which overstates the width of the bands.
 }
 \keyword{internal}

@@ -63,73 +63,45 @@ set_alpha <- function(color, alpha) {
   color
 }
 
-#' Build Fan Chart Data from Forecast Quantiles
+#' Build Fan Chart Data from Forecast Draws
 #'
 #' Constructs a long data frame with lower/upper band values for fan charts.
-#' If requested quantiles are missing, they are computed from forecast draws.
+#' Each forecast draw is first converted to a level path, and the bands are
+#' the quantiles of these level paths per horizon. Compounding growth-rate
+#' quantiles instead would describe a path where every period sits at the
+#' same extreme quantile, which overstates the width of the bands.
 #'
 #' @param x A `koma_forecast` object.
 #' @param tsl In-sample time series list used to anchor the forecast.
 #' @param forecast_start Forecast start date for windowing.
 #' @param variables Character vector of variables to include.
-#' @param fan_quantiles Numeric probabilities for the fan chart.
+#' @param fan_quantiles Numeric probabilities for the fan chart. Defaults to
+#' the quantiles stored in `x`.
 #'
 #' @return A data frame with band values for plotting or `NULL` when no bands
 #' can be constructed.
 #' @keywords internal
 build_fan_data <- function(x, tsl, forecast_start, variables, fan_quantiles) {
-  quantiles_list <- x$quantiles
-  if (is.null(quantiles_list)) {
-    quantiles_list <- list()
-  }
-
-  if (!is.null(fan_quantiles)) {
-    probs <- normalize_quantile_probs(fan_quantiles)
-    if (length(probs)) {
-      desired_names <- quantile_names_from_probs(probs)
-      missing <- setdiff(desired_names, names(quantiles_list))
-      if (length(missing)) {
-        if (is.null(x$forecasts)) {
-          cli::cli_abort(c(
-            "x" = "Fan chart requires forecast draws for the requested quantiles.",
-            "i" = "Run forecast with point_forecast = list(active = FALSE)."
-          ))
-        } else {
-          freq <- stats::frequency(x$forecasts[[1]])
-          missing_probs <- probs[match(missing, desired_names)]
-          computed <- quantiles_from_forecasts(
-            x$forecasts,
-            freq,
-            probs = missing_probs
-          )
-          computed_list <- as_ets_list(computed, tsl)
-          if (is.list(computed_list) &&
-            length(computed_list) > 0 &&
-            all(vapply(computed_list, is_ets, logical(1)))) {
-            computed_list <- list(computed_list)
-            names(computed_list) <- names(computed)
-          }
-          quantiles_list <- c(quantiles_list, computed_list)
-        }
-      }
-      quantiles_list <- quantiles_list[intersect(desired_names, names(quantiles_list))]
-    }
-  }
-
-  if (!length(quantiles_list)) {
-    if (is.null(x$forecasts)) {
-      cli::cli_abort(c(
-        "x" = "Fan chart requires forecast draws, but none are available.",
-        "i" = "Run forecast with point_forecast = list(active = FALSE)."
-      ))
-    }
+  if (is.null(x$forecasts) || !length(x$forecasts)) {
     cli::cli_abort(c(
-      "x" = "Fan chart requested, but no quantiles are available.",
-      "i" = "Check that forecast draws are valid and quantiles can be computed."
+      "x" = "Fan chart requires forecast draws, but none are available.",
+      "i" = "Run forecast with options = list(approximate = FALSE)."
     ))
   }
 
-  pairs <- get_fan_pairs(names(quantiles_list), fan_quantiles)
+  quantile_names <- if (is.null(fan_quantiles)) {
+    names(x$quantiles)
+  } else {
+    quantile_names_from_probs(normalize_quantile_probs(fan_quantiles))
+  }
+  if (!length(quantile_names)) {
+    cli::cli_abort(c(
+      "x" = "Fan chart requested, but no quantiles are available.",
+      "i" = "Provide {.arg fan_quantiles} or forecast with {.arg probs}."
+    ))
+  }
+
+  pairs <- get_fan_pairs(quantile_names, fan_quantiles)
   if (!length(pairs)) {
     cli::cli_warn(c(
       "!" = "Fan chart requested, but no symmetric quantile pairs found.",
@@ -138,56 +110,54 @@ build_fan_data <- function(x, tsl, forecast_start, variables, fan_quantiles) {
     return(NULL)
   }
 
-  quantile_vars <- names(quantiles_list[[pairs[[1]]$lower]])
-  if (is.null(quantile_vars)) {
-    quantile_vars <- names(tsl)
-  }
-  available_vars <- intersect(variables, intersect(names(tsl), quantile_vars))
+  available_vars <- intersect(
+    variables,
+    intersect(names(tsl), colnames(x$forecasts[[1]]))
+  )
   if (!length(available_vars)) {
     cli::cli_warn("Fan chart requested, but no matching variables found.")
     return(NULL)
   }
   tsl <- tsl[available_vars]
-  out <- list()
+  tsl_rate <- lapply(tsl, rate)
 
+  # Level paths per draw: array of horizon x variable x draw
+  level_draws <- lapply(x$forecasts, function(draw) {
+    draw_list <- as_ets_list(draw[, available_vars, drop = FALSE], tsl_rate)
+    if (is_ets(draw_list)) {
+      draw_list <- list(draw_list)
+      names(draw_list) <- available_vars
+    }
+    draw_level <- level(as_mets(concat(tsl, draw_list)))
+    stats::window(draw_level, start = forecast_start)
+  })
+  dates <- as.numeric(stats::time(level_draws[[1]]))
+  level_draws <- simplify2array(lapply(level_draws, as.matrix))
+
+  probs <- vapply(
+    unlist(pairs),
+    parse_quantile_name,
+    numeric(1)
+  )
+  level_quantiles <- apply(
+    level_draws,
+    c(1, 2),
+    stats::quantile,
+    probs = probs,
+    names = FALSE
+  )
+  dimnames(level_quantiles) <- list(unlist(pairs), NULL, available_vars)
+
+  out <- list()
   for (ix in seq_along(pairs)) {
     lower_name <- pairs[[ix]]$lower
     upper_name <- pairs[[ix]]$upper
 
-    lower_list <- quantiles_list[[lower_name]]
-    upper_list <- quantiles_list[[upper_name]]
-
-    if (is.null(names(lower_list)) && length(lower_list) == length(tsl)) {
-      names(lower_list) <- names(tsl)
-    }
-    if (is.null(names(upper_list)) && length(upper_list) == length(tsl)) {
-      names(upper_list) <- names(tsl)
-    }
-
-    lower_list <- lower_list[available_vars]
-    upper_list <- upper_list[available_vars]
-
-    lower_level <- level(as_mets(concat(tsl, lower_list)))
-    upper_level <- level(as_mets(concat(tsl, upper_list)))
-
-    lower_level <- stats::window(lower_level, start = forecast_start)
-    upper_level <- stats::window(upper_level, start = forecast_start)
-
-    dates <- as.numeric(stats::time(lower_level))
-
-    lower_level <- as.matrix(lower_level)
-    upper_level <- as.matrix(upper_level)
-    colnames(lower_level) <- available_vars
-    colnames(upper_level) <- available_vars
-
-    for (i in seq_along(available_vars)) {
-      var <- available_vars[i]
-      lower_vec <- lower_level[, i, drop = TRUE]
-      upper_vec <- upper_level[, i, drop = TRUE]
+    for (var in available_vars) {
       out[[length(out) + 1L]] <- data.frame(
         dates = dates,
-        lower = as.numeric(lower_vec),
-        upper = as.numeric(upper_vec),
+        lower = level_quantiles[lower_name, , var],
+        upper = level_quantiles[upper_name, , var],
         band = paste0(lower_name, "-", upper_name),
         band_order = ix,
         variable = var,
@@ -353,7 +323,8 @@ get_fan_pairs <- function(quantile_names, fan_quantiles = NULL) {
   }
 
   fan_probs <- c(fan_probs[fan_probs < 0.5], 1 - fan_probs[fan_probs > 0.5])
-  lower_probs <- sort(unique(fan_probs[fan_probs < 0.5]))
+  # round so that e.g. 0.05 and 1 - 0.95 collapse to one pair
+  lower_probs <- sort(unique(round(fan_probs[fan_probs < 0.5], 10)))
 
   get_name <- function(target, tol = 1e-8) {
     diffs <- abs(probs - target)
