@@ -340,71 +340,88 @@ new_prepare_estimation <- function(ts_data, sys_eq, dates, fill_method) {
 }
 
 validate_estimation_dates <- function(dates, frequency = 4) {
-  if (is.null(dates$estimation) ||
-    is.null(dates$estimation$start) ||
-    is.null(dates$estimation$end) ||
-    length(dates$estimation$start) == 0L ||
-    length(dates$estimation$end) == 0L
+  validate_date_range(dates, "estimation", frequency = frequency)
+}
+
+#' Validate a Start/End Date Range in `dates`
+#'
+#' @param dates A list of date ranges, e.g. `dates$estimation`.
+#' @param field Name of the range in `dates` to validate, e.g. "estimation".
+#' @param frequency Frequency of the time series.
+#' @param call The environment from which the error is called.
+#'
+#' @return Invisibly `NULL`; aborts if the range is invalid.
+#' @keywords internal
+validate_date_range <- function(dates, field, frequency = 4,
+                                call = rlang::caller_env()) {
+  range <- dates[[field]]
+  label <- paste0("dates$", field)
+
+  if (is.null(range) ||
+    is.null(range$start) ||
+    is.null(range$end) ||
+    length(range$start) == 0L ||
+    length(range$end) == 0L
   ) {
     cli::cli_abort(c(
-      "!" = "Invalid {.field dates$estimation}:",
+      "!" = "Invalid {.field {label}}:",
       "x" = "{.field start} and {.field end} must be provided"
-    ))
+    ), call = call)
   }
-  if (!is.numeric(dates$estimation$start) || !is.numeric(dates$estimation$end)) {
+  if (!is.numeric(range$start) || !is.numeric(range$end)) {
     cli::cli_abort(c(
-      "!" = "Invalid {.field dates$estimation}:",
+      "!" = "Invalid {.field {label}}:",
       "x" = "{.field start} and {.field end} must be numeric"
-    ))
+    ), call = call)
   }
-  if (!length(dates$estimation$start) %in% c(1L, 2L) ||
-    !length(dates$estimation$end) %in% c(1L, 2L)
+  if (!length(range$start) %in% c(1L, 2L) ||
+    !length(range$end) %in% c(1L, 2L)
   ) {
     cli::cli_abort(c(
-      "!" = "Invalid {.field dates$estimation}:",
+      "!" = "Invalid {.field {label}}:",
       "x" = "{.field start} and {.field end} must be length 1 or 2"
-    ))
+    ), call = call)
   }
-  if (anyNA(dates$estimation$start) ||
-    anyNA(dates$estimation$end) ||
-    any(!is.finite(dates$estimation$start), na.rm = TRUE) ||
-    any(!is.finite(dates$estimation$end), na.rm = TRUE)
+  if (anyNA(range$start) ||
+    anyNA(range$end) ||
+    any(!is.finite(range$start), na.rm = TRUE) ||
+    any(!is.finite(range$end), na.rm = TRUE)
   ) {
     cli::cli_abort(c(
-      "!" = "Invalid {.field dates$estimation}:",
+      "!" = "Invalid {.field {label}}:",
       "x" = "{.field start} and {.field end} must be finite"
-    ))
+    ), call = call)
   }
-  if (length(dates$estimation$start) == 2L &&
-    (dates$estimation$start[2] < 1L || dates$estimation$start[2] > frequency)
+  if (length(range$start) == 2L &&
+    (range$start[2] < 1L || range$start[2] > frequency)
   ) {
     cli::cli_abort(c(
-      "!" = "Invalid {.field dates$estimation}:",
+      "!" = "Invalid {.field {label}}:",
       "x" = "{.field start} period must be between 1 and {frequency}"
-    ))
+    ), call = call)
   }
-  if (length(dates$estimation$end) == 2L &&
-    (dates$estimation$end[2] < 1L || dates$estimation$end[2] > frequency)
+  if (length(range$end) == 2L &&
+    (range$end[2] < 1L || range$end[2] > frequency)
   ) {
     cli::cli_abort(c(
-      "!" = "Invalid {.field dates$estimation}:",
+      "!" = "Invalid {.field {label}}:",
       "x" = "{.field end} period must be between 1 and {frequency}"
-    ))
+    ), call = call)
   }
 
-  estimation_start <- dates_to_num(dates$estimation$start, frequency = frequency)
-  estimation_end <- dates_to_num(dates$estimation$end, frequency = frequency)
-  if (length(estimation_start) != 1L || length(estimation_end) != 1L) {
+  range_start <- dates_to_num(range$start, frequency = frequency)
+  range_end <- dates_to_num(range$end, frequency = frequency)
+  if (length(range_start) != 1L || length(range_end) != 1L) {
     cli::cli_abort(c(
-      "!" = "Invalid {.field dates$estimation}:",
+      "!" = "Invalid {.field {label}}:",
       "x" = "{.field start} and {.field end} must be scalar dates"
-    ))
+    ), call = call)
   }
-  if (estimation_start > estimation_end) {
+  if (range_start > range_end) {
     cli::cli_abort(c(
-      "!" = "Invalid {.field dates$estimation}:",
+      "!" = "Invalid {.field {label}}:",
       "x" = "{.field start} must be before {.field end}"
-    ))
+    ), call = call)
   }
 
   invisible(NULL)
