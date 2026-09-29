@@ -1165,10 +1165,13 @@ test_that("conflicting restrictions on identity error", {
     "singular"
   )
   # the per-draw error is reported once, with its cause and the draw count
-  expect_error(
+  err <- expect_error(
     withr::with_seed(7, forecast(est, dates, restrictions = restrictions)),
     "All forecast draws failed.*100 of 100 draws: .*singular"
   )
+  # and chained as parent, including the backtrace of the failed draw
+  expect_match(conditionMessage(err$parent), "singular")
+  expect_false(is.null(err$parent$trace))
 })
 
 test_that("forecast with restrictions for variables that are not in SEM", {

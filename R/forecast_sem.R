@@ -105,9 +105,11 @@ forecast_sem <- function(sys_eq, estimates,
     # safely() wraps quietly(): x$error is the error of a failed draw,
     # x$result$warnings the warnings and x$result$result the forecast.
     draw_warnings <- unlist(lapply(forecasts, function(x) x$result$warnings))
-    draw_errors <- unlist(lapply(forecasts, function(x) {
-      if (!is.null(x$error)) conditionMessage(x$error)
-    }))
+    draw_errors <- Filter(Negate(is.null), lapply(forecasts, `[[`, "error"))
+    # The first error is chained as parent, so rlang::last_trace() shows
+    # where the draw failed.
+    first_error <- if (length(draw_errors) > 0) draw_errors[[1]]
+    draw_errors <- vapply(draw_errors, conditionMessage, character(1))
     forecasts <- lapply(forecasts, function(x) x$result$result)
 
     if (length(draw_warnings) > 0) {
@@ -122,14 +124,14 @@ forecast_sem <- function(sys_eq, estimates,
       cli::cli_abort(c(
         "x" = "All forecast draws failed:",
         summarise_draw_conditions(draw_errors, nsave)
-      ))
+      ), parent = first_error)
     }
     if (!all(valid_forecasts)) {
       cli::cli_warn(c(
         "!" = "Some forecast draws failed and were dropped:",
         summarise_draw_conditions(draw_errors, nsave),
         ">" = "Proceeding with {sum(valid_forecasts)} of {length(forecasts)} draws."
-      ))
+      ), parent = first_error)
       forecasts <- forecasts[valid_forecasts]
     }
 
