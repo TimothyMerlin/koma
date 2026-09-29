@@ -443,3 +443,99 @@ validate_priors <- function(equation) {
     ))
   }
 }
+
+#' Validate Forecast Restrictions
+#'
+#' Checks the structure of user-supplied forecast restrictions before any
+#' forecast draw is computed. Without this check, malformed restrictions only
+#' fail inside the individual draws, where density forecasts catch the errors
+#' per draw and report a misleading "All forecast draws failed".
+#'
+#' Restrictions for variables that are not endogenous are dropped with a single
+#' warning.
+#'
+#' @param restrictions `NULL` or a named list. Each element is a list with
+#' numeric `value` and `horizon` vectors of equal length.
+#' @param endogenous_variables Character vector of endogenous variable names.
+#' @param horizon Integer forecast horizon.
+#' @param call The environment from which the error is called.
+#'
+#' @return The restrictions without entries for non-endogenous variables.
+#' @keywords internal
+validate_restrictions <- function(restrictions, endogenous_variables, horizon,
+                                  call = rlang::caller_env()) {
+  if (is.null(restrictions) || identical(restrictions, list())) {
+    return(restrictions)
+  }
+
+  if (!is.list(restrictions) || is.data.frame(restrictions)) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.arg restrictions}:",
+      "x" = "Must be {.code NULL} or a named list, not {.obj_type_friendly {restrictions}}."
+    ), call = call)
+  }
+
+  variables <- names(restrictions)
+  if (is.null(variables) || anyNA(variables) || any(variables == "")) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.arg restrictions}:",
+      "x" = "Every restriction must be named after an endogenous variable."
+    ), call = call)
+  }
+  if (anyDuplicated(variables)) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.arg restrictions}:",
+      "x" = "Duplicate restrictions for {.val {unique(variables[duplicated(variables)])}}.",
+      "i" = "Combine them into one entry with vectors for {.field value} and {.field horizon}."
+    ), call = call)
+  }
+
+  for (variable in variables) {
+    restriction <- restrictions[[variable]]
+    if (!is.list(restriction) || !all(c("value", "horizon") %in% names(restriction))) {
+      cli::cli_abort(c(
+        "!" = "Invalid restriction for {.val {variable}}:",
+        "x" = "Must be a list with elements {.field value} and {.field horizon}."
+      ), call = call)
+    }
+
+    value <- restriction[["value"]]
+    hx <- restriction[["horizon"]]
+    if (!is.numeric(value) || !is.numeric(hx) ||
+      length(value) == 0L || length(value) != length(hx)) {
+      cli::cli_abort(c(
+        "!" = "Invalid restriction for {.val {variable}}:",
+        "x" = "{.field value} and {.field horizon} must be numeric vectors of the same, non-zero length."
+      ), call = call)
+    }
+    if (any(!is.finite(value)) || any(!is.finite(hx))) {
+      cli::cli_abort(c(
+        "!" = "Invalid restriction for {.val {variable}}:",
+        "x" = "{.field value} and {.field horizon} must not contain missing or infinite values."
+      ), call = call)
+    }
+    if (any(hx != round(hx)) || any(hx < 1) || any(hx > horizon)) {
+      cli::cli_abort(c(
+        "!" = "Invalid restriction for {.val {variable}}:",
+        "x" = "{.field horizon} must contain whole numbers between 1 and {horizon}."
+      ), call = call)
+    }
+    if (anyDuplicated(hx)) {
+      cli::cli_abort(c(
+        "!" = "Invalid restriction for {.val {variable}}:",
+        "x" = "{.field horizon} contains duplicates: {.val {unique(hx[duplicated(hx)])}}."
+      ), call = call)
+    }
+  }
+
+  unknown <- setdiff(variables, endogenous_variables)
+  if (length(unknown)) {
+    cli::cli_warn(c(
+      "x" = "Restriction(s) for variable(s) {.val {unknown}} ignored: not found among endogenous variables.",
+      "i" = "Please ensure all restriction names match endogenous variable names exactly. See ?forecast for details."
+    ))
+    restrictions <- restrictions[variables %in% endogenous_variables]
+  }
+
+  restrictions
+}

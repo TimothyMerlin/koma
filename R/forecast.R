@@ -190,6 +190,12 @@ new_forecast <- function(estimates, dates, restrictions, options) {
 
   horizon <- length(seq(dates$forecast$start, dates$forecast$end, by = 1 / frequency))
 
+  restrictions <- validate_restrictions(
+    restrictions,
+    estimates$sys_eq$endogenous_variables,
+    horizon
+  )
+
   edge <- detect_edge(
     rate(ts_data[estimates$sys_eq$endogenous_variables]),
     dates$estimation$start,

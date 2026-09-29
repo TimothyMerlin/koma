@@ -457,3 +457,58 @@ test_that("validate_equation throws error for a bracket-indexed variable
   equation <- c("consumption~constant+gdp+covid[1:3]")
   expect_error(validate_equation(equation))
 })
+
+test_that("validate_restrictions accepts valid restrictions", {
+  endogenous <- c("gdp", "manufacturing")
+
+  expect_null(validate_restrictions(NULL, endogenous, 4))
+  expect_equal(validate_restrictions(list(), endogenous, 4), list())
+
+  restrictions <- list(
+    gdp = list(value = c(0.5, 0.7), horizon = c(1, 3)),
+    manufacturing = list(horizon = 4L, value = 1)
+  )
+  expect_equal(validate_restrictions(restrictions, endogenous, 4), restrictions)
+})
+
+test_that("validate_restrictions rejects malformed restrictions", {
+  endogenous <- c("gdp", "manufacturing")
+  check <- function(restrictions, pattern) {
+    expect_error(
+      validate_restrictions(restrictions, endogenous, 4),
+      pattern,
+      class = "rlang_error"
+    )
+  }
+
+  check(c(gdp = 0.5), "named list")
+  check(data.frame(value = 0.5, horizon = 1), "named list")
+  check(list(list(value = 0.5, horizon = 1)), "named after")
+  check(
+    list(gdp = list(value = 0.5, horizon = 1), gdp = list(value = 1, horizon = 2)),
+    "Duplicate restrictions"
+  )
+  check(list(gdp = 0.5), "value.*horizon")
+  check(list(gdp = list(value = 0.5)), "value.*horizon")
+  check(list(gdp = list(value = "0.5", horizon = 1)), "numeric")
+  check(list(gdp = list(value = c(0.5, 0.7), horizon = 1)), "same, non-zero length")
+  check(list(gdp = list(value = numeric(0), horizon = numeric(0))), "same, non-zero length")
+  check(list(gdp = list(value = NA_real_, horizon = 1)), "missing or infinite")
+  check(list(gdp = list(value = 0.5, horizon = 0)), "between 1 and 4")
+  check(list(gdp = list(value = 0.5, horizon = 5)), "between 1 and 4")
+  check(list(gdp = list(value = 0.5, horizon = 1.5)), "whole numbers")
+  check(list(gdp = list(value = c(0.5, 0.7), horizon = c(2, 2))), "duplicates")
+})
+
+test_that("validate_restrictions drops non-endogenous variables with one warning", {
+  restrictions <- list(
+    gdp = list(value = 0.5, horizon = 1),
+    consumption = list(value = 0.5, horizon = 1)
+  )
+
+  expect_warning(
+    out <- validate_restrictions(restrictions, "gdp", 4),
+    "consumption"
+  )
+  expect_equal(out, restrictions["gdp"])
+})
