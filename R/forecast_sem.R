@@ -54,6 +54,18 @@ forecast_sem <- function(sys_eq, estimates,
     draw_jx <- NULL
     nsave <- length(estimates[[1]]$beta_jw)
 
+    # Evaluate lazy arguments before the closure is shipped to future workers.
+    # An unevaluated promise may refer to the caller's global environment,
+    # which is not exported to multisession workers.
+    force(sys_eq)
+    force(restrictions)
+    force(y_matrix)
+    force(forecast_x_matrix)
+    force(horizon)
+    force(freq)
+    force(forecast_dates)
+    force(conditional_innov_method)
+
     p <- progressr::progressor(steps = nsave)
 
     safe_draw_forecasts <- purrr::safely(function(draw_jx) {

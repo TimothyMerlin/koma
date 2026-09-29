@@ -1127,6 +1127,59 @@ test_that("forecast with restrictions for variables that are not in SEM", {
   expect_equal(out$mean$manufacturing[1], 0.5)
 })
 
+test_that("density forecast with restrictions works with multisession futures", {
+  skip_on_cran()
+  skip_if_not_installed(c("future", "doFuture"))
+
+  old_plan <- future::plan()
+  on.exit(future::plan(old_plan), add = TRUE)
+
+  dates <- list(
+    estimation = list(start = c(1976, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
+  )
+
+  equations <- "manufacturing ~ world_gdp,
+    service ~ population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
+  exogenous_variables <- c("world_gdp", "population")
+
+  sys_eq <- system_of_equations(equations, exogenous_variables)
+
+  ts_data <- simulated_data$ts_data
+  ts_data[sys_eq$endogenous_variables] <-
+    lapply(sys_eq$endogenous_variables, function(x) {
+      stats::window(ts_data[[x]], end = c(2023, 1))
+    })
+
+  est <- withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 40)))
+  )
+
+  future::plan(future::multisession, workers = 2)
+
+  # Call forecast() from the global environment, as a user would. The
+  # restrictions argument is then a promise on a global variable, and the
+  # global environment is not shipped to future workers.
+  assign(
+    "koma_test_restrictions",
+    list(manufacturing = list(value = 0.5, horizon = 1)),
+    envir = globalenv()
+  )
+  on.exit(rm("koma_test_restrictions", envir = globalenv()), add = TRUE)
+
+  forecast_call <- as.call(list(
+    forecast, est, dates,
+    restrictions = quote(koma_test_restrictions),
+    options = list(approximate = FALSE)
+  ))
+  out <- withr::with_seed(7, eval(forecast_call, envir = globalenv()))
+
+  expect_length(out$forecasts, 20)
+  expect_equal(out$mean$manufacturing[1], 0.5)
+})
+
 
 test_that("estimate an AR(1) model", {
   skip_on_cran()
