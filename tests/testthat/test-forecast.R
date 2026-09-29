@@ -642,6 +642,15 @@ test_that("forecast stops when exogenous series don't extend to forecast end", {
     "Forecast horizon shortened to 7."
   )
 
+  # restrictions beyond the shortened horizon fail once, before the draws
+  expect_error(
+    suppressWarnings(forecast(
+      estimates, dates,
+      restrictions = list(consumption = list(value = 0.5, horizon = 9))
+    )),
+    "between 1 and 7"
+  )
+
   suppressWarnings(
     result <- withr::with_seed(
       7,
@@ -686,6 +695,22 @@ test_that("shorten_forecast_horizon shortens to available exogenous data", {
     "shortened to 5"
   )
   expect_equal(horizon, 5)
+})
+
+test_that("summarise_draw_conditions groups messages by first line", {
+  messages <- c(
+    "! A is ill-conditioned.\n→ kappa = 1e13",
+    "! A is ill-conditioned.\n→ kappa = 2e13",
+    "value {not interpolated}"
+  )
+
+  expect_equal(
+    summarise_draw_conditions(messages, 10),
+    c(
+      "*" = "2 of 10 draws: ! A is ill-conditioned.",
+      "*" = "1 of 10 draws: value {{not interpolated}}"
+    )
+  )
 })
 
 test_that("horizon shortening warns once with multisession futures", {
@@ -1139,9 +1164,10 @@ test_that("conflicting restrictions on identity error", {
     )),
     "singular"
   )
+  # the per-draw error is reported once, with its cause and the draw count
   expect_error(
     withr::with_seed(7, forecast(est, dates, restrictions = restrictions)),
-    "All forecast draws failed"
+    "All forecast draws failed.*100 of 100 draws: .*singular"
   )
 })
 

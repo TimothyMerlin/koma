@@ -14,7 +14,6 @@ forecast_draw(
   freq,
   forecast_dates,
   restrictions,
-  state,
   conditional_innov_method = "projection",
   central_tendency = NULL
 )
@@ -37,10 +36,6 @@ variables.}
 \item{forecast_dates}{List containing 'start' and 'end' dates for forecast.}
 
 \item{restrictions}{List of model constraints. Default is empty.}
-
-\item{state}{An environment used to share mutable state between function
-calls, particularly for issuing warnings only once during the forecasting
-process.}
 }
 \description{
 This function computes a forecast for a single draw of the parameter
