@@ -190,6 +190,24 @@ test_that("get_fan_pairs() does not duplicate complementary quantiles", {
   expect_equal(pairs, list(list(lower = "q_5", upper = "q_95")))
 })
 
+test_that("plot.koma_forecast() validates variables", {
+  fake_forecast <- structure(
+    list(
+      mean = list(GDP = ts(1:8, start = c(2024, 1), freq = 4)),
+      ts_data = list(GDP = ts(1:8, start = c(2022, 1), freq = 4))
+    ),
+    class = "koma_forecast"
+  )
+
+  for (variables in list(NULL, 1, character(0), NA_character_, c("GDP", NA))) {
+    expect_error(
+      plot(fake_forecast, variables = variables),
+      "non-empty character vector",
+      class = "rlang_error"
+    )
+  }
+})
+
 test_that("plot.koma_forecast() errors cleanly when plotly is missing", {
   skip_if(
     requireNamespace("plotly", quietly = TRUE),

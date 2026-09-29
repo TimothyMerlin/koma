@@ -70,10 +70,11 @@ new_plot <- function(x, ...) {
   theme <- if (is.null(theme)) init_koma_theme() else merge_theme(theme)
 
   # sanity checks
-  stopifnot(
-    "variables must be a non-NULL character vector." =
-      !is.null(variables) || is.character(variables)
-  )
+  if (!is.character(variables) || length(variables) == 0L || anyNA(variables)) {
+    cli::cli_abort(
+      "`variables` must be a non-empty character vector of variable names."
+    )
+  }
 
   # check plotly availability
   if (!requireNamespace("plotly", quietly = TRUE)) {
