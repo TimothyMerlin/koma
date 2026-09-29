@@ -852,6 +852,26 @@ test_that("rebase", {
   expect_error(rebase(x, start = start, end = end, unused = TRUE))
 })
 
+test_that("rebase validates the index period", {
+  x <- ets(1:10, start = c(2000, 1), frequency = 4)
+
+  # integer dates work like numeric ones
+  expect_equal(rebase(x, c(2001L, 1L), c(2001L, 4L)), rebase(x, c(2001, 1), c(2001, 4)))
+
+  expect_error(rebase(x, "2001", c(2001, 4)), "must be dates", class = "rlang_error")
+  expect_error(rebase(x, c(2001, NA), c(2001, 4)), "must be dates", class = "rlang_error")
+  # partly and fully outside the series, and start after end
+  expect_error(rebase(x, c(1999, 1), c(2000, 4)), "within the series", class = "rlang_error")
+  expect_error(rebase(x, c(2005, 1), c(2005, 4)), "within the series", class = "rlang_error")
+  expect_error(rebase(x, c(2001, 4), c(2001, 1)), "within the series", class = "rlang_error")
+
+  y <- x
+  y[5] <- NA
+  expect_error(rebase(y, c(2001, 1), c(2001, 4)), "finite and non-zero", class = "rlang_error")
+  z <- ets(c(0, 0, 0, 0, 1, 2), start = c(2000, 1), frequency = 4)
+  expect_error(rebase(z, c(2000, 1), c(2000, 4)), "finite and non-zero", class = "rlang_error")
+})
+
 test_that("rebase.list throws error when elements not of type koma_ts", {
   # Case rebase list
   x <- list(

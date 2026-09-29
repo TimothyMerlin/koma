@@ -1242,7 +1242,34 @@ rebase <- function(x, start, end, ...) {
 #' @rdname rebase
 #' @export
 rebase.ts <- function(x, start, end, ...) {
+  valid_date <- function(d) {
+    is.numeric(d) && length(d) %in% c(1L, 2L) && !anyNA(d)
+  }
+  if (!valid_date(start) || !valid_date(end)) {
+    cli::cli_abort(
+      "{.arg start} and {.arg end} must be dates like {.code c(2019, 1)} or {.code 2019}."
+    )
+  }
+
+  frequency <- stats::frequency(x)
+  index_start <- dates_to_num(as.double(start), frequency = frequency)
+  index_end <- dates_to_num(as.double(end), frequency = frequency)
+  tol <- 1e-8
+  if (index_start > index_end + tol ||
+    index_start < stats::tsp(x)[1] - tol ||
+    index_end > stats::tsp(x)[2] + tol) {
+    cli::cli_abort(c(
+      "x" = "The index period must lie within the series.",
+      "i" = "The series covers {.val {stats::tsp(x)[1]}} to {.val {stats::tsp(x)[2]}}."
+    ))
+  }
+
   base <- as.numeric(mean(stats::window(x, start = start, end = end)))
+  if (!is.finite(base) || base == 0) {
+    cli::cli_abort(
+      "The mean over the index period must be finite and non-zero, not {.val {base}}."
+    )
+  }
   x / base * 100
 }
 
