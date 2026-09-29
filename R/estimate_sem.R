@@ -59,6 +59,13 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
 
   gibbs_settings <- get_gibbs_settings()
 
+  # Evaluate lazy arguments before the closure is shipped to future workers.
+  # An unevaluated promise keeps the caller's environment alive, so the whole
+  # estimate() frame (ts_data, previous estimates, ...) would be serialized to
+  # every worker.
+  force(y_matrix)
+  force(x_matrix)
+
   safe_draw_parameters <- purrr::safely(function(eq_jx) {
     gibbs_sampler <- gibbs_settings[[colnames(character_gamma_matrix)[eq_jx]]]
 
