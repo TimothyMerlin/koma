@@ -23,6 +23,7 @@ Useful links:
 
 Authors:
 \itemize{
+  \item Merlin Scherer \email{scherer@kof.ethz.ch} (\href{https://orcid.org/0009-0005-7479-168X}{ORCID}) [copyright holder]
   \item Samad Sarferaz \email{sarferaz@kof.ethz.ch} (\href{https://orcid.org/0000-0001-9283-3293}{ORCID}) [copyright holder]
 }
 
