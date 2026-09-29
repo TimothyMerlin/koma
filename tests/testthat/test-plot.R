@@ -185,6 +185,41 @@ test_that("growth whiskers are per-horizon quantiles of growth draws", {
   }
 })
 
+test_that("fan bands are rebased together with the level line", {
+  skip_on_cran()
+  setup <- fan_test_forecast()
+  x <- setup$x
+  tsl <- setup$tsl
+  index <- list(start = c(2019, 1), end = c(2019, 4))
+
+  fig <- plot(
+    x,
+    variables = "gdp",
+    fan = TRUE,
+    theme = init_koma_theme(index = index)
+  )
+  built <- plotly::plotly_build(fig)
+  fan_traces <- Filter(
+    function(tr) identical(tr$legendgroup, "fan"),
+    built$x$data
+  )
+
+  # factor that rebase() applies to the level line in the forecast period
+  level_line <- as_mets(concat(tsl, x$mean))
+  factor <- as.numeric(stats::window(
+    level(rebase(level_line, index$start, index$end))[, "gdp"],
+    start = setup$forecast_start
+  )) / as.numeric(stats::window(
+    level(level_line)[, "gdp"],
+    start = setup$forecast_start
+  ))
+  fan <- build_fan_data(x, tsl, setup$forecast_start, "gdp", NULL)
+
+  expect_length(fan_traces, 2)
+  expect_equal(as.numeric(fan_traces[[1]]$y), fan$lower * factor)
+  expect_equal(as.numeric(fan_traces[[2]]$y), fan$upper * factor)
+})
+
 test_that("get_fan_pairs() does not duplicate complementary quantiles", {
   pairs <- get_fan_pairs(c("q_5", "q_95"), c(0.05, 0.95))
   expect_equal(pairs, list(list(lower = "q_5", upper = "q_95")))

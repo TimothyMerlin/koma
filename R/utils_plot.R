@@ -169,6 +169,30 @@ build_fan_data <- function(x, tsl, forecast_start, variables, fan_quantiles) {
   do.call(rbind, out)
 }
 
+#' Rebase Fan Chart Data
+#'
+#' Scales the level bands with the same factor that [rebase()] applies to the
+#' level series, so that the fan stays aligned with the rebased level line.
+#'
+#' @param fan_data A data frame as returned by [build_fan_data()].
+#' @param level_mts Level series (before rebasing) with one column per
+#' variable in `fan_data`.
+#' @param start Start date of the index period.
+#' @param end End date of the index period.
+#'
+#' @return `fan_data` with rebased `lower` and `upper` values.
+#' @keywords internal
+rebase_fan_data <- function(fan_data, level_mts, start, end) {
+  for (var in unique(fan_data$variable)) {
+    base <- as.numeric(mean(stats::window(level_mts[, var], start = start, end = end)))
+    rows <- fan_data$variable == var
+    fan_data$lower[rows] <- fan_data$lower[rows] / base * 100
+    fan_data$upper[rows] <- fan_data$upper[rows] / base * 100
+  }
+
+  fan_data
+}
+
 #' Build Whisker Data for Growth Rates from Forecast Quantiles
 #'
 #' Constructs a data frame with lower/upper values for growth-rate whiskers.

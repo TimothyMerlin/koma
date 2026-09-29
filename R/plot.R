@@ -139,6 +139,11 @@ new_plot <- function(x, ...) {
 
   # Index level data at dates if start and end dates provided
   if (!any(is.null(theme$index$start), is.null(theme$index$end))) {
+    if (!is.null(fan_data)) {
+      fan_data <- rebase_fan_data(
+        fan_data, level(out), theme$index$start, theme$index$end
+      )
+    }
     out <- rebase(out, theme$index$start, theme$index$end)
   }
 
