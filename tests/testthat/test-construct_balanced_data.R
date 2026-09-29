@@ -55,7 +55,7 @@ test_that("construct_balanced_data works", {
   ts_data$`manufacturing.L(1)`[1] <- NA
   ts_data$`service.L(1)`[1] <- NA
 
-  suppressWarnings(
+  expect_no_warning(
     result <- construct_balanced_data(
       ts_data, endogenous_variables,
       total_exogenous_variables, start, end
@@ -65,14 +65,16 @@ test_that("construct_balanced_data works", {
   expect_warning(
     construct_balanced_data(
       ts_data, endogenous_variables,
-      total_exogenous_variables, start, end
+      total_exogenous_variables, start, end,
+      warn = TRUE
     ),
     "Estimation start moved to"
   )
   expect_warning(
     construct_balanced_data(
       ts_data, endogenous_variables,
-      total_exogenous_variables, start, end
+      total_exogenous_variables, start, end,
+      warn = TRUE
     ),
     "consumption.L(2)",
     fixed = TRUE

@@ -249,8 +249,7 @@ new_forecast <- function(estimates, dates, restrictions, options) {
     rate(ts_data),
     estimates$sys_eq$endogenous_variables,
     estimates$sys_eq$total_exogenous_variables,
-    dates$estimation$start, dates$current,
-    state = list(warning_issued = TRUE)
+    dates$estimation$start, dates$current
   )
 
   y_matrix <- balanced_data$y_matrix

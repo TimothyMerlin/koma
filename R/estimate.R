@@ -320,7 +320,8 @@ new_prepare_estimation <- function(ts_data, sys_eq, dates, fill_method) {
   balanced_data <- construct_balanced_data(
     rate(ts_data), sys_eq$endogenous_variables,
     sys_eq$total_exogenous_variables,
-    dates$estimation$start, dates$estimation$end
+    dates$estimation$start, dates$estimation$end,
+    warn = TRUE
   )
 
   # Estimation inverts x_matrix (or t(x_matrix) %*% x_matrix); an exact

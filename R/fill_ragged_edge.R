@@ -32,8 +32,7 @@ fill_ragged_edge <- function(ts_data, sys_eq,
     ##### Construct Y and X matrix
     balanced_data <- construct_balanced_data(
       ts_data, endogenous_variables, total_exogenous_variables,
-      dates$estimation$start, dates$estimation$end,
-      state = list(warning_issued = TRUE)
+      dates$estimation$start, dates$estimation$end
     )
 
     date <- dates_to_str(num_to_dates(edge$date, balanced_data$freq), balanced_data$freq)
@@ -157,8 +156,7 @@ conditional_fill <- function(ts_data, sys_eq, dates,
   balanced_data <- construct_balanced_data(
     ts_data, endogenous_variables,
     sys_eq$total_exogenous_variables,
-    dates$estimation$start, dates$current,
-    state = list(warning_issued = TRUE)
+    dates$estimation$start, dates$current
   )
 
   y_matrix <- balanced_data$y_matrix

@@ -6,14 +6,15 @@
 #' to include in x matrix.
 #' @param start Start date for truncation.
 #' @param end End date for truncation.
-#' @inheritParams forecast_draw
+#' @param warn Logical. If TRUE, warn when the start is moved because of
+#' missing or lag-induced NAs. Default is FALSE.
 #'
 #' @return A list containing the truncated time series data, y_matrix, x_matrix
 #' the number of observations, the date of last observation and the frequency.
 #' @keywords internal
 construct_balanced_data <- function(ts_data, endogenous_variables,
                                     total_exogenous_variables,
-                                    start, end, state = NULL) {
+                                    start, end, warn = FALSE) {
   variables_to_include <- intersect(
     names(ts_data), c(endogenous_variables, total_exogenous_variables)
   )
@@ -30,7 +31,7 @@ construct_balanced_data <- function(ts_data, endogenous_variables,
   )
   freq <- stats::frequency(truncated_ts_data)
 
-  if (start_edge$date > start && is.null(state$warning_issued)) {
+  if (warn && start_edge$date > start) {
     late_series <- late_starting_series(ts_data, start, end)
     cli::cli_warn(c(
       "Estimation start moved to {.val {dates_to_str(num_to_dates(start_edge$date, freq), freq)}}.",

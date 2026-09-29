@@ -10,7 +10,7 @@ construct_balanced_data(
   total_exogenous_variables,
   start,
   end,
-  state = NULL
+  warn = FALSE
 )
 }
 \arguments{
@@ -25,9 +25,8 @@ to include in x matrix.}
 
 \item{end}{End date for truncation.}
 
-\item{state}{An environment used to share mutable state between function
-calls, particularly for issuing warnings only once during the forecasting
-process.}
+\item{warn}{Logical. If TRUE, warn when the start is moved because of
+missing or lag-induced NAs. Default is FALSE.}
 }
 \value{
 A list containing the truncated time series data, y_matrix, x_matrix
