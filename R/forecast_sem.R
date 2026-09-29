@@ -21,8 +21,11 @@ forecast_sem <- function(sys_eq, estimates,
                          freq, forecast_dates, approximate, probs,
                          conditional_innov_method = "projection") {
   state <- new.env()
-  state$warning_issued <- FALSE
   state$warning_issued_restrictions <- FALSE
+
+  # The same for every draw, so shorten (and warn) once in the main process
+  # instead of per draw, where multisession workers cannot share the state.
+  horizon <- shorten_forecast_horizon(horizon, forecast_x_matrix, forecast_dates)
 
   out <- list()
 
@@ -146,6 +149,42 @@ forecast_sem <- function(sys_eq, estimates,
   out
 }
 
+#' Shorten the Forecast Horizon to the Available Exogenous Data
+#'
+#' If the exogenous variables end before the forecast end date, the horizon is
+#' shortened to the number of periods with complete exogenous data, and a
+#' warning names the variables that end early.
+#'
+#' @inheritParams forecast_sem
+#'
+#' @return The (possibly shortened) forecast horizon.
+#' @keywords internal
+shorten_forecast_horizon <- function(horizon, forecast_x_matrix, forecast_dates) {
+  if (is.null(forecast_x_matrix)) {
+    return(horizon)
+  }
+
+  max_date <- max(stats::time(stats::na.omit(forecast_x_matrix)))
+  if (forecast_dates$end <= max_date) {
+    return(horizon)
+  }
+
+  horizon <- nrow(stats::na.omit(forecast_x_matrix))
+
+  # Identify variables that contain NAs
+  na_columns <- colnames(forecast_x_matrix)[apply(is.na(forecast_x_matrix), 2, any)]
+
+  # If no columns with NAs, set all columns as ending before forecast end date
+  if (length(na_columns) == 0) na_columns <- colnames(forecast_x_matrix)
+
+  cli::cli_warn(c(
+    "!" = "Forecast horizon shortened to {horizon}.",
+    ">" = "The following variables end before forecast end date: {na_columns}"
+  ))
+
+  horizon
+}
+
 #' Generate a Forecast for a Single Draw
 #'
 #' This function computes a forecast for a single draw of the parameter
@@ -180,27 +219,6 @@ forecast_draw <- function(sys_eq, estimates, jx,
   companion_matrix <- construct_companion_matrix(posterior, sys_eq$exogenous_variables)
   reduced_form <- construct_reduced_form(companion_matrix)
 
-  if (!is.null(forecast_x_matrix)) {
-    # Shorten horizon if forecast end date is after the latest available date
-    max_date <- max(stats::time(stats::na.omit(forecast_x_matrix)))
-    if (forecast_dates$end > max_date) {
-      horizon <- nrow(stats::na.omit(forecast_x_matrix))
-
-      if (!state$warning_issued) {
-        # Identify variables that contain NAs
-        na_columns <- colnames(forecast_x_matrix)[apply(is.na(forecast_x_matrix), 2, any)]
-
-        # If no columns with NAs, set all columns as ending before forecast end date
-        if (length(na_columns) == 0) na_columns <- colnames(forecast_x_matrix)
-
-        cli::cli_warn(c(
-          "!" = "Forecast horizon shortened to {horizon}.",
-          ">" = "The following variables end before forecast end date: {na_columns}"
-        ))
-        state$warning_issued <- TRUE
-      }
-    }
-  }
   endogenous_variables <- sys_eq$endogenous_variables
   if (!all(names(restrictions) %in% endogenous_variables)) {
     missing <-

@@ -669,6 +669,69 @@ test_that("forecast stops when exogenous series don't extend to forecast end", {
   print(result, variables = c("gdp", "consumption"))
 })
 
+test_that("shorten_forecast_horizon shortens to available exogenous data", {
+  forecast_dates <- list(start = 2023.25, end = 2024.75)
+  x_matrix <- stats::ts(
+    cbind(a = 1:7, b = c(1:5, NA, NA)),
+    start = c(2023, 2), frequency = 4
+  )
+
+  expect_equal(shorten_forecast_horizon(7, NULL, forecast_dates), 7)
+  expect_equal(
+    shorten_forecast_horizon(7, x_matrix[, "a", drop = FALSE], forecast_dates),
+    7
+  )
+  expect_warning(
+    horizon <- shorten_forecast_horizon(7, x_matrix, forecast_dates),
+    "shortened to 5"
+  )
+  expect_equal(horizon, 5)
+})
+
+test_that("horizon shortening warns once with multisession futures", {
+  skip_on_cran()
+  skip_if_not_installed(c("future", "doFuture"))
+
+  old_plan <- future::plan()
+  on.exit(future::plan(old_plan), add = TRUE)
+
+  dates <- list(
+    estimation = list(start = c(1977, 1), end = c(2018, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
+  )
+  sys_eq <- system_of_equations(
+    simulated_data$equations, simulated_data$exogenous_variables
+  )
+
+  ts_data <- simulated_data$ts_data
+  ts_data[sys_eq$endogenous_variables] <-
+    lapply(sys_eq$endogenous_variables, function(x) {
+      stats::window(ts_data[[x]], end = c(2023, 1))
+    })
+
+  estimates <- withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 40)))
+  )
+  estimates$ts_data$world_gdp <-
+    stats::window(simulated_data$ts_data$world_gdp, end = c(2024, 4))
+
+  future::plan(future::multisession, workers = 2)
+
+  shortened_warnings <- 0L
+  withCallingHandlers(
+    withr::with_seed(7, forecast(estimates, dates)),
+    warning = function(w) {
+      if (grepl("shortened", conditionMessage(w))) {
+        shortened_warnings <<- shortened_warnings + 1L
+      }
+      invokeRestart("muffleWarning")
+    }
+  )
+
+  expect_equal(shortened_warnings, 1L)
+})
+
 test_that("update_anker", {
   x <- rate(ets(
     c(100, 101, 99, 103),
