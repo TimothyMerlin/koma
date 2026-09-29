@@ -131,6 +131,86 @@ test_that("run_model_iteration", {
   expect_equal(names(result), c("error", "estimates"))
 })
 
+test_that("run_model_iteration passes approximate to forecast options", {
+  captured <- NULL
+  local_mocked_bindings(
+    estimate.list = function(...) structure(list(), class = "koma_estimate"),
+    forecast.koma_estimate = function(estimates, dates, ...,
+                                      restrictions = NULL, options = NULL) {
+      captured <<- list(dots = list(...), options = options)
+      stop("forecast called")
+    }
+  )
+
+  param <- list(
+    ts_data = list(),
+    dates = list(
+      in_sample = list(end = 2020),
+      estimation = list(end = 2020)
+    )
+  )
+  expect_error(
+    run_model_iteration(
+      param, "mean", TRUE, "gdp", NULL, simulated_data$sys_eq,
+      TRUE, list(),
+      estimates = NULL
+    ),
+    "forecast called"
+  )
+
+  expect_length(captured$dots, 0)
+  expect_true(captured$options$approximate)
+})
+
+test_that("validate_model_evaluation_input resolves and checks inputs", {
+  sys_eq <- simulated_data$sys_eq
+  ts_data <- simulated_data$ts_data
+  dates <- list(
+    estimation = list(start = c(1977, 1), end = c(2018, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
+  )
+  check <- function(..., pattern) {
+    args <- list(
+      sys_eq = sys_eq, variables = "consumption", horizon = 4,
+      ts_data = ts_data, dates = dates, evaluate_on_levels = TRUE
+    )
+    overrides <- list(...)
+    args[names(overrides)] <- overrides
+    expect_error(
+      do.call(validate_model_evaluation_input, args),
+      pattern,
+      class = "rlang_error"
+    )
+  }
+
+  expect_equal(
+    validate_model_evaluation_input(sys_eq, NULL, 4, ts_data, dates, TRUE),
+    sys_eq$endogenous_variables
+  )
+  expect_equal(
+    validate_model_evaluation_input(sys_eq, "consumption", 4, ts_data, dates, TRUE),
+    "consumption"
+  )
+
+  check(sys_eq = list(), pattern = "koma_seq")
+  check(variables = 1, pattern = "character vector")
+  check(variables = "gdpp", pattern = "gdpp")
+  check(variables = "world_gdp", pattern = "Only endogenous")
+  check(horizon = 0, pattern = "positive whole number")
+  check(horizon = 1.5, pattern = "positive whole number")
+  check(horizon = c(1, 2), pattern = "positive whole number")
+  check(evaluate_on_levels = NA, pattern = "TRUE or FALSE")
+  check(
+    dates = list(estimation = dates$estimation),
+    pattern = "dates\\$forecast"
+  )
+  check(
+    dates = list(forecast = dates$forecast),
+    pattern = "dates\\$estimation"
+  )
+  check(horizon = 12, pattern = "does not fit")
+})
+
 test_that("calculate_error", {
   time_index <- c(1, 2, 3, 4)
 

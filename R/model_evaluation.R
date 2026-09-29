@@ -65,8 +65,8 @@ model_evaluation <- function(sys_eq, variables,
                              ),
                              restrictions = NULL) {
   check_dots_used(...)
-  validate_model_evaluation_input(
-    sys_eq, variables, horizon, ts_data, dates, ...
+  variables <- validate_model_evaluation_input(
+    sys_eq, variables, horizon, ts_data, dates, evaluate_on_levels
   )
   setup_global_progress_handler()
 
@@ -189,12 +189,40 @@ new_model_evaluation <- function(sys_eq, variables,
   errors
 }
 
-validate_model_evaluation_input <- function(
-  sys_eq, variables, horizon, ts_data, dates, ...
-) {
+#' Validate Model Evaluation Input
+#'
+#' @inheritParams model_evaluation
+#' @param call The environment from which the error is called.
+#'
+#' @return The variables to evaluate: `variables`, or all endogenous variables
+#' if `variables` is `NULL`.
+#' @keywords internal
+validate_model_evaluation_input <- function(sys_eq, variables, horizon,
+                                            ts_data, dates, evaluate_on_levels,
+                                            call = rlang::caller_env()) {
+  if (!inherits(sys_eq, "koma_seq")) {
+    cli::cli_abort(
+      "`sys_eq` must be of class 'koma_seq', not {.obj_type_friendly {sys_eq}}.",
+      call = call
+    )
+  }
+  if (!is.list(ts_data)) {
+    cli::cli_abort(
+      "`ts_data` must be a list, not {.obj_type_friendly {ts_data}}.",
+      call = call
+    )
+  }
+
   if (is.null(variables)) {
     variables <- sys_eq$endogenous_variables
   } else {
+    if (!is.character(variables) || length(variables) == 0L || anyNA(variables)) {
+      cli::cli_abort(
+        "`variables` must be NULL or a character vector of variable names.",
+        call = call
+      )
+    }
+
     missing_vars <- variables[
       !(variables %in% names(ts_data))
     ]
@@ -203,9 +231,44 @@ validate_model_evaluation_input <- function(
       cli::cli_abort(c(
         "x" = "The following variables were not found in ts_data:",
         ">" = paste(missing_vars, collapse = ", ")
-      ), call = rlang::caller_env())
+      ), call = call)
+    }
+
+    not_endogenous <- setdiff(variables, sys_eq$endogenous_variables)
+    if (length(not_endogenous) > 0) {
+      cli::cli_abort(c(
+        "x" = "Only endogenous variables can be evaluated:",
+        ">" = paste(not_endogenous, collapse = ", ")
+      ), call = call)
     }
   }
+
+  if (!is.numeric(horizon) || length(horizon) != 1L || !is.finite(horizon) ||
+    horizon < 1 || horizon != round(horizon)) {
+    cli::cli_abort("`horizon` must be a single positive whole number.", call = call)
+  }
+
+  if (!is.logical(evaluate_on_levels) || length(evaluate_on_levels) != 1L ||
+    is.na(evaluate_on_levels)) {
+    cli::cli_abort("`evaluate_on_levels` must be TRUE or FALSE.", call = call)
+  }
+
+  frequency <- get_single_frequency(ts_data)
+  validate_date_range(dates, "estimation", frequency = frequency, call = call)
+  validate_date_range(dates, "forecast", frequency = frequency, call = call)
+
+  # The rolling evaluation needs at least one full horizon inside the forecast
+  # window; otherwise no iteration runs and the RMSE is NaN.
+  forecast_start <- dates_to_num(dates$forecast$start, frequency = frequency)
+  forecast_end <- dates_to_num(dates$forecast$end, frequency = frequency)
+  if (iterate_n_periods(forecast_start, horizon - 1, frequency = frequency) > forecast_end) {
+    cli::cli_abort(c(
+      "x" = "`horizon` ({horizon}) does not fit into {.field dates$forecast}.",
+      "i" = "The forecast window must span at least {horizon} period{?s}."
+    ), call = call)
+  }
+
+  variables
 }
 
 run_model_iteration <- function(param, summary, approximate,
@@ -222,7 +285,7 @@ run_model_iteration <- function(param, summary, approximate,
   forecasts <- forecast.koma_estimate(
     estimates, param$dates,
     restrictions = restrictions,
-    approximate = approximate
+    options = list(approximate = approximate)
   )
 
   if (evaluate_on_levels) {
