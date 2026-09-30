@@ -225,6 +225,16 @@ summarise_draw_conditions <- function(messages, n_draws) {
     function(x) if (length(x)) x[[1]] else "",
     character(1)
   )
+  # drop the leading cli symbol of the first line; the summary adds its own
+  symbols <- c(
+    "!", cli::symbol$cross, cli::symbol$info, cli::symbol$tick,
+    cli::symbol$arrow_right, cli::symbol$bullet
+  )
+  for (prefix in paste0(symbols, " ")) {
+    has_prefix <- startsWith(headers, prefix)
+    headers[has_prefix] <- substring(headers[has_prefix], nchar(prefix) + 1)
+  }
+
   unique_headers <- unique(headers)
   counts <- vapply(unique_headers, function(h) sum(headers == h), integer(1))
 

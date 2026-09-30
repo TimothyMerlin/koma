@@ -700,14 +700,15 @@ test_that("shorten_forecast_horizon shortens to available exogenous data", {
 test_that("summarise_draw_conditions groups messages by first line", {
   messages <- c(
     "! A is ill-conditioned.\n→ kappa = 1e13",
-    "! A is ill-conditioned.\n→ kappa = 2e13",
+    paste0(cli::symbol$cross, " A is ill-conditioned.\n→ kappa = 2e13"),
     "value {not interpolated}"
   )
 
+  # the leading cli symbol is dropped, so both warnings are grouped together
   expect_equal(
     summarise_draw_conditions(messages, 10),
     c(
-      "*" = "2 of 10 draws: ! A is ill-conditioned.",
+      "*" = "2 of 10 draws: A is ill-conditioned.",
       "*" = "1 of 10 draws: value {{not interpolated}}"
     )
   )
