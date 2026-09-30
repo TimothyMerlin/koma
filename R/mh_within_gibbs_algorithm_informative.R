@@ -160,13 +160,11 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
 #' algorithm.
 #'
 #' @inheritParams draw_parameters_j_informative
-#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
-#' invariant across Gibbs draws, so callers that iterate can compute it once
-#' and pass it in to avoid recomputing it on every call. If `NULL` (the
-#' default), it is computed internally.
-#' @param xbtxb Optional precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
+#' @param xtx Precomputed \eqn{x_matrix'x_matrix}. This is invariant across
+#' Gibbs draws, so it is computed once instead of on every call.
+#' @param xbtxb Precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
 #' \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
-#' rationale as `xtx`. If `NULL` (the default), it is computed internally.
+#' rationale as `xtx`.
 #'
 #' @return A list containing the initial parameters for gamma
 #' (`gamma_jw`) and the Cholesky factor of the
@@ -177,7 +175,7 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
 initialize_sampler_informative <- function(y_matrix, x_matrix,
                                            character_gamma_matrix,
                                            character_beta_matrix, jx,
-                                           xtx = NULL, xbtxb = NULL) {
+                                           xtx, xbtxb) {
   number_endogenous_in_j <-
     length(grep("gamma", character_gamma_matrix[, jx]))
   if (number_endogenous_in_j == 0) {
@@ -358,16 +356,14 @@ draw_omega_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
 #'
 #' @inheritParams draw_parameters_j_informative
 #' @inheritParams draw_gamma_j_informative
-#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
-#' invariant across Gibbs draws, so callers that iterate can compute it once
-#' and pass it in to avoid recomputing it on every call. If `NULL` (the
-#' default), it is computed internally.
+#' @param xtx Precomputed \eqn{x_matrix'x_matrix}. This is invariant across
+#' Gibbs draws, so it is computed once instead of on every call.
 #'
 #' @return List containing theta_jw and beta_jw
 #' @keywords internal
 draw_theta_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
                                      character_beta_matrix, jx, gamma_jw,
-                                     omega_jw, priors_j, xtx = NULL) {
+                                     omega_jw, priors_j, xtx) {
   number_endogenous_in_j <-
     length(grep("gamma", character_gamma_matrix[, jx]))
   number_of_exogenous <- nrow(character_beta_matrix)
@@ -566,13 +562,11 @@ target_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
 #'
 #' @inheritParams draw_parameters_j_informative
 #' @inheritParams draw_gamma_j_informative
-#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
-#' invariant across Gibbs draws, so callers that iterate can compute it once
-#' and pass it in to avoid recomputing it on every call. If `NULL` (the
-#' default), it is computed internally.
-#' @param xbtxb Optional precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
+#' @param xtx Precomputed \eqn{x_matrix'x_matrix}. This is invariant across
+#' Gibbs draws, so it is computed once instead of on every call.
+#' @param xbtxb Precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
 #' \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
-#' rationale as `xtx`. If `NULL` (the default), it is computed internally.
+#' rationale as `xtx`.
 #'
 #' @return The function returns the evaluation of the target function,
 #' which is used to decide whether to accept or reject proposed states
@@ -581,7 +575,7 @@ target_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
 target_j_informative_initial <- function(y_matrix, x_matrix,
                                          character_gamma_matrix,
                                          character_beta_matrix, jx, gamma_jw,
-                                         xtx = NULL, xbtxb = NULL) {
+                                         xtx, xbtxb) {
   y_matrix_j <- construct_y_matrix_j(y_matrix, character_gamma_matrix, jx)
   if (anyNA(y_matrix_j)) {
     return(NA)
@@ -648,13 +642,11 @@ target_j_informative_initial <- function(y_matrix, x_matrix,
 #'
 #' @inheritParams draw_parameters_j_informative
 #' @inheritParams draw_gamma_j_informative
-#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
-#' invariant across Gibbs draws, so callers that iterate can compute it once
-#' and pass it in to avoid recomputing it on every call. If `NULL` (the
-#' default), it is computed internally.
-#' @param xbtxb Optional precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
+#' @param xtx Precomputed \eqn{x_matrix'x_matrix}. This is invariant across
+#' Gibbs draws, so it is computed once instead of on every call.
+#' @param xbtxb Precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
 #' \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
-#' rationale as `xtx`. If `NULL` (the default), it is computed internally.
+#' rationale as `xtx`.
 #'
 #' @return The function returns the evaluation of the target function,
 #' which is used to decide whether to accept or reject proposed states
@@ -662,7 +654,7 @@ target_j_informative_initial <- function(y_matrix, x_matrix,
 #' @keywords internal
 initial_omega_j <- function(y_matrix, x_matrix, character_gamma_matrix,
                             character_beta_matrix, jx, gamma_jw,
-                            xtx = NULL, xbtxb = NULL) {
+                            xtx, xbtxb) {
   gamma_count <- sum(grepl("gamma", character_gamma_matrix[, jx]))
 
   if (gamma_count == 0) {

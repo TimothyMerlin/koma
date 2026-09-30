@@ -82,7 +82,8 @@ test_that("construct_beta_hat_j_matrix computes beta_hat_j correctly", {
   jx <- 1
 
   result <- construct_beta_hat_j_matrix(
-    x_matrix, z_matrix_j, character_beta_matrix, jx
+    x_matrix, z_matrix_j, character_beta_matrix, jx,
+    xbtxb_for(x_matrix, character_beta_matrix, jx)
   )
 
   expected_output <- matrix(c(1.5, -1, 0), nrow = 3)
@@ -100,7 +101,7 @@ test_that("construct_pi_hat_0 correctly computes pi_hat_0", {
     nrow = 8, ncol = 2, dimnames = list(NULL, c("y_j-Y_j*gamma_j", "Y_j"))
   )
 
-  result <- construct_pi_hat_0(x_matrix, z_matrix_j)
+  result <- construct_pi_hat_0(x_matrix, z_matrix_j, crossprod(x_matrix))
 
   expected_output <- matrix(
     c(0.0640975604962179, 0.0718475273146385, -0.21740793920036),
@@ -121,7 +122,7 @@ endogenous variable case", {
     nrow = 8, ncol = 2, dimnames = list(NULL, c("y_j-Y_j*gamma_j", "Y_j"))
   )
 
-  result <- construct_theta_hat_j(x_matrix, z_matrix_j)
+  result <- construct_theta_hat_j(x_matrix, z_matrix_j, crossprod(x_matrix))
 
   expected_output <- matrix(
     c(

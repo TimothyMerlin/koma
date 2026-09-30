@@ -159,7 +159,9 @@ when there is one endogenous variable", {
     x_matrix,
     character_gamma_matrix,
     character_beta_matrix,
-    jx
+    jx,
+    crossprod(x_matrix),
+    xbtxb_for(x_matrix, character_beta_matrix, jx)
   )
   expect_equal(
     result_with_endogenous$gamma_parameters_j,
@@ -212,7 +214,9 @@ the one endogenous variable case", {
     jx,
     gamma_parameters_1,
     tau,
-    cholesky_of_inverse_hessian
+    cholesky_of_inverse_hessian,
+    crossprod(x_matrix),
+    xbtxb_for(x_matrix, character_beta_matrix, jx)
   )
   expect_equal(
     new_gamma_parameters_1,
@@ -241,7 +245,9 @@ the one endogenous variable case", {
     jx,
     gamma_parameters_1,
     tau,
-    cholesky_of_inverse_hessian
+    cholesky_of_inverse_hessian,
+    crossprod(x_matrix),
+    xbtxb_for(x_matrix, character_beta_matrix, jx)
   )
   expect_equal(
     new_gamma_parameters_1,
@@ -286,7 +292,9 @@ test_that("draw_omega_j correctly returns the Omega", {
     7,
     draw_omega_j(
       y_matrix, x_matrix, character_gamma_matrix,
-      character_beta_matrix, jx, gamma_parameters_1
+      character_beta_matrix, jx, gamma_parameters_1,
+      crossprod(x_matrix),
+      xbtxb_for(x_matrix, character_beta_matrix, jx)
     )
   )
 
@@ -321,7 +329,7 @@ the one endogenous variables case", {
     7,
     draw_theta_j(
       y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
-      jx, gamma_parameters_j, omega_tilde_jw
+      jx, gamma_parameters_j, omega_tilde_jw, crossprod(x_matrix)
     )
   )
 
@@ -360,7 +368,7 @@ the no endogenous variables case", {
     7,
     draw_theta_j(
       y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
-      jx, gamma_parameters_j, omega_tilde_jw
+      jx, gamma_parameters_j, omega_tilde_jw, crossprod(x_matrix)
     )
   )
 
@@ -393,7 +401,9 @@ test_that("target_j correctly computes the target function
     character_gamma_matrix,
     character_beta_matrix,
     jx,
-    parameters
+    parameters,
+    crossprod(x_matrix),
+    xbtxb_for(x_matrix, character_beta_matrix, jx)
   )
 
   # Check that the result is a single double value
@@ -411,7 +421,9 @@ test_that("target_j correctly computes the target function
     character_gamma_matrix,
     character_beta_matrix,
     jx,
-    new_parameters
+    new_parameters,
+    crossprod(x_matrix),
+    xbtxb_for(x_matrix, character_beta_matrix, jx)
   )
 
   # Check that the result has changed
@@ -426,8 +438,11 @@ test_that("target_j correctly computes the target function
       character_gamma_matrix,
       character_beta_matrix,
       jx,
-      parameters
-    )
+      parameters,
+      crossprod(x_matrix),
+      xbtxb_for(x_matrix, character_beta_matrix, jx)
+    ),
+    "number of gamma parameters"
   )
 })
 

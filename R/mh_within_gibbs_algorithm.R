@@ -136,13 +136,11 @@ draw_parameters_j <- function(y_matrix, x_matrix, character_gamma_matrix,
 #' algorithm.
 #'
 #' @inheritParams draw_parameters_j
-#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
-#' invariant across Gibbs draws, so callers that iterate can compute it once
-#' and pass it in to avoid recomputing it on every call. If `NULL` (the
-#' default), it is computed internally.
-#' @param xbtxb Optional precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
+#' @param xtx Precomputed \eqn{x_matrix'x_matrix}. This is invariant across
+#' Gibbs draws, so it is computed once instead of on every call.
+#' @param xbtxb Precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
 #' \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
-#' rationale as `xtx`. If `NULL` (the default), it is computed internally.
+#' rationale as `xtx`.
 #'
 #' @return A list containing the initial parameters for gamma
 #' (`gamma_parameters_j`) and the Cholesky factor of the
@@ -152,7 +150,7 @@ draw_parameters_j <- function(y_matrix, x_matrix, character_gamma_matrix,
 #' @keywords internal
 initialize_sampler <- function(y_matrix, x_matrix, character_gamma_matrix,
                                character_beta_matrix, jx,
-                               xtx = NULL, xbtxb = NULL) {
+                               xtx, xbtxb) {
   number_endogenous_in_j <-
     length(grep("gamma", character_gamma_matrix[, jx]))
   if (number_endogenous_in_j == 0) {
@@ -202,13 +200,11 @@ initialize_sampler <- function(y_matrix, x_matrix, character_gamma_matrix,
 #' @param tau A tuning scalar \eqn{\tau} to adjust the acceptance rate.
 #' @param cholesky_of_inverse_hessian The Cholesky factor \eqn{L} of the
 #' inverse Hessian matrix \eqn{M^{-1}} used to generate candidate draws.
-#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
-#' invariant across Gibbs draws, so callers that iterate can compute it once
-#' and pass it in to avoid recomputing it on every call. If `NULL` (the
-#' default), it is computed internally.
-#' @param xbtxb Optional precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
+#' @param xtx Precomputed \eqn{x_matrix'x_matrix}. This is invariant across
+#' Gibbs draws, so it is computed once instead of on every call.
+#' @param xbtxb Precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
 #' \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
-#' rationale as `xtx`. If `NULL` (the default), it is computed internally.
+#' rationale as `xtx`.
 #'
 #' @return A \eqn{(n_j \times 1)} matrix with the either accepted candidate or
 #' previous gamma parameters. Returns 0 if there are no endogenous
@@ -218,7 +214,7 @@ draw_gamma_j <- function(y_matrix, x_matrix, character_gamma_matrix,
                          character_beta_matrix, jx,
                          gamma_parameters_j, tau,
                          cholesky_of_inverse_hessian,
-                         xtx = NULL, xbtxb = NULL) {
+                         xtx, xbtxb) {
   number_endogenous_in_j <- length(grep("gamma", character_gamma_matrix[, jx]))
   if (number_endogenous_in_j == 0) {
     gamma_parameters_j <- NA
@@ -277,20 +273,18 @@ draw_gamma_j <- function(y_matrix, x_matrix, character_gamma_matrix,
 #' for each row of \eqn{[ u_j,  V_j ]}.
 #'
 #' @inheritParams draw_parameters_j
-#' @param xtx Optional precomputed \eqn{x_matrix'x_matrix}. This is
-#' invariant across Gibbs draws, so callers that iterate can compute it once
-#' and pass it in to avoid recomputing it on every call. If `NULL` (the
-#' default), it is computed internally.
-#' @param xbtxb Optional precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
+#' @param xtx Precomputed \eqn{x_matrix'x_matrix}. This is invariant across
+#' Gibbs draws, so it is computed once instead of on every call.
+#' @param xbtxb Precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
 #' \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
-#' rationale as `xtx`. If `NULL` (the default), it is computed internally.
+#' rationale as `xtx`.
 #'
 #' @return List containing \eqn{{\tilde{\Omega}}_j^{(w)}} as `omega_tilde_jw`
 #' and \eqn{\Omega_j^{(w)}} as `omega_jw`.
 #' @keywords internal
 draw_omega_j <- function(y_matrix, x_matrix, character_gamma_matrix,
                          character_beta_matrix, jx, gamma_parameters_j,
-                         xtx = NULL, xbtxb = NULL) {
+                         xtx, xbtxb) {
   number_endogenous_in_j <-
     length(grep("gamma", character_gamma_matrix[, jx]))
   # number of exogenous, predetermined variables + intercept
@@ -350,10 +344,7 @@ draw_omega_j <- function(y_matrix, x_matrix, character_gamma_matrix,
 #' @keywords internal
 draw_theta_j <- function(y_matrix, x_matrix, character_gamma_matrix,
                          character_beta_matrix, jx, gamma_parameters_j,
-                         omega_tilde_jw, xtx = NULL) {
-  if (is.null(xtx)) {
-    xtx <- crossprod(x_matrix)
-  }
+                         omega_tilde_jw, xtx) {
   number_endogenous_in_j <- length(grep("gamma", character_gamma_matrix[, jx]))
 
   if (number_endogenous_in_j == 0) {
@@ -460,7 +451,7 @@ draw_theta_j <- function(y_matrix, x_matrix, character_gamma_matrix,
 #' @keywords internal
 target_j <- function(y_matrix, x_matrix, character_gamma_matrix,
                      character_beta_matrix, jx, gamma_parameters_j,
-                     xtx = NULL, xbtxb = NULL) {
+                     xtx, xbtxb) {
   y_matrix_j <- construct_y_matrix_j(y_matrix, character_gamma_matrix, jx)
   if (anyNA(y_matrix_j)) {
     return(NA)

@@ -11,8 +11,8 @@ draw_omega_j(
   character_beta_matrix,
   jx,
   gamma_parameters_j,
-  xtx = NULL,
-  xbtxb = NULL
+  xtx,
+  xbtxb
 )
 }
 \arguments{
@@ -35,14 +35,12 @@ exogenous variables and \eqn{n} the number of equations.}
 
 \item{jx}{The index of equation \eqn{j}.}
 
-\item{xtx}{Optional precomputed \eqn{x_matrix'x_matrix}. This is
-invariant across Gibbs draws, so callers that iterate can compute it once
-and pass it in to avoid recomputing it on every call. If \code{NULL} (the
-default), it is computed internally.}
+\item{xtx}{Precomputed \eqn{x_matrix'x_matrix}. This is invariant across
+Gibbs draws, so it is computed once instead of on every call.}
 
-\item{xbtxb}{Optional precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
+\item{xbtxb}{Precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
 \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
-rationale as \code{xtx}. If \code{NULL} (the default), it is computed internally.}
+rationale as \code{xtx}.}
 }
 \value{
 List containing \eqn{{\tilde{\Omega}}_j^{(w)}} as \code{omega_tilde_jw}
