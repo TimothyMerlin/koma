@@ -76,13 +76,21 @@ forecast_sem <- function(sys_eq, estimates,
 
     # Warnings and errors are collected per draw and reported once below,
     # instead of being signalled for every draw on the workers.
-    safe_draw_forecasts <- purrr::safely(purrr::quietly(function(draw_jx) {
-      forecast_draw(
-        sys_eq, estimates, draw_jx,
-        y_matrix, forecast_x_matrix, horizon, freq, forecast_dates,
-        restrictions, conditional_innov_method = conditional_innov_method
+    safe_draw_forecasts <- purrr::safely(function(draw_jx) {
+      warnings <- character(0)
+      result <- withCallingHandlers(
+        forecast_draw(
+          sys_eq, estimates, draw_jx,
+          y_matrix, forecast_x_matrix, horizon, freq, forecast_dates,
+          restrictions, conditional_innov_method = conditional_innov_method
+        ),
+        warning = function(w) {
+          warnings <<- c(warnings, conditionMessage(w))
+          invokeRestart("muffleWarning")
+        }
       )
-    }))
+      list(result = result, warnings = warnings)
+    })
 
     suppressPackageStartupMessages(
       # Run estimation in parallel
@@ -102,8 +110,8 @@ forecast_sem <- function(sys_eq, estimates,
       }
     )
 
-    # safely() wraps quietly(): x$error is the error of a failed draw,
-    # x$result$warnings the warnings and x$result$result the forecast.
+    # x$error is the error of a failed draw, x$result$warnings the warnings
+    # and x$result$result the forecast.
     draw_warnings <- unlist(lapply(forecasts, function(x) x$result$warnings))
     draw_errors <- Filter(Negate(is.null), lapply(forecasts, `[[`, "error"))
     # The first error is chained as parent, so rlang::last_trace() shows
