@@ -52,12 +52,18 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
   col_positions <- stochastic_positions[eq_jx]
   equation_names <- colnames(character_gamma_matrix)
 
+  gibbs_settings <- get_gibbs_settings()
+
+  # Progress is reported per Gibbs draw, so the total is the number of draws
+  # of all equations estimated here.
   set_progress_handler(operation = "estimation")
   p <- progressr::progressor(
-    steps = length(stochastic_equations)
+    steps = sum(vapply(
+      equation_names[col_positions],
+      function(eq) gibbs_settings[[eq]]$ndraws,
+      numeric(1)
+    ))
   )
-
-  gibbs_settings <- get_gibbs_settings()
 
   # Evaluate lazy arguments before the closure is shipped to future workers.
   # An unevaluated promise keeps the caller's environment alive, so the whole
@@ -68,16 +74,17 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
 
   safe_draw_parameters <- purrr::safely(function(eq_jx) {
     gibbs_sampler <- gibbs_settings[[colnames(character_gamma_matrix)[eq_jx]]]
+    progress <- function(amount) p(amount = amount)
 
     if (length(priors[[eq_jx]]) == 0) {
       draw_parameters_j(
         y_matrix, x_matrix, character_gamma_matrix,
-        character_beta_matrix, eq_jx, gibbs_sampler
+        character_beta_matrix, eq_jx, gibbs_sampler, progress
       )
     } else {
       draw_parameters_j_informative(
         y_matrix, x_matrix, character_gamma_matrix,
-        character_beta_matrix, eq_jx, gibbs_sampler, priors
+        character_beta_matrix, eq_jx, gibbs_sampler, priors, progress
       )
     }
   }, quiet = FALSE)
@@ -101,9 +108,7 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
         amount = 0,
         message = equation_names[eq_jx]
       )
-      out <- safe_draw_parameters(eq_jx)
-      p(amount = 1)
-      out
+      safe_draw_parameters(eq_jx)
     }
   )
 

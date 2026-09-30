@@ -31,6 +31,7 @@
 #' @param gibbs_sampler An object of class `gibbs_sampler` that holds an
 #' equations gibbs settings.
 #' @param priors The priors for \eqn{\theta} in equation \eqn{j}.
+#' @inheritParams draw_parameters_j
 #'
 #' @return A list containing matrices for the saved draws of parameters and
 #' additional diagnostic information.
@@ -38,7 +39,8 @@
 draw_parameters_j_informative <- function(y_matrix, x_matrix,
                                           character_gamma_matrix,
                                           character_beta_matrix, jx,
-                                          gibbs_sampler, priors) {
+                                          gibbs_sampler, priors,
+                                          progress = function(amount) invisible()) {
   priors_j <- construct_priors_j(
     priors, character_gamma_matrix, character_beta_matrix, jx
   )
@@ -87,6 +89,11 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
   )
 
   gx <- 1 # initial value for saved draws
+  # Report progress at most every 0.5 seconds; each update has a cost, and
+  # with parallel workers the main process handles the updates of all workers.
+  # The clock is compared as a plain number: a difftime costs ~15x more.
+  pending_draws <- 0L
+  last_report <- unclass(Sys.time())
 
   #### Start Gibbs sampler
   for (wx in 1:gibbs_sampler$ndraws) {
@@ -140,7 +147,15 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
       out$omega_tilde_jw[[gx]] <- results_draw_omega_j$omega_tilde_jw
       gx <- gx + 1
     }
+
+    pending_draws <- pending_draws + 1L
+    if (unclass(Sys.time()) - last_report > 0.5) {
+      progress(pending_draws)
+      pending_draws <- 0L
+      last_report <- unclass(Sys.time())
+    }
   }
+  if (pending_draws > 0L) progress(pending_draws)
 
   if (all(is.na(out$gamma_jw))) count_accepted <- NA
   out$count_accepted <- count_accepted

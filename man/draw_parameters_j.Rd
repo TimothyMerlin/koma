@@ -10,7 +10,8 @@ draw_parameters_j(
   character_gamma_matrix,
   character_beta_matrix,
   jx,
-  gibbs_sampler
+  gibbs_sampler,
+  progress = function(amount) invisible()
 )
 }
 \arguments{
@@ -35,6 +36,10 @@ exogenous variables and \eqn{n} the number of equations.}
 
 \item{gibbs_sampler}{An object of class \code{gibbs_sampler} that holds an
 equations gibbs settings.}
+
+\item{progress}{Function called with the number of completed draws since
+its last call, at most about every 0.5 seconds. Used to update the progress
+bar.}
 }
 \value{
 A list containing matrices for the saved draws of parameters and

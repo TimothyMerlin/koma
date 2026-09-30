@@ -53,8 +53,7 @@ get_default_progress_configs <- function() {
       format = paste0(
         "{cli::pb_spin} {cli::pb_bar} {cli::pb_percent} | ",
         "elapsed {.timestamp {cli::pb_elapsed}} | ",
-        "{.field {cli::pb_status}} | ",
-        "{cli::pb_current}/{cli::pb_total}"
+        "{.field {cli::pb_status}}"
       ),
       format_done = paste0(
         "{.alert-success SEM estimation completed in {.timestamp {cli::pb_elapsed}}}."

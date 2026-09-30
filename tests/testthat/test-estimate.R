@@ -1535,3 +1535,57 @@ test_that("identity equations can be placed anywhere in the system, not only las
   expect_s3_class(summary_interleaved, "koma_summary")
   expect_equal(summary_interleaved$stats, summary_last$stats)
 })
+
+test_that("estimation progress is reported per Gibbs draw", {
+  skip_on_cran()
+  dates <- list(estimation = list(start = c(1977, 1), end = c(2019, 4)))
+  exogenous_variables <- c("world_gdp", "population")
+  ts_data <- simulated_data$ts_data
+  options <- list(gibbs = list(ndraws = 302))
+  # progressr only signals progress in interactive sessions by default
+  withr::local_options(progressr.enable = TRUE)
+
+  # total steps of the progress bar and the amounts reported against it
+  record_progress <- function(expr) {
+    steps <- NULL
+    amounts <- numeric(0)
+    withCallingHandlers(expr, progression = function(cnd) {
+      if (identical(cnd$type, "initiate")) steps <<- cnd$steps
+      if (identical(cnd$type, "update")) amounts <<- c(amounts, cnd$amount)
+    })
+    list(steps = steps, amounts = amounts)
+  }
+
+  sys_eq <- system_of_equations(
+    "consumption ~ gdp + consumption.L(1),
+    manufacturing ~ manufacturing.L(1) + world_gdp,
+    service ~ service.L(1) + population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service",
+    exogenous_variables
+  )
+  progress <- record_progress(
+    estimates <- withr::with_seed(
+      7,
+      estimate(ts_data, sys_eq, dates, options = options)
+    )
+  )
+  # 3 stochastic equations x 302 draws; how the draws are split into updates
+  # depends on timing, but together they must add up to the total
+  expect_equal(progress$steps, 3 * 302)
+  expect_equal(sum(progress$amounts), 3 * 302)
+
+  # re-estimating one changed equation only counts the draws of that equation
+  sys_eq <- system_of_equations(
+    "consumption ~ gdp + consumption.L(1),
+    manufacturing ~ manufacturing.L(1) + manufacturing.L(2) + world_gdp,
+    service ~ service.L(1) + population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service",
+    exogenous_variables
+  )
+  progress <- record_progress(withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates, options = options, estimates = estimates)
+  ))
+  expect_equal(progress$steps, 302)
+  expect_equal(sum(progress$amounts), 302)
+})
