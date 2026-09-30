@@ -14,6 +14,7 @@ forecast_draw(
   freq,
   forecast_dates,
   restrictions,
+  phi_positions,
   conditional_innov_method = "projection",
   central_tendency = NULL
 )
@@ -36,6 +37,9 @@ variables.}
 \item{forecast_dates}{List containing 'start' and 'end' dates for forecast.}
 
 \item{restrictions}{List of model constraints. Default is empty.}
+
+\item{phi_positions}{Positions of the lagged endogenous regressors, as
+returned by \code{\link[=find_phi_positions]{find_phi_positions()}}.}
 }
 \description{
 This function computes a forecast for a single draw of the parameter

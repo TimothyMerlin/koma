@@ -12,6 +12,7 @@
 #'
 #' @param estimate A draw that contains beta, gamma and omega tilde estimates.
 #' @inheritParams forecast_draw
+#' @inheritParams construct_phi
 #'
 #' @return A list containing posterior system matrices:
 #'   * `gamma_matrix`: Posterior \eqn{\Gamma} (n x n) structural coefficient matrix.
@@ -22,7 +23,7 @@
 #'     \eqn{\Omega = (\Gamma^{-1})'\Sigma\Gamma^{-1}} (n x n).
 #'
 #' @keywords internal
-construct_posterior <- function(sys_eq, estimate) {
+construct_posterior <- function(sys_eq, estimate, phi_positions) {
   call <- rlang::caller_env()
 
   posterior <-
@@ -75,7 +76,7 @@ construct_posterior <- function(sys_eq, estimate) {
     )
   }
 
-  phi_matrix <- construct_phi(sys_eq, posterior$beta_matrix)
+  phi_matrix <- construct_phi(phi_positions, posterior$beta_matrix)
 
   sigma_matrix <- estimate$sigma_matrix
   dimnames(sigma_matrix) <- dimnames(posterior$gamma_matrix)
@@ -204,16 +205,14 @@ update_estimates_with_weights <- function(identities, gamma_matrix, beta_matrix)
 #' Construct a Dynamic SEM (Structural Equation Model) Phi Matrix
 #'
 #' This function constructs the list of lagged endogenous coefficient matrices
-#' \eqn{\Phi(1), \ldots, \Phi(L)} from the system of equations and the beta
-#' matrix. It identifies lagged endogenous regressors in each equation and maps
-#' their coefficients into the corresponding \eqn{\Phi(\ell)} matrix in the
-#' dynamic SEM:
+#' \eqn{\Phi(1), \ldots, \Phi(L)} from the beta matrix. It maps the
+#' coefficients of the lagged endogenous regressors, located by
+#' [find_phi_positions()], into the corresponding \eqn{\Phi(\ell)} matrix in
+#' the dynamic SEM:
 #' \eqn{Y\Gamma = \tilde{X}\tilde{B} + Y_{t-1}\Phi(1) + \cdots + Y_{t-p}\Phi(L) + U.}
 #'
-#' @param sys_eq A list containing the system of equations. Must
-#' include `$equations` with the equations of the system,
-#' `$endogenous_variables` with the names of the endogenous variables, and
-#' `$total_exogenous_variables` with the names of all exogenous variables.
+#' @param phi_positions Positions of the lagged endogenous regressors, as
+#' returned by [find_phi_positions()].
 #' @param beta_matrix A numeric matrix of beta coefficients corresponding to the
 #' exogenous variables in the system of equations.
 #'
@@ -222,10 +221,41 @@ update_estimates_with_weights <- function(identities, gamma_matrix, beta_matrix)
 #' \eqn{\ell}-lagged endogenous variables. The list names correspond to lag
 #' orders (as character strings).
 #' @keywords internal
-construct_phi <- function(sys_eq, beta_matrix) { # nolint: cyclomatic_complexity_linter
+construct_phi <- function(phi_positions, beta_matrix) {
   # Use the following system
   # Y * Gamma = X_tilde B_tilde + Y(-1) * Phi(1) + ... + Y(-p) * Phi(L) + U
+  n <- ncol(beta_matrix)
 
+  phi_matrix <- vector("list")
+  for (lx in names(phi_positions)) {
+    matf <- matrix(0, n, n)
+    for (jx in names(phi_positions[[lx]])) {
+      for (ix in names(phi_positions[[lx]][[jx]])) {
+        matf[phi_positions[[lx]][[jx]][[ix]][2], as.numeric(jx)] <-
+          beta_matrix[phi_positions[[lx]][[jx]][[ix]][1], as.numeric(jx)]
+      }
+    }
+    phi_matrix[[lx]] <- matf
+  }
+
+  phi_matrix
+}
+
+#' Find the Positions of Lagged Endogenous Regressors
+#'
+#' Identifies the lagged endogenous regressors in each equation. The result
+#' depends only on the system of equations, so it is computed once and reused
+#' by [construct_phi()] for every draw.
+#'
+#' @param sys_eq A list containing the system of equations. Must
+#' include `$equations` with the equations of the system,
+#' `$endogenous_variables` with the names of the endogenous variables, and
+#' `$total_exogenous_variables` with the names of all exogenous variables.
+#'
+#' @return A nested list indexed by lag, equation and endogenous variable,
+#' holding the row in the beta matrix and the row in \eqn{\Phi(\ell)}.
+#' @keywords internal
+find_phi_positions <- function(sys_eq) { # nolint: cyclomatic_complexity_linter
   equations <- sys_eq$equations
   endogenous_variables <- sys_eq$endogenous_variables
   exogenous_variables <- sys_eq$total_exogenous_variables
@@ -255,18 +285,5 @@ construct_phi <- function(sys_eq, beta_matrix) { # nolint: cyclomatic_complexity
     }
   }
 
-  #### Construct Phi(L) matrix
-  phi_matrix <- vector("list")
-  for (lx in names(indxl)) {
-    matf <- matrix(0, n, n)
-    for (jx in names(indxl[[lx]])) {
-      for (ix in names(indxl[[lx]][[jx]])) {
-        matf[indxl[[lx]][[jx]][[ix]][2], as.numeric(jx)] <-
-          beta_matrix[indxl[[lx]][[jx]][[ix]][1], as.numeric(jx)]
-      }
-    }
-    phi_matrix[[lx]] <- matf
-  }
-
-  phi_matrix
+  indxl
 }

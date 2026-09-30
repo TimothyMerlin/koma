@@ -34,7 +34,9 @@ test_that("construct_posterior constructs median estimate matrices correctly", {
     system_of_equations, simulated_data$estimates
   )
 
-  result <- construct_posterior(system_of_equations, estimate)
+  result <- construct_posterior(
+    system_of_equations, estimate, find_phi_positions(system_of_equations)
+  )
 
   expect_type(result, "list")
   expect_named(
@@ -97,7 +99,9 @@ test_that("construct_posterior posterior matrices are not complete", {
   )
 
   expect_error(
-    construct_posterior(system_of_equations, estimate),
+    construct_posterior(
+      system_of_equations, estimate, find_phi_positions(system_of_equations)
+    ),
     "column 6 and row 4"
   )
 })
@@ -171,7 +175,9 @@ test_that("construct_posterior returns estimates for draw jx", {
     system_of_equations, estimates, jx
   )
 
-  result <- construct_posterior(system_of_equations, estimate)
+  result <- construct_posterior(
+    system_of_equations, estimate, find_phi_positions(system_of_equations)
+  )
 
   expected_gamma_matrix <-
     structure(c(
@@ -445,7 +451,7 @@ test_that("construct_phi correctly returns phi matrix", {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
   ), dim = c(6L, 6L)))
 
-  result <- construct_phi(sys_eq, beta_matrix)
+  result <- construct_phi(find_phi_positions(sys_eq), beta_matrix)
 
   expect_identical(result, expected_phi)
 })
@@ -500,7 +506,7 @@ test_that("construct_phi with lagged identity", {
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
   ), dim = c(6L, 6L)))
 
-  result <- construct_phi(sys_eq, beta_matrix)
+  result <- construct_phi(find_phi_positions(sys_eq), beta_matrix)
 
   expect_identical(result, expected_phi)
 })

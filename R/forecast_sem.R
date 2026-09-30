@@ -30,6 +30,9 @@ forecast_sem <- function(sys_eq, estimates,
     restrictions, sys_eq$endogenous_variables, horizon
   )
 
+  # Depends only on the system of equations, so find it once for all draws.
+  phi_positions <- find_phi_positions(sys_eq)
+
   out <- list()
 
   set_progress_handler(operation = "forecasting")
@@ -38,12 +41,14 @@ forecast_sem <- function(sys_eq, estimates,
     out$mean <- forecast_draw(
       sys_eq, estimates, NULL,
       y_matrix, forecast_x_matrix, horizon, freq, forecast_dates, restrictions,
+      phi_positions,
       conditional_innov_method = conditional_innov_method,
       central_tendency = "mean"
     )
     out$median <- forecast_draw(
       sys_eq, estimates, NULL,
       y_matrix, forecast_x_matrix, horizon, freq, forecast_dates, restrictions,
+      phi_positions,
       conditional_innov_method = conditional_innov_method,
       central_tendency = "median"
     )
@@ -82,7 +87,8 @@ forecast_sem <- function(sys_eq, estimates,
         forecast_draw(
           sys_eq, estimates, draw_jx,
           y_matrix, forecast_x_matrix, horizon, freq, forecast_dates,
-          restrictions, conditional_innov_method = conditional_innov_method
+          restrictions, phi_positions,
+          conditional_innov_method = conditional_innov_method
         ),
         warning = function(w) {
           warnings <<- c(warnings, conditionMessage(w))
@@ -240,11 +246,13 @@ summarise_draw_conditions <- function(messages, n_draws) {
 #' and reduced-form representation of the system before computing forecasts.
 #'
 #' @inheritParams forecast_sem
+#' @inheritParams construct_phi
 #' @keywords internal
 forecast_draw <- function(sys_eq, estimates, jx,
                           y_matrix, forecast_x_matrix,
                           horizon, freq, forecast_dates,
-                          restrictions, conditional_innov_method = "projection",
+                          restrictions, phi_positions,
+                          conditional_innov_method = "projection",
                           central_tendency = NULL) {
   if (is.null(jx)) {
     # Case point forecast with option to extract mean or median estimates
@@ -258,7 +266,7 @@ forecast_draw <- function(sys_eq, estimates, jx,
     estimates <- extract_estimates_from_draws(sys_eq, estimates, jx = jx)
   }
 
-  posterior <- construct_posterior(sys_eq, estimates)
+  posterior <- construct_posterior(sys_eq, estimates, phi_positions)
   companion_matrix <- construct_companion_matrix(posterior, sys_eq$exogenous_variables)
   reduced_form <- construct_reduced_form(companion_matrix)
 

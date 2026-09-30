@@ -4,13 +4,16 @@
 \alias{construct_posterior}
 \title{Construct Posterior Matrices from LIBA Estimates}
 \usage{
-construct_posterior(sys_eq, estimate)
+construct_posterior(sys_eq, estimate, phi_positions)
 }
 \arguments{
 \item{sys_eq}{A \code{koma_seq} object (\link{system_of_equations}) containing details
 about the system of equations used in the model.}
 
 \item{estimate}{A draw that contains beta, gamma and omega tilde estimates.}
+
+\item{phi_positions}{Positions of the lagged endogenous regressors, as
+returned by \code{\link[=find_phi_positions]{find_phi_positions()}}.}
 }
 \value{
 A list containing posterior system matrices:

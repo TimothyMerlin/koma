@@ -4,13 +4,11 @@
 \alias{construct_phi}
 \title{Construct a Dynamic SEM (Structural Equation Model) Phi Matrix}
 \usage{
-construct_phi(sys_eq, beta_matrix)
+construct_phi(phi_positions, beta_matrix)
 }
 \arguments{
-\item{sys_eq}{A list containing the system of equations. Must
-include \verb{$equations} with the equations of the system,
-\verb{$endogenous_variables} with the names of the endogenous variables, and
-\verb{$total_exogenous_variables} with the names of all exogenous variables.}
+\item{phi_positions}{Positions of the lagged endogenous regressors, as
+returned by \code{\link[=find_phi_positions]{find_phi_positions()}}.}
 
 \item{beta_matrix}{A numeric matrix of beta coefficients corresponding to the
 exogenous variables in the system of equations.}
@@ -23,10 +21,10 @@ orders (as character strings).
 }
 \description{
 This function constructs the list of lagged endogenous coefficient matrices
-\eqn{\Phi(1), \ldots, \Phi(L)} from the system of equations and the beta
-matrix. It identifies lagged endogenous regressors in each equation and maps
-their coefficients into the corresponding \eqn{\Phi(\ell)} matrix in the
-dynamic SEM:
+\eqn{\Phi(1), \ldots, \Phi(L)} from the beta matrix. It maps the
+coefficients of the lagged endogenous regressors, located by
+\code{\link[=find_phi_positions]{find_phi_positions()}}, into the corresponding \eqn{\Phi(\ell)} matrix in
+the dynamic SEM:
 \eqn{Y\Gamma = \tilde{X}\tilde{B} + Y_{t-1}\Phi(1) + \cdots + Y_{t-p}\Phi(L) + U.}
 }
 \keyword{internal}
