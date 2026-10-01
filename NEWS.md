@@ -1,4 +1,4 @@
-# koma 0.3.1.9000
+# koma 0.4.0
 
 ## Breaking changes
 
