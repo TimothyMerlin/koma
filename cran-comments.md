@@ -1,20 +1,38 @@
-## CRAN check fix
+## Resubmission of an archived package
 
-This submission fixes the test failure CRAN reported for koma 0.3.1 on the
-`r-devel-linux-x86_64-fedora-clang` (tests-MKL) check flavor
-(https://cran.r-project.org/web/checks/check_results_koma.html):
+koma was archived on 2026-09-27 because a check issue was not corrected in
+time. The issue was a test failure on the tests-MKL additional check
+(r-devel, Fedora Linux 44):
 
-* `test-mh_within_gibbs_algorithm_informative.R` compared an MCMC posterior
-  quantile against a fixed expected value with too tight a tolerance. This
-  sampler path is already known to show small cross-environment drift
-  (BLAS/LAPACK-level floating point differences compounding over 200
-  iterations) despite a fixed seed; the tests-MKL flavor exceeded the
-  existing bound (0.2136 vs. 0.21). The tolerance has been widened (to 0.28)
-  with more headroom to absorb this without weakening the test's ability to
-  catch real regressions.
+* `test-mh_within_gibbs_algorithm_informative.R`, "draw_parameters_j_informative
+  with diffuse priors and no gamma priors", compared an MCMC posterior quantile
+  against a fixed expected value with too tight a tolerance (0.2136 vs. 0.21).
+  This sampler path shows small cross-environment drift (BLAS/LAPACK-level
+  floating point differences compounding over 200 iterations) despite a fixed
+  seed. The tolerance has been widened to 0.28, with headroom for this drift
+  without weakening the test's ability to catch real regressions.
+
+## Submission
+
+This is a feature release (0.3.1 -> 0.4.0). Besides the fix above, it adds
+new equation syntax and theme options, fixes several bugs in estimation,
+forecasting and plotting, tightens input validation, and speeds up estimation
+and forecasting. See NEWS.md for details.
+
+## Test environments
+
+* local: macOS Tahoe 26.7.1 (aarch64-apple-darwin23), R 4.6.1
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+0 errors | 0 warnings | 0 notes
 
-* "Rathke" and "Sarferaz" are flagged as possibly misspelled words in the DESCRIPTION. These are proper names (surnames of the authors of the referenced forthcoming paper) and are spelled correctly.
+* The incoming checks are expected to note that the package was archived;
+  see "Resubmission of an archived package" above.
+* If flagged, "Rathke" and "Sarferaz" in the DESCRIPTION are proper names
+  (surnames of the authors of the referenced forthcoming paper) and are
+  spelled correctly.
+
+## Reverse dependencies
+
+koma has no reverse dependencies on CRAN.
