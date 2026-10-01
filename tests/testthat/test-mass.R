@@ -40,6 +40,9 @@ test_that("multivariate_norm returns values", {
 
 test_that("multivariate_norm returns correct values with set seed for a
 specific covariance matrix", {
+  # Exact values depend on the eigenvector signs returned by the LAPACK
+  # implementation (e.g. Accelerate on macOS, MKL), not on koma.
+  skip_on_cran()
   skip_on_os("mac")
   skip_on_os("windows")
 
