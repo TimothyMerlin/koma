@@ -22,6 +22,15 @@ and forecasting. See NEWS.md for details.
 ## Test environments
 
 * local: macOS Tahoe 26.7.1 (aarch64-apple-darwin23), R 4.6.1
+* R-hub (R Consortium runners):
+  * linux: R-devel (2026-09-29 r90598)
+  * windows: R-devel (2026-09-30 r90605 ucrt)
+  * macos: x86_64-apple-darwin20, R-devel (2026-09-29 r90598)
+  * mkl: Intel MKL container, R-devel (2026-09-30 r90605)
+
+All R-hub platforms: Status OK. The mkl container mirrors the tests-MKL
+additional check that led to the archival; the previously failing test passes
+there.
 
 ## R CMD check results
 
