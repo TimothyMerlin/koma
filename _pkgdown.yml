@@ -52,12 +52,16 @@ reference:
       - rate
       - level
       - rebase
-      - type
+      - filter_by_attribute
+      - set_koma_attr_policy
+      - get_koma_attr_policy
+      - reset_koma_attr_policy
   
   - title: Datasets
     contents:
       - small_open_economy
       - klein
+      - simulated_sem
 
   - title: Utilities
     contents:
