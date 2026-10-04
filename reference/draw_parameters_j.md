@@ -13,7 +13,8 @@ draw_parameters_j(
   character_gamma_matrix,
   character_beta_matrix,
   jx,
-  gibbs_sampler
+  gibbs_sampler,
+  progress = function(amount) invisible()
 )
 ```
 
@@ -52,6 +53,12 @@ draw_parameters_j(
 
   An object of class `gibbs_sampler` that holds an equations gibbs
   settings.
+
+- progress:
+
+  Function called with the number of completed draws since its last
+  call, at most about every 0.5 seconds. Used to update the progress
+  bar.
 
 ## Value
 

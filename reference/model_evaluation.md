@@ -87,3 +87,51 @@ The function initiates the RMSE calculation from `dates$forecast$start`
 and continues until `dates$forecast$start + horizon` equals
 `dates$forecast$end`. In each iteration, a quarter is added to both the
 in-sample data and to `dates$forecast$start`.
+
+## Examples
+
+``` r
+data("simulated_sem")
+
+dates <- list(
+  estimation = list(start = c(1977, 1), end = c(2018, 4)),
+  forecast = list(start = c(2023, 2), end = c(2023, 3))
+)
+
+rmse <- model_evaluation(
+  sys_eq = simulated_sem$sys_eq,
+  variables = c("consumption", "investment"),
+  horizon = 1,
+  ts_data = simulated_sem$ts_data,
+  dates = dates,
+  evaluate_on_levels = TRUE,
+  options = list(gibbs = list(ndraws = 10), summary = "mean")
+)
+#> 
+#> ── Gibbs Sampler Settings ──────────────────────────────────────────────────────
+#> 
+#> ── System Wide Settings ──
+#>   • Number of draws (`ndraws`): 10
+#>   • Burn-in ratio (`burnin_ratio`): 0.5
+#>   • Burn-in (`burnin`): 5
+#>   • Store frequency (`nstore`): 1
+#>   • Number of saved draws (`nsave`): 5
+#>   • Tau (`tau`): 1.1
+#> 
+#> 
+#> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
+#> • investment: 80.0%
+#> 
+#> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
+#> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
+#> 
+#> 
+#> Conditional fill detected after "2023 Q1".
+#> Missing observations for: "consumption", "investment", "current_account",
+#> "manufacturing", "service", and "gdp"
+#> Missing values will be conditionally filled up to "2023 Q2" before forecasting.
+#> ✔ Forecasting completed.
+head(rmse)
+#>   consumption investment
+#> 1    12581.77   73408.67
+```

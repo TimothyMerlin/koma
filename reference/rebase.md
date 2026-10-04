@@ -8,6 +8,15 @@ scaled accordingly.
 
 ``` r
 rebase(x, start, end, ...)
+
+# S3 method for class 'ts'
+rebase(x, start, end, ...)
+
+# S3 method for class 'list'
+rebase(x, start, end, ...)
+
+# S3 method for class 'mts'
+rebase(x, start, end, ...)
 ```
 
 ## Arguments
@@ -35,3 +44,12 @@ rebase(x, start, end, ...)
 ## Value
 
 An ets object with the level computed.
+
+## Examples
+
+``` r
+x <- as_ets(ts(c(90, 95, 100, 105), start = c(2020, 1), frequency = 4))
+rebase(x, start = c(2020, 2), end = c(2020, 3))
+#>           Qtr1      Qtr2      Qtr3      Qtr4
+#> 2020  92.30769  97.43590 102.56410 107.69231
+```

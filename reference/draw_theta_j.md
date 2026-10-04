@@ -12,7 +12,8 @@ draw_theta_j(
   character_beta_matrix,
   jx,
   gamma_parameters_j,
-  omega_tilde_jw
+  omega_tilde_jw,
+  xtx
 )
 ```
 
@@ -51,6 +52,11 @@ draw_theta_j(
 
   A \\(n_j \times 1)\\ matrix with the parameters of the gamma matrix,
   where \\n_j\\ is the number of endogenous variables in equation \\j\\.
+
+- xtx:
+
+  Precomputed \\x_matrix'x_matrix\\. This is invariant across Gibbs
+  draws, so it is computed once instead of on every call.
 
 ## Value
 

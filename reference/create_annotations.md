@@ -11,7 +11,8 @@ with customizable y positions and formatting.
 create_annotations(
   x_ticks,
   y_position,
-  font = list(family = NULL, size = NULL)
+  font = list(family = NULL, size = NULL),
+  digits = 1
 )
 ```
 
@@ -34,6 +35,11 @@ create_annotations(
   optional `family` and `size` components to customize the font family
   and size, respectively. If not specified, default Plotly text
   properties are used.
+
+- digits:
+
+  Number of decimal places to round the annotation value to. Defaults to
+  1.
 
 ## Value
 

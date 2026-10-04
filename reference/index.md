@@ -38,8 +38,14 @@
   Compute the level for a time series
 - [`rebase()`](https://timothymerlin.github.io/koma/reference/rebase.md)
   : Rebase Time Series Data Relative to a Base Period
-- [`type()`](https://timothymerlin.github.io/koma/reference/type.md) :
-  Get the type of a koma_ts object
+- [`filter_by_attribute()`](https://timothymerlin.github.io/koma/reference/filter_by_attribute.md)
+  : Filter a koma_ts object by attribute value
+- [`set_koma_attr_policy()`](https://timothymerlin.github.io/koma/reference/set_koma_attr_policy.md)
+  : Register metadata behavior for a koma_ts attribute
+- [`get_koma_attr_policy()`](https://timothymerlin.github.io/koma/reference/get_koma_attr_policy.md)
+  : Look up the registered policy for a koma_ts attribute
+- [`reset_koma_attr_policy()`](https://timothymerlin.github.io/koma/reference/reset_koma_attr_policy.md)
+  : Remove a registered koma_ts attribute policy
 
 ## Datasets
 
@@ -48,6 +54,8 @@
   economy (Switzerland)
 - [`klein`](https://timothymerlin.github.io/koma/reference/klein.md) :
   Klein macroeconomic time series (1970 Q1 onward)
+- [`simulated_sem`](https://timothymerlin.github.io/koma/reference/simulated_sem.md)
+  : Simulated SEM example data
 
 ## Utilities
 

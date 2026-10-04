@@ -11,7 +11,7 @@ construct_balanced_data(
   total_exogenous_variables,
   start,
   end,
-  state = NULL
+  warn = FALSE
 )
 ```
 
@@ -37,11 +37,10 @@ construct_balanced_data(
 
   End date for truncation.
 
-- state:
+- warn:
 
-  An environment used to share mutable state between function calls,
-  particularly for issuing warnings only once during the forecasting
-  process.
+  Logical. If TRUE, warn when the start is moved because of missing or
+  lag-induced NAs. Default is FALSE.
 
 ## Value
 

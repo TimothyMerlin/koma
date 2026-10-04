@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Estimating and Forecasting with the koma Package • koma</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Estimating and Forecasting with the koma Package">
 </head>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,21 +52,21 @@
       <h1>Estimating and Forecasting with the koma Package</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/main/vignettes/koma-getting-started.Rmd" class="external-link"><code>vignettes/koma-getting-started.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/vignettes/koma-getting-started.Rmd" class="external-link"><code>vignettes/koma-getting-started.Rmd</code></a></small>
       <div class="d-none name"><code>koma-getting-started.Rmd</code></div>
     </div>
 
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://timothymerlin.github.io/koma">koma</a></span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://timothymerlin.github.io/koma/">koma</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
 <p>This vignette walks through a minimal end-to-end workflow: define a
 small system, prepare data, estimate, and forecast. For full syntax
-details, see the <a href="../equations.html">equation reference</a>, and
-for time series handling see the <a href="../koma-extended-timeseries.html">ets vignette</a>.</p>
+details, see the <a href="koma-equations.html">equation reference</a>,
+and for time series handling see the <a href="koma-extended-timeseries.html">ets vignette</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="define-a-small-system">Define a small system<a class="anchor" aria-label="anchor" href="#define-a-small-system"></a>
@@ -76,7 +76,7 @@ mirror a small open economy. The interest rate, world GDP, and the
 exchange rate are treated as exogenous in this example. To keep the
 setup minimal, the GDP identity below uses fixed illustrative weights.
 For an example with time-varying weights computed from nominal series,
-see the <a href="../koma-klein.html">Klein vignette</a>.</p>
+see the <a href="koma-klein.html">Klein vignette</a>.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">equations</span> <span class="op">&lt;-</span> <span class="st">"consumption ~ gdp + consumption.L(1) + interest_rate,</span></span>
 <span><span class="st">investment ~ gdp + investment.L(1) + interest_rate,</span></span>
@@ -128,26 +128,26 @@ the system.</p>
 <span><span class="va">series</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/unique.html" class="external-link">unique</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">sys_eq</span><span class="op">$</span><span class="va">endogenous_variables</span>, <span class="va">sys_eq</span><span class="op">$</span><span class="va">exogenous_variables</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="va">ts_data</span> <span class="op">&lt;-</span> <span class="va">small_open_economy</span><span class="op">[</span><span class="va">series</span><span class="op">]</span></span></code></pre></div>
 <p>If you pass <code>ts</code> objects directly, <code><a href="../reference/estimate.html">estimate()</a></code>
-will prompt you for default conversion settings and optional exceptions.
-For example, we override the defaults to use level/diff_log and keep
-<code>interest_rate</code> as a rate series:</p>
+assumes they are already in rates (the form the model estimates on) and
+converts them with <code>series_type = "rate"</code>,
+<code>method = "none"</code> (no transformation applied), emitting a
+warning that lists the affected series:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">estimates</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/estimate.html">estimate</a></span><span class="op">(</span><span class="va">ts_data</span>, <span class="va">sys_eq</span>, <span class="va">dates</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Some of the time series in `ts_data` are not `ets`.</span></span>
-<span><span class="co">#&gt; They will be automatically converted with `as_ets` using the defaults:</span></span>
-<span><span class="co">#&gt; Default settings</span></span>
-<span><span class="co">#&gt; series_type = level</span></span>
-<span><span class="co">#&gt; method = percentage</span></span>
-<span><span class="co">#&gt; Are these correct? (y/n): n</span></span>
-<span><span class="co">#&gt; Enter series_type: level</span></span>
-<span><span class="co">#&gt; Enter method: diff_log</span></span>
-<span><span class="co">#&gt; Specify exception to default settings? (y/n): y</span></span>
-<span><span class="co">#&gt; Enter series name: interest_rate</span></span>
-<span><span class="co">#&gt; Enter series_type for interest_rate (default level): rate</span></span>
-<span><span class="co">#&gt; Enter method for interest_rate (default diff_log): none</span></span>
-<span><span class="co">#&gt; Specify exception to default settings? (y/n): n</span></span></code></pre></div>
-<p>In this vignette we convert explicitly to keep the example
-non-interactive:</p>
+<span><span class="co">#&gt; ! The following series are plain &lt;ts&gt; objects, not &lt;koma_ts&gt;: "consumption",</span></span>
+<span><span class="co">#&gt;   "investment", "exports", "imports", "gdp", "interest_rate", "world_gdp",</span></span>
+<span><span class="co">#&gt;   and "exchange_rate".</span></span>
+<span><span class="co">#&gt; i They are assumed to already be in rates, the form the model estimates on,</span></span>
+<span><span class="co">#&gt;   and are converted to &lt;koma_ts&gt; with `series_type = "rate"`, `method =</span></span>
+<span><span class="co">#&gt;   "none"`. The values are used as-is; no rate/level transformation is</span></span>
+<span><span class="co">#&gt;   applied.</span></span>
+<span><span class="co">#&gt; i To convert a series from levels (e.g. a percentage or diff_log growth</span></span>
+<span><span class="co">#&gt;   rate), wrap it first with `ets()` or `as_ets()`. See</span></span>
+<span><span class="co">#&gt;   `vignette("koma-extended-timeseries")` for details.</span></span></code></pre></div>
+<p>Most of these series are actually in levels and need a diff_log
+transform to become growth rates, and <code>interest_rate</code> is a
+rate that needs no transform, so here we convert explicitly instead of
+relying on the <code>rate</code>/<code>none</code> default:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ts_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">ts_data</span>, <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="op">{</span></span>
 <span>    <span class="fu"><a href="../reference/koma_ts.html">as_ets</a></span><span class="op">(</span><span class="va">x</span>, series_type <span class="op">=</span> <span class="st">"level"</span>, method <span class="op">=</span> <span class="st">"diff_log"</span><span class="op">)</span></span>
@@ -190,31 +190,31 @@ non-interactive:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Estimates</span> <span style="color: #00BBBB;">───────────────────────────────────────────────────────────────────</span></span></span>
 <span><span class="co">#&gt; <span style="font-weight: bold;">consumption</span> ~  0.35 - 0.02 * gdp  +  0.06 * consumption.L(1)  +  0.04 * interest_rate</span></span>
-<span><span class="co">#&gt;  <span style="font-weight: bold;">investment</span> ~  - 0.29  +  1.99 * gdp - 0.02 * investment.L(1) - 0.14 * interest_rate</span></span>
+<span><span class="co">#&gt;  <span style="font-weight: bold;">investment</span> ~  - 0.29  +  1.99 * gdp - 0.03 * investment.L(1) - 0.14 * interest_rate</span></span>
 <span><span class="co">#&gt;     <span style="font-weight: bold;">exports</span> ~  - 0.09  +  2.98 * world_gdp  +  0.28 * exchange_rate - 0.28 * exports.L(1)</span></span>
-<span><span class="co">#&gt;     <span style="font-weight: bold;">imports</span> ~  0.01  +  2.2 * gdp - 0.19 * exchange_rate - 0.14 * imports.L(1)</span></span>
+<span><span class="co">#&gt;     <span style="font-weight: bold;">imports</span> ~  0.02  +  2.2 * gdp - 0.19 * exchange_rate - 0.14 * imports.L(1)</span></span>
 <span><span class="co">#&gt;         <span style="font-weight: bold;">gdp</span> == 0.55 * consumption  +  0.20 * investment  +  0.30 * exports - 0.05 * imports</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">estimates</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ==============================================================================</span></span>
 <span><span class="co">#&gt;                   consumption    investment     exports         imports       </span></span>
 <span><span class="co">#&gt; ------------------------------------------------------------------------------</span></span>
-<span><span class="co">#&gt; constant            0.35          -0.29          -0.09            0.01        </span></span>
-<span><span class="co">#&gt;                   [ 0.26; 0.43]  [-0.63; 0.04]  [-0.64;  0.47]  [-0.43;  0.45]</span></span>
+<span><span class="co">#&gt; constant            0.35          -0.29          -0.09            0.02        </span></span>
+<span><span class="co">#&gt;                   [ 0.27; 0.43]  [-0.64; 0.03]  [-0.64;  0.47]  [-0.42;  0.44]</span></span>
 <span><span class="co">#&gt; consumption.L(1)    0.06                                                      </span></span>
-<span><span class="co">#&gt;                   [-0.11; 0.23]                                               </span></span>
+<span><span class="co">#&gt;                   [-0.11; 0.24]                                               </span></span>
 <span><span class="co">#&gt; interest_rate       0.04          -0.14                                       </span></span>
-<span><span class="co">#&gt;                   [ 0.00; 0.08]  [-0.35; 0.08]                                </span></span>
+<span><span class="co">#&gt;                   [ 0.00; 0.08]  [-0.36; 0.08]                                </span></span>
 <span><span class="co">#&gt; gdp                -0.02           1.99                           2.20        </span></span>
 <span><span class="co">#&gt;                   [-0.10; 0.08]  [ 1.45; 2.53]                  [ 1.52;  2.92]</span></span>
-<span><span class="co">#&gt; investment.L(1)                   -0.02                                       </span></span>
-<span><span class="co">#&gt;                                  [-0.21; 0.15]                                </span></span>
+<span><span class="co">#&gt; investment.L(1)                   -0.03                                       </span></span>
+<span><span class="co">#&gt;                                  [-0.20; 0.14]                                </span></span>
 <span><span class="co">#&gt; exports.L(1)                                     -0.28                        </span></span>
 <span><span class="co">#&gt;                                                 [-0.43; -0.12]                </span></span>
 <span><span class="co">#&gt; world_gdp                                         2.98                        </span></span>
 <span><span class="co">#&gt;                                                 [ 2.13;  3.77]                </span></span>
 <span><span class="co">#&gt; exchange_rate                                     0.28           -0.19        </span></span>
-<span><span class="co">#&gt;                                                 [ 0.12;  0.45]  [-0.32; -0.06]</span></span>
+<span><span class="co">#&gt;                                                 [ 0.12;  0.45]  [-0.33; -0.06]</span></span>
 <span><span class="co">#&gt; imports.L(1)                                                     -0.14        </span></span>
 <span><span class="co">#&gt;                                                                 [-0.31;  0.03]</span></span>
 <span><span class="co">#&gt; ==============================================================================</span></span>
@@ -244,10 +244,10 @@ quarter before the forecast start date.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;         consumption investment exports imports    gdp interest_rate world_gdp</span></span>
-<span><span class="co">#&gt; 2023 Q1      0.3983     1.1411  1.4131  1.6923 0.7866        1.1009    0.4827</span></span>
-<span><span class="co">#&gt; 2023 Q2      0.4141     0.0788  0.3795  0.6664 0.3241        1.5227    0.4083</span></span>
-<span><span class="co">#&gt; 2023 Q3      0.4250     0.3424  0.5249  1.1760 0.4009        1.7075    0.4259</span></span>
-<span><span class="co">#&gt; 2023 Q4      0.4376     0.1941  0.3685  0.7114 0.3545        1.7006    0.2906</span></span>
+<span><span class="co">#&gt; 2023 Q1      0.3994     1.1504  1.4131  1.6973 0.7888        1.1009    0.4827</span></span>
+<span><span class="co">#&gt; 2023 Q2      0.4162     0.0896  0.3795  0.6738 0.3270        1.5227    0.4083</span></span>
+<span><span class="co">#&gt; 2023 Q3      0.4270     0.3604  0.5249  1.1850 0.4051        1.7075    0.4259</span></span>
+<span><span class="co">#&gt; 2023 Q4      0.4392     0.2191  0.3685  0.7204 0.3599        1.7006    0.2906</span></span>
 <span><span class="co">#&gt;         exchange_rate</span></span>
 <span><span class="co">#&gt; 2023 Q1        0.9217</span></span>
 <span><span class="co">#&gt; 2023 Q2       -1.3863</span></span>
@@ -263,7 +263,7 @@ quarter before the forecast start date.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;           Qtr1      Qtr2      Qtr3      Qtr4</span></span>
-<span><span class="co">#&gt; 2023 0.7865677 0.3240562 0.4008722 0.3544575</span></span>
+<span><span class="co">#&gt; 2023 0.7888037 0.3270159 0.4051231 0.3599249</span></span>
 <span><span class="fu"><a href="../reference/level.html">level</a></span><span class="op">(</span><span class="va">forecasts</span><span class="op">$</span><span class="va">mean</span><span class="op">$</span><span class="va">gdp</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
 <span><span class="co">#&gt; attributes:</span></span>
@@ -273,7 +273,7 @@ quarter before the forecast start date.</p>
 <span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;          Qtr1     Qtr2     Qtr3     Qtr4</span></span>
 <span><span class="co">#&gt; 2022                            191668.9</span></span>
-<span><span class="co">#&gt; 2023 193182.4 193809.4 194587.9 195278.9</span></span></code></pre></div>
+<span><span class="co">#&gt; 2023 193186.7 193819.5 194606.3 195308.0</span></span></code></pre></div>
 <p>You can also summarize forecast horizons with mean/median and
 quantiles:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
@@ -281,19 +281,19 @@ quantiles:</p>
 <span><span class="co">#&gt; =========================================</span></span>
 <span><span class="co">#&gt; consumption  Mean   Median  5%      95%  </span></span>
 <span><span class="co">#&gt; -----------------------------------------</span></span>
-<span><span class="co">#&gt; 2023 Q1      0.398   0.409  -0.036  0.786</span></span>
-<span><span class="co">#&gt; 2023 Q2      0.414    0.41   0.008  0.841</span></span>
-<span><span class="co">#&gt; 2023 Q3      0.425   0.429   0.027  0.839</span></span>
-<span><span class="co">#&gt; 2023 Q4      0.438   0.439  -0.008  0.874</span></span>
+<span><span class="co">#&gt; 2023 Q1      0.399   0.409  -0.029   0.77</span></span>
+<span><span class="co">#&gt; 2023 Q2      0.416   0.419   0.012  0.844</span></span>
+<span><span class="co">#&gt; 2023 Q3      0.427   0.421   0.032  0.837</span></span>
+<span><span class="co">#&gt; 2023 Q4      0.439    0.44  -0.006  0.886</span></span>
 <span><span class="co">#&gt; =========================================</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ========================================</span></span>
 <span><span class="co">#&gt; investment  Mean   Median  5%      95%  </span></span>
 <span><span class="co">#&gt; ----------------------------------------</span></span>
-<span><span class="co">#&gt; 2023 Q1     1.141   1.098  -3.367  5.648</span></span>
-<span><span class="co">#&gt; 2023 Q2     0.079   0.169  -5.048  5.026</span></span>
-<span><span class="co">#&gt; 2023 Q3     0.342   0.341  -4.778  5.396</span></span>
-<span><span class="co">#&gt; 2023 Q4     0.194   0.238  -4.954  5.389</span></span>
+<span><span class="co">#&gt; 2023 Q1      1.15   1.147  -3.572   5.61</span></span>
+<span><span class="co">#&gt; 2023 Q2      0.09   0.184  -4.979  5.078</span></span>
+<span><span class="co">#&gt; 2023 Q3      0.36   0.359  -4.727  5.509</span></span>
+<span><span class="co">#&gt; 2023 Q4     0.219   0.236  -4.954  5.657</span></span>
 <span><span class="co">#&gt; ========================================</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; =====================================</span></span>
@@ -308,19 +308,19 @@ quantiles:</p>
 <span><span class="co">#&gt; =====================================</span></span>
 <span><span class="co">#&gt; imports  Mean   Median  5%      95%  </span></span>
 <span><span class="co">#&gt; -------------------------------------</span></span>
-<span><span class="co">#&gt; 2023 Q1  1.692   1.651  -2.404  6.283</span></span>
-<span><span class="co">#&gt; 2023 Q2  0.666   0.693  -4.141   5.25</span></span>
-<span><span class="co">#&gt; 2023 Q3  1.176   1.242  -3.758  6.184</span></span>
-<span><span class="co">#&gt; 2023 Q4  0.711   0.719  -4.063  5.269</span></span>
+<span><span class="co">#&gt; 2023 Q1  1.697   1.688  -2.416  6.267</span></span>
+<span><span class="co">#&gt; 2023 Q2  0.674   0.715  -4.183  5.304</span></span>
+<span><span class="co">#&gt; 2023 Q3  1.185   1.212  -3.699  6.097</span></span>
+<span><span class="co">#&gt; 2023 Q4   0.72   0.724  -4.007  5.457</span></span>
 <span><span class="co">#&gt; =====================================</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; =====================================</span></span>
 <span><span class="co">#&gt; gdp      Mean   Median  5%      95%  </span></span>
 <span><span class="co">#&gt; -------------------------------------</span></span>
-<span><span class="co">#&gt; 2023 Q1  0.787   0.795   -0.84  2.486</span></span>
-<span><span class="co">#&gt; 2023 Q2  0.324   0.326  -1.421  2.146</span></span>
-<span><span class="co">#&gt; 2023 Q3  0.401   0.404  -1.539  2.283</span></span>
-<span><span class="co">#&gt; 2023 Q4  0.354   0.408  -1.431  2.199</span></span>
+<span><span class="co">#&gt; 2023 Q1  0.789   0.796  -0.837   2.48</span></span>
+<span><span class="co">#&gt; 2023 Q2  0.327   0.326  -1.441  2.145</span></span>
+<span><span class="co">#&gt; 2023 Q3  0.405   0.405  -1.504  2.291</span></span>
+<span><span class="co">#&gt; 2023 Q4   0.36   0.403  -1.424  2.185</span></span>
 <span><span class="co">#&gt; =====================================</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ==========================================</span></span>
@@ -355,8 +355,8 @@ quantiles:</p>
 <span><span class="co">#&gt; =====================================</span></span>
 <span><span class="co">#&gt; gdp      Mean   Median  5%      95%  </span></span>
 <span><span class="co">#&gt; -------------------------------------</span></span>
-<span><span class="co">#&gt; 2023 Q1  0.787   0.795   -0.84  2.486</span></span>
-<span><span class="co">#&gt; 2023 Q2  0.324   0.326  -1.421  2.146</span></span>
+<span><span class="co">#&gt; 2023 Q1  0.789   0.796  -0.837   2.48</span></span>
+<span><span class="co">#&gt; 2023 Q2  0.327   0.326  -1.441  2.145</span></span>
 <span><span class="co">#&gt; =====================================</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Mean, Median, Quantiles</span></span></code></pre></div>
@@ -372,11 +372,11 @@ quantiles:</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Samad Sarferaz, Laurent Florin, Merlin Scherer.</p>
+  <p>Developed by Samad Sarferaz, Merlin Scherer.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

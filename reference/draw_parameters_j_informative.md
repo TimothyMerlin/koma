@@ -15,7 +15,8 @@ draw_parameters_j_informative(
   character_beta_matrix,
   jx,
   gibbs_sampler,
-  priors
+  priors,
+  progress = function(amount) invisible()
 )
 ```
 
@@ -58,6 +59,12 @@ draw_parameters_j_informative(
 - priors:
 
   The priors for \\\theta\\ in equation \\j\\.
+
+- progress:
+
+  Function called with the number of completed draws since its last
+  call, at most about every 0.5 seconds. Used to update the progress
+  bar.
 
 ## Value
 

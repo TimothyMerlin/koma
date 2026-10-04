@@ -13,6 +13,16 @@ forecast(
   options = list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
     conditional_innov_method = "projection")
 )
+
+# S3 method for class 'koma_estimate'
+forecast(
+  estimates,
+  dates,
+  ...,
+  restrictions = NULL,
+  options = list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
+    conditional_innov_method = "projection")
+)
 ```
 
 ## Arguments
@@ -119,7 +129,7 @@ This function provides the option for parallel computing through the
 function. For a detailed example on executing `estimate` in parallel,
 see the vignette: `vignette("parallel")`. For more details, see the
 [future package
-documentation](https://cran.r-project.org/web/packages/future/future.pdf).
+documentation](https://CRAN.R-project.org/package=future).
 
 ## See also
 
@@ -128,3 +138,74 @@ documentation](https://cran.r-project.org/web/packages/future/future.pdf).
 
 - Related functions within the package that may be of interest:
   [`estimate`](https://timothymerlin.github.io/koma/reference/estimate.md).
+
+## Examples
+
+``` r
+data("simulated_sem")
+
+dates <- list(
+  current = c(2024, 4),
+  estimation = simulated_sem$dates$estimation,
+  forecast = list(start = c(2025, 1), end = c(2025, 4))
+)
+
+ts_data <- simulated_sem$ts_data
+# Endogenous series must stop at the last observed quarter before forecasting.
+ts_data[simulated_sem$sys_eq$endogenous_variables] <- lapply(
+  simulated_sem$sys_eq$endogenous_variables,
+  function(x) {
+    stats::window(ts_data[[x]], end = dates$current)
+  }
+)
+
+set.seed(11)
+fit <- estimate(
+  ts_data = ts_data,
+  sys_eq = simulated_sem$sys_eq,
+  dates = dates,
+  options = list(gibbs = list(ndraws = 10))
+)
+#> 
+#> ── Gibbs Sampler Settings ──────────────────────────────────────────────────────
+#> 
+#> ── System Wide Settings ──
+#>   • Number of draws (`ndraws`): 10
+#>   • Burn-in ratio (`burnin_ratio`): 0.5
+#>   • Burn-in (`burnin`): 5
+#>   • Store frequency (`nstore`): 1
+#>   • Number of saved draws (`nsave`): 5
+#>   • Tau (`tau`): 1.1
+#> 
+#> 
+#> ── Estimation ──────────────────────────────────────────────────────────────────
+#> 
+#> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
+#> • consumption: 80.0%
+#> 
+#> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
+#> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
+#> 
+fc <- forecast(fit, dates = dates)
+#> 
+#> ── Forecast ────────────────────────────────────────────────────────────────────
+print(fc)
+#> <koma_ts>
+#> attributes:
+#>   series_type: list[9]
+#>   method: list[9]
+#>   value_type: list[9]
+#>   anker: list[9]
+#> 
+#> series:
+#>         consumption investment current_account manufacturing service     gdp
+#> 2025 Q1      5.9971     4.4651          0.4067        0.0040 -0.0289 -0.0157
+#> 2025 Q2      5.8354     4.8972          1.2844        0.5227 -0.2147  0.0803
+#> 2025 Q3      5.5752     3.7639         -0.4847       -0.0543  0.0127 -0.0141
+#> 2025 Q4      5.1550     3.3069          2.9297        1.0349 -0.4408  0.1495
+#>         real_interest_rate world_gdp population
+#> 2025 Q1            -1.0418   -0.9163     0.9900
+#> 2025 Q2            -0.3902    0.0282    -0.3553
+#> 2025 Q3            -0.3920   -2.4366    -1.1260
+#> 2025 Q4             0.2817    1.8674    -2.7807
+```

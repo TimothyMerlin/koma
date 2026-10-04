@@ -87,3 +87,37 @@ operands to `koma_ts` avoids that warning.
 ## See also
 
 [`ts`](https://rdrr.io/r/stats/ts.html)
+
+## Examples
+
+``` r
+x <- ets(ts(1:8, start = c(2020, 1), frequency = 4),
+  series_type = "level",
+  method = "diff_log"
+)
+x
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   method:  chr "diff_log"
+#> 
+#> series:
+#>      Qtr1 Qtr2 Qtr3 Qtr4
+#> 2020    1    2    3    4
+#> 2021    5    6    7    8
+
+x <- ts(1:8, start = c(2020, 1), frequency = 4)
+as_ets(x, series_type = "level", method = "diff_log")
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   method:  chr "diff_log"
+#> 
+#> series:
+#>      Qtr1 Qtr2 Qtr3 Qtr4
+#> 2020    1    2    3    4
+#> 2021    5    6    7    8
+x <- as_ets(ts(1:8, start = c(2020, 1), frequency = 4))
+is_ets(x)
+#> [1] TRUE
+```

@@ -8,7 +8,7 @@ exogenous variables.
 ## Usage
 
 ``` r
-construct_theta_bar_j(x_matrix, z_matrix_j, priors_j, omega_tilde_jw)
+construct_theta_bar_j(x_matrix, z_matrix_j, priors_j, omega_tilde_jw, xtx)
 ```
 
 ## Arguments
@@ -26,6 +26,11 @@ construct_theta_bar_j(x_matrix, z_matrix_j, priors_j, omega_tilde_jw)
 
   A variance-covariance matrix \\\tilde{\Omega}\_j = A'\_j \Omega_j
   A_j\\ for row \\j\\.
+
+- xtx:
+
+  Precomputed \\x_matrix'x_matrix\\. This is invariant across Gibbs
+  draws, so it is computed once instead of on every call.
 
 ## Value
 

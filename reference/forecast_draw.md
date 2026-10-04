@@ -19,7 +19,7 @@ forecast_draw(
   freq,
   forecast_dates,
   restrictions,
-  state,
+  phi_positions,
   conditional_innov_method = "projection",
   central_tendency = NULL
 )
@@ -61,8 +61,7 @@ forecast_draw(
 
   List of model constraints. Default is empty.
 
-- state:
+- phi_positions:
 
-  An environment used to share mutable state between function calls,
-  particularly for issuing warnings only once during the forecasting
-  process.
+  Positions of the lagged endogenous regressors, as returned by
+  [`find_phi_positions()`](https://timothymerlin.github.io/koma/reference/find_phi_positions.md).

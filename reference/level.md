@@ -10,6 +10,15 @@ Required attributes of the input time series are:
 
 ``` r
 level(x, ...)
+
+# S3 method for class 'ts'
+level(x, ...)
+
+# S3 method for class 'mts'
+level(x, ...)
+
+# S3 method for class 'list'
+level(x, ...)
 ```
 
 ## Arguments

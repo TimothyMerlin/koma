@@ -56,3 +56,53 @@ Additional arguments supported in `...`:
 
 Note: `sigma` values are based on `omega_tilde_jw` and use only
 variances (no covariances) from each covariance draw.
+
+## Examples
+
+``` r
+data("simulated_sem")
+set.seed(11)
+
+fit <- estimate(
+  ts_data = simulated_sem$ts_data,
+  sys_eq = simulated_sem$sys_eq,
+  dates = simulated_sem$dates,
+  options = list(gibbs = list(ndraws = 10))
+)
+#> 
+#> ── Gibbs Sampler Settings ──────────────────────────────────────────────────────
+#> 
+#> ── System Wide Settings ──
+#>   • Number of draws (`ndraws`): 10
+#>   • Burn-in ratio (`burnin_ratio`): 0.5
+#>   • Burn-in (`burnin`): 5
+#>   • Store frequency (`nstore`): 1
+#>   • Number of saved draws (`nsave`): 5
+#>   • Tau (`tau`): 1.1
+#> 
+#> 
+#> ── Estimation ──────────────────────────────────────────────────────────────────
+#> 
+#> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
+#> • consumption: 80.0%
+#> 
+#> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
+#> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
+#> 
+rm_df <- running_mean(fit, params = "beta", max_draws = 100)
+head(rm_df)
+#>   draw     value    variable param             coef draw_position
+#> 1    1 1.1419010 consumption  beta         constant             1
+#> 2    1 0.4979447 consumption  beta consumption.L(1)             1
+#> 3    1 0.2243029 consumption  beta consumption.L(2)             1
+#> 4    2 1.3458769 consumption  beta         constant             2
+#> 5    2 0.4591917 consumption  beta consumption.L(1)             2
+#> 6    2 0.2293820 consumption  beta consumption.L(2)             2
+#>   in_grace_window                             label
+#> 1            TRUE         consumption:beta:constant
+#> 2            TRUE consumption:beta:consumption.L(1)
+#> 3            TRUE consumption:beta:consumption.L(2)
+#> 4            TRUE         consumption:beta:constant
+#> 5            TRUE consumption:beta:consumption.L(1)
+#> 6            TRUE consumption:beta:consumption.L(2)
+```

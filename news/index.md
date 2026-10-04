@@ -1,6 +1,281 @@
 # Changelog
 
+## koma 0.4.0
+
+CRAN release: 2026-10-02
+
+### Breaking changes
+
+- [`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md)
+  no longer interactively prompts (via
+  [`readline()`](https://rdrr.io/r/base/readline.html)) when `ts_data`
+  contains plain `ts` series instead of `koma_ts`. It now silently
+  converts them to `koma_ts` with `series_type = "rate"`,
+  `method = "none"` (i.e. assumes the series is already in rates, the
+  form the model estimates on, and applies no transformation) and emits
+  a warning listing the affected series. Previously the interactive
+  prompt defaulted to `series_type = "level"`, `method = "percentage"`
+  if confirmed, which transformed the series; **this is a behavior
+  change for any series that is actually in levels** — convert those to
+  rates first with
+  [`ets()`](https://timothymerlin.github.io/koma/reference/koma_ts.md)/[`as_ets()`](https://timothymerlin.github.io/koma/reference/koma_ts.md)
+  (see
+  [`vignette("koma-extended-timeseries")`](https://timothymerlin.github.io/koma/articles/koma-extended-timeseries.md)).
+  If sibling `koma_ts` series carry custom attributes beyond
+  `series_type`/`method` (e.g. a project-specific `value_type`), those
+  are backfilled as `NA` on the converted series, since
+  [`as_mets()`](https://timothymerlin.github.io/koma/reference/as_mets.md)
+  requires every series in `ts_data` to share the same attribute names.
+  The affected series names are stored on the returned `koma_estimate`
+  object as `plain_ts_names` and are also shown whenever the object is
+  printed.
+  [`forecast()`](https://timothymerlin.github.io/koma/reference/forecast.md)
+  still returns `koma_ts` for these series in
+  `mean`/`median`/`quantiles` (not plain `ts`), since printing,
+  formatting, and plotting a forecast require every series in those
+  lists to share a uniform `koma_ts` schema.
+
+### New features
+
+- Added `dummies(prefix, spec)` equation syntax,
+  e.g. `dummies(covid, 1:8)`, as shorthand for a set of dummy variables
+  (`covid_1+covid_2+...+covid_8`). `spec` uses the same range/list
+  syntax as lag notation. It’s expanded before validation, so the
+  expanded names must still be declared in `exogenous_variables` like
+  any other regressor; see
+  [`vignette("koma-equations")`](https://timothymerlin.github.io/koma/articles/koma-equations.md).
+- Identity (`==`) equations can now appear anywhere in the system of
+  equations, not only after every stochastic (`~`) equation. Previously,
+  an identity placed before a stochastic equation caused that equation’s
+  column to be estimated in its place, leaving the real equation
+  unestimated and surfacing only later as an opaque
+  `<variable> not found in the estimates` error
+  ([\#137](https://github.com/TimothyMerlin/koma/issues/137)).
+- Added `digits` to
+  [`init_koma_theme()`](https://timothymerlin.github.io/koma/reference/init_koma_theme.md),
+  a list with `quarterly`, `level`, and `annual` elements controlling
+  the decimal places shown in quarterly growth-rate hover values, level
+  hover values, and annual growth-rate annotations respectively
+  (previously hardcoded to 2, 2, and 1 decimal place; the annual default
+  is now 2 as well).
+- Exported
+  [`set_koma_attr_policy()`](https://timothymerlin.github.io/koma/reference/set_koma_attr_policy.md),
+  previously internal-only, since the error raised when merging
+  mismatched `koma_ts` attributes (e.g. `anker`) directs users to call
+  it.
+- Added
+  [`get_koma_attr_policy()`](https://timothymerlin.github.io/koma/reference/get_koma_attr_policy.md)
+  to inspect a registered attribute policy, and
+  [`reset_koma_attr_policy()`](https://timothymerlin.github.io/koma/reference/reset_koma_attr_policy.md)
+  to remove one (or all) registered policies, since policies are shared
+  for the whole R session.
+- The estimation progress bar now advances with the Gibbs draws instead
+  of once per equation, so it moves continuously rather than in large
+  jumps while an equation is sampled. It updates at most every 0.5
+  seconds per worker to keep the overhead small. When re-estimating only
+  some equations (`estimate(..., estimates = )`), the bar now counts
+  only those equations instead of stopping short of 100%.
+
+### Bug fixes
+
+- Fixed Gibbs sampler thinning: `nstore` was ignored and every
+  post-burn-in draw was kept, while the reported `nsave` understated the
+  stored draws. The samplers now keep every `nstore`-th draw after
+  burn-in and `nsave` is `floor((ndraws - burnin) / nstore)`. Settings
+  that were previously truncated silently now fail early: `nstore` must
+  be at least 1, `burnin_ratio` must lie in `[0, 1)`, and
+  `ndraws * burnin_ratio` must be a whole number.
+- Fixed priors in front of lag shorthand. `{0,1000}x.L(1,3,5)` now sets
+  the prior on `x.L(1)`, `x.L(3)` and `x.L(5)`, and the same applies to
+  ranges (`x.L(1:3)`) and `lag(x, 1:3)`. Previously the comma form
+  silently attached the prior to the unlagged `x` instead, and the range
+  and [`lag()`](https://rdrr.io/r/stats/lag.html) forms silently dropped
+  the prior.
+- Fixed
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html)/[`plotli()`](https://timothymerlin.github.io/koma/reference/plotli.md)
+  plotly titles: an [`ifelse()`](https://rdrr.io/r/base/ifelse.html)
+  silently coerced a factor variable name to its underlying integer code
+  instead of showing the variable name; replaced with `if`/`else`.
+- Fixed
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html)/[`plotli()`](https://timothymerlin.github.io/koma/reference/plotli.md)
+  so a partial `theme` argument (missing some fields) no longer drops
+  straight to
+  [`init_koma_theme()`](https://timothymerlin.github.io/koma/reference/init_koma_theme.md)’s
+  defaults for every field; missing fields are now recursively filled in
+  from the defaults via a new internal
+  [`merge_theme()`](https://timothymerlin.github.io/koma/reference/merge_theme.md)
+  helper.
+- Fixed
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html)/[`plotli()`](https://timothymerlin.github.io/koma/reference/plotli.md)
+  coloring the current year’s annual growth-rate annotation grey
+  (in-sample) even when some of its quarters are still forecasted.
+  [`to_long()`](https://timothymerlin.github.io/koma/reference/to_long.md)
+  now classifies an observation as in-sample only once its full period
+  (not just its start) has elapsed by the forecast start date, which
+  matters for `growth_annual` data since an annual timestamp only marks
+  the start of the year.
+- Fixed the level fan chart in `plot(..., fan = TRUE)`. The bands
+  compounded growth-rate quantiles, i.e. described a path where growth
+  sits at the same extreme quantile in every period, which made them far
+  too wide and strongly asymmetric. Each forecast draw is now converted
+  to a level path first and the bands are the quantiles of these paths
+  per horizon. Also fixed complementary quantiles such as
+  `c(0.05, 0.95)` drawing the same band twice.
+- Fixed the fan chart in `plot(..., fan = TRUE)` when the theme rebases
+  the level (`init_koma_theme(index = ...)`): the level line was rebased
+  but the fan bands were not, so they were drawn on a different scale.
+  The bands are now scaled by the same factor.
+- Fixed the `variables` check in
+  [`plot()`](https://rdrr.io/r/graphics/plot.default.html) for
+  forecasts: its condition used `||` instead of `&&`, so non-character,
+  empty or `NA` values passed and only failed later with unrelated
+  errors. `variables` must now be a non-empty character vector without
+  `NA`.
+- Fixed density forecasts with `restrictions` under
+  `future::plan(future::multisession)`: every draw failed with “All
+  forecast draws failed” because the restrictions reached the workers as
+  an unevaluated promise referring to the caller’s global environment.
+- Fixed
+  [`model_evaluation()`](https://timothymerlin.github.io/koma/reference/model_evaluation.md)
+  ignoring `options$approximate`: it was passed to
+  [`forecast()`](https://timothymerlin.github.io/koma/reference/forecast.md)
+  in the wrong place, so every evaluation ran the slower density
+  forecast. `variables = NULL` now evaluates all endogenous variables as
+  documented instead of returning an empty result.
+  [`model_evaluation()`](https://timothymerlin.github.io/koma/reference/model_evaluation.md)
+  now also validates its inputs (`variables` must be endogenous,
+  `horizon` a positive whole number that fits into `dates$forecast`,
+  `evaluate_on_levels` a single logical, and
+  `dates$estimation`/`dates$forecast` valid ranges); a horizon longer
+  than the forecast window previously returned `NaN` RMSEs.
+
+### Error handling and validation
+
+- [`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md)
+  now aborts with an informative error if
+  `future::plan(future::multicore)` is active on macOS, instead of
+  risking a silent segfault: Apple’s Accelerate framework (used by
+  [`eigen()`](https://rdrr.io/r/base/eigen.html)) is not fork-safe.
+  Switch to `future::plan(future::multisession)` instead.
+- Rank-deficient `x_matrix` caused by a lagged identity coinciding with
+  lags of its own components (e.g. `gdp.L(1)` alongside lags of all of
+  `gdp`’s components) is now caught early with an informative error
+  identifying the collinear variables, instead of surfacing later as an
+  opaque `"computationally singular"` error inside the Gibbs sampler
+  ([\#135](https://github.com/TimothyMerlin/koma/issues/135)).
+- A variable declared as both a stochastic equation (`~`) and an
+  identity (`==`) is now caught early with an informative error naming
+  the variable and both conflicting equations, instead of surfacing
+  later as an opaque
+  `'names' attribute [...] must be the same length as the vector` error
+  deep inside identity/weight construction.
+- Hardened parsing of
+  [`system_of_equations()`](https://timothymerlin.github.io/koma/reference/system_of_equations.md)
+  input. Malformed priors (e.g. a wrong separator) now error instead of
+  silently becoming `NA`, and negative-mean priors such as `{-0.4,0.1}`
+  are no longer wrongly rejected. An equation with its own dependent
+  variable on the right-hand side without a lag (e.g. `gdp ~ gdp + x1`)
+  now errors instead of being silently dropped. Lag and `dummies()`
+  specs with a stray extra colon (e.g. `.L(1:2:3)`) now error instead of
+  being truncated. A trailing operator (e.g. `y ~`) and missing identity
+  weights now produce messages that name the actual problem. The
+  `[key=val,...]` settings block is now evaluated against an allowlist
+  of functions instead of in
+  [`baseenv()`](https://rdrr.io/r/base/environment.html), so equation
+  strings can no longer run arbitrary code.
+- Bracketed index terms such as `covid[1:3]`, which were never
+  supported, now fail validation with an error. Previously they passed
+  validation, and a trailing one was mistaken for an equation settings
+  block (`[key=val]`) and silently dropped from the equation
+  ([\#138](https://github.com/TimothyMerlin/koma/issues/138)). Use
+  `dummies(covid, 1:3)` for a set of dummy variables.
+- The “Estimation start moved” warning now lists every series whose
+  first non-`NA` observation falls after the requested estimation start,
+  so it is clear which missing or lag-induced `NA`s shortened the
+  sample.
+- [`forecast()`](https://timothymerlin.github.io/koma/reference/forecast.md)
+  now validates `restrictions` before forecasting: each entry must be
+  named after a variable and contain numeric `value` and `horizon`
+  vectors of equal length, without missing values, with whole horizons
+  within the forecast horizon and no duplicates. Malformed restrictions
+  previously failed inside every draw with a misleading “All forecast
+  draws failed”. Restrictions for non-endogenous variables are dropped
+  with a single warning before the draws start.
+- The “Forecast horizon shortened” warning in
+  [`forecast()`](https://timothymerlin.github.io/koma/reference/forecast.md)
+  is now issued once. It was raised per draw with a shared “warn once”
+  flag, which multisession workers do not share, so density forecasts
+  under `future::plan(future::multisession)` repeated the warning. The
+  horizon is now shortened once before the draws start.
+- Density forecasts now report the actual errors of failed draws.
+  Previously they were dropped and only “All forecast draws failed.
+  Likely causes: redundant/incompatible restrictions” was shown,
+  whatever the cause. Errors and warnings of individual draws (e.g. a
+  singular or ill-conditioned restriction system) are now collected and
+  reported once, grouped by message with the number of draws affected,
+  instead of being repeated for every draw. The first draw error is
+  chained as the parent error, so
+  [`rlang::last_trace()`](https://rlang.r-lib.org/reference/last_error.html)
+  shows where the draw failed.
+- Restrictions beyond a forecast horizon that was shortened because
+  exogenous data end early now fail once with a clear error before the
+  draws start, instead of failing in every draw.
+- [`rebase()`](https://timothymerlin.github.io/koma/reference/rebase.md)
+  now validates the index period. A period partly outside the series
+  previously computed the base from the available part only (with just a
+  [`window()`](https://rdrr.io/r/stats/window.html) warning), a period
+  fully outside failed with a cryptic `'start' cannot be after 'end'`,
+  and `NA` values in the period silently turned the whole series into
+  `NA`. These cases now fail with a clear error.
+
+### Performance
+
+- Sped up estimation by using
+  [`crossprod()`](https://rdrr.io/r/base/crossprod.html)/[`tcrossprod()`](https://rdrr.io/r/base/crossprod.html)
+  and the two-argument `solve(A, b)` instead of `t(X) %*% X` and
+  `solve(A) %*% b` in the OLS helpers called on every Gibbs sampler
+  draw.
+- Sped up the Gibbs/Metropolis-Hastings sampler further: replaced
+  [`Matrix::solve()`](https://rdrr.io/pkg/Matrix/man/solve-methods.html)/[`chol()`](https://rdrr.io/r/base/chol.html)/[`det()`](https://rdrr.io/r/base/det.html)
+  with their base R equivalents in the sampler’s hot path (the `Matrix`
+  generics pay S4 dispatch overhead even on plain matrices, which every
+  call here is), and hoisted the per-equation-invariant
+  `crossprod(x_matrix)` (and the restricted-column `crossprod(x_b)` used
+  for `beta_hat`) out of the `ndraws`-iteration loop instead of
+  recomputing it on every call. Draws are numerically unchanged
+  (bit-identical given the same seed); benchmarks show roughly 10-30%
+  faster estimation depending on model size, on top of the earlier
+  [`crossprod()`](https://rdrr.io/r/base/crossprod.html)/`solve(A, b)`
+  fix.
+- Sped up
+  [`forecast()`](https://timothymerlin.github.io/koma/reference/forecast.md):
+  the positions of the lagged endogenous regressors were located with
+  regular expressions in every forecast draw, although they depend only
+  on the system of equations. They are now found once per forecast.
+  Forecasts are numerically unchanged (bit-identical given the same
+  seed); a density forecast with 1000 draws of the simulated example
+  model is about 40% faster (1.29 s to 0.79 s).
+- [`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md)
+  no longer serializes its whole calling environment to every parallel
+  worker. The data matrices reached the worker closure as unevaluated
+  promises, which kept the
+  [`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md)
+  frame alive, including `ts_data` and, when re-estimating, the previous
+  `estimates` with all draws. In a small example re-estimation, the data
+  sent per worker dropped from about 2 MB to 160 KB.
+
+## koma 0.3.1
+
+CRAN release: 2026-07-29
+
+- Added `\value` documentation tags to `print.koma_forecast` and
+  `print.koma_seq` to comply with CRAN policy.
+
+## koma 0.3.0
+
 ## koma 0.2.2
+
+## koma 0.2.2.9000
 
 ## koma 0.2.2
 

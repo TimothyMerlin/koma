@@ -7,7 +7,7 @@ variables in equation \\j\\.
 ## Usage
 
 ``` r
-construct_pi_hat_0(x_matrix, z_matrix_j)
+construct_pi_hat_0(x_matrix, z_matrix_j, xtx)
 ```
 
 ## Arguments
@@ -20,6 +20,11 @@ construct_pi_hat_0(x_matrix, z_matrix_j)
 - z_matrix_j:
 
   A \\Z_j = y_j - Y_j \* \gamma_j\\ matrix.
+
+- xtx:
+
+  Precomputed \\x_matrix'x_matrix\\. This is invariant across Gibbs
+  draws, so it is computed once instead of on every call.
 
 ## Value
 

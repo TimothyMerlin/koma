@@ -132,3 +132,56 @@ Hyndman (1996) for computing HDRs from an estimated density.
 Hyndman, R. J. (1996). Computing and graphing highest density regions.
 The American Statistician, 50(2), 120–126.
 [doi:10.2307/2684423](https://doi.org/10.2307/2684423)
+
+## Examples
+
+``` r
+x <- c(rnorm(500, -2, 0.5), rnorm(500, 2, 0.5))
+hdr(x, probs = c(0.5, 0.9))
+#> ==========
+#> level_50
+#> --------
+#> Mode: 2.008
+#> Intervals: [-2.455; -1.532]; [1.546; 2.467]
+#> 
+#> level_90
+#> --------
+#> Mode: 2.008
+#> Intervals: [-3.154; -0.842]; [0.861; 3.157]
+#> 
+#> ==========
+
+data("simulated_sem")
+set.seed(11)
+
+fit <- estimate(
+  ts_data = simulated_sem$ts_data,
+  sys_eq = simulated_sem$sys_eq,
+  dates = simulated_sem$dates,
+  options = list(gibbs = list(ndraws = 10))
+)
+#> 
+#> ── Gibbs Sampler Settings ──────────────────────────────────────────────────────
+#> 
+#> ── System Wide Settings ──
+#>   • Number of draws (`ndraws`): 10
+#>   • Burn-in ratio (`burnin_ratio`): 0.5
+#>   • Burn-in (`burnin`): 5
+#>   • Store frequency (`nstore`): 1
+#>   • Number of saved draws (`nsave`): 5
+#>   • Tau (`tau`): 1.1
+#> 
+#> 
+#> ── Estimation ──────────────────────────────────────────────────────────────────
+#> 
+#> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
+#> • consumption: 80.0%
+#> 
+#> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
+#> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
+#> 
+hdr_fit <- hdr(fit, probs = c(0.5, 0.9))
+names(hdr_fit$intervals)
+#> [1] "consumption"     "investment"      "current_account" "manufacturing"  
+#> [5] "service"        
+```

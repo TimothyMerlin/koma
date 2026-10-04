@@ -7,7 +7,3 @@ Define the internal environment of the package
 ``` r
 the
 ```
-
-## Format
-
-An object of class `environment` of length 2.

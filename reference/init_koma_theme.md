@@ -11,6 +11,7 @@ init_koma_theme(
   font = NULL,
   trace_name = NULL,
   xaxis = list(tickfont = NULL, range = list(start = NULL, end = NULL)),
+  digits = list(quarterly = 2, level = 2, annual = 2),
   yaxis = list(y = list(title = list(text = "QoQ, in %"), tick_center = 0), y2 =
     list(title = list(text = "Level"), tick_center = 100), tickfont = NULL, number_ticks
     = 5),
@@ -67,6 +68,19 @@ init_koma_theme(
   - `tickfont`: Sets this axis' tick font, including tickfont for annual
     growth rates.
 
+- digits:
+
+  A list specifying the number of decimal places shown for plotted
+  values.
+
+  - `quarterly`: Digits for the quarterly growth-rate hover values.
+    Defaults to 2.
+
+  - `level`: Digits for the level hover values. Defaults to 2.
+
+  - `annual`: Digits for the annual growth-rate annotations below the
+    x-axis. Defaults to 2.
+
 - yaxis:
 
   A list with custom labels for the y-axes `y` (left) and `y2` (right).
@@ -113,3 +127,16 @@ init_koma_theme(
     - `in_sample`: Text color for in-sample data bars.
 
     - `forecast`: Text color for forecast data bars.
+
+## Value
+
+A named list containing the theme settings.
+
+## Examples
+
+``` r
+theme <- init_koma_theme()
+names(theme)
+#> [1] "index"      "title"      "font"       "trace_name" "xaxis"     
+#> [6] "digits"     "yaxis"      "legend"     "color"     
+```

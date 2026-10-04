@@ -10,6 +10,15 @@ Required attributes of the input time series are:
 
 ``` r
 rate(x, ...)
+
+# S3 method for class 'ts'
+rate(x, ...)
+
+# S3 method for class 'list'
+rate(x, ...)
+
+# S3 method for class 'mts'
+rate(x, ...)
 ```
 
 ## Arguments

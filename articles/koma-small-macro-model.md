@@ -87,7 +87,7 @@ The `equations` string contains the model equations, while
 `exogenous_variables` lists the exogenous variables. The `.L(1)`
 notation indicates a lag of one period. For further details on the
 syntax, please refer to the [equation syntax
-documentation](https://timothymerlin.github.io/koma/equations.md).
+documentation](https://timothymerlin.github.io/koma/articles/koma-equations.md).
 
 ## Creating the SEM
 
@@ -236,9 +236,9 @@ summary(estimates)
 ##                        consumption    investment    exports         imports        prices        interest_rate 
 ## ---------------------------------------------------------------------------------------------------------------
 ## constant                 0.36          0.45          -0.29           -0.05          0.04          -0.51        
-##                        [ 0.28; 0.46]  [0.19; 0.71]  [-0.86;  0.32]  [-0.55; 0.44]  [0.01; 0.06]  [-0.63; -0.40]
+##                        [ 0.28; 0.46]  [0.19; 0.71]  [-0.86;  0.32]  [-0.56; 0.44]  [0.01; 0.06]  [-0.63; -0.40]
 ## consumption.L(1)         0.11                                                                                  
-##                        [-0.08; 0.29]                                                                           
+##                        [-0.08; 0.28]                                                                           
 ## gdp                     -0.03                                                                                  
 ##                        [-0.13; 0.06]                                                                           
 ## investment.L(1)                        0.21                                                                    
@@ -252,7 +252,7 @@ summary(estimates)
 ## domestic_demand                                                       2.61                                     
 ##                                                                     [ 1.62; 3.74]                              
 ## prices.L(1)                                                                         0.56          -0.19        
-##                                                                                    [0.46; 0.66]  [-0.60;  0.21]
+##                                                                                    [0.46; 0.66]  [-0.61;  0.21]
 ## exchange_rate                                                                       0.03                       
 ##                                                                                    [0.02; 0.05]                
 ## oil_price                                                                           0.01                       
@@ -283,7 +283,8 @@ summary(estimates, variables = "investment")
 ```
 
 To see how to run the estimation in parallel, refer to the [parallel
-estimation vignette](https://timothymerlin.github.io/koma/parallel.md).
+estimation
+vignette](https://timothymerlin.github.io/koma/articles/koma-parallel.md).
 
 ## Diagnostics
 
@@ -345,15 +346,15 @@ print(forecasts)
 ## 
 ## series:
 ##         consumption investment exports imports  prices interest_rate    gdp
-## 2023 Q1      0.3940     0.4953  1.2033  1.0677 -0.0587        0.8385 0.6717
-## 2023 Q2      0.3821     0.4917  0.6258  0.9778 -0.0703        1.2689 0.4066
-## 2023 Q3      0.3836     0.5117  0.7445  0.9278  0.0100        1.5664 0.4922
-## 2023 Q4      0.3883     0.5711  0.3600  0.9941 -0.0114        1.6947 0.2922
+## 2023 Q1      0.3944     0.4953  1.2033  1.0678 -0.0586        0.8380 0.6720
+## 2023 Q2      0.3831     0.4917  0.6258  0.9768 -0.0702        1.2684 0.4080
+## 2023 Q3      0.3845     0.5117  0.7445  0.9274  0.0100        1.5658 0.4932
+## 2023 Q4      0.3887     0.5711  0.3600  0.9964 -0.0113        1.6940 0.2917
 ##         domestic_demand world_gdp interest_rate_germany exchange_rate oil_price
-## 2023 Q1          0.4345    0.4827                2.3887        0.9217   -8.7520
-## 2023 Q2          0.4259    0.4083                3.1460       -1.3863   -3.3787
-## 2023 Q3          0.4348    0.4259                3.6393       -1.7869    9.9001
-## 2023 Q4          0.4614    0.2906                3.8850       -0.7502   -3.3373
+## 2023 Q1          0.4348    0.4827                2.3887        0.9217   -8.7520
+## 2023 Q2          0.4266    0.4083                3.1460       -1.3863   -3.3787
+## 2023 Q3          0.4354    0.4259                3.6393       -1.7869    9.9001
+## 2023 Q4          0.4617    0.2906                3.8850       -0.7502   -3.3373
 ```
 
 ``` r
@@ -363,11 +364,11 @@ rate(forecasts$mean$gdp)
 ## attributes:
 ##   series_type:  chr "rate"
 ##   method:  chr "diff_log"
-##   anker:  num [1:2] 192510 2023
+##   anker:  num [1:2] 192517 2023
 ## 
 ## series:
 ##           Qtr1      Qtr2      Qtr3      Qtr4
-## 2023 0.6716659 0.4066033 0.4921892 0.2921809
+## 2023 0.6720110 0.4079898 0.4932285 0.2916674
 level(forecasts$mean$gdp)
 ## <koma_ts>
 ## attributes:
@@ -376,8 +377,8 @@ level(forecasts$mean$gdp)
 ## 
 ## series:
 ##          Qtr1     Qtr2     Qtr3     Qtr4
-## 2022                            192510.1
-## 2023 193807.5 194597.1 195557.3 196129.5
+## 2022                            192516.7
+## 2023 193814.8 194607.2 195569.4 196140.6
 ```
 
 ### Conditional Forecasting

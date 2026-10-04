@@ -14,7 +14,9 @@ target_j_informative_initial(
   character_gamma_matrix,
   character_beta_matrix,
   jx,
-  gamma_jw
+  gamma_jw,
+  xtx,
+  xbtxb
 )
 ```
 
@@ -53,6 +55,16 @@ target_j_informative_initial(
 
   A \\(n_j \times 1)\\ vector with the parameters of the gamma matrix,
   where \\n_j\\ is the number of endogenous variables in equation \\j\\.
+
+- xtx:
+
+  Precomputed \\x_matrix'x_matrix\\. This is invariant across Gibbs
+  draws, so it is computed once instead of on every call.
+
+- xbtxb:
+
+  Precomputed \\x_b'x_b\\, where \\x_b\\ is \\x_matrix\\ restricted to
+  the columns kept for equation \\j\\. Same rationale as `xtx`.
 
 ## Value
 

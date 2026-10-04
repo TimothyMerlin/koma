@@ -16,7 +16,9 @@ initialize_sampler_informative(
   x_matrix,
   character_gamma_matrix,
   character_beta_matrix,
-  jx
+  jx,
+  xtx,
+  xbtxb
 )
 ```
 
@@ -50,6 +52,16 @@ initialize_sampler_informative(
 - jx:
 
   The index of equation \\j\\.
+
+- xtx:
+
+  Precomputed \\x_matrix'x_matrix\\. This is invariant across Gibbs
+  draws, so it is computed once instead of on every call.
+
+- xbtxb:
+
+  Precomputed \\x_b'x_b\\, where \\x_b\\ is \\x_matrix\\ restricted to
+  the columns kept for equation \\j\\. Same rationale as `xtx`.
 
 ## Value
 

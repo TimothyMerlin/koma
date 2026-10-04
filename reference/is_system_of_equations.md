@@ -19,3 +19,11 @@ is_system_of_equations(x)
 
 Logical. Returns `TRUE` if the object inherits from the class
 `koma_seq`, and `FALSE` otherwise.
+
+## Examples
+
+``` r
+sys <- system_of_equations("y ~ x", exogenous_variables = "x")
+is_system_of_equations(sys)
+#> [1] TRUE
+```

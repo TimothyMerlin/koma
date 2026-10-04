@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Equation Syntax Reference • koma</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Equation Syntax Reference">
 </head>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@
       <h1>Equation Syntax Reference</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/main/vignettes/koma-equations.Rmd" class="external-link"><code>vignettes/koma-equations.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/vignettes/koma-equations.Rmd" class="external-link"><code>vignettes/koma-equations.Rmd</code></a></small>
       <div class="d-none name"><code>koma-equations.Rmd</code></div>
     </div>
 
@@ -158,11 +158,14 @@ with no variable name:</p>
 <span id="cb9-4"><a href="#cb9-4" tabindex="-1"></a><span class="co"># Prior on a lagged term</span></span>
 <span id="cb9-5"><a href="#cb9-5" tabindex="-1"></a>consumption <span class="sc">~</span> gdp <span class="sc">+</span> {<span class="fl">0.9</span>, <span class="dv">10</span>} <span class="fu">consumption.L</span>(<span class="dv">1</span>)</span>
 <span id="cb9-6"><a href="#cb9-6" tabindex="-1"></a></span>
-<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co"># Prior on an endogenous regressor</span></span>
-<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>consumption <span class="sc">~</span> {<span class="fl">0.2</span>, <span class="fl">0.5</span>} service <span class="sc">+</span> gdp</span>
+<span id="cb9-7"><a href="#cb9-7" tabindex="-1"></a><span class="co"># Same prior on several lags (applies to consumption.L(1), .L(2) and .L(4))</span></span>
+<span id="cb9-8"><a href="#cb9-8" tabindex="-1"></a>consumption <span class="sc">~</span> gdp <span class="sc">+</span> {<span class="dv">0</span>, <span class="dv">1000</span>} <span class="fu">consumption.L</span>(<span class="dv">1</span><span class="sc">:</span><span class="dv">2</span>, <span class="dv">4</span>)</span>
 <span id="cb9-9"><a href="#cb9-9" tabindex="-1"></a></span>
-<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co"># Error-term prior: {df, scale}</span></span>
-<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>consumption <span class="sc">~</span> gdp <span class="sc">+</span> <span class="fu">consumption.L</span>(<span class="dv">1</span>) <span class="sc">+</span> {<span class="dv">3</span>, <span class="fl">0.001</span>}</span></code></pre></div>
+<span id="cb9-10"><a href="#cb9-10" tabindex="-1"></a><span class="co"># Prior on an endogenous regressor</span></span>
+<span id="cb9-11"><a href="#cb9-11" tabindex="-1"></a>consumption <span class="sc">~</span> {<span class="fl">0.2</span>, <span class="fl">0.5</span>} service <span class="sc">+</span> gdp</span>
+<span id="cb9-12"><a href="#cb9-12" tabindex="-1"></a></span>
+<span id="cb9-13"><a href="#cb9-13" tabindex="-1"></a><span class="co"># Error-term prior: {df, scale}</span></span>
+<span id="cb9-14"><a href="#cb9-14" tabindex="-1"></a>consumption <span class="sc">~</span> gdp <span class="sc">+</span> <span class="fu">consumption.L</span>(<span class="dv">1</span>) <span class="sc">+</span> {<span class="dv">3</span>, <span class="fl">0.001</span>}</span></code></pre></div>
 <p>Rules:</p>
 <ul>
 <li>Priors are only supported in stochastic equations.</li>
@@ -170,6 +173,9 @@ with no variable name:</p>
 <code>{mean, variance} variable</code>.</li>
 <li>The error-term prior has the form <code>{df, scale}</code> and
 appears without a variable name.</li>
+<li>A prior in front of lag shorthand (<code>x.L(1:3)</code>,
+<code>x.L(1, 3)</code>, <code>lag(x, 1:3)</code>) applies to every lag
+it expands to.</li>
 <li>The dependent variable cannot have a prior.</li>
 <li>The error-term prior must be the last prior in the equation.</li>
 </ul>
@@ -184,6 +190,47 @@ emitted.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="st">"consumption ~ constant + gdp + consumption.L(1) + consumption.L(2) [tau = 1.2]"</span></span></code></pre></div>
 </div>
+<div class="section level3">
+<h3 id="dummy-variables">7. Dummy Variables<a class="anchor" aria-label="anchor" href="#dummy-variables"></a>
+</h3>
+<p>Dummy variables can be written as <code>dummies(prefix, spec)</code>
+instead of spelling out every term. <code>spec</code> follows the same
+syntax as lag ranges (a single index, a <code>lower:upper</code> range,
+or a comma-separated mix).</p>
+<div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Shorthand:</span></span>
+<span><span class="va">consp</span> <span class="op">~</span> <span class="va">ydispbr</span> <span class="op">+</span> <span class="fu">consp.L</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span> <span class="fu">dummies</span><span class="op">(</span><span class="va">covid</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Equivalent to:</span></span>
+<span><span class="va">consp</span> <span class="op">~</span> <span class="va">ydispbr</span> <span class="op">+</span> <span class="fu">consp.L</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="va">covid_1</span> <span class="op">+</span> <span class="va">covid_2</span> <span class="op">+</span> <span class="va">covid_3</span> <span class="op">+</span> <span class="va">covid_4</span> <span class="op">+</span> <span class="va">covid_5</span> <span class="op">+</span> <span class="va">covid_6</span> <span class="op">+</span> <span class="va">covid_7</span> <span class="op">+</span> <span class="va">covid_8</span></span></code></pre></div>
+<p><code>dummies()</code> only expands the <em>equation string</em> - it
+does not create any data. It is expanded before validation, so the
+expanded names are treated exactly like any hand-typed variable, which
+means the usual three steps for an exogenous variable still apply:</p>
+<p><strong>1. The data has to exist.</strong> Each expanded name
+(<code>covid_1</code>, <code>covid_2</code>, …) must be a real 0/1
+series in the <code>ts_data</code> passed to <code><a href="../reference/estimate.html">estimate()</a></code>.
+<code>koma</code> does not generate this from a period specification -
+you build it like any other series, e.g. as a shock in a single period
+per dummy:</p>
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">covid_periods</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2020.25</span>, <span class="fl">2020.5</span>, <span class="fl">2020.75</span>, <span class="fl">2021</span>, <span class="fl">2021.25</span>, <span class="fl">2021.5</span>, <span class="fl">2021.75</span>, <span class="fl">2022</span><span class="op">)</span></span>
+<span><span class="kw">for</span> <span class="op">(</span><span class="va">i</span> <span class="kw">in</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_along</a></span><span class="op">(</span><span class="va">covid_periods</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
+<span>  <span class="va">dummy</span> <span class="op">&lt;-</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/ts.html" class="external-link">ts</a></span><span class="op">(</span><span class="fl">0</span>, start <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/start.html" class="external-link">start</a></span><span class="op">(</span><span class="va">ts_data</span><span class="op">$</span><span class="va">consp</span><span class="op">)</span>, end <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/start.html" class="external-link">end</a></span><span class="op">(</span><span class="va">ts_data</span><span class="op">$</span><span class="va">consp</span><span class="op">)</span>,</span>
+<span>    frequency <span class="op">=</span> <span class="fu">stats</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/stats/time.html" class="external-link">frequency</a></span><span class="op">(</span><span class="va">ts_data</span><span class="op">$</span><span class="va">consp</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/window.html" class="external-link">window</a></span><span class="op">(</span><span class="va">dummy</span>, start <span class="op">=</span> <span class="va">covid_periods</span><span class="op">[</span><span class="va">i</span><span class="op">]</span>, end <span class="op">=</span> <span class="va">covid_periods</span><span class="op">[</span><span class="va">i</span><span class="op">]</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
+<span>  <span class="va">ts_data</span><span class="op">[[</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"covid_"</span>, <span class="va">i</span><span class="op">)</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/koma_ts.html">as_ets</a></span><span class="op">(</span><span class="va">dummy</span>, series_type <span class="op">=</span> <span class="st">"rate"</span>, method <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
+<span><span class="op">}</span></span></code></pre></div>
+<p><strong>2. It must be declared as exogenous</strong>, same as for any
+other regressor:</p>
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">exogenous_variables</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"ydispbr"</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"covid_"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><strong>3. If forecasting</strong>, the dummy series must also extend
+through the forecast horizon in <code>ts_data</code> (typically as 0,
+since a one-off shock dummy shouldn’t recur) - <code><a href="../reference/forecast.html">forecast()</a></code>
+errors if an exogenous series doesn’t reach the forecast end date.</p>
+</div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -192,11 +239,11 @@ emitted.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Samad Sarferaz, Laurent Florin, Merlin Scherer.</p>
+  <p>Developed by Samad Sarferaz, Merlin Scherer.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

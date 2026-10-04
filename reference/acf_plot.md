@@ -83,5 +83,43 @@ covariances) from each covariance draw.
 
 The red dashed horizontal lines show approximate significance bounds
 \\\pm z\_{1-\alpha/2}/\sqrt{n}\\ for zero autocorrelation, where
-\\\alpha = 1 - \code{conf_level}\\ and \\n\\ is the number of retained
-draws for the corresponding coefficient series.
+\\\alpha = 1 - \mathrm{conf\\level}\\ and \\n\\ is the number of
+retained draws for the corresponding coefficient series.
+
+## Examples
+
+``` r
+if (requireNamespace("ggplot2", quietly = TRUE)) {
+  data("simulated_sem")
+  set.seed(11)
+
+  fit <- estimate(
+    ts_data = simulated_sem$ts_data,
+    sys_eq = simulated_sem$sys_eq,
+    dates = simulated_sem$dates,
+    options = list(gibbs = list(ndraws = 10))
+  )
+  acf_plot(fit, params = "beta", max_lag = 12)
+}
+#> 
+#> ── Gibbs Sampler Settings ──────────────────────────────────────────────────────
+#> 
+#> ── System Wide Settings ──
+#> • Number of draws (`ndraws`): 10
+#> • Burn-in ratio (`burnin_ratio`): 0.5
+#> • Burn-in (`burnin`): 5
+#> • Store frequency (`nstore`): 1
+#> • Number of saved draws (`nsave`): 5
+#> • Tau (`tau`): 1.1
+#> 
+#> 
+#> ── Estimation ──────────────────────────────────────────────────────────────────
+#> 
+#> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
+#> • consumption: 80.0%
+#> 
+#> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
+#> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
+#> 
+
+```

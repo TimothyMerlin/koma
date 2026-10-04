@@ -12,8 +12,8 @@ This vignette demonstrates how to use the
 function to run `koma` package functions either sequentially or in
 parallel, depending on your operating system and other preferences.
 
-For more details, see the future package documentation:
-<https://cran.r-project.org/web/packages/future/future.pdf>
+For more details, see the [future package
+documentation](https://CRAN.R-project.org/package=future).
 
 ## Preliminaries
 
@@ -107,13 +107,32 @@ future::plan("future::multisession", workers = workers)
 estimates <- estimate(ts_data, sys_eq, dates)
 ```
 
-### Unix-like systems
+### Linux
 
-For Unix-like systems, you can use **multicore**:
+On Linux, you can use **multicore** (fork-based, lower overhead):
 
 ``` r
 
 future::plan("future::multicore", workers = workers)
+
+estimates <- estimate(ts_data, sys_eq, dates)
+```
+
+### macOS
+
+On macOS, **do not use `multicore`**. Apple’s Accelerate framework (the
+BLAS/LAPACK backend used by
+[`eigen()`](https://rdrr.io/r/base/eigen.html)) relies on Grand Central
+Dispatch internally, which is not fork-safe. Forked workers will
+segfault with “invalid permissions” inside
+[`eigen()`](https://rdrr.io/r/base/eigen.html).
+
+Use **multisession** instead — it spawns fresh R processes rather than
+forking:
+
+``` r
+
+future::plan("future::multisession", workers = workers)
 
 estimates <- estimate(ts_data, sys_eq, dates)
 ```

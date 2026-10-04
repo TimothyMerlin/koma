@@ -274,3 +274,31 @@ x / x
 #> 2020    1    1    1    1
 #> 2021    1    1
 ```
+
+## Using plain ts with estimate()
+
+[`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md)
+requires `koma_ts`, but if you pass a plain `ts` it will convert it
+automatically, assuming the series is already in rates (the form the
+model estimates on) and applying no transformation
+(`series_type = "rate"`, `method = "none"`). A warning lists any series
+converted this way. If a series is actually in levels, convert it
+explicitly first, as shown above, so the right transformation is
+applied:
+
+``` r
+
+level_series <- stats::ts(c(100, 101, 99, 103, 105, 104, 108, 110),
+  start = c(2020, 1), frequency = 4
+)
+as_ets(level_series, series_type = "level", method = "diff_log")
+#> <koma_ts>
+#> attributes:
+#>   series_type:  chr "level"
+#>   method:  chr "diff_log"
+#> 
+#> series:
+#>      Qtr1 Qtr2 Qtr3 Qtr4
+#> 2020  100  101   99  103
+#> 2021  105  104  108  110
+```

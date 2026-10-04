@@ -15,7 +15,8 @@ draw_theta_j_informative(
   jx,
   gamma_jw,
   omega_jw,
-  priors_j
+  priors_j,
+  xtx
 )
 ```
 
@@ -58,6 +59,11 @@ draw_theta_j_informative(
 - omega_jw:
 
   \\{\Omega}\_j^{(w)}\\
+
+- xtx:
+
+  Precomputed \\x_matrix'x_matrix\\. This is invariant across Gibbs
+  draws, so it is computed once instead of on every call.
 
 ## Value
 

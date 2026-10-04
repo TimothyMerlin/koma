@@ -1,5 +1,6 @@
 <urlset xmlns = 'http://www.sitemaps.org/schemas/sitemap/0.9'>
 <url><loc>https://timothymerlin.github.io/koma/404.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/CONTRIBUTING.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/LICENSE.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/articles/index.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/articles/koma-diagnostics.html</loc></url>
@@ -46,6 +47,7 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/create_lagged_variables.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/dates_to_num.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/dates_to_str.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/default_koma_attr_merge.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/detect_edge.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/detect_lag.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/draw_gamma_j.html</loc></url>
@@ -59,12 +61,16 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/draws_to_matrix.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/estimate.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/estimate_sem.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/expand_dummies.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/extend_ts_with_forecast.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/extract.koma_estimate.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/extract_estimates_from_draws.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/extract_lagged_vars.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/fill_ragged_edge.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/filter_by_attribute.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/find_dependent_columns.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/find_extremas.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/find_phi_positions.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/forecast.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/forecast_draw.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/forecast_sem.html</loc></url>
@@ -78,6 +84,7 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/get_endogenous_variables.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/get_fan_pairs.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/get_identities.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/get_koma_attr_policy.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/get_lagged_values.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/get_max_lag.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/get_optimal_ticks.html</loc></url>
@@ -107,6 +114,7 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/koma_ts.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/level.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/merge_koma_attrs.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/merge_theme.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/model_evaluation.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/model_identification.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/multivariate_norm.html</loc></url>
@@ -114,6 +122,7 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/normalize_coef_names.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/normalize_quantile_probs.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/num_to_dates.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/parse_index_spec.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/parse_lags.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/parse_quantile_name.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/plot.koma_estimate_hdr.html</loc></url>
@@ -132,6 +141,8 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/quantiles_from_forecasts.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/rate.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/rebase.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/rebase_fan_data.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/reset_koma_attr_policy.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/restore_koma_attrs.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/riwish.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/running_mean.html</loc></url>
@@ -142,8 +153,11 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/set_gibbs_spec.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/set_koma_attr_policy.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/set_restrictions.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/shorten_forecast_horizon.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/simulated_sem.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/small_open_economy.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/strip_koma_attrs.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/summarise_draw_conditions.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/summary.koma_estimate.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/summary.koma_estimate_hdi.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/summary.koma_estimate_hdr.html</loc></url>
@@ -162,14 +176,20 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/the.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/to_long.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/trace_plot.html</loc></url>
-<url><loc>https://timothymerlin.github.io/koma/reference/type.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/update_anker.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/update_estimates_with_weights.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/update_identity_weights.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/validate_completeness.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/validate_date_range.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/validate_equation.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/validate_full_rank.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/validate_identities.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/validate_identity_lag_collinearity.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/validate_model_evaluation_input.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/validate_restrictions.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/validate_system_of_equations.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/validate_thetas_exist.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/validate_unique_endogenous_variables.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/vector_to_matrix.html</loc></url>
 </urlset>
 

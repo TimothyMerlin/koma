@@ -9,7 +9,7 @@ covariance matrix \\\Omega = (\Gamma^{-1})'\Sigma\Gamma^{-1}\\.
 ## Usage
 
 ``` r
-construct_posterior(sys_eq, estimate)
+construct_posterior(sys_eq, estimate, phi_positions)
 ```
 
 ## Arguments
@@ -23,6 +23,11 @@ construct_posterior(sys_eq, estimate)
 - estimate:
 
   A draw that contains beta, gamma and omega tilde estimates.
+
+- phi_positions:
+
+  Positions of the lagged endogenous regressors, as returned by
+  [`find_phi_positions()`](https://timothymerlin.github.io/koma/reference/find_phi_positions.md).
 
 ## Value
 

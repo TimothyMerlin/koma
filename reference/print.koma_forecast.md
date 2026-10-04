@@ -39,6 +39,13 @@ print(x, ..., variables = NULL, central_tendency = NULL, digits = 4)
   Optional. Integer number of decimal digits to round the printed
   output. Default is 4.
 
+## Value
+
+Invisibly returns `x`, the original `koma_forecast` object (a list of
+`koma_ts` objects, one per forecasted variable). Called primarily for
+its side effect of printing the selected forecast as a multivariate time
+series (`mts`) to the console.
+
 ## Details
 
 This function prints the forecasts contained in a `koma_forecast`

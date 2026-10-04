@@ -15,6 +15,16 @@ estimate(
   options = list(gibbs = list(), fill = list(method = "mean")),
   estimates = NULL
 )
+
+# S3 method for class 'list'
+estimate(
+  ts_data,
+  sys_eq,
+  dates,
+  ...,
+  options = list(gibbs = list(), fill = list(method = "mean")),
+  estimates = NULL
+)
 ```
 
 ## Arguments
@@ -98,6 +108,12 @@ elements:
 
   The date ranges used during estimation.
 
+- plain_ts_names:
+
+  Character vector of series names that were supplied as plain `ts` (not
+  `koma_ts`) in `ts_data`. These are assumed to already be in rates and
+  tagged accordingly; see the "Plain ts input" section below.
+
 ## Details
 
 After estimation, use
@@ -114,7 +130,31 @@ This function provides the option for parallel computing through the
 function. For a detailed example on executing `estimate` in parallel,
 see the vignette: `vignette("parallel")`. For more details, see the
 [future package
-documentation](https://cran.r-project.org/web/packages/future/future.pdf).
+documentation](https://CRAN.R-project.org/package=future).
+
+## Plain ts input
+
+If any element of `ts_data` is a plain `ts` rather than a `koma_ts` (see
+[`ets`](https://timothymerlin.github.io/koma/reference/koma_ts.md)), it
+is assumed to already be in rates, the form the model estimates on, and
+is converted to `koma_ts` with `series_type = "rate"`,
+`method = "none"`: the values are used as-is, no rate/level
+transformation is applied. A warning lists the affected series, and the
+same list is stored in the returned object as `plain_ts_names` (also
+surfaced when the `koma_estimate` is printed). If a series actually
+needs to be converted from levels (e.g. via a percentage or diff_log
+growth rate), convert it first with
+[`ets`](https://timothymerlin.github.io/koma/reference/koma_ts.md) or
+[`as_ets`](https://timothymerlin.github.io/koma/reference/koma_ts.md);
+see
+[`vignette("koma-extended-timeseries")`](https://timothymerlin.github.io/koma/articles/koma-extended-timeseries.md).
+
+`koma_ts` objects may carry custom attributes beyond `series_type`/
+`method` (e.g. a project-specific `value_type`). Since all series in
+`ts_data` must share the same attribute names (see
+[`as_mets`](https://timothymerlin.github.io/koma/reference/as_mets.md)),
+any such extra attributes found on sibling `koma_ts` series are set to
+`NA` on the converted series.
 
 ## Gibbs Sampler Specifications
 
@@ -124,8 +164,8 @@ documentation](https://cran.r-project.org/web/packages/future/future.pdf).
 - `burnin_ratio`: Numeric specifying the ratio for the burn-in period.
   Default is 0.5.
 
-- `nstore`: Integer specifying the frequency of stored draws. Default is
-  1.
+- `nstore`: Integer specifying the frequency of stored draws. Every
+  `nstore`-th draw after the burn-in is kept. Default is 1.
 
 - `tau`: Numeric tuning parameter for enforcing an acceptance rate.
   Default is 1.1.
@@ -140,3 +180,46 @@ documentation](https://cran.r-project.org/web/packages/future/future.pdf).
 
 - Related functions within the package that may be of interest:
   [`forecast`](https://timothymerlin.github.io/koma/reference/forecast.md).
+
+## Examples
+
+``` r
+data("simulated_sem")
+set.seed(11)
+
+fit <- estimate(
+  ts_data = simulated_sem$ts_data,
+  sys_eq = simulated_sem$sys_eq,
+  dates = simulated_sem$dates,
+  options = list(gibbs = list(ndraws = 10))
+)
+#> 
+#> ── Gibbs Sampler Settings ──────────────────────────────────────────────────────
+#> 
+#> ── System Wide Settings ──
+#>   • Number of draws (`ndraws`): 10
+#>   • Burn-in ratio (`burnin_ratio`): 0.5
+#>   • Burn-in (`burnin`): 5
+#>   • Store frequency (`nstore`): 1
+#>   • Number of saved draws (`nsave`): 5
+#>   • Tau (`tau`): 1.1
+#> 
+#> 
+#> ── Estimation ──────────────────────────────────────────────────────────────────
+#> 
+#> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
+#> • consumption: 80.0%
+#> 
+#> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
+#> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
+#> 
+print(fit)
+#> 
+#> ── Estimates ───────────────────────────────────────────────────────────────────
+#>     consumption ~  1.33 - 0.3 * gdp  +  0.47 * consumption.L(1)  +  0.23 * consumption.L(2)
+#>      investment ~  2.28 - 1.26 * gdp  +  0.44 * investment.L(1)  +  0.37 * real_interest_rate
+#> current_account ~  1.52 - 0.51 * current_account.L(1)  +  0.53 * world_gdp
+#>   manufacturing ~  0.57  +  0.06 * manufacturing.L(1)  +  0.32 * world_gdp
+#>         service ~  - 0.01  +  0.16 * service.L(1)  +  0.05 * population - 0.83 * gdp
+#>             gdp == 0.4 * manufacturing  +  0.6 * service 
+```

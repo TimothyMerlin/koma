@@ -62,6 +62,13 @@ should be separated by commas if provided as a single string.
 - Lagged variables are denoted by `X.L(x)` for variable `X` and lag
   `L(x)` (e.g. `.L(1)`, `.L(2)`).
 
+- Dummy variables can be written as `dummies(prefix, spec)`, e.g.
+  `dummies(covid, 1:8)` expands to `covid_1+covid_2+...+covid_8`. `spec`
+  follows the same syntax as lag ranges (a single index, a `lower:upper`
+  range, or a comma-separated mix). Expansion happens before validation,
+  so every expanded name must still be declared in
+  `exogenous_variables`, just like a hand-typed variable.
+
 - Intercept are included by default, you can also explicitly specify the
   constant by adding `constant` to the equation (e.g.
   `y ~ constant + x1`). To exclude the intercept, add `+0` or `-1` to

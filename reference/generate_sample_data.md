@@ -73,3 +73,25 @@ A list containing three elements:
 
 It creates a sample of data where the relationship between the variables
 is determined by the defined parameters.
+
+## Examples
+
+``` r
+gamma_matrix <- matrix(1, nrow = 1)
+beta_matrix <- matrix(c(0.2, 0.5, 0.3), nrow = 3)
+sigma_matrix <- matrix(0.01, nrow = 1)
+
+sample <- generate_sample_data(
+  sample_size = 12,
+  sample_start = c(2000, 1),
+  burnin = 4,
+  gamma_matrix = gamma_matrix,
+  beta_matrix = beta_matrix,
+  sigma_matrix = sigma_matrix,
+  endogenous_variables = "y",
+  exogenous_variables = "x",
+  predetermined_variables = "y.L(1)"
+)
+names(sample)
+#> [1] "y_matrix" "x_matrix" "ts_data" 
+```

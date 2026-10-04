@@ -1,26 +1,25 @@
 # Construct a Dynamic SEM (Structural Equation Model) Phi Matrix
 
 This function constructs the list of lagged endogenous coefficient
-matrices \\\Phi(1), \ldots, \Phi(L)\\ from the system of equations and
-the beta matrix. It identifies lagged endogenous regressors in each
-equation and maps their coefficients into the corresponding
-\\\Phi(\ell)\\ matrix in the dynamic SEM: \\Y\Gamma =
-\tilde{X}\tilde{B} + Y\_{t-1}\Phi(1) + \cdots + Y\_{t-p}\Phi(L) + U.\\
+matrices \\\Phi(1), \ldots, \Phi(L)\\ from the beta matrix. It maps the
+coefficients of the lagged endogenous regressors, located by
+[`find_phi_positions()`](https://timothymerlin.github.io/koma/reference/find_phi_positions.md),
+into the corresponding \\\Phi(\ell)\\ matrix in the dynamic SEM:
+\\Y\Gamma = \tilde{X}\tilde{B} + Y\_{t-1}\Phi(1) + \cdots +
+Y\_{t-p}\Phi(L) + U.\\
 
 ## Usage
 
 ``` r
-construct_phi(sys_eq, beta_matrix)
+construct_phi(phi_positions, beta_matrix)
 ```
 
 ## Arguments
 
-- sys_eq:
+- phi_positions:
 
-  A list containing the system of equations. Must include `$equations`
-  with the equations of the system, `$endogenous_variables` with the
-  names of the endogenous variables, and `$total_exogenous_variables`
-  with the names of all exogenous variables.
+  Positions of the lagged endogenous regressors, as returned by
+  [`find_phi_positions()`](https://timothymerlin.github.io/koma/reference/find_phi_positions.md).
 
 - beta_matrix:
 

@@ -44,5 +44,5 @@ List of estimates for the endogenous variables.
 
 This function provides the option for parallel computing through the
 [`future::plan()`](https://future.futureverse.org/reference/plan.html)
-function. For more details, see the future package documentation:
-https://cran.r-project.org/web/packages/future/future.pdf
+function. For more details, see the [future package
+documentation](https://CRAN.R-project.org/package=future).

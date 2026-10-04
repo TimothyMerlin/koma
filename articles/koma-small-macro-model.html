@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Estimating Small Macro Model for Switzerland • koma</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Estimating Small Macro Model for Switzerland">
 </head>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@
       <h1>Estimating Small Macro Model for Switzerland</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/main/vignettes/koma-small-macro-model.Rmd" class="external-link"><code>vignettes/koma-small-macro-model.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/vignettes/koma-small-macro-model.Rmd" class="external-link"><code>vignettes/koma-small-macro-model.Rmd</code></a></small>
       <div class="d-none name"><code>koma-small-macro-model.Rmd</code></div>
     </div>
 
@@ -184,7 +184,7 @@ and forecasting.</p>
 <p>The <code>equations</code> string contains the model equations, while
 <code>exogenous_variables</code> lists the exogenous variables. The
 <code>.L(1)</code> notation indicates a lag of one period. For further
-details on the syntax, please refer to the <a href="../equations.html">equation syntax documentation</a>.</p>
+details on the syntax, please refer to the <a href="koma-equations.html">equation syntax documentation</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="creating-the-sem">Creating the SEM<a class="anchor" aria-label="anchor" href="#creating-the-sem"></a>
@@ -193,7 +193,7 @@ details on the syntax, please refer to the <a href="../equations.html">equation 
 system of equations object, which can then be used for estimation and
 forecasting.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://timothymerlin.github.io/koma">koma</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://timothymerlin.github.io/koma/">koma</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sys_eq</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/system_of_equations.html">system_of_equations</a></span><span class="op">(</span></span>
 <span>  equations <span class="op">=</span> <span class="va">equations</span>,</span>
@@ -317,9 +317,9 @@ in the equations. Now, we can estimate the model using the
 <span><span class="co">##                        consumption    investment    exports         imports        prices        interest_rate </span></span>
 <span><span class="co">## ---------------------------------------------------------------------------------------------------------------</span></span>
 <span><span class="co">## constant                 0.36          0.45          -0.29           -0.05          0.04          -0.51        </span></span>
-<span><span class="co">##                        [ 0.28; 0.46]  [0.19; 0.71]  [-0.86;  0.32]  [-0.55; 0.44]  [0.01; 0.06]  [-0.63; -0.40]</span></span>
+<span><span class="co">##                        [ 0.28; 0.46]  [0.19; 0.71]  [-0.86;  0.32]  [-0.56; 0.44]  [0.01; 0.06]  [-0.63; -0.40]</span></span>
 <span><span class="co">## consumption.L(1)         0.11                                                                                  </span></span>
-<span><span class="co">##                        [-0.08; 0.29]                                                                           </span></span>
+<span><span class="co">##                        [-0.08; 0.28]                                                                           </span></span>
 <span><span class="co">## gdp                     -0.03                                                                                  </span></span>
 <span><span class="co">##                        [-0.13; 0.06]                                                                           </span></span>
 <span><span class="co">## investment.L(1)                        0.21                                                                    </span></span>
@@ -333,7 +333,7 @@ in the equations. Now, we can estimate the model using the
 <span><span class="co">## domestic_demand                                                       2.61                                     </span></span>
 <span><span class="co">##                                                                     [ 1.62; 3.74]                              </span></span>
 <span><span class="co">## prices.L(1)                                                                         0.56          -0.19        </span></span>
-<span><span class="co">##                                                                                    [0.46; 0.66]  [-0.60;  0.21]</span></span>
+<span><span class="co">##                                                                                    [0.46; 0.66]  [-0.61;  0.21]</span></span>
 <span><span class="co">## exchange_rate                                                                       0.03                       </span></span>
 <span><span class="co">##                                                                                    [0.02; 0.05]                </span></span>
 <span><span class="co">## oil_price                                                                           0.01                       </span></span>
@@ -358,7 +358,7 @@ in the equations. Now, we can estimate the model using the
 <span><span class="co">## =============================</span></span>
 <span><span class="co">## Posterior mean (90% credible interval: [5.0%, 95.0%])</span></span>
 <span><span class="co">## Estimation period: 1996 Q1 - 2019 Q4</span></span></code></pre></div>
-<p>To see how to run the estimation in parallel, refer to the <a href="../parallel.html">parallel estimation vignette</a>.</p>
+<p>To see how to run the estimation in parallel, refer to the <a href="koma-parallel.html">parallel estimation vignette</a>.</p>
 </div>
 <div class="section level2">
 <h2 id="diagnostics">Diagnostics<a class="anchor" aria-label="anchor" href="#diagnostics"></a>
@@ -409,26 +409,26 @@ This function will generate forecasts for the specified date range.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## series:</span></span>
 <span><span class="co">##         consumption investment exports imports  prices interest_rate    gdp</span></span>
-<span><span class="co">## 2023 Q1      0.3940     0.4953  1.2033  1.0677 -0.0587        0.8385 0.6717</span></span>
-<span><span class="co">## 2023 Q2      0.3821     0.4917  0.6258  0.9778 -0.0703        1.2689 0.4066</span></span>
-<span><span class="co">## 2023 Q3      0.3836     0.5117  0.7445  0.9278  0.0100        1.5664 0.4922</span></span>
-<span><span class="co">## 2023 Q4      0.3883     0.5711  0.3600  0.9941 -0.0114        1.6947 0.2922</span></span>
+<span><span class="co">## 2023 Q1      0.3944     0.4953  1.2033  1.0678 -0.0586        0.8380 0.6720</span></span>
+<span><span class="co">## 2023 Q2      0.3831     0.4917  0.6258  0.9768 -0.0702        1.2684 0.4080</span></span>
+<span><span class="co">## 2023 Q3      0.3845     0.5117  0.7445  0.9274  0.0100        1.5658 0.4932</span></span>
+<span><span class="co">## 2023 Q4      0.3887     0.5711  0.3600  0.9964 -0.0113        1.6940 0.2917</span></span>
 <span><span class="co">##         domestic_demand world_gdp interest_rate_germany exchange_rate oil_price</span></span>
-<span><span class="co">## 2023 Q1          0.4345    0.4827                2.3887        0.9217   -8.7520</span></span>
-<span><span class="co">## 2023 Q2          0.4259    0.4083                3.1460       -1.3863   -3.3787</span></span>
-<span><span class="co">## 2023 Q3          0.4348    0.4259                3.6393       -1.7869    9.9001</span></span>
-<span><span class="co">## 2023 Q4          0.4614    0.2906                3.8850       -0.7502   -3.3373</span></span></code></pre></div>
+<span><span class="co">## 2023 Q1          0.4348    0.4827                2.3887        0.9217   -8.7520</span></span>
+<span><span class="co">## 2023 Q2          0.4266    0.4083                3.1460       -1.3863   -3.3787</span></span>
+<span><span class="co">## 2023 Q3          0.4354    0.4259                3.6393       -1.7869    9.9001</span></span>
+<span><span class="co">## 2023 Q4          0.4617    0.2906                3.8850       -0.7502   -3.3373</span></span></code></pre></div>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/rate.html">rate</a></span><span class="op">(</span><span class="va">forecasts</span><span class="op">$</span><span class="va">mean</span><span class="op">$</span><span class="va">gdp</span><span class="op">)</span></span>
 <span><span class="co">## &lt;koma_ts&gt;</span></span>
 <span><span class="co">## attributes:</span></span>
 <span><span class="co">##   series_type:  chr "rate"</span></span>
 <span><span class="co">##   method:  chr "diff_log"</span></span>
-<span><span class="co">##   anker:  num [1:2] 192510 2023</span></span>
+<span><span class="co">##   anker:  num [1:2] 192517 2023</span></span>
 <span><span class="co">## </span></span>
 <span><span class="co">## series:</span></span>
 <span><span class="co">##           Qtr1      Qtr2      Qtr3      Qtr4</span></span>
-<span><span class="co">## 2023 0.6716659 0.4066033 0.4921892 0.2921809</span></span>
+<span><span class="co">## 2023 0.6720110 0.4079898 0.4932285 0.2916674</span></span>
 <span><span class="fu"><a href="../reference/level.html">level</a></span><span class="op">(</span><span class="va">forecasts</span><span class="op">$</span><span class="va">mean</span><span class="op">$</span><span class="va">gdp</span><span class="op">)</span></span>
 <span><span class="co">## &lt;koma_ts&gt;</span></span>
 <span><span class="co">## attributes:</span></span>
@@ -437,8 +437,8 @@ This function will generate forecasts for the specified date range.</p>
 <span><span class="co">## </span></span>
 <span><span class="co">## series:</span></span>
 <span><span class="co">##          Qtr1     Qtr2     Qtr3     Qtr4</span></span>
-<span><span class="co">## 2022                            192510.1</span></span>
-<span><span class="co">## 2023 193807.5 194597.1 195557.3 196129.5</span></span></code></pre></div>
+<span><span class="co">## 2022                            192516.7</span></span>
+<span><span class="co">## 2023 193814.8 194607.2 195569.4 196140.6</span></span></code></pre></div>
 <div class="section level3">
 <h3 id="conditional-forecasting">Conditional Forecasting<a class="anchor" aria-label="anchor" href="#conditional-forecasting"></a>
 </h3>
@@ -467,11 +467,11 @@ reflect these user-defined conditions.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Samad Sarferaz, Laurent Florin, Merlin Scherer.</p>
+  <p>Developed by Samad Sarferaz, Merlin Scherer.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

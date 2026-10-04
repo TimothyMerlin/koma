@@ -70,4 +70,4 @@ A `list` of 14 `ts` objects:
 
 ## Source
 
-<https://fred.stlouisfed.org/>
+Federal Reserve Economic Data (FRED), Federal Reserve Bank of St. Louis.

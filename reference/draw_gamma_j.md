@@ -15,7 +15,9 @@ draw_gamma_j(
   jx,
   gamma_parameters_j,
   tau,
-  cholesky_of_inverse_hessian
+  cholesky_of_inverse_hessian,
+  xtx,
+  xbtxb
 )
 ```
 
@@ -63,6 +65,16 @@ draw_gamma_j(
 
   The Cholesky factor \\L\\ of the inverse Hessian matrix \\M^{-1}\\
   used to generate candidate draws.
+
+- xtx:
+
+  Precomputed \\x_matrix'x_matrix\\. This is invariant across Gibbs
+  draws, so it is computed once instead of on every call.
+
+- xbtxb:
+
+  Precomputed \\x_b'x_b\\, where \\x_b\\ is \\x_matrix\\ restricted to
+  the columns kept for equation \\j\\. Same rationale as `xtx`.
 
 ## Value
 

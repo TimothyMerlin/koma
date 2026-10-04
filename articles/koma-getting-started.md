@@ -10,9 +10,9 @@ library(koma)
 This vignette walks through a minimal end-to-end workflow: define a
 small system, prepare data, estimate, and forecast. For full syntax
 details, see the [equation
-reference](https://timothymerlin.github.io/koma/equations.md), and for
-time series handling see the [ets
-vignette](https://timothymerlin.github.io/koma/koma-extended-timeseries.md).
+reference](https://timothymerlin.github.io/koma/articles/koma-equations.md),
+and for time series handling see the [ets
+vignette](https://timothymerlin.github.io/koma/articles/koma-extended-timeseries.md).
 
 ## Define a small system
 
@@ -21,7 +21,7 @@ small open economy. The interest rate, world GDP, and the exchange rate
 are treated as exogenous in this example. To keep the setup minimal, the
 GDP identity below uses fixed illustrative weights. For an example with
 time-varying weights computed from nominal series, see the [Klein
-vignette](https://timothymerlin.github.io/koma/koma-klein.md).
+vignette](https://timothymerlin.github.io/koma/articles/koma-klein.md).
 
 ``` r
 
@@ -82,30 +82,30 @@ ts_data <- small_open_economy[series]
 
 If you pass `ts` objects directly,
 [`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md)
-will prompt you for default conversion settings and optional exceptions.
-For example, we override the defaults to use level/diff_log and keep
-`interest_rate` as a rate series:
+assumes they are already in rates (the form the model estimates on) and
+converts them with `series_type = "rate"`, `method = "none"` (no
+transformation applied), emitting a warning that lists the affected
+series:
 
 ``` r
 
 estimates <- estimate(ts_data, sys_eq, dates)
-#> Some of the time series in `ts_data` are not `ets`.
-#> They will be automatically converted with `as_ets` using the defaults:
-#> Default settings
-#> series_type = level
-#> method = percentage
-#> Are these correct? (y/n): n
-#> Enter series_type: level
-#> Enter method: diff_log
-#> Specify exception to default settings? (y/n): y
-#> Enter series name: interest_rate
-#> Enter series_type for interest_rate (default level): rate
-#> Enter method for interest_rate (default diff_log): none
-#> Specify exception to default settings? (y/n): n
+#> ! The following series are plain <ts> objects, not <koma_ts>: "consumption",
+#>   "investment", "exports", "imports", "gdp", "interest_rate", "world_gdp",
+#>   and "exchange_rate".
+#> i They are assumed to already be in rates, the form the model estimates on,
+#>   and are converted to <koma_ts> with `series_type = "rate"`, `method =
+#>   "none"`. The values are used as-is; no rate/level transformation is
+#>   applied.
+#> i To convert a series from levels (e.g. a percentage or diff_log growth
+#>   rate), wrap it first with `ets()` or `as_ets()`. See
+#>   `vignette("koma-extended-timeseries")` for details.
 ```
 
-In this vignette we convert explicitly to keep the example
-non-interactive:
+Most of these series are actually in levels and need a diff_log
+transform to become growth rates, and `interest_rate` is a rate that
+needs no transform, so here we convert explicitly instead of relying on
+the `rate`/`none` default:
 
 ``` r
 
@@ -151,31 +151,31 @@ print(estimates)
 #> 
 #> ── Estimates ───────────────────────────────────────────────────────────────────
 #> consumption ~  0.35 - 0.02 * gdp  +  0.06 * consumption.L(1)  +  0.04 * interest_rate
-#>  investment ~  - 0.29  +  1.99 * gdp - 0.02 * investment.L(1) - 0.14 * interest_rate
+#>  investment ~  - 0.29  +  1.99 * gdp - 0.03 * investment.L(1) - 0.14 * interest_rate
 #>     exports ~  - 0.09  +  2.98 * world_gdp  +  0.28 * exchange_rate - 0.28 * exports.L(1)
-#>     imports ~  0.01  +  2.2 * gdp - 0.19 * exchange_rate - 0.14 * imports.L(1)
+#>     imports ~  0.02  +  2.2 * gdp - 0.19 * exchange_rate - 0.14 * imports.L(1)
 #>         gdp == 0.55 * consumption  +  0.20 * investment  +  0.30 * exports - 0.05 * imports
 summary(estimates)
 #> 
 #> ==============================================================================
 #>                   consumption    investment     exports         imports       
 #> ------------------------------------------------------------------------------
-#> constant            0.35          -0.29          -0.09            0.01        
-#>                   [ 0.26; 0.43]  [-0.63; 0.04]  [-0.64;  0.47]  [-0.43;  0.45]
+#> constant            0.35          -0.29          -0.09            0.02        
+#>                   [ 0.27; 0.43]  [-0.64; 0.03]  [-0.64;  0.47]  [-0.42;  0.44]
 #> consumption.L(1)    0.06                                                      
-#>                   [-0.11; 0.23]                                               
+#>                   [-0.11; 0.24]                                               
 #> interest_rate       0.04          -0.14                                       
-#>                   [ 0.00; 0.08]  [-0.35; 0.08]                                
+#>                   [ 0.00; 0.08]  [-0.36; 0.08]                                
 #> gdp                -0.02           1.99                           2.20        
 #>                   [-0.10; 0.08]  [ 1.45; 2.53]                  [ 1.52;  2.92]
-#> investment.L(1)                   -0.02                                       
-#>                                  [-0.21; 0.15]                                
+#> investment.L(1)                   -0.03                                       
+#>                                  [-0.20; 0.14]                                
 #> exports.L(1)                                     -0.28                        
 #>                                                 [-0.43; -0.12]                
 #> world_gdp                                         2.98                        
 #>                                                 [ 2.13;  3.77]                
 #> exchange_rate                                     0.28           -0.19        
-#>                                                 [ 0.12;  0.45]  [-0.32; -0.06]
+#>                                                 [ 0.12;  0.45]  [-0.33; -0.06]
 #> imports.L(1)                                                     -0.14        
 #>                                                                 [-0.31;  0.03]
 #> ==============================================================================
@@ -210,10 +210,10 @@ print(forecasts)
 #> 
 #> series:
 #>         consumption investment exports imports    gdp interest_rate world_gdp
-#> 2023 Q1      0.3983     1.1411  1.4131  1.6923 0.7866        1.1009    0.4827
-#> 2023 Q2      0.4141     0.0788  0.3795  0.6664 0.3241        1.5227    0.4083
-#> 2023 Q3      0.4250     0.3424  0.5249  1.1760 0.4009        1.7075    0.4259
-#> 2023 Q4      0.4376     0.1941  0.3685  0.7114 0.3545        1.7006    0.2906
+#> 2023 Q1      0.3994     1.1504  1.4131  1.6973 0.7888        1.1009    0.4827
+#> 2023 Q2      0.4162     0.0896  0.3795  0.6738 0.3270        1.5227    0.4083
+#> 2023 Q3      0.4270     0.3604  0.5249  1.1850 0.4051        1.7075    0.4259
+#> 2023 Q4      0.4392     0.2191  0.3685  0.7204 0.3599        1.7006    0.2906
 #>         exchange_rate
 #> 2023 Q1        0.9217
 #> 2023 Q2       -1.3863
@@ -229,7 +229,7 @@ rate(forecasts$mean$gdp)
 #> 
 #> series:
 #>           Qtr1      Qtr2      Qtr3      Qtr4
-#> 2023 0.7865677 0.3240562 0.4008722 0.3544575
+#> 2023 0.7888037 0.3270159 0.4051231 0.3599249
 level(forecasts$mean$gdp)
 #> <koma_ts>
 #> attributes:
@@ -239,7 +239,7 @@ level(forecasts$mean$gdp)
 #> series:
 #>          Qtr1     Qtr2     Qtr3     Qtr4
 #> 2022                            191668.9
-#> 2023 193182.4 193809.4 194587.9 195278.9
+#> 2023 193186.7 193819.5 194606.3 195308.0
 ```
 
 You can also summarize forecast horizons with mean/median and quantiles:
@@ -250,19 +250,19 @@ summary(forecasts)
 #> =========================================
 #> consumption  Mean   Median  5%      95%  
 #> -----------------------------------------
-#> 2023 Q1      0.398   0.409  -0.036  0.786
-#> 2023 Q2      0.414    0.41   0.008  0.841
-#> 2023 Q3      0.425   0.429   0.027  0.839
-#> 2023 Q4      0.438   0.439  -0.008  0.874
+#> 2023 Q1      0.399   0.409  -0.029   0.77
+#> 2023 Q2      0.416   0.419   0.012  0.844
+#> 2023 Q3      0.427   0.421   0.032  0.837
+#> 2023 Q4      0.439    0.44  -0.006  0.886
 #> =========================================
 #> 
 #> ========================================
 #> investment  Mean   Median  5%      95%  
 #> ----------------------------------------
-#> 2023 Q1     1.141   1.098  -3.367  5.648
-#> 2023 Q2     0.079   0.169  -5.048  5.026
-#> 2023 Q3     0.342   0.341  -4.778  5.396
-#> 2023 Q4     0.194   0.238  -4.954  5.389
+#> 2023 Q1      1.15   1.147  -3.572   5.61
+#> 2023 Q2      0.09   0.184  -4.979  5.078
+#> 2023 Q3      0.36   0.359  -4.727  5.509
+#> 2023 Q4     0.219   0.236  -4.954  5.657
 #> ========================================
 #> 
 #> =====================================
@@ -277,19 +277,19 @@ summary(forecasts)
 #> =====================================
 #> imports  Mean   Median  5%      95%  
 #> -------------------------------------
-#> 2023 Q1  1.692   1.651  -2.404  6.283
-#> 2023 Q2  0.666   0.693  -4.141   5.25
-#> 2023 Q3  1.176   1.242  -3.758  6.184
-#> 2023 Q4  0.711   0.719  -4.063  5.269
+#> 2023 Q1  1.697   1.688  -2.416  6.267
+#> 2023 Q2  0.674   0.715  -4.183  5.304
+#> 2023 Q3  1.185   1.212  -3.699  6.097
+#> 2023 Q4   0.72   0.724  -4.007  5.457
 #> =====================================
 #> 
 #> =====================================
 #> gdp      Mean   Median  5%      95%  
 #> -------------------------------------
-#> 2023 Q1  0.787   0.795   -0.84  2.486
-#> 2023 Q2  0.324   0.326  -1.421  2.146
-#> 2023 Q3  0.401   0.404  -1.539  2.283
-#> 2023 Q4  0.354   0.408  -1.431  2.199
+#> 2023 Q1  0.789   0.796  -0.837   2.48
+#> 2023 Q2  0.327   0.326  -1.441  2.145
+#> 2023 Q3  0.405   0.405  -1.504  2.291
+#> 2023 Q4   0.36   0.403  -1.424  2.185
 #> =====================================
 #> 
 #> ==========================================
@@ -324,8 +324,8 @@ summary(forecasts, variables = "gdp", horizon = 2)
 #> =====================================
 #> gdp      Mean   Median  5%      95%  
 #> -------------------------------------
-#> 2023 Q1  0.787   0.795   -0.84  2.486
-#> 2023 Q2  0.324   0.326  -1.421  2.146
+#> 2023 Q1  0.789   0.796  -0.837   2.48
+#> 2023 Q2  0.327   0.326  -1.441  2.145
 #> =====================================
 #> 
 #> Mean, Median, Quantiles

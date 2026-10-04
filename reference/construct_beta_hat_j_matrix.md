@@ -7,7 +7,13 @@ Y_j \* \gamma_j\\
 ## Usage
 
 ``` r
-construct_beta_hat_j_matrix(x_matrix, z_matrix_j, character_beta_matrix, jx)
+construct_beta_hat_j_matrix(
+  x_matrix,
+  z_matrix_j,
+  character_beta_matrix,
+  jx,
+  xbtxb
+)
 ```
 
 ## Arguments
@@ -31,6 +37,13 @@ construct_beta_hat_j_matrix(x_matrix, z_matrix_j, character_beta_matrix, jx)
 - jx:
 
   The index of equation \\j\\.
+
+- xbtxb:
+
+  Precomputed \\x_b'x_b\\, where \\x_b\\ is \\x_matrix\\ restricted to
+  the columns kept for equation \\j\\. This is invariant across Gibbs
+  draws for a given equation, so it is computed once per equation
+  instead of on every call.
 
 ## Value
 

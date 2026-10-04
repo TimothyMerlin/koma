@@ -38,5 +38,6 @@ cutting off data points.
 
 ## References
 
-Adapted from the methodology outlined by Victor Bezak in the GitHub
-repository: https://github.com/VictorBezak/Plotly_Multi-Axes_Gridlines
+Implements the gridline-alignment approach described by Victor Bezak in
+the GitHub repository
+<https://github.com/VictorBezak/Plotly_Multi-Axes_Gridlines>.

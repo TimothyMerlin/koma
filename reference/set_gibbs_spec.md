@@ -49,8 +49,8 @@ Invisible NULL. The function updates `the$gibbs_sampler` in place.
 - `burnin_ratio`: Numeric specifying the ratio for the burn-in period.
   Default is 0.5.
 
-- `nstore`: Integer specifying the frequency of stored draws. Default is
-  1.
+- `nstore`: Integer specifying the frequency of stored draws. Every
+  `nstore`-th draw after the burn-in is kept. Default is 1.
 
 - `tau`: Numeric tuning parameter for enforcing an acceptance rate.
   Default is 1.1.

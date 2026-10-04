@@ -7,8 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Error Correction in a Small Open Economy Model • koma</title>
 <script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<link href="../deps/bootstrap-5.3.1/bootstrap.min.css" rel="stylesheet">
-<script src="../deps/bootstrap-5.3.1/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
+<link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
+<script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Error Correction in a Small Open Economy Model">
 </head>
@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,14 +52,14 @@
       <h1>Error Correction in a Small Open Economy Model</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/timothymerlin/koma/blob/main/vignettes/koma-error-correction.Rmd" class="external-link"><code>vignettes/koma-error-correction.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/vignettes/koma-error-correction.Rmd" class="external-link"><code>vignettes/koma-error-correction.Rmd</code></a></small>
       <div class="d-none name"><code>koma-error-correction.Rmd</code></div>
     </div>
 
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://timothymerlin.github.io/koma">koma</a></span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://timothymerlin.github.io/koma/">koma</a></span><span class="op">)</span></span></code></pre></div>
 <div class="section level2">
 <h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
 </h2>
@@ -284,7 +284,7 @@ windows.</p>
 <span><span class="co">#&gt; exports.L(1)                  -0.19          </span></span>
 <span><span class="co">#&gt;                           [   -0.37;   -0.01]</span></span>
 <span><span class="co">#&gt; exports_level.L(1)            -0.24          </span></span>
-<span><span class="co">#&gt;                           [   -0.37;   -0.12]</span></span>
+<span><span class="co">#&gt;                           [   -0.37;   -0.11]</span></span>
 <span><span class="co">#&gt; world_gdp_level.L(1)           0.55          </span></span>
 <span><span class="co">#&gt;                           [    0.27;    0.84]</span></span>
 <span><span class="co">#&gt; exchange_rate_level.L(1)       0.06          </span></span>
@@ -307,7 +307,7 @@ windows.</p>
 <span>    <span class="va">long_run_world_gdp</span>,</span>
 <span>    <span class="va">long_run_exchange_rate</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; [1] "Adjustment speed: -0.242, Long-run world GDP: 2.285, Exchange rate: 0.247"</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] "Adjustment speed: -0.242, Long-run world GDP: 2.284, Exchange rate: 0.247"</span></span></code></pre></div>
 <p>The adjustment speed is -0.24, which is negative and implies about
 24% of the gap closes each period. The long-run elasticities imply that
 a 1% rise in world GDP is associated with roughly 2.28% higher exports
@@ -340,23 +340,23 @@ sign if the index is defined the other way).</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;         consumption investment exports imports    gdp domestic_demand</span></span>
-<span><span class="co">#&gt; 2023 Q1      0.3747     0.3695  0.8578  1.0266 0.4666          0.3726</span></span>
-<span><span class="co">#&gt; 2023 Q2      0.3810     0.4639  0.7363  0.7798 0.5333          0.4141</span></span>
-<span><span class="co">#&gt; 2023 Q3      0.3714     0.5915  0.6504  0.9925 0.4267          0.4594</span></span>
-<span><span class="co">#&gt; 2023 Q4      0.3995     0.5453  0.2972  0.9804 0.2708          0.4578</span></span>
-<span><span class="co">#&gt; 2024 Q1      0.3907     0.5046  0.8627  0.8809 0.5751          0.4362</span></span>
-<span><span class="co">#&gt; 2024 Q2      0.3899     0.4520  0.6635  0.8540 0.4729          0.4147</span></span>
-<span><span class="co">#&gt; 2024 Q3      0.3862     0.5442  1.3581  0.9590 0.7968          0.4494</span></span>
-<span><span class="co">#&gt; 2024 Q4      0.4007     0.5277  0.5356  1.1307 0.3268          0.4515</span></span>
+<span><span class="co">#&gt; 2023 Q1      0.3744     0.3695  0.8694  1.0240 0.4732          0.3725</span></span>
+<span><span class="co">#&gt; 2023 Q2      0.3811     0.4639  0.7411  0.7756 0.5375          0.4142</span></span>
+<span><span class="co">#&gt; 2023 Q3      0.3715     0.5915  0.6576  0.9964 0.4288          0.4595</span></span>
+<span><span class="co">#&gt; 2023 Q4      0.3993     0.5453  0.3011  0.9752 0.2747          0.4577</span></span>
+<span><span class="co">#&gt; 2024 Q1      0.3912     0.5046  0.8663  0.8814 0.5772          0.4365</span></span>
+<span><span class="co">#&gt; 2024 Q2      0.3897     0.4520  0.6658  0.8568 0.4727          0.4146</span></span>
+<span><span class="co">#&gt; 2024 Q3      0.3862     0.5442  1.3584  0.9559 0.7982          0.4494</span></span>
+<span><span class="co">#&gt; 2024 Q4      0.4009     0.5277  0.5384  1.1220 0.3319          0.4516</span></span>
 <span><span class="co">#&gt;         exports_level world_gdp_level exchange_rate_level world_gdp</span></span>
-<span><span class="co">#&gt; 2023 Q1      1168.954        2474.282             -0.7646    0.4827</span></span>
-<span><span class="co">#&gt; 2023 Q2      1169.690        2474.690             -2.1510    0.4083</span></span>
-<span><span class="co">#&gt; 2023 Q3      1170.340        2475.116             -3.9379    0.4259</span></span>
-<span><span class="co">#&gt; 2023 Q4      1170.637        2475.407             -4.6881    0.2906</span></span>
-<span><span class="co">#&gt; 2024 Q1      1171.500        2475.865             -5.2093    0.4586</span></span>
-<span><span class="co">#&gt; 2024 Q2      1172.164        2476.261             -2.6797    0.3955</span></span>
-<span><span class="co">#&gt; 2024 Q3      1173.522        2476.770             -4.9959    0.5096</span></span>
-<span><span class="co">#&gt; 2024 Q4      1174.057        2477.210             -6.6168    0.4393</span></span>
+<span><span class="co">#&gt; 2023 Q1      1168.965        2474.282             -0.7646    0.4827</span></span>
+<span><span class="co">#&gt; 2023 Q2      1169.706        2474.690             -2.1510    0.4083</span></span>
+<span><span class="co">#&gt; 2023 Q3      1170.364        2475.116             -3.9379    0.4259</span></span>
+<span><span class="co">#&gt; 2023 Q4      1170.665        2475.407             -4.6881    0.2906</span></span>
+<span><span class="co">#&gt; 2024 Q1      1171.531        2475.865             -5.2093    0.4586</span></span>
+<span><span class="co">#&gt; 2024 Q2      1172.197        2476.261             -2.6797    0.3955</span></span>
+<span><span class="co">#&gt; 2024 Q3      1173.555        2476.770             -4.9959    0.5096</span></span>
+<span><span class="co">#&gt; 2024 Q4      1174.094        2477.210             -6.6168    0.4393</span></span>
 <span><span class="co">#&gt;         exchange_rate</span></span>
 <span><span class="co">#&gt; 2023 Q1        0.9217</span></span>
 <span><span class="co">#&gt; 2023 Q2       -1.3863</span></span>
@@ -376,8 +376,8 @@ sign if the index is defined the other way).</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;           Qtr1      Qtr2      Qtr3      Qtr4</span></span>
-<span><span class="co">#&gt; 2023 0.8577540 0.7362662 0.6503629 0.2972050</span></span>
-<span><span class="co">#&gt; 2024 0.8627210 0.6635003 1.3581153 0.5355779</span></span>
+<span><span class="co">#&gt; 2023 0.8693943 0.7411222 0.6576243 0.3011234</span></span>
+<span><span class="co">#&gt; 2024 0.8662591 0.6657588 1.3583590 0.5383926</span></span>
 <span><span class="fu"><a href="../reference/level.html">level</a></span><span class="op">(</span><span class="va">forecasts</span><span class="op">$</span><span class="va">mean</span><span class="op">$</span><span class="va">exports</span><span class="op">)</span></span>
 <span><span class="co">#&gt; &lt;koma_ts&gt;</span></span>
 <span><span class="co">#&gt; attributes:</span></span>
@@ -387,8 +387,8 @@ sign if the index is defined the other way).</p>
 <span><span class="co">#&gt; series:</span></span>
 <span><span class="co">#&gt;          Qtr1     Qtr2     Qtr3     Qtr4</span></span>
 <span><span class="co">#&gt; 2022                            118297.6</span></span>
-<span><span class="co">#&gt; 2023 119316.6 120198.4 120982.6 121342.7</span></span>
-<span><span class="co">#&gt; 2024 122394.1 123208.9 124893.6 125564.3</span></span></code></pre></div>
+<span><span class="co">#&gt; 2023 119330.5 120218.2 121011.4 121376.3</span></span>
+<span><span class="co">#&gt; 2024 122432.3 123250.2 124935.8 125610.2</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>
@@ -397,11 +397,11 @@ sign if the index is defined the other way).</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p>Developed by Samad Sarferaz, Laurent Florin, Merlin Scherer.</p>
+  <p>Developed by Samad Sarferaz, Merlin Scherer.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer>

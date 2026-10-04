@@ -1,7 +1,9 @@
 # Simulate from a Multivariate Normal Distribution
 
 Produces one or more samples from the specified multivariate normal
-distribution.
+distribution. Adapted from
+[`MASS::mvrnorm`](https://rdrr.io/pkg/MASS/man/mvrnorm.html) in the CRAN
+package MASS, licensed `GPL-2 | GPL-3` as declared on CRAN.
 
 ## Usage
 
@@ -52,15 +54,3 @@ Fourth Edition. Springer, New York. ISBN 0-387-95457-0
 ## See also
 
 [`rnorm()`](https://rdrr.io/r/stats/Normal.html)
-
-## Examples
-
-``` r
-#'
-if (FALSE) { # \dontrun{
-sigma <- matrix(c(10, 3, 3, 2), 2, 2)
-sigma
-var(multivariate_norm(n = 1000, rep(0, 2), sigma))
-var(multivariate_norm(n = 1000, rep(0, 2), sigma, empirical = TRUE))
-} # }
-```

@@ -1,8 +1,11 @@
-# Build Fan Chart Data from Forecast Quantiles
+# Build Fan Chart Data from Forecast Draws
 
 Constructs a long data frame with lower/upper band values for fan
-charts. If requested quantiles are missing, they are computed from
-forecast draws.
+charts. Each forecast draw is first converted to a level path, and the
+bands are the quantiles of these level paths per horizon. Compounding
+growth-rate quantiles instead would describe a path where every period
+sits at the same extreme quantile, which overstates the width of the
+bands.
 
 ## Usage
 
@@ -30,7 +33,8 @@ build_fan_data(x, tsl, forecast_start, variables, fan_quantiles)
 
 - fan_quantiles:
 
-  Numeric probabilities for the fan chart.
+  Numeric probabilities for the fan chart. Defaults to the quantiles
+  stored in `x`.
 
 ## Value
 

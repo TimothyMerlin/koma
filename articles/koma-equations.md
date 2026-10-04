@@ -121,6 +121,9 @@ consumption ~ {0, 1000} 1 + gdp
 # Prior on a lagged term
 consumption ~ gdp + {0.9, 10} consumption.L(1)
 
+# Same prior on several lags (applies to consumption.L(1), .L(2) and .L(4))
+consumption ~ gdp + {0, 1000} consumption.L(1:2, 4)
+
 # Prior on an endogenous regressor
 consumption ~ {0.2, 0.5} service + gdp
 
@@ -134,6 +137,8 @@ Rules:
 - Coefficient priors have the form `{mean, variance} variable`.
 - The error-term prior has the form `{df, scale}` and appears without a
   variable name.
+- A prior in front of lag shorthand (`x.L(1:3)`, `x.L(1, 3)`,
+  `lag(x, 1:3)`) applies to every lag it expands to.
 - The dependent variable cannot have a prior.
 - The error-term prior must be the last prior in the equation.
 
@@ -147,3 +152,55 @@ acceptance rate falls outside 30%-60 %, a warning is emitted.
 
 "consumption ~ constant + gdp + consumption.L(1) + consumption.L(2) [tau = 1.2]"
 ```
+
+### 7. Dummy Variables
+
+Dummy variables can be written as `dummies(prefix, spec)` instead of
+spelling out every term. `spec` follows the same syntax as lag ranges (a
+single index, a `lower:upper` range, or a comma-separated mix).
+
+``` r
+
+# Shorthand:
+consp ~ ydispbr + consp.L(1) + dummies(covid, 1:8)
+
+# Equivalent to:
+consp ~ ydispbr + consp.L(1) +
+  covid_1 + covid_2 + covid_3 + covid_4 + covid_5 + covid_6 + covid_7 + covid_8
+```
+
+`dummies()` only expands the *equation string* - it does not create any
+data. It is expanded before validation, so the expanded names are
+treated exactly like any hand-typed variable, which means the usual
+three steps for an exogenous variable still apply:
+
+**1. The data has to exist.** Each expanded name (`covid_1`, `covid_2`,
+…) must be a real 0/1 series in the `ts_data` passed to
+[`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md).
+`koma` does not generate this from a period specification - you build it
+like any other series, e.g. as a shock in a single period per dummy:
+
+``` r
+
+covid_periods <- c(2020.25, 2020.5, 2020.75, 2021, 2021.25, 2021.5, 2021.75, 2022)
+for (i in seq_along(covid_periods)) {
+  dummy <- stats::ts(0, start = stats::start(ts_data$consp), end = stats::end(ts_data$consp),
+    frequency = stats::frequency(ts_data$consp))
+  window(dummy, start = covid_periods[i], end = covid_periods[i]) <- 1
+  ts_data[[paste0("covid_", i)]] <- as_ets(dummy, series_type = "rate", method = "none")
+}
+```
+
+**2. It must be declared as exogenous**, same as for any other
+regressor:
+
+``` r
+
+exogenous_variables <- c("ydispbr", paste0("covid_", 1:8))
+```
+
+**3. If forecasting**, the dummy series must also extend through the
+forecast horizon in `ts_data` (typically as 0, since a one-off shock
+dummy shouldn’t recur) -
+[`forecast()`](https://timothymerlin.github.io/koma/reference/forecast.md)
+errors if an exogenous series doesn’t reach the forecast end date.
