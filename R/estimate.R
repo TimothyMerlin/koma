@@ -18,10 +18,9 @@
 #'   during estimation.
 #' }
 #' See \link[=get_default_gibbs_spec]{Gibbs Sampler Specifications}.
-#' @param estimates Optional. A `koma_estimate` object
-#' (see \code{\link{estimate}}) containing the estimates of the previously
-#' estimated simultaneous equations model. Use this parameter when some
-#' equations of the system need to be re-estimated.
+#' @param estimates Ignored. Re-estimating only some equations of a previously
+#' estimated model is currently disabled; passing a `koma_estimate` object
+#' gives a warning and all equations are estimated.
 #'
 #' @section Parallel:
 #' This function provides the option for parallel computing through
@@ -173,23 +172,14 @@ estimate.list <- function(ts_data, sys_eq, dates,
   }
 
   pre <- new_prepare_estimation(ts_data, sys_eq, dates, fill_method)
-  if (is.null(estimates)) {
-    estimates <- new_estimate(pre$sys_eq, pre$y_matrix, pre$x_matrix)
-  } else {
-    # reestimate some equations
-    stopifnot(inherits(estimates, "koma_estimate"))
-    eq_jx <- identify_reestimation_indices(sys_eq, estimates$sys_eq)
-    estimates <- estimates$estimates
-
-    if (!is.null(eq_jx)) {
-      # estimate subset
-      reestimates <- new_estimate(pre$sys_eq, pre$y_matrix, pre$x_matrix, eq_jx)
-      for (name in names(reestimates)) {
-        estimates[[name]] <- reestimates[[name]]
-      }
-      estimates <- estimates[sys_eq$stochastic_equations]
-    }
+  if (!is.null(estimates)) {
+    cli::cli_warn(c(
+      "!" = "{.arg estimates} is ignored: re-estimating only some equations
+      is currently disabled.",
+      "i" = "All equations are estimated."
+    ))
   }
+  estimates <- new_estimate(pre$sys_eq, pre$y_matrix, pre$x_matrix)
 
   tryCatch(
     {
@@ -923,35 +913,3 @@ print.koma_summary <- function(x, ...) {
 }
 
 check_texreg_installed <- function() rlang::is_installed("texreg")
-
-#' @keywords internal
-identify_reestimation_indices <- function(current_sys_eq, prev_sys_eq) {
-  prev_char_beta <- prev_sys_eq$character_beta_matrix
-  char_beta <- current_sys_eq$character_beta_matrix
-
-  # Remove columns of deterministic equations
-  char_beta <- char_beta[, current_sys_eq$stochastic_equations]
-
-  eq_jx <- NULL
-
-  for (ix in seq_len(ncol(char_beta))) {
-    endog <- colnames(char_beta)[ix]
-
-    # Get exogenous variables in the equation that are not zero
-    exog <- rownames(char_beta)[char_beta[, endog] != 0]
-
-    # Determine if the previous exogenous variables exist and
-    # get them if they do
-    if (endog %in% colnames(prev_char_beta)) {
-      prev_exog <- rownames(prev_char_beta)[prev_char_beta[, endog] != 0]
-    } else {
-      prev_exog <- character()
-    }
-
-    if (!identical(exog, prev_exog)) {
-      eq_jx <- c(eq_jx, ix)
-    }
-  }
-
-  eq_jx
-}

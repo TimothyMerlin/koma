@@ -1,5 +1,9 @@
 # koma 0.4.1
 
+## Breaking changes
+
+* `estimate(..., estimates = )` no longer re-estimates only the equations that changed. The argument is now ignored with a warning and all equations are estimated. The check for changed equations only compared the lagged and exogenous regressors of each equation, so a changed contemporaneous endogenous regressor, prior, estimation sample or data set was not noticed and the previous draws were returned unchanged. It also failed for systems with a single stochastic equation.
+
 ## Bug fixes
 
 * Fixed priors on contemporaneous endogenous regressors (e.g. `{0,1}gdp` where `gdp` is endogenous). The likelihood was dropped from the Metropolis-Hastings target for these coefficients, so the data was ignored and their posterior was just the prior. The posterior now combines the prior with the data. **Estimates of models that set such a prior will change.** Priors on lags, exogenous variables, the constant and the error term were not affected.

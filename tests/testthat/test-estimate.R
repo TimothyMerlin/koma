@@ -528,128 +528,52 @@ test_that("print", {
   expect_true(inherits(result, "koma_estimate"))
 })
 
-test_that("estimate correctly reestimates model", {
+test_that("estimate ignores `estimates` and estimates the full model", {
   skip_on_cran()
   dates <- list(estimation = list(
     start = c(1977, 1),
     end = c(2019, 4)
   ))
+  exogenous_variables <- c("world_gdp", "population")
+  ts_data <- simulated_data$ts_data
+  options <- list(gibbs = list(ndraws = 200))
 
-  equations <-
-    "consumption ~ gdp + consumption.L(1) + consumption.L(2),
-    investment ~ gdp + investment.L(1) + real_interest_rate,
+  sys_eq <- system_of_equations(
+    "consumption ~ gdp + consumption.L(1),
     manufacturing ~ manufacturing.L(1) + world_gdp,
     service ~ service.L(1) + population + gdp,
-    gdp == 0.5*manufacturing + 0.5*service"
-
-  exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
-
-  sys_eq <- system_of_equations(equations, exogenous_variables)
-
-  ts_data <- simulated_data$ts_data
-
-  estimates <- withr::with_seed(
-    7,
-    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
+    gdp == 0.5*manufacturing + 0.5*service",
+    exogenous_variables
   )
-  expect_equal(length(estimates$estimates$manufacturing$beta_jw[[1]]), 3)
-  expect_true(!"current_account" %in% names(estimates$estimates))
+  previous <- withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates, options = options)
+  )
 
-  # Test 1: Case reestimate SEM with changed equation
-  equations <-
-    "consumption ~ gdp + consumption.L(1) + consumption.L(2),
-    current_account ~ world_gdp + current_account.L(1),
-    manufacturing ~ manufacturing.L(1) + manufacturing.L(2) + world_gdp,
+  # consumption drops its contemporaneous endogenous regressor
+  sys_eq <- system_of_equations(
+    "consumption ~ consumption.L(1),
+    manufacturing ~ manufacturing.L(1) + world_gdp,
     service ~ service.L(1) + population + gdp,
-    gdp == 0.5*manufacturing + 0.5*service"
-
-  exogenous_variables <- c("world_gdp", "population")
-
-  sys_eq <- system_of_equations(equations, exogenous_variables)
-
-  reestimates <- withr::with_seed(
+    gdp == 0.5*manufacturing + 0.5*service",
+    exogenous_variables
+  )
+  expect_warning(
+    out <- withr::with_seed(
+      7,
+      estimate(ts_data, sys_eq, dates, options = options, estimates = previous)
+    ),
+    "ignored"
+  )
+  fresh <- withr::with_seed(
     7,
-    estimate(ts_data, sys_eq, dates,
-      options = list(gibbs = list(ndraws = 200)),
-      estimates = estimates
-    )
+    estimate(ts_data, sys_eq, dates, options = options)
   )
 
-  expect_equal(
-    reestimates$estimates$consumption, estimates$estimates$consumption
-  )
-  expect_equal(
-    reestimates$estimates$service, estimates$estimates$service
-  )
-  expect_equal(names(reestimates$estimates), sys_eq$stochastic_equations)
-  expect_equal(names(reestimates$estimates), sys_eq$stochastic_equations)
-  # manufacturing was reestimated, with now 4 coefficients
-  expect_equal(length(reestimates$estimates$manufacturing$beta_jw[[1]]), 4)
-  expect_equal(length(reestimates$estimates$current_account$beta_jw[[1]]), 3)
-  # Test 2: Case reestimate SEM with additional endogenous
-  expect_true("current_account" %in% names(reestimates$estimates))
-  # Test 3: Case remove endogenous from estimates
-  expect_true(!"investment" %in% names(reestimates$estimates))
-
-  # Test 4: Nothing to reestimate
-  out <- withr::with_seed(
-    7,
-    estimate(ts_data, sys_eq, dates,
-      options = list(gibbs = list(ndraws = 200)),
-      estimates = reestimates
-    )
-  )
-  expect_equal(out, reestimates)
-
-  out <- withr::with_seed(
-    7,
-    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
-  )
-
-  # seeds are equivalent
-  expect_equal(
-    attributes(out$estimates)$rng, attributes(estimates$estimates)$rng
-  )
-
-  # expect_equal(out$estimates$consumption, estimates$estimates$consumption)
-  gibbs_settings <- get_gibbs_settings()
-  gibbs_sampler <- gibbs_settings[[1]]
-
-  draw_cons_out <- withr::with_seed(
-    7,
-    draw_parameters_j(
-      out$y_matrix,
-      out$x_matrix,
-      out$sys_eq$character_gamma_matrix,
-      out$sys_eq$character_beta_matrix,
-      1,
-      gibbs_sampler
-    )
-  )
-  draw_cons_rest <- withr::with_seed(
-    7,
-    draw_parameters_j(
-      reestimates$y_matrix,
-      reestimates$x_matrix,
-      reestimates$sys_eq$character_gamma_matrix,
-      reestimates$sys_eq$character_beta_matrix,
-      1,
-      gibbs_sampler
-    )
-  )
-  expect_equal(draw_cons_out, draw_cons_rest)
-  draw_cons_est <- withr::with_seed(
-    7,
-    draw_parameters_j(
-      estimates$y_matrix,
-      estimates$x_matrix,
-      estimates$sys_eq$character_gamma_matrix,
-      estimates$sys_eq$character_beta_matrix,
-      1,
-      gibbs_sampler
-    )
-  )
-  # expect_equal(draw_cons_rest, draw_cons_est)
+  expect_equal(out$estimates, fresh$estimates)
+  expect_false(isTRUE(all.equal(
+    out$estimates$consumption, previous$estimates$consumption
+  )))
 })
 
 test_that("estimate correctly estimates model with informative priors", {
@@ -1577,18 +1501,4 @@ test_that("estimation progress is reported per Gibbs draw", {
   expect_equal(progress$steps, 3 * 302)
   expect_equal(sum(progress$amounts), 3 * 302)
 
-  # re-estimating one changed equation only counts the draws of that equation
-  sys_eq <- system_of_equations(
-    "consumption ~ gdp + consumption.L(1),
-    manufacturing ~ manufacturing.L(1) + manufacturing.L(2) + world_gdp,
-    service ~ service.L(1) + population + gdp,
-    gdp == 0.5*manufacturing + 0.5*service",
-    exogenous_variables
-  )
-  progress <- record_progress(withr::with_seed(
-    7,
-    estimate(ts_data, sys_eq, dates, options = options, estimates = estimates)
-  ))
-  expect_equal(progress$steps, 302)
-  expect_equal(sum(progress$amounts), 302)
 })

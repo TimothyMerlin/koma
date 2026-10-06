@@ -135,6 +135,8 @@ fill_ragged_edge <- function(ts_data, sys_eq,
 #'
 #' @param fill_method Character string indicating which central tendency measure
 #' ("mean" or "median") to use when filling ragged edges.
+#' @param estimates A `koma_estimate` object (see \code{\link{estimate}})
+#' containing the estimates of the simultaneous equations model.
 #' @inheritParams estimate
 #' @inheritParams system_of_equations
 #'

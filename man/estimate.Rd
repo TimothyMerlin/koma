@@ -43,10 +43,9 @@ during estimation.
 }
 See \link[=get_default_gibbs_spec]{Gibbs Sampler Specifications}.}
 
-\item{estimates}{Optional. A \code{koma_estimate} object
-(see \code{\link{estimate}}) containing the estimates of the previously
-estimated simultaneous equations model. Use this parameter when some
-equations of the system need to be re-estimated.}
+\item{estimates}{Ignored. Re-estimating only some equations of a previously
+estimated model is currently disabled; passing a \code{koma_estimate} object
+gives a warning and all equations are estimated.}
 }
 \value{
 An object of class \code{koma_estimate}.

@@ -14,10 +14,8 @@ about the system of equations used in the model.}
 
 \item{dates}{Key-value list for date ranges in various model operations.}
 
-\item{estimates}{Optional. A \code{koma_estimate} object
-(see \code{\link{estimate}}) containing the estimates of the previously
-estimated simultaneous equations model. Use this parameter when some
-equations of the system need to be re-estimated.}
+\item{estimates}{A \code{koma_estimate} object (see \code{\link{estimate}})
+containing the estimates of the simultaneous equations model.}
 
 \item{fill_method}{Character string indicating which central tendency measure
 ("mean" or "median") to use when filling ragged edges.}
