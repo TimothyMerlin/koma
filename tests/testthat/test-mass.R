@@ -97,3 +97,36 @@ test_that("multivariate_norm_pdf", {
 
   expect_equal(result, expected_result)
 })
+
+test_that("multivariate_norm_pdf returns the log density without underflow", {
+  sigma <- matrix(c(10, 3, 3, 2), 2, 2)
+  mu <- c(0, 0)
+  x <- c(1, 1)
+
+  expect_equal(
+    multivariate_norm_pdf(x, mu, sigma, log = TRUE),
+    log(multivariate_norm_pdf(x, mu, sigma))
+  )
+
+  # about 103 standard deviations from the mean: the density underflows to 0
+  # but the log density is an ordinary number
+  expect_equal(multivariate_norm_pdf(-0.35, 10, matrix(0.01)), 0)
+  expect_equal(
+    multivariate_norm_pdf(-0.35, 10, matrix(0.01), log = TRUE),
+    dnorm(-0.35, mean = 10, sd = 0.1, log = TRUE)
+  )
+})
+
+test_that("multivariate_norm_pdf log density survives a tiny determinant", {
+  # 30 independent variables with variance 1e-11: det(sigma) underflows to 0
+  p <- 30
+  sigma <- diag(1e-11, p)
+  mu <- rep(0, p)
+  x <- rep(1e-6, p)
+
+  expect_equal(det(sigma), 0)
+  expect_equal(
+    multivariate_norm_pdf(x, mu, sigma, log = TRUE),
+    sum(dnorm(x, mean = mu, sd = sqrt(1e-11), log = TRUE))
+  )
+})

@@ -287,6 +287,36 @@ test_that("draw_parameters_j_informative with diffuse priors and no gamma priors
   expect_equal(omega_q, expected_omega, tolerance = 0.15)
 })
 
+test_that("target_j_informative is finite for a tight gamma prior far away", {
+  y_matrix <- simulated_data$y_matrix
+  x_matrix <- simulated_data$x_matrix
+  character_gamma_matrix <- simulated_data$character_gamma_matrix
+  character_beta_matrix <- simulated_data$character_beta_matrix
+  jx <- 1
+
+  number_endogenous_in_j <-
+    length(grep("gamma", character_gamma_matrix[, jx]))
+
+  target <- function(gamma) {
+    target_j_informative(
+      y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix, jx,
+      gamma_jw = matrix(gamma, number_endogenous_in_j, 1),
+      omega_jw = diag(number_endogenous_in_j + 1),
+      theta_jw = matrix(0, ncol(x_matrix), number_endogenous_in_j + 1),
+      priors_j = list(
+        gamma_mean = matrix(10, number_endogenous_in_j, 1),
+        gamma_vcv = diag(0.001, number_endogenous_in_j)
+      )
+    )
+  }
+
+  # more than 300 prior standard deviations from the prior mean
+  expect_true(is.finite(target(-0.35)))
+  expect_true(is.finite(target(-0.3)))
+  # the Metropolis-Hastings step compares the two, so they must differ
+  expect_false(is.nan(target(-0.3) - target(-0.35)))
+})
+
 test_that("construct_priors_j, with two endogenous", {
   equations <-
     "consumption ~ {0.1,1000}1 + {0.4,0.1}gdp + {1,10}service + {0.9,10}consumption.L(1) + {0.1,1000}consumption.L(2) {4,0.002},

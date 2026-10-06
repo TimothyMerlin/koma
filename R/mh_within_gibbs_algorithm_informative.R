@@ -545,11 +545,10 @@ target_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
     # Evaluate log of target function
     # (multiply by -1: maximize instead of minimize)
     target_result <-
-      -log(
-        multivariate_norm_pdf(
-          gamma_jw,
-          mu = priors_j[["gamma_mean"]], sigma = priors_j[["gamma_vcv"]]
-        )
+      -multivariate_norm_pdf(
+        gamma_jw,
+        mu = priors_j[["gamma_mean"]], sigma = priors_j[["gamma_vcv"]],
+        log = TRUE
       )
     +
       0.5 * sum(diag(t(solve(a_matrix_j)) %*%

@@ -4,7 +4,7 @@
 \alias{multivariate_norm_pdf}
 \title{Evaluate Multivariate Normal Density at x}
 \usage{
-multivariate_norm_pdf(x, mu, sigma)
+multivariate_norm_pdf(x, mu, sigma, log = FALSE)
 }
 \arguments{
 \item{x}{A vector at which to evaluate the density.}
@@ -13,9 +13,13 @@ multivariate_norm_pdf(x, mu, sigma)
 
 \item{sigma}{A positive-definite symmetric matrix specifying the covariance
 matrix of the variables.}
+
+\item{log}{If \code{TRUE}, the log density is returned. It is computed directly,
+so it stays finite where the density itself underflows to zero.}
 }
 \value{
-The density of the multivariate normal distribution at \code{x}.
+The density of the multivariate normal distribution at \code{x}, or
+its logarithm if \code{log = TRUE}.
 }
 \description{
 Evaluate Multivariate Normal Density at x

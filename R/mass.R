@@ -71,23 +71,28 @@ multivariate_norm <- function(n = 1, mu, sigma, tol = 1e-06,
 #' @param mu A vector giving the means of the variables.
 #' @param sigma A positive-definite symmetric matrix specifying the covariance
 #' matrix of the variables.
+#' @param log If `TRUE`, the log density is returned. It is computed directly,
+#' so it stays finite where the density itself underflows to zero.
 #'
-#' @return The density of the multivariate normal distribution at \code{x}.
+#' @return The density of the multivariate normal distribution at \code{x}, or
+#' its logarithm if `log = TRUE`.
 #'
-#' @importFrom stats dnorm
 #' @keywords internal
-multivariate_norm_pdf <- function(x, mu, sigma) {
+multivariate_norm_pdf <- function(x, mu, sigma, log = FALSE) {
   p <- length(mu)
   if (!all(dim(sigma) == c(p, p))) {
     stop("incompatible arguments")
   }
 
-  det_sigma <- det(sigma)
+  log_det_sigma <- as.numeric(determinant(sigma, logarithm = TRUE)$modulus)
   inv_sigma <- solve(sigma)
 
   diff <- as.vector(x - mu)
   exponent <- -0.5 * t(diff) %*% inv_sigma %*% diff
-  density <- (1 / sqrt((2 * pi)^p * det_sigma)) * exp(exponent)
+  log_density <- -0.5 * (p * base::log(2 * pi) + log_det_sigma) + exponent
 
-  return(as.numeric(density))
+  if (log) {
+    return(as.numeric(log_density))
+  }
+  return(as.numeric(exp(log_density)))
 }

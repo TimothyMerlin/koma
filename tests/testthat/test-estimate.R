@@ -734,8 +734,11 @@ test_that("estimate with informative priors, that are too far from true value", 
     )
   )
 
-  # MCMC step is never accepted for consumption
-  expect_equal(mean(out$estimates$consumption$count_accepted), 0)
+  # The chain starts at the data optimum, far from the prior mean. It must not
+  # freeze there: MCMC steps are accepted and gdp moves towards the prior.
+  # 200 draws are far too few to reach 1000.
+  expect_gt(mean(out$estimates$consumption$count_accepted), 0)
+  expect_gt(median(unlist(out$estimates$consumption$gamma_jw)), 5)
 })
 
 test_that("estimate with no gamma parameters", {

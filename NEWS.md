@@ -1,3 +1,9 @@
+# koma 0.4.1
+
+## Bug fixes
+
+* Fixed tight priors on contemporaneous endogenous regressors whose mean is far from the data estimate (e.g. `{1000,0.00001}gdp`). The prior density underflowed to zero at the chain's start value, so every Metropolis-Hastings proposal was rejected and the coefficient stayed at its start value with a 0% acceptance rate. The log prior density is now computed directly, so the chain moves towards the prior. It still starts at the data estimate and moves in small steps, so a prior this far away can need many more draws to converge; check the trace plot.
+
 # koma 0.4.0
 
 ## Breaking changes
