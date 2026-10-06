@@ -22,7 +22,7 @@ test_that("draw_parameters_j_informative returns parameters for equation 1", {
     list(
       list(
         constant = list(0, 1000),
-        gdp = list(10, 0.1),
+        gdp = list(10, 0.001),
         `consumption.L(1)` = list(0, 1000),
         `consumption.L(2)` = list(5, 0.01),
         epsilon = list(3, 0.001)
@@ -162,29 +162,32 @@ test_that("draw_parameters_j_informative with diffuse priors", {
   # sigma is 0.5
 
   expected_beta <- structure(c(
-    -1.07015324267421, 1.06053159574891, 2.48163945605022,
-    0.337527525720606, 0.469649376673617, 0.634751542276184, 0.0142312245608084,
-    0.21956041205714, 0.415034298410651
+    0.772744717450134, 1.23727575301782, 1.77416087404064,
+    0.381416590751618, 0.5011071706404, 0.597563290445894, 0.0802165245952577,
+    0.198600542825458, 0.300398966872362
   ), dim = c(3L, 3L), dimnames = list(
     c("5%", "50%", "95%"), NULL
   ))
 
   expected_gamma <- c(
-    `5%` = -3.21395432232359,
-    `50%` = -0.772119407175861,
-    `95%` = 0.947569664387587
+    `5%` = -0.642552418493153,
+    `50%` = -0.390933915894648,
+    `95%` = -0.184550552906983
   )
 
   expected_omega <- structure(c(
-    0.536002192595383, 0.923982708419069, 3.68687021495534,
-    -0.548111165459908, 0.103879654640507, 1.14116669300607, -0.548111165459908,
-    0.103879654640507, 1.14116669300607, 0.316571701974609, 0.376360434884513,
-    0.435419919519801
+    0.473499323686895, 0.537843066036547, 0.649576888580231,
+    -0.132506278085996, -0.0412457318372337, 0.0752179009027843,
+    -0.132506278085996, -0.0412457318372338, 0.0752179009027843,
+    0.307039095503668, 0.357928475403219, 0.414715769519724
   ), dim = c(3L, 2L, 2L), dimnames = list(c("5%", "50%", "95%"), NULL, NULL))
 
-  expect_equal(beta_q, expected_beta, tolerance = 0.05)
-  expect_equal(gamma_q, expected_gamma, tolerance = 0.05)
-  expect_equal(omega_q, expected_omega, tolerance = 0.05)
+  # This sampler path drifts across BLAS/LAPACK implementations despite a fixed
+  # seed (e.g. reference BLAS vs. Apple Accelerate), so use the same bounds as
+  # the test without gamma priors below.
+  expect_equal(beta_q, expected_beta, tolerance = 0.12)
+  expect_lte(max(abs(unname(gamma_q) - unname(expected_gamma))), 0.28)
+  expect_equal(omega_q, expected_omega, tolerance = 0.15)
 })
 
 test_that("draw_parameters_j_informative with diffuse priors and no gamma priors", {
@@ -287,6 +290,42 @@ test_that("draw_parameters_j_informative with diffuse priors and no gamma priors
   expect_equal(omega_q, expected_omega, tolerance = 0.15)
 })
 
+test_that("target_j_informative adds the likelihood to the gamma prior", {
+  y_matrix <- simulated_data$y_matrix
+  x_matrix <- simulated_data$x_matrix
+  character_gamma_matrix <- simulated_data$character_gamma_matrix
+  character_beta_matrix <- simulated_data$character_beta_matrix
+  jx <- 1
+
+  number_endogenous_in_j <-
+    length(grep("gamma", character_gamma_matrix[, jx]))
+  expect_gt(number_endogenous_in_j, 0)
+
+  gamma_jw <- matrix(0.4, number_endogenous_in_j, 1)
+  omega_jw <- diag(number_endogenous_in_j + 1)
+  theta_jw <- matrix(0, ncol(x_matrix), number_endogenous_in_j + 1)
+  gamma_mean <- matrix(0, number_endogenous_in_j, 1)
+  gamma_vcv <- diag(number_endogenous_in_j)
+
+  target <- function(priors_j) {
+    target_j_informative(
+      y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix, jx,
+      gamma_jw, omega_jw, theta_jw, priors_j
+    )
+  }
+
+  likelihood_term <- target(list())
+  prior_term <-
+    -log(multivariate_norm_pdf(gamma_jw, mu = gamma_mean, sigma = gamma_vcv))
+
+  # the data must enter the target, not only the prior
+  expect_gt(abs(likelihood_term), 0)
+  expect_equal(
+    target(list(gamma_mean = gamma_mean, gamma_vcv = gamma_vcv)),
+    prior_term + likelihood_term
+  )
+})
+
 test_that("target_j_informative is finite for a tight gamma prior far away", {
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix
@@ -315,6 +354,39 @@ test_that("target_j_informative is finite for a tight gamma prior far away", {
   expect_true(is.finite(target(-0.3)))
   # the Metropolis-Hastings step compares the two, so they must differ
   expect_false(is.nan(target(-0.3) - target(-0.35)))
+})
+
+test_that("draw_parameters_j_informative lets the data update a gamma prior", {
+  y_matrix <- simulated_data$y_matrix
+  x_matrix <- simulated_data$x_matrix
+  character_gamma_matrix <- simulated_data$character_gamma_matrix
+  character_beta_matrix <- simulated_data$character_beta_matrix
+  jx <- 1
+
+  # prior far from the data on the contemporaneous endogenous regressor only
+  priors <-
+    list(list(gdp = list(5, 1)), list(), list(), list(), list(), list())
+
+  result <-
+    withr::with_seed(
+      7,
+      draw_parameters_j_informative(
+        y_matrix,
+        x_matrix,
+        character_gamma_matrix,
+        character_beta_matrix,
+        jx,
+        set_gibbs_spec(ndraws = 1000, burnin_ratio = 0.5, nstore = 1),
+        priors
+      )
+    )
+
+  gamma_draws <- unlist(result$gamma_jw)
+
+  # without a prior the posterior is around -0.4 with sd 0.16; a {5, 1} prior
+  # may pull it slightly, but the posterior must not just reproduce the prior
+  expect_lt(mean(gamma_draws), 1)
+  expect_lt(sd(gamma_draws), 0.5)
 })
 
 test_that("construct_priors_j, with two endogenous", {
