@@ -8,13 +8,14 @@ find_phi_positions(sys_eq)
 }
 \arguments{
 \item{sys_eq}{A list containing the system of equations. Must
-include \verb{$equations} with the equations of the system,
-\verb{$endogenous_variables} with the names of the endogenous variables, and
-\verb{$total_exogenous_variables} with the names of all exogenous variables.}
+include \verb{$endogenous_variables} with the names of the endogenous variables
+and \verb{$character_beta_matrix} with the character beta matrix.}
 }
 \value{
 A nested list indexed by lag, equation and endogenous variable,
-holding the row in the beta matrix and the row in \eqn{\Phi(\ell)}.
+holding the row in the beta matrix and the row in \eqn{\Phi(\ell)}. It has
+one entry for every lag up to the largest one, in order, so that
+\code{\link[=construct_phi]{construct_phi()}} returns \eqn{\Phi(1), \ldots, \Phi(L)} without gaps.
 }
 \description{
 Identifies the lagged endogenous regressors in each equation. The result

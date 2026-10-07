@@ -456,6 +456,63 @@ test_that("construct_phi correctly returns phi matrix", {
   expect_identical(result, expected_phi)
 })
 
+# Phi matrices from a beta matrix that numbers its cells column by column, so
+# every coefficient can be told apart.
+phi_from_numbered_beta <- function(equations) {
+  sys_eq <- system_of_equations(equations, "x")
+  character_beta_matrix <- sys_eq$character_beta_matrix
+  beta_matrix <- matrix(
+    as.numeric(seq_along(character_beta_matrix)),
+    nrow = nrow(character_beta_matrix),
+    dimnames = dimnames(character_beta_matrix)
+  )
+  construct_phi(find_phi_positions(sys_eq), beta_matrix)
+}
+
+test_that("construct_phi finds a lag that an earlier equation does not use", {
+  # beta rows: constant, a.L(1), a.L(2), x
+  result <- phi_from_numbered_beta("a ~ a.L(1) + x, b ~ a.L(2) + x")
+
+  expect_identical(result, list(
+    `1` = matrix(c(2, 0, 0, 0), 2, 2),
+    `2` = matrix(c(0, 0, 7, 0), 2, 2)
+  ))
+})
+
+test_that("construct_phi tells apart variables that share a prefix", {
+  # beta rows: constant, gdp.L(1), gdp_ch.L(1), x
+  result <- phi_from_numbered_beta(
+    "gdp ~ gdp.L(1) + x, gdp_ch ~ gdp_ch.L(1) + x"
+  )
+
+  expect_identical(result, list(`1` = matrix(c(2, 0, 0, 7), 2, 2)))
+})
+
+test_that("construct_phi handles digits in names and lags above 9", {
+  # beta rows: constant, m2.L(1), y.L(12), x
+  result <- phi_from_numbered_beta("m2 ~ m2.L(1) + x, y ~ y.L(12) + x")
+
+  zero <- matrix(0, 2, 2)
+  expected <- c(
+    list(matrix(c(2, 0, 0, 0), 2, 2)),
+    rep(list(zero), 10),
+    list(matrix(c(0, 0, 0, 7), 2, 2))
+  )
+  names(expected) <- as.character(1:12)
+
+  expect_identical(result, expected)
+})
+
+test_that("construct_phi returns the lags in order", {
+  # beta rows: constant, a.L(2), b.L(1), x
+  result <- phi_from_numbered_beta("a ~ a.L(2) + x, b ~ b.L(1) + x")
+
+  expect_identical(result, list(
+    `1` = matrix(c(0, 0, 0, 7), 2, 2),
+    `2` = matrix(c(2, 0, 0, 0), 2, 2)
+  ))
+})
+
 test_that("construct_phi with lagged identity", {
   equations <-
     "consumption ~ gdp + consumption.L(1) + consumption.L(2),

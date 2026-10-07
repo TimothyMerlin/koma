@@ -248,40 +248,36 @@ construct_phi <- function(phi_positions, beta_matrix) {
 #' by [construct_phi()] for every draw.
 #'
 #' @param sys_eq A list containing the system of equations. Must
-#' include `$equations` with the equations of the system,
-#' `$endogenous_variables` with the names of the endogenous variables, and
-#' `$total_exogenous_variables` with the names of all exogenous variables.
+#' include `$endogenous_variables` with the names of the endogenous variables
+#' and `$character_beta_matrix` with the character beta matrix.
 #'
 #' @return A nested list indexed by lag, equation and endogenous variable,
-#' holding the row in the beta matrix and the row in \eqn{\Phi(\ell)}.
+#' holding the row in the beta matrix and the row in \eqn{\Phi(\ell)}. It has
+#' one entry for every lag up to the largest one, in order, so that
+#' [construct_phi()] returns \eqn{\Phi(1), \ldots, \Phi(L)} without gaps.
 #' @keywords internal
-find_phi_positions <- function(sys_eq) { # nolint: cyclomatic_complexity_linter
-  equations <- sys_eq$equations
+find_phi_positions <- function(sys_eq) {
   endogenous_variables <- sys_eq$endogenous_variables
-  exogenous_variables <- sys_eq$total_exogenous_variables
-  n <- length(endogenous_variables)
+  character_beta_matrix <- sys_eq$character_beta_matrix
 
-  #### Find lagged endogenous variables
-  indxl <- list()
-  for (jx in 1:n) {
-    for (ix in 1:n) {
-      # Find lagged endogenous variable
-      if (any(grepl(paste0("^", endogenous_variables[ix]), exogenous_variables))) {
-        # Position of endogenous variables in exogenous_variables vector
-        indx <- grep(paste0("^", endogenous_variables[ix]), exogenous_variables)
-        # Lagged endogenous variables ix
-        vlagi <- exogenous_variables[indx]
+  #### Find rows of the beta matrix that hold a lagged endogenous variable
+  regressors <- rownames(character_beta_matrix)
+  lag_pattern <- "^(.+)\\.L\\(([0-9]+)\\)$"
+  # Position of the lagged variable in endogenous_variables, NA if it is none
+  variables <- match(sub(lag_pattern, "\\1", regressors), endogenous_variables)
+  rows <- which(grepl(lag_pattern, regressors) & !is.na(variables))
+  if (length(rows) == 0) {
+    return(list())
+  }
+  lags <- sub(lag_pattern, "\\2", regressors)
 
-        gx <- 1
-        # Find if lagged endogenous variable present in equation jx
-        for (lx in regmatches(vlagi, regexpr("[0-9]", vlagi))) {
-          if (any(grepl(paste0(endogenous_variables[ix], ".L(", lx, ")"), equations[jx], fixed = TRUE))) {
-            indxl[[lx]][[as.character(jx)]][[as.character(ix)]] <-
-              c(indx[gx], ix)
-            gx <- gx + 1
-          }
-        }
-      }
+  indxl <- vector("list", max(as.integer(lags[rows])))
+  names(indxl) <- seq_along(indxl)
+  for (rx in rows) {
+    ix <- variables[rx]
+    # Find equations with the lagged endogenous variable
+    for (jx in which(character_beta_matrix[rx, ] != "0")) {
+      indxl[[lags[rx]]][[as.character(jx)]][[as.character(ix)]] <- c(rx, ix)
     }
   }
 
