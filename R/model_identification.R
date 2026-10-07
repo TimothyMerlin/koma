@@ -50,7 +50,7 @@ model_identification <- function(character_gamma_matrix,
   if (any(is.na(gamma_vec))) {
     return(TRUE)
   }
-  beta_vec <- beta_vectorization(character_beta_matrix)
+  beta_vec <- beta_vectorization(character_beta_matrix, identity_weights)
 
   # Compute Gamma matrix
   gamma_parameters <- multivariate_norm(
@@ -331,6 +331,8 @@ adjust_constant_vector <- function(constant_vector, identity_weights) {
 #'
 #' @param character_beta_matrix A character matrix representing the
 #'   beta structure of the model.
+#' @param identity_weights A list of identity weights for adjusting
+#'   constant vectors.
 #' @return A list with three elements:
 #'   \describe{
 #'     \item{transformation_matrix}{A numeric matrix used for parameter
@@ -339,7 +341,8 @@ adjust_constant_vector <- function(constant_vector, identity_weights) {
 #'     \item{constant_vector}{A numeric vector for constant terms.}
 #'   }
 #' @keywords internal
-beta_vectorization <- function(character_beta_matrix) {
+beta_vectorization <- function(character_beta_matrix,
+                               identity_weights = list()) {
   number_of_exogenous <- nrow(character_beta_matrix)
   number_of_endogenous <- ncol(character_beta_matrix)
   character_vector <- c(character_beta_matrix)
@@ -356,9 +359,18 @@ beta_vectorization <- function(character_beta_matrix) {
     ] <- 1
   }
 
-  # constant_vector in numeric
+  theta_parameters <- get_parameters(character_beta_matrix, "theta")
+  # constant_vector in character form
   constant_vector <- matrix(0, number_of_endogenous * number_of_exogenous, 1)
-  # constant_vector[grep("theta", character_vector)]
+
+  for (ix in seq_along(theta_parameters)) {
+    constant_vector[
+      character_vector == theta_parameters[ix]
+    ] <- theta_parameters[ix]
+  }
+
+  # Identity weights enter the beta matrix with a positive sign
+  constant_vector <- -adjust_constant_vector(constant_vector, identity_weights)
 
   return(list(
     transformation_matrix = transformation_matrix,

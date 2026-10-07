@@ -116,6 +116,24 @@ no predetermined variables besides the constant", {
   )
 })
 
+test_that("model_identification counts exogenous identity components", {
+  # c is identified through i and g, which it excludes and which enter the
+  # identity for y
+  equations <-
+    "c ~ y + z,
+    y == 1*c + 1*i + 1*g"
+
+  sys_eq <- system_of_equations(equations, c("z", "i", "g"))
+
+  expect_true(
+    model_identification(
+      sys_eq$character_gamma_matrix,
+      sys_eq$character_beta_matrix,
+      sys_eq$identities
+    )
+  )
+})
+
 test_that("model_identification without gamma parameters", {
   equations <-
     "manufacturing ~ manufacturing.L(1) + world_gdp,
