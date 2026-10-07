@@ -23,6 +23,7 @@
 * Fixed the identification check for large systems, where a parameter name could also match longer names that start with it (e.g. `theta6_4` and `theta6_40`). An identity weight could then be replaced by the weight of another component in the rank condition.
 * Fixed the identification check for identities with exogenous components (e.g. `c ~ y + z, y == 1*c + 1*i + 1*g` with exogenous `i` and `g`). Their weights were ignored, so a model identified through such components was rejected with `rank condition not satisfied`.
 * The identification error now lists the equations that fail, instead of printing a table of all equations before the error. For the order condition it shows the number of endogenous regressors and the number of excluded lagged or exogenous variables of each failing equation; an equation fails when the first is larger than the second. For the rank condition it shows the rank and the required rank. Previously the order table was mislabelled and showed other counts.
+* The identification check no longer advances the random number generator. It draws random parameter values for the rank condition, which shifted the seed before the sampler started, so the draws for a given seed depended on the number of coefficients in the model. **For models with contemporaneous endogenous regressors, `estimate()` returns different draws for the same seed than before.**
 
 # koma 0.4.0
 

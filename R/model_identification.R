@@ -52,6 +52,18 @@ model_identification <- function(character_gamma_matrix,
   }
   beta_vec <- beta_vectorization(character_beta_matrix, identity_weights)
 
+  # The check draws random parameter values. Restore the state of the random
+  # number generator afterwards, so the check does not change later draws.
+  old_seed <- get0(".Random.seed", envir = globalenv(), inherits = FALSE)
+  on.exit(
+    if (is.null(old_seed)) {
+      rm(".Random.seed", envir = globalenv())
+    } else {
+      assign(".Random.seed", old_seed, envir = globalenv())
+    },
+    add = TRUE
+  )
+
   # Compute Gamma matrix
   gamma_parameters <- multivariate_norm(
     n = 1,

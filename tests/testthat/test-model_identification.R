@@ -160,6 +160,25 @@ test_that("model_identification reports the rank of failing equations", {
   )
 })
 
+test_that("model_identification leaves the random number generator untouched", {
+  equations <-
+    "a ~ b + a.L(1) + x,
+    b ~ a + b.L(1) + x"
+
+  sys_eq <- system_of_equations(equations, "x")
+
+  expected <- withr::with_seed(1, runif(1))
+
+  withr::local_seed(1)
+  model_identification(
+    sys_eq$character_gamma_matrix,
+    sys_eq$character_beta_matrix,
+    sys_eq$identities
+  )
+
+  expect_equal(runif(1), expected)
+})
+
 test_that("model_identification counts exogenous identity components", {
   # c is identified through i and g, which it excludes and which enter the
   # identity for y
