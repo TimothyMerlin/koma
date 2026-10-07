@@ -95,8 +95,10 @@ model_identification <- function(character_gamma_matrix,
     beta_vec$constant_vector,
     nrow = number_of_exogenous, ncol = number_of_endogenous
   )
-  # Drop intercept from B matrix
-  beta_matrix <- beta_matrix[-1, , drop = FALSE]
+  # The constants are not beta parameters. Draw a value for each equation
+  # that has one, so an excluded constant counts as an exclusion restriction.
+  has_constant <- character_beta_matrix[1, ] != "0"
+  beta_matrix[1, has_constant] <- stats::rnorm(sum(has_constant))
 
   identity_positions <- which(
     colnames(character_beta_matrix) %in% names(identity_weights)

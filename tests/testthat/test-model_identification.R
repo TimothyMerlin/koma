@@ -179,6 +179,23 @@ test_that("model_identification leaves the random number generator untouched", {
   expect_equal(runif(1), expected)
 })
 
+test_that("model_identification counts an excluded constant", {
+  # b includes both exogenous variables but has no constant, which a includes
+  equations <-
+    "a ~ b + x1,
+    b ~ 0 + a + x1 + x2"
+
+  sys_eq <- system_of_equations(equations, c("x1", "x2"))
+
+  expect_true(
+    model_identification(
+      sys_eq$character_gamma_matrix,
+      sys_eq$character_beta_matrix,
+      sys_eq$identities
+    )
+  )
+})
+
 test_that("model_identification counts exogenous identity components", {
   # c is identified through i and g, which it excludes and which enter the
   # identity for y
