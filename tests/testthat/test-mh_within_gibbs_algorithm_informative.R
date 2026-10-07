@@ -91,6 +91,38 @@ test_that("draw_parameters_j_informative keeps every nstore-th draw after burn-i
   expect_identical(thinned$beta_jw, unthinned$beta_jw[seq(3, 18, by = 3)])
 })
 
+test_that("draw_parameters_j_informative saves omega_tilde of the saved gamma", {
+  y_matrix <- simulated_data$y_matrix
+  x_matrix <- simulated_data$x_matrix
+  character_gamma_matrix <- simulated_data$character_gamma_matrix
+  character_beta_matrix <- simulated_data$character_beta_matrix
+  jx <- 1
+  priors <- list(list(), list(), list(), list(), list(), list())
+
+  result <- withr::with_seed(
+    7,
+    draw_parameters_j_informative(
+      y_matrix,
+      x_matrix,
+      character_gamma_matrix,
+      character_beta_matrix,
+      jx,
+      set_gibbs_spec(ndraws = 50, burnin_ratio = 0.2),
+      priors
+    )
+  )
+  # the check only bites if some Metropolis-Hastings steps were accepted
+  expect_gt(sum(result$count_accepted), 0)
+
+  # omega_tilde = A' omega A, with A built from the gamma of the same draw
+  expected_omega_tilde <- lapply(seq_along(result$gamma_jw), function(wx) {
+    a_matrix_j <- diag(length(result$gamma_jw[[wx]]) + 1)
+    a_matrix_j[, 1] <- c(1, -result$gamma_jw[[wx]])
+    t(a_matrix_j) %*% result$omega_jw[[wx]] %*% a_matrix_j
+  })
+  expect_equal(result$omega_tilde_jw, expected_omega_tilde)
+})
+
 test_that("draw_parameters_j_informative with diffuse priors", {
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix

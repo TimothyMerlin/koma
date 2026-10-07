@@ -140,11 +140,20 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
     ##### Save draws
     if (wx > gibbs_sampler$burnin &&
       (wx - gibbs_sampler$burnin) %% gibbs_sampler$nstore == 0) {
+      # Omega_tilde depends on gamma, but was computed in step 3 before gamma
+      # was drawn in step 4. Recompute it with the gamma that is saved.
+      omega_tilde_jw <- results_draw_omega_j$omega_tilde_jw
+      if (nrow(omega_jw) > 1) {
+        a_matrix_j <- diag(nrow(omega_jw))
+        a_matrix_j[, 1] <- c(1, -gamma_jw)
+        omega_tilde_jw <- t(a_matrix_j) %*% omega_jw %*% a_matrix_j
+      }
+
       out$beta_jw[[gx]] <- results_draw_theta_j$beta_jw
       out$theta_jw[[gx]] <- results_draw_theta_j$theta_jw
       out$gamma_jw[[gx]] <- gamma_jw
       out$omega_jw[[gx]] <- results_draw_omega_j$omega_jw
-      out$omega_tilde_jw[[gx]] <- results_draw_omega_j$omega_tilde_jw
+      out$omega_tilde_jw[[gx]] <- omega_tilde_jw
       gx <- gx + 1
     }
 
