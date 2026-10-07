@@ -126,18 +126,38 @@ test_that("model_identification reports the counts of the order condition", {
 
   sys_eq <- system_of_equations(equations, "x")
 
-  messages <- capture_messages(
-    try(
-      model_identification(
-        sys_eq$character_gamma_matrix,
-        sys_eq$character_beta_matrix,
-        sys_eq$identities
-      ),
-      silent = TRUE
-    )
+  expect_error(
+    model_identification(
+      sys_eq$character_gamma_matrix,
+      sys_eq$character_beta_matrix,
+      sys_eq$identities
+    ),
+    "a: 1 endogenous regressor, 0 excluded lagged or exogenous variables"
+  )
+})
+
+test_that("model_identification reports the rank of failing equations", {
+  # circular dependency between manufacturing and service
+  raw_equations <-
+    "consumption ~ gdp + consumption.L(1) + consumption.L(2),
+    investment ~ gdp + investment.L(1) + real_interest_rate,
+    current_account ~ current_account.L(1) + world_gdp,
+    manufacturing ~ service + world_gdp,
+    service ~ manufacturing + gdp,
+    gdp == 0.5*manufacturing + 0.5*service "
+
+  sys_eq <- system_of_equations(
+    raw_equations, c("real_interest_rate", "world_gdp")
   )
 
-  expect_match(paste(messages, collapse = ""), "a\\s+FALSE\\s+1\\s+0")
+  expect_error(
+    model_identification(
+      sys_eq$character_gamma_matrix,
+      sys_eq$character_beta_matrix,
+      sys_eq$identities
+    ),
+    "manufacturing: rank 4, required 5"
+  )
 })
 
 test_that("model_identification counts exogenous identity components", {

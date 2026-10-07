@@ -86,10 +86,6 @@ model_identification <- function(character_gamma_matrix,
   # Drop intercept from B matrix
   beta_matrix <- beta_matrix[-1, , drop = FALSE]
 
-  # number of exogenous variables (minus intercept)
-  number_of_exogenous <- number_of_exogenous - 1
-  number_of_identities <- length(identity_weights)
-
   identity_positions <- which(
     colnames(character_beta_matrix) %in% names(identity_weights)
   )
@@ -116,46 +112,64 @@ model_identification <- function(character_gamma_matrix,
 
     rr <- rbind(gammas, betas)
     r <- rr[rr[, j] == 0, -j, drop = FALSE]
+    rank <- qr(r)$rank
+    required_rank <- number_of_endogenous - 1
     rank_all[[i]] <- list(
-      "Fullfilled" = qr(r)$rank == (number_of_endogenous - 1),
-      "Rank" = qr(r)$rank
+      fulfilled = rank == required_rank,
+      message = cli::pluralize("rank {rank}, required {required_rank}")
     )
     # Order condition: the number of excluded lagged or exogenous variables
     # must be at least the number of endogenous regressors
     endogenous_regressors <- sum(gamma_matrix[, j] != 0) - 1
     excluded_predetermined <- sum(beta_matrix[, j] == 0)
     order_all[[i]] <- list(
-      "Fullfilled" = endogenous_regressors <= excluded_predetermined,
-      "# endogenous regressors" = endogenous_regressors,
-      "# excluded lagged or exogenous" = excluded_predetermined
+      fulfilled = endogenous_regressors <= excluded_predetermined,
+      message = cli::pluralize(
+        "{endogenous_regressors} endogenous regressor{?s},
+        {excluded_predetermined} excluded lagged or exogenous variable{?s}"
+      )
     )
   }
   names(rank_all) <-
     setdiff(colnames(character_beta_matrix), names(identity_weights))
   names(order_all) <- names(rank_all)
 
-  check_condition <- function(mat, condition_name, call = rlang::caller_env()) {
-    if (sum(do.call(cbind, do.call(cbind, mat)[1, ])) !=
-      (number_of_endogenous - number_of_identities)) {
-      cli::cli({
-        cli::cli_alert_danger(
-          c(
-            "The specified model is not identified because the {condition_name}
-           condition is not satisfied!"
-          )
-        )
-        cli::cli_verbatim(c(utils::capture.output(do.call(rbind, mat)), "\n"))
-      })
-      # throw the error
-      cli::cli_abort(
-        "Model identification error: {condition_name} condition not satisfied.",
-        call = call
-      )
+  check_condition <- function(checks, condition_name, hint,
+                              call = rlang::caller_env()) {
+    failed <- Filter(function(check) !check$fulfilled, checks)
+    if (length(failed) == 0) {
+      return(invisible(TRUE))
     }
+
+    equations <- vapply(
+      names(failed),
+      function(name) paste0("{.field ", name, "}: ", failed[[name]]$message),
+      character(1)
+    )
+    names(equations) <- rep("x", length(equations))
+
+    cli::cli_abort(
+      c(
+        "Model identification error: {condition_name} condition not satisfied.",
+        equations,
+        "i" = hint
+      ),
+      call = call
+    )
   }
 
-  check_condition(order_all, "order", call = call)
-  check_condition(rank_all, "rank", call = call)
+  check_condition(
+    order_all, "order",
+    "An equation needs at least as many excluded lagged or exogenous variables
+    as endogenous regressors.",
+    call = call
+  )
+  check_condition(
+    rank_all, "rank",
+    "The variables excluded from an equation must enter the other equations
+    with linearly independent coefficients.",
+    call = call
+  )
 
   return(TRUE)
 }
