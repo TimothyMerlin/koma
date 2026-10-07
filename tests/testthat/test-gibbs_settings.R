@@ -73,6 +73,15 @@ test_that("set_gibbs_spec, error on zero nstore", {
   expect_error(set_gibbs_spec(nstore = 0), "nstore must be a positive integer")
 })
 
+test_that("set_gibbs_spec, error when no draw would be saved", {
+  expect_error(set_gibbs_spec(ndraws = 0), "at least one draw")
+  # 2 draws after burn-in, of which every 5th is kept
+  expect_error(
+    set_gibbs_spec(ndraws = 4, burnin_ratio = 0.5, nstore = 5),
+    "at least one draw"
+  )
+})
+
 test_that("validate_integerish, integer", {
   x <- 20
   name <- "ndraws"

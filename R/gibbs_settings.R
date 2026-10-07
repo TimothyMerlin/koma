@@ -86,6 +86,12 @@ new_gibbs_spec <- function(ndraws, burnin_ratio, nstore, tau, ...) {
   }
   burnin <- round(burnin)
   nsave <- floor((ndraws - burnin) / nstore)
+  if (any(nsave < 1)) {
+    cli::cli_abort(
+      "ndraws, burnin_ratio and nstore must leave at least one draw to save",
+      call = rlang::caller_env()
+    )
+  }
 
   structure(
     list(
