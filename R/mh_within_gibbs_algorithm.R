@@ -59,6 +59,7 @@ draw_parameters_j <- function(y_matrix, x_matrix, character_gamma_matrix,
   # restricted-column x_b'x_b used for beta_hat) are invariant across the
   # whole loop below. Compute them once here instead of on every call.
   xtx <- crossprod(x_matrix)
+  inverse_xtx <- solve(xtx)
   indices_to_remove <- grep("\\b0\\b", character_beta_matrix[, jx])
   if (length(indices_to_remove) > 0) {
     xbtxb <- crossprod(x_matrix[, -indices_to_remove, drop = FALSE])
@@ -120,7 +121,7 @@ draw_parameters_j <- function(y_matrix, x_matrix, character_gamma_matrix,
     ##### Draw 4. Theta_j from multivariate normal distribution
     results_draw_theta_j <- draw_theta_j(
       y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
-      jx, gamma_jw, results_draw_omega_j$omega_tilde_jw, xtx
+      jx, gamma_jw, results_draw_omega_j$omega_tilde_jw, xtx, inverse_xtx
     )
 
     ##### Save draws
@@ -363,12 +364,14 @@ draw_omega_j <- function(y_matrix, x_matrix, character_gamma_matrix,
 #'
 #' @inheritParams draw_parameters_j
 #' @inheritParams draw_gamma_j
+#' @param inverse_xtx Precomputed inverse of \eqn{x_matrix'x_matrix}. Same
+#' rationale as `xtx`.
 #'
 #' @return List containing theta_jw and beta_jw
 #' @keywords internal
 draw_theta_j <- function(y_matrix, x_matrix, character_gamma_matrix,
                          character_beta_matrix, jx, gamma_parameters_j,
-                         omega_tilde_jw, xtx) {
+                         omega_tilde_jw, xtx, inverse_xtx = solve(xtx)) {
   number_endogenous_in_j <- length(grep("gamma", character_gamma_matrix[, jx]))
 
   if (number_endogenous_in_j == 0) {
@@ -402,7 +405,7 @@ draw_theta_j <- function(y_matrix, x_matrix, character_gamma_matrix,
   theta_p2 <- theta_p[-(1:seperate_blocks_at)]
 
   # Compute unrestricted posterior variance
-  xi <- kronecker(omega_tilde_jw, solve(xtx))
+  xi <- kronecker(omega_tilde_jw, inverse_xtx)
 
   # Permute xi
   xi_p <- xi[permutation, permutation, drop = FALSE]

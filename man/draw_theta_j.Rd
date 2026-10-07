@@ -12,7 +12,8 @@ draw_theta_j(
   jx,
   gamma_parameters_j,
   omega_tilde_jw,
-  xtx
+  xtx,
+  inverse_xtx = solve(xtx)
 )
 }
 \arguments{
@@ -41,6 +42,9 @@ equation \eqn{j}.}
 
 \item{xtx}{Precomputed \eqn{x_matrix'x_matrix}. This is invariant across
 Gibbs draws, so it is computed once instead of on every call.}
+
+\item{inverse_xtx}{Precomputed inverse of \eqn{x_matrix'x_matrix}. Same
+rationale as \code{xtx}.}
 }
 \value{
 List containing theta_jw and beta_jw
