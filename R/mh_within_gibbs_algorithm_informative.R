@@ -54,6 +54,13 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
   out$omega_tilde_jw <- vector("list", gibbs_sampler$nsave)
   count_accepted <- matrix(0, gibbs_sampler$ndraws, 1)
 
+  # cbind() and `[` are much slower on time series than on plain matrices and
+  # are called in every draw below, so drop the time series class once here.
+  y_matrix <- unclass(y_matrix)
+  attr(y_matrix, "tsp") <- NULL
+  x_matrix <- unclass(x_matrix)
+  attr(x_matrix, "tsp") <- NULL
+
   # x_matrix is fixed across all draws of this equation, so x'x (and the
   # restricted-column x_b'x_b used for beta_hat) are invariant across the
   # whole loop below. Compute them once here instead of on every call.

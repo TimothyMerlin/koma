@@ -4,6 +4,10 @@
 
 * `estimate(..., estimates = )` no longer re-estimates only the equations that changed. The argument is now ignored with a warning and all equations are estimated. The check for changed equations only compared the lagged and exogenous regressors of each equation, so a changed contemporaneous endogenous regressor, prior, estimation sample or data set was not noticed and the previous draws were returned unchanged. It also failed for systems with a single stochastic equation.
 
+## Performance
+
+* `estimate()` is faster for equations with contemporaneous endogenous regressors. The sampler converted time series objects in every draw; it now works on plain matrices. In a small example the time per equation dropped from about 1.5 to 0.6 seconds for 2000 draws. The draws are unchanged.
+
 ## Bug fixes
 
 * Fixed how `forecast()` handles lagged endogenous regressors. A lag could be dropped or misplaced when an equation skips the lower lags of a variable (e.g. only `x.L(4)`), when variable names share a prefix or contain digits, or for lags of 10 or more. Forecasts of such models change. Estimation is not affected, except where a ragged edge is filled.

@@ -91,6 +91,34 @@ test_that("draw_parameters_j_informative keeps every nstore-th draw after burn-i
   expect_identical(thinned$beta_jw, unthinned$beta_jw[seq(3, 18, by = 3)])
 })
 
+test_that("draw_parameters_j_informative gives the same draws for ts and plain matrices", {
+  y_matrix <- simulated_data$y_matrix
+  x_matrix <- simulated_data$x_matrix
+  expect_s3_class(y_matrix, "ts")
+  plain <- function(x) matrix(as.numeric(x), nrow(x), dimnames = dimnames(x))
+  priors <- list(list(), list(), list(), list(), list(), list())
+
+  run_sampler <- function(y_matrix, x_matrix) {
+    withr::with_seed(
+      7,
+      draw_parameters_j_informative(
+        y_matrix,
+        x_matrix,
+        simulated_data$character_gamma_matrix,
+        simulated_data$character_beta_matrix,
+        1,
+        set_gibbs_spec(ndraws = 20),
+        priors
+      )
+    )
+  }
+
+  expect_equal(
+    run_sampler(y_matrix, x_matrix),
+    run_sampler(plain(y_matrix), plain(x_matrix))
+  )
+})
+
 test_that("draw_parameters_j_informative saves omega_tilde of the saved gamma", {
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix
