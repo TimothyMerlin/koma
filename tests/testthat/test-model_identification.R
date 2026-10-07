@@ -77,6 +77,26 @@ test_that("model_identification throws error for unidentified structure", {
   )
 })
 
+test_that("model_identification reports the order condition when only one
+non-constant predetermined variable exists", {
+  # a includes every variable in the system, so it has no exclusion
+  # restriction and the order condition fails
+  equations <-
+    "a ~ b + x,
+    b ~ a"
+
+  sys_eq <- system_of_equations(equations, "x")
+
+  expect_error(
+    model_identification(
+      sys_eq$character_gamma_matrix,
+      sys_eq$character_beta_matrix,
+      sys_eq$identities
+    ),
+    "Model identification error: order"
+  )
+})
+
 test_that("model_identification without gamma parameters", {
   equations <-
     "manufacturing ~ manufacturing.L(1) + world_gdp,

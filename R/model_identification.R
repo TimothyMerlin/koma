@@ -78,7 +78,7 @@ model_identification <- function(character_gamma_matrix,
     nrow = number_of_exogenous, ncol = number_of_endogenous
   )
   # Drop intercept from B matrix
-  beta_matrix <- beta_matrix[-1, ]
+  beta_matrix <- beta_matrix[-1, , drop = FALSE]
 
   # number of exogenous variables (minus intercept)
   number_of_exogenous <- number_of_exogenous - 1
