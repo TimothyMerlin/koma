@@ -241,6 +241,8 @@ find_dependent_columns <- function(x_matrix, tol = 1e-7) {
 gamma_vectorization <- function(character_gamma_matrix, identity_weights) {
   number_of_endogenous <- ncol(character_gamma_matrix)
   character_vector <- c(character_gamma_matrix)
+  # Parameter names without the leading minus sign
+  parameter_names <- gsub("^-", "", character_vector)
 
   parameters <- get_parameters(character_gamma_matrix, "gamma")
 
@@ -254,7 +256,7 @@ gamma_vectorization <- function(character_gamma_matrix, identity_weights) {
 
   for (ix in seq_along(parameters)) {
     transformation_matrix[
-      grep(parameters[ix], character_vector), ix
+      parameter_names == parameters[ix], ix
     ] <- -1
   }
 
@@ -268,7 +270,7 @@ gamma_vectorization <- function(character_gamma_matrix, identity_weights) {
 
   for (ix in seq_along(theta_parameters)) {
     constant_vector[
-      grep(theta_parameters[ix], character_vector)
+      parameter_names == theta_parameters[ix]
     ] <- theta_parameters[ix]
   }
 
@@ -305,7 +307,7 @@ adjust_constant_vector <- function(constant_vector, identity_weights) {
     weight_name <- names(identity_weights[[idx]]$weights)
     for (ix in weight_name) {
       # Find matching elements in constant_vector
-      matches <- grep(ix, constant_vector)
+      matches <- which(constant_vector == ix)
 
       if (length(matches) > 0) {
         # Replace with corresponding numeric value
@@ -349,7 +351,9 @@ beta_vectorization <- function(character_beta_matrix) {
     0, number_of_endogenous * number_of_exogenous, length(parameters)
   )
   for (ix in seq_along(parameters)) {
-    transformation_matrix[grep(parameters[ix], character_vector), ix] <- 1
+    transformation_matrix[
+      gsub("^-", "", character_vector) == parameters[ix], ix
+    ] <- 1
   }
 
   # constant_vector in numeric

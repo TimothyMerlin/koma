@@ -15,6 +15,7 @@
 * Fixed priors on contemporaneous endogenous regressors (e.g. `{0,1}gdp` where `gdp` is endogenous). The likelihood was dropped from the Metropolis-Hastings target for these coefficients, so the data was ignored and their posterior was just the prior. The posterior now combines the prior with the data. **Estimates of models that set such a prior will change.** Priors on lags, exogenous variables, the constant and the error term were not affected.
 * Fixed tight priors on contemporaneous endogenous regressors whose mean is far from the data estimate (e.g. `{1000,0.00001}gdp`). The prior density underflowed to zero at the chain's start value, so every Metropolis-Hastings proposal was rejected and the coefficient stayed at its start value with a 0% acceptance rate. The log prior density is now computed directly, so the chain moves towards the prior. It still starts at the data estimate and moves in small steps, so a prior this far away can need many more draws to converge; check the trace plot.
 * Fixed the identification check for simultaneous systems with at most one lagged or exogenous variable (e.g. `a ~ b + x, b ~ a` or `a ~ b, b ~ a`). It failed with `incorrect number of dimensions` or `0 x 0 matrix`; it now reports which identification condition is not satisfied.
+* Fixed the identification check for large systems, where a parameter name could also match longer names that start with it (e.g. `theta6_4` and `theta6_40`). An identity weight could then be replaced by the weight of another component in the rank condition.
 
 # koma 0.4.0
 

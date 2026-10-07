@@ -325,6 +325,51 @@ test_that("beta_vectorization works", {
   expect_equal(result, expected_result)
 })
 
+test_that("vectorization matches parameter names exactly", {
+  # beta1_2 must not also match beta1_20, and likewise for gamma and theta
+  character_beta_matrix <- matrix(
+    c("constant1", "beta1_2", "beta1_20"),
+    nrow = 3, ncol = 1
+  )
+
+  result <- beta_vectorization(character_beta_matrix)
+
+  expect_equal(
+    result$transformation_matrix,
+    matrix(c(0, 1, 0, 0, 0, 1), nrow = 3, ncol = 2)
+  )
+
+  character_gamma_matrix <- matrix(
+    c(
+      1, "-gamma2_1", "-gamma2_10",
+      0, 1, 0,
+      "-theta3_1", "-theta3_10", 1
+    ),
+    nrow = 3, ncol = 3
+  )
+
+  identity_weights <- list(
+    c = list(weights = list(theta3_1 = 0.1, theta3_10 = 0.9))
+  )
+
+  result <- gamma_vectorization(character_gamma_matrix, identity_weights)
+
+  expect_equal(
+    result$transformation_matrix,
+    matrix(
+      c(
+        0, -1, 0, 0, 0, 0, 0, 0, 0,
+        0, 0, -1, 0, 0, 0, 0, 0, 0
+      ),
+      nrow = 9, ncol = 2
+    )
+  )
+  expect_equal(
+    result$constant_vector,
+    matrix(c(1, 0, 0, 0, 1, 0, -0.1, -0.9, 1), nrow = 9, ncol = 1)
+  )
+})
+
 test_that("vector_to_matrix", {
   transformation_matrix <- matrix(c(1, 0, 0, 0, 0, 0, 1, 0), nrow = 4, ncol = 2)
   parameters <- c(1, 2)
