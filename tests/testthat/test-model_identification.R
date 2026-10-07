@@ -116,6 +116,30 @@ no predetermined variables besides the constant", {
   )
 })
 
+test_that("model_identification reports the counts of the order condition", {
+  # a has one endogenous regressor (b) and excludes no lagged or exogenous
+  # variable; c is an excluded endogenous variable and must not be counted
+  equations <-
+    "a ~ b + x,
+    b ~ a,
+    c ~ a"
+
+  sys_eq <- system_of_equations(equations, "x")
+
+  messages <- capture_messages(
+    try(
+      model_identification(
+        sys_eq$character_gamma_matrix,
+        sys_eq$character_beta_matrix,
+        sys_eq$identities
+      ),
+      silent = TRUE
+    )
+  )
+
+  expect_match(paste(messages, collapse = ""), "a\\s+FALSE\\s+1\\s+0")
+})
+
 test_that("model_identification counts exogenous identity components", {
   # c is identified through i and g, which it excludes and which enter the
   # identity for y

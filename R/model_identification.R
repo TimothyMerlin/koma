@@ -120,10 +120,14 @@ model_identification <- function(character_gamma_matrix,
       "Fullfilled" = qr(r)$rank == (number_of_endogenous - 1),
       "Rank" = qr(r)$rank
     )
+    # Order condition: the number of excluded lagged or exogenous variables
+    # must be at least the number of endogenous regressors
+    endogenous_regressors <- sum(gamma_matrix[, j] != 0) - 1
+    excluded_predetermined <- sum(beta_matrix[, j] == 0)
     order_all[[i]] <- list(
-      "Fullfilled" = dim(r)[2] <= dim(r)[1],
-      "# included endogenous" = dim(r)[2],
-      "# excluded exogenous" = dim(r)[1]
+      "Fullfilled" = endogenous_regressors <= excluded_predetermined,
+      "# endogenous regressors" = endogenous_regressors,
+      "# excluded lagged or exogenous" = excluded_predetermined
     )
   }
   names(rank_all) <-

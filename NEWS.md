@@ -21,6 +21,7 @@
 * Fixed the identification check for simultaneous systems with at most one lagged or exogenous variable (e.g. `a ~ b + x, b ~ a` or `a ~ b, b ~ a`). It failed with `incorrect number of dimensions` or `0 x 0 matrix`; it now reports which identification condition is not satisfied.
 * Fixed the identification check for large systems, where a parameter name could also match longer names that start with it (e.g. `theta6_4` and `theta6_40`). An identity weight could then be replaced by the weight of another component in the rank condition.
 * Fixed the identification check for identities with exogenous components (e.g. `c ~ y + z, y == 1*c + 1*i + 1*g` with exogenous `i` and `g`). Their weights were ignored, so a model identified through such components was rejected with `rank condition not satisfied`.
+* The table printed when the order condition is not satisfied now shows, per equation, the number of endogenous regressors and the number of excluded lagged or exogenous variables. An equation fails when the first is larger than the second. Previously both columns were mislabelled and showed other counts.
 
 # koma 0.4.0
 
