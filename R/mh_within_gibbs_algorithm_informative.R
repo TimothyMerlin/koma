@@ -670,9 +670,9 @@ target_j_informative_initial <- function(y_matrix, x_matrix,
 #' \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
 #' rationale as `xtx`.
 #'
-#' @return The function returns the evaluation of the target function,
-#' which is used to decide whether to accept or reject proposed states
-#' in the MH algorithm. Returns NA if there are no gamma parameters.
+#' @return A \eqn{((1 + n_j) \times (1 + n_j))} matrix with the initial value
+#' for \eqn{\Omega_j}, the residual covariance at the initial
+#' \eqn{\gamma_j}. Returns NA if the endogenous regressors contain NA.
 #' @keywords internal
 initial_omega_j <- function(y_matrix, x_matrix, character_gamma_matrix,
                             character_beta_matrix, jx, gamma_jw,
@@ -708,12 +708,19 @@ initial_omega_j <- function(y_matrix, x_matrix, character_gamma_matrix,
   # Compute theta_hat matrix
   theta_hat <- cbind(beta_hat_j, pi_hat_0)
 
-  # Evaluate log of target function
-  # (multiply by -1: maximize instead of minimize)
-  omega_hat <- t(z_matrix_j - x_matrix %*% theta_hat) %*%
-    (z_matrix_j - x_matrix %*% theta_hat)
+  # Residual covariance of Z_j, an estimate of Omega_tilde = A' Omega A
+  omega_tilde_hat <- crossprod(z_matrix_j - x_matrix %*% theta_hat) /
+    nrow(x_matrix)
 
-  omega_hat
+  if (gamma_count == 0) {
+    # A is the identity, so Omega_tilde is Omega
+    return(omega_tilde_hat)
+  }
+
+  # Map back to Omega = A^-1' Omega_tilde A^-1
+  a_matrix_j <- diag(gamma_count + 1)
+  a_matrix_j[, 1] <- c(1, -gamma_jw)
+  t(solve(a_matrix_j)) %*% omega_tilde_hat %*% solve(a_matrix_j)
 }
 
 #' Construct priors for a single equation

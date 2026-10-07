@@ -123,6 +123,41 @@ test_that("draw_parameters_j_informative saves omega_tilde of the saved gamma", 
   expect_equal(result$omega_tilde_jw, expected_omega_tilde)
 })
 
+test_that("initial_omega_j returns a covariance that maps to the residuals", {
+  y_matrix <- simulated_data$y_matrix
+  x_matrix <- simulated_data$x_matrix
+  character_gamma_matrix <- simulated_data$character_gamma_matrix
+  character_beta_matrix <- simulated_data$character_beta_matrix
+  jx <- 1
+  gamma_jw <- 0.5
+
+  in_equation <- character_beta_matrix[, jx] != "0"
+  result <- initial_omega_j(
+    y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
+    jx, gamma_jw,
+    xtx = crossprod(x_matrix),
+    xbtxb = crossprod(x_matrix[, in_equation, drop = FALSE])
+  )
+
+  # residuals of the structural equation given gamma, and of the reduced form
+  # of the endogenous regressor
+  y_j <- y_matrix[, jx]
+  y_endogenous <- y_matrix[, grep("gamma", character_gamma_matrix[, jx])]
+  residuals <- cbind(
+    stats::lm.fit(x_matrix[, in_equation, drop = FALSE], y_j - gamma_jw * y_endogenous)$residuals,
+    stats::lm.fit(x_matrix, y_endogenous)$residuals
+  )
+  residual_covariance <- crossprod(residuals) / nrow(y_matrix)
+
+  # the sampler uses omega_tilde = A' omega A
+  a_matrix_j <- diag(2)
+  a_matrix_j[, 1] <- c(1, -gamma_jw)
+  expect_equal(
+    t(a_matrix_j) %*% result %*% a_matrix_j, residual_covariance,
+    ignore_attr = TRUE
+  )
+})
+
 test_that("draw_parameters_j_informative with diffuse priors", {
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix
