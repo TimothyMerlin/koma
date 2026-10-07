@@ -87,7 +87,7 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
         character_beta_matrix, eq_jx, gibbs_sampler, priors, progress
       )
     }
-  }, quiet = FALSE)
+  }, quiet = TRUE)
 
   globals_to_export <- c(
     "p",
@@ -113,11 +113,18 @@ estimate_sem <- function(sys_eq, y_matrix, x_matrix, eq_jx = NULL) {
   )
 
   names(estimates) <- equation_names[col_positions]
-  out <- purrr::map(estimates, "result")
 
-  if (all(sapply(out, is.null))) {
-    cli::cli_abort("All equations failed to estimate.")
-    return(NULL)
+  errors <- purrr::compact(purrr::map(estimates, "error"))
+  if (length(errors) > 0) {
+    messages <- paste0(names(errors), ": ", purrr::map_chr(errors, conditionMessage))
+    # Escape braces so cli does not interpolate the error messages
+    messages <- gsub("\\{", "{{", messages)
+    messages <- gsub("\\}", "}}", messages)
+    cli::cli_abort(c(
+      "!" = "Estimation failed for {length(errors)} equation{?s}:",
+      stats::setNames(messages, rep("x", length(messages)))
+    ))
   }
-  out
+
+  purrr::map(estimates, "result")
 }

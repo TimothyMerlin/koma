@@ -124,10 +124,11 @@ test_that("estimate_sem error in equation j", {
   equation_settings <- sys_eq$equation_settings[sys_eq$stochastic_equations]
   set_gibbs_settings(settings = list(ndraws = 200), simulated_data$sys_eq$equation_settings)
 
-  suppressWarnings(
-    result <- estimate_sem(sys_eq, y_matrix, x_matrix)
+  # the error names the equation that failed
+  expect_error(
+    suppressWarnings(estimate_sem(sys_eq, y_matrix, x_matrix)),
+    "consumption"
   )
-  expect_equal(result$consumption, NULL)
 })
 
 test_that("estimate_sem warns when multicore is used on macOS", {
