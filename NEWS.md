@@ -7,6 +7,7 @@
 ## Performance
 
 * `estimate()` is faster for equations with contemporaneous endogenous regressors. The sampler converted time series objects in every draw; it now works on plain matrices. In a small example the time per equation dropped from about 1.5 to 0.6 seconds for 2000 draws. The draws are unchanged.
+* `estimate()` is faster for large systems. The sampler moved the zero restrictions of an equation to the end by multiplying with a permutation matrix in every draw; it now reorders by index. For a synthetic system with 91 regressors, 400 draws of one equation take about 1.3 s instead of 2.7 s. The draws are unchanged.
 
 ## Bug fixes
 

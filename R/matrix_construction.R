@@ -206,3 +206,41 @@ construct_theta_bar_j <- function(x_matrix, z_matrix_j, priors_j,
     xi_bar = xi_bar
   ))
 }
+
+#' Order the elements of theta with the zero restrictions last
+#'
+#' Finds the order that moves the parameters of \eqn{\theta_j} restricted to
+#' zero to the end. The zero restrictions are only on the betas, i.e. on the
+#' first column of \eqn{\Theta_j}. The free betas come first, then the
+#' parameters of the other columns in their original order, then the
+#' restricted betas.
+#'
+#' Indexing with the returned order, `theta[permutation]` and
+#' `xi[permutation, permutation]`, gives the same result as multiplying with
+#' the permutation matrix \eqn{P}, \eqn{P \theta} and \eqn{P \Xi P'}, but is
+#' much faster.
+#'
+#' @inheritParams construct_beta_hat_j_matrix
+#' @param number_of_parameters The length of the vectorized \eqn{\Theta_j},
+#' i.e. \eqn{k (1 + n_j)}.
+#'
+#' @return A list with `permutation`, the positions of the elements of theta
+#' in the new order, and `seperate_blocks_at`, the number of free parameters.
+#' @keywords internal
+construct_theta_permutation <- function(character_beta_matrix, jx,
+                                        number_of_parameters) {
+  # Find the indices of elements in equation j that are betas
+  fpos <- grep("^0", character_beta_matrix[, jx], invert = TRUE)
+  # Find the indices of elements in equation j that are 0
+  fposend <- grep("\\b0\\b", character_beta_matrix[, jx])
+
+  # Leave free parameters of other columns at their place
+  number_of_exogenous <- nrow(character_beta_matrix)
+  other_columns <- number_of_exogenous +
+    seq_len(number_of_parameters - number_of_exogenous)
+
+  list(
+    permutation = c(fpos, other_columns, fposend),
+    seperate_blocks_at = number_of_parameters - length(fposend)
+  )
+}

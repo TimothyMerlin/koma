@@ -388,35 +388,14 @@ draw_theta_j <- function(y_matrix, x_matrix, character_gamma_matrix,
   # parameters and the second block contains all parameters that are
   # restricted to zero.
   # Zero restrictions only on betas, i.e. first column of theta_hat
-  # Choose free parameters from first column (this is P')
-  permutation_matrix <- matrix(0, length(theta_hat), length(theta_hat))
-  # Find the indices of elements in equation j that are betas
-  fpos <- grep("^0", character_beta_matrix[, jx], invert = TRUE)
-  for (ix in seq_along(fpos)) {
-    permutation_matrix[ix, fpos[ix]] <- 1
-  }
+  theta_permutation <- construct_theta_permutation(
+    character_beta_matrix, jx, length(theta_hat)
+  )
+  permutation <- theta_permutation$permutation
+  seperate_blocks_at <- theta_permutation$seperate_blocks_at
 
-  # Permute zero restrictions to the end
-  # Find the indices of elements in equation j that are 0
-  fposend <- grep("\\b0\\b", character_beta_matrix[, jx])
-
-  permute_from_row <- length(fpos) + 1
-  seperate_blocks_at <- length(theta_hat) - length(fposend)
-
-  for (ix in seq_along(fposend)) {
-    permutation_matrix[(seperate_blocks_at + ix), fposend[ix]] <- 1
-  }
-
-  if (number_endogenous_in_j != 0) {
-    # Leave free parameters of other columns at their place
-    permutation_matrix[
-      permute_from_row:seperate_blocks_at,
-      (length(character_beta_matrix[, jx]) + 1):length(theta_hat)
-    ] <-
-      diag(length(theta_hat) - length(character_beta_matrix[, jx]))
-  }
   # Permute theta_hat
-  theta_p <- permutation_matrix %*% theta_hat
+  theta_p <- theta_hat[permutation]
 
   # Construct the two blocks
   theta_p1 <- theta_p[1:seperate_blocks_at]
@@ -426,7 +405,7 @@ draw_theta_j <- function(y_matrix, x_matrix, character_gamma_matrix,
   xi <- kronecker(omega_tilde_jw, solve(xtx))
 
   # Permute xi
-  xi_p <- permutation_matrix %*% xi %*% t(permutation_matrix)
+  xi_p <- xi[permutation, permutation, drop = FALSE]
 
   # Construct the two blocks
   xi_p11 <- xi_p[1:seperate_blocks_at, 1:seperate_blocks_at, drop = FALSE]

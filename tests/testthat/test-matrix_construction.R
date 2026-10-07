@@ -136,3 +136,81 @@ endogenous variable case", {
   )
   expect_equal(result, expected_output)
 })
+
+# The permutation matrix P that moves the zero restrictions to the end, built
+# element by element. construct_theta_permutation() must give the same order.
+permutation_matrix_for <- function(character_beta_matrix, jx,
+                                   number_of_parameters) {
+  number_of_exogenous <- nrow(character_beta_matrix)
+  permutation_matrix <- matrix(0, number_of_parameters, number_of_parameters)
+
+  fpos <- grep("^0", character_beta_matrix[, jx], invert = TRUE)
+  for (ix in seq_along(fpos)) {
+    permutation_matrix[ix, fpos[ix]] <- 1
+  }
+
+  fposend <- grep("\\b0\\b", character_beta_matrix[, jx])
+  seperate_blocks_at <- number_of_parameters - length(fposend)
+  for (ix in seq_along(fposend)) {
+    permutation_matrix[seperate_blocks_at + ix, fposend[ix]] <- 1
+  }
+
+  if (number_of_parameters > number_of_exogenous) {
+    permutation_matrix[
+      (length(fpos) + 1):seperate_blocks_at,
+      (number_of_exogenous + 1):number_of_parameters
+    ] <- diag(number_of_parameters - number_of_exogenous)
+  }
+  permutation_matrix
+}
+
+test_that("construct_theta_permutation matches the permutation matrix", {
+  character_beta_matrix <- simulated_data$character_beta_matrix
+  number_of_exogenous <- nrow(character_beta_matrix)
+
+  # equation 1 has one endogenous regressor, equation 3 has none
+  cases <- list(
+    list(jx = 1, number_of_parameters = 2 * number_of_exogenous),
+    list(jx = 3, number_of_parameters = number_of_exogenous)
+  )
+  for (case in cases) {
+    result <- construct_theta_permutation(
+      character_beta_matrix, case$jx, case$number_of_parameters
+    )
+    permutation <- result$permutation
+    permutation_matrix <- permutation_matrix_for(
+      character_beta_matrix, case$jx, case$number_of_parameters
+    )
+
+    theta <- withr::with_seed(7, stats::rnorm(case$number_of_parameters))
+    xi <- crossprod(withr::with_seed(
+      8,
+      matrix(
+        stats::rnorm(case$number_of_parameters^2),
+        case$number_of_parameters
+      )
+    ))
+
+    # P theta and P Xi P'
+    expect_equal(theta[permutation], c(permutation_matrix %*% theta))
+    expect_equal(
+      xi[permutation, permutation],
+      permutation_matrix %*% xi %*% t(permutation_matrix)
+    )
+
+    # P' theta permutes back
+    theta_back <- numeric(case$number_of_parameters)
+    theta_back[permutation] <- theta
+    expect_equal(theta_back, c(t(permutation_matrix) %*% theta))
+
+    # the zero restrictions are the last block
+    n_zero <- sum(character_beta_matrix[, case$jx] == "0")
+    expect_equal(
+      result$seperate_blocks_at, case$number_of_parameters - n_zero
+    )
+    expect_equal(
+      tail(permutation, n_zero),
+      unname(which(character_beta_matrix[, case$jx] == "0"))
+    )
+  }
+})
