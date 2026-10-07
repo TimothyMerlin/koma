@@ -97,6 +97,25 @@ non-constant predetermined variable exists", {
   )
 })
 
+test_that("model_identification reports the order condition when there are
+no predetermined variables besides the constant", {
+  # neither equation excludes anything, so the order condition fails
+  equations <-
+    "a ~ b,
+    b ~ a"
+
+  sys_eq <- system_of_equations(equations, character(0))
+
+  expect_error(
+    model_identification(
+      sys_eq$character_gamma_matrix,
+      sys_eq$character_beta_matrix,
+      sys_eq$identities
+    ),
+    "Model identification error: order"
+  )
+})
+
 test_that("model_identification without gamma parameters", {
   equations <-
     "manufacturing ~ manufacturing.L(1) + world_gdp,

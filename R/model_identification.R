@@ -66,11 +66,17 @@ model_identification <- function(character_gamma_matrix,
   )
 
   # Compute Beta matrix
-  beta_parameters <- multivariate_norm(
-    n = 1,
-    matrix(0, dim(beta_vec$transformation_matrix)[2], 1),
-    diag(dim(beta_vec$transformation_matrix)[2]) * 0.5
-  )
+  number_of_betas <- dim(beta_vec$transformation_matrix)[2]
+  if (number_of_betas > 0) {
+    beta_parameters <- multivariate_norm(
+      n = 1,
+      matrix(0, number_of_betas, 1),
+      diag(number_of_betas) * 0.5
+    )
+  } else {
+    # No lagged or exogenous variables besides the constant
+    beta_parameters <- matrix(0, 0, 1)
+  }
   beta_matrix <- vector_to_matrix(
     beta_vec$transformation_matrix,
     beta_parameters,
