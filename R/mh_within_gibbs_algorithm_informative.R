@@ -309,7 +309,7 @@ draw_gamma_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
     )
 
     # Accept-reject step
-    if (!is.nan(alpha) && alpha > stats::runif(n = 1)) {
+    if (!is.na(alpha) && alpha > stats::runif(n = 1)) {
       gamma_jw <- candidate_gamma_parameters_j
     } else {
       gamma_jw <- gamma_jw

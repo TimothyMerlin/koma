@@ -276,7 +276,7 @@ draw_gamma_j <- function(y_matrix, x_matrix, character_gamma_matrix,
     )
 
     # Accept-reject step
-    if (alpha > stats::runif(n = 1)) {
+    if (!is.na(alpha) && alpha > stats::runif(n = 1)) {
       gamma_parameters_j <- candidate_gamma_parameters_j
     } else {
       gamma_parameters_j <- gamma_parameters_j

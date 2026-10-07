@@ -255,6 +255,36 @@ the one endogenous variable case", {
   )
 })
 
+test_that("draw_gamma_j rejects the candidate when the target is not a number", {
+  # real data does not produce this, so the target is replaced
+  testthat::local_mocked_bindings(target_j = function(...) NaN)
+
+  y_matrix <- simulated_data$y_matrix
+  x_matrix <- simulated_data$x_matrix
+  character_gamma_matrix <- simulated_data$character_gamma_matrix
+  character_beta_matrix <- simulated_data$character_beta_matrix
+  jx <- 1
+  gamma_parameters_1 <- structure(-0.34996818653039, dim = c(1L, 1L))
+  cholesky_of_inverse_hessian <- structure(0.175744390195533, dim = c(1L, 1L))
+
+  new_gamma_parameters_1 <- withr::with_seed(
+    7,
+    draw_gamma_j(
+      y_matrix,
+      x_matrix,
+      character_gamma_matrix,
+      character_beta_matrix,
+      jx,
+      gamma_parameters_1,
+      tau = 1.1,
+      cholesky_of_inverse_hessian,
+      crossprod(x_matrix),
+      xbtxb_for(x_matrix, character_beta_matrix, jx)
+    )
+  )
+  expect_equal(new_gamma_parameters_1, gamma_parameters_1)
+})
+
 test_that("draw_gamma_j returns 0 when there are no endogenous variables", {
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix
