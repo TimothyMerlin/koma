@@ -19,7 +19,7 @@ test_that("draw_parameters_j_informative handles an equation with no free coeffi
   expect_equal(result$omega_tilde_jw, result$omega_jw)
 })
 
-test_that("informative targets warn when called directly without gamma parameters", {
+test_that("informative target warns when called directly without gamma parameters", {
   expect_silent(equation_data <- construct_equation_data(
     simulated_data$y_matrix, simulated_data$x_matrix,
     simulated_data$character_gamma_matrix, simulated_data$character_beta_matrix,
@@ -31,21 +31,15 @@ test_that("informative targets warn when called directly without gamma parameter
     character_beta_matrix = simulated_data$character_beta_matrix,
     jx = 3, gamma_jw = NA, equation_data = equation_data
   )
-  targets <- list(
-    list(fun = target_j_informative,
-      extra = list(omega_jw = NULL, theta_jw = NULL, priors_j = NULL)),
-    list(fun = target_j_informative_initial,
-      extra = list(xtx = NULL, xbtxb = NULL))
+  expect_warning(
+    result <- do.call(
+      target_j_informative,
+      c(args, list(omega_jw = NULL, theta_jw = NULL, priors_j = NULL))
+    ),
+    "Equation 3 does not contain any gamma parameters. Returning NA.",
+    fixed = TRUE
   )
-
-  for (target in targets) {
-    expect_warning(
-      result <- do.call(target$fun, c(args, target$extra)),
-      "Equation 3 does not contain any gamma parameters. Returning NA.",
-      fixed = TRUE
-    )
-    expect_identical(result, NA)
-  }
+  expect_identical(result, NA)
 })
 
 test_that("draw_parameters_j_informative returns parameters for equation 1", {
