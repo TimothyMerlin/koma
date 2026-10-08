@@ -17,5 +17,8 @@ A character vector of the formatted equations.
 \description{
 This function formats an object of class \code{koma_seq} for better readability.
 It formats the equations to ensure proper spacing around operators and aligns
-the equations for a cleaner display.
+the equations for a cleaner display. Priors are read from \code{x$priors} and
+shown in front of the term they belong to, with the error-term prior last.
+Equation specific settings are read from \code{x$equation_settings} and appended
+in square brackets.
 }

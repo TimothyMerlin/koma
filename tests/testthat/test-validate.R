@@ -376,6 +376,70 @@ fragment truncated at a '-'", {
 })
 
 # Validate single equations
+test_that("validate_sys_eq_priors accepts the priors of a new system", {
+  sys_eq <- system_of_equations(
+    "consumption ~ {0,1000}1 + {0.4,0.1}gdp + {0.9,10}consumption.L(1:2) + {3,0.001},
+    gdp == 0.5*consumption + 0.5*x",
+    exogenous_variables = "x"
+  )
+  expect_true(validate_sys_eq_priors(sys_eq))
+
+  # priors changed by hand to something valid
+  sys_eq$priors[[1]]$gdp <- list(-0.2, 5)
+  sys_eq$priors[[1]]$constant <- NULL
+  expect_true(validate_sys_eq_priors(sys_eq))
+})
+
+test_that("validate_sys_eq_priors rejects invalid priors set by hand", {
+  sys_eq <- system_of_equations(
+    "consumption ~ {0.4,0.1}gdp + consumption.L(1),
+    gdp == 0.5*consumption + 0.5*x",
+    exogenous_variables = "x"
+  )
+
+  # a term that is not in the equation
+  invalid <- sys_eq
+  invalid$priors[[1]]$gpd <- list(0, 1)
+  expect_error(validate_sys_eq_priors(invalid), "consumption.*gpd")
+
+  # variance that is not positive
+  invalid <- sys_eq
+  invalid$priors[[1]]$gdp <- list(0.4, -0.1)
+  expect_error(validate_sys_eq_priors(invalid), "consumption.*gdp")
+
+  # missing or non-numeric values
+  invalid <- sys_eq
+  invalid$priors[[1]]$gdp <- list(NA_real_, 0.1)
+  expect_error(validate_sys_eq_priors(invalid), "consumption.*gdp")
+  invalid$priors[[1]]$gdp <- list(0.4)
+  expect_error(validate_sys_eq_priors(invalid), "consumption.*gdp")
+  invalid$priors[[1]]$gdp <- list("0.4", 0.1)
+  expect_error(validate_sys_eq_priors(invalid), "consumption.*gdp")
+
+  # the messages say what the two numbers are
+  invalid <- sys_eq
+  invalid$priors[[1]]$gdp <- list(0.4, 0)
+  expect_error(validate_sys_eq_priors(invalid), "list(mean, variance)", fixed = TRUE)
+  invalid <- sys_eq
+  invalid$priors[[1]]$epsilon <- list(3, -1)
+  expect_error(validate_sys_eq_priors(invalid), "list(df, scale)", fixed = TRUE)
+
+  # unnamed prior
+  invalid <- sys_eq
+  invalid$priors[[1]] <- list(list(0.4, 0.1))
+  expect_error(validate_sys_eq_priors(invalid), "consumption")
+
+  # prior on an identity
+  invalid <- sys_eq
+  invalid$priors[[2]] <- list(consumption = list(0.5, 1))
+  expect_error(validate_sys_eq_priors(invalid), "gdp.*identit")
+
+  # not one entry per equation
+  invalid <- sys_eq
+  invalid$priors <- invalid$priors[1]
+  expect_error(validate_sys_eq_priors(invalid), "one entry per equation")
+})
+
 test_that("validate_equation processes valid R variable names correctly", {
   equation <- c("consumption123~constant+0.5*manufacturing+gdp")
   expect_true(validate_equation(equation))

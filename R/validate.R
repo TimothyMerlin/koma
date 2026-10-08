@@ -461,6 +461,93 @@ validate_priors <- function(equation) {
   }
 }
 
+#' Validate the Priors Stored in a System of Equations
+#'
+#' `validate_priors()` checks the prior syntax in the equation strings when the
+#' system is created. The priors can be changed afterwards in `sys_eq$priors`,
+#' so this checks the stored priors again before they are used.
+#'
+#' @param sys_eq A `koma_seq` object.
+#' @param call The environment from which the error is called.
+#'
+#' @return `TRUE` invisibly, or an error listing the invalid priors.
+#' @keywords internal
+validate_sys_eq_priors <- function(sys_eq, call = rlang::caller_env()) {
+  equations <- sys_eq$equations
+  priors <- sys_eq$priors
+
+  if (!is.list(priors) || length(priors) != length(equations)) {
+    cli::cli_abort(c(
+      "!" = "{.code sys_eq$priors} must be a list with one entry per equation.",
+      "i" = "Use an empty {.code list()} for equations without priors."
+    ), call = call)
+  }
+
+  is_valid_prior <- function(prior) {
+    length(prior) == 2 &&
+      all(vapply(prior, function(value) {
+        is.numeric(value) && length(value) == 1 && is.finite(value)
+      }, logical(1))) &&
+      prior[[2]] > 0
+  }
+
+  problems <- character(0)
+  for (ix in seq_along(equations)) {
+    priors_j <- priors[[ix]]
+    if (length(priors_j) == 0) {
+      next
+    }
+    eq <- split_eq(equations[ix])
+    add_problem <- function(...) {
+      problems <<- c(problems, paste0(eq$lhs, ": ", ...))
+    }
+
+    if (eq$op == "==") {
+      add_problem("identities cannot have priors.")
+      next
+    }
+    prior_names <- names(priors_j)
+    if (!is.list(priors_j) || is.null(prior_names) || any(!nzchar(prior_names))) {
+      add_problem("priors must be a list named by the terms they belong to.")
+      next
+    }
+
+    terms <- c(strsplit(eq$rhs, "+", fixed = TRUE)[[1]], "epsilon")
+    unknown <- setdiff(prior_names, terms)
+    if (length(unknown) > 0) {
+      add_problem("no such term for prior ", paste(unknown, collapse = ", "), ".")
+    }
+    duplicated_names <- unique(prior_names[duplicated(prior_names)])
+    if (length(duplicated_names) > 0) {
+      add_problem("more than one prior for ", paste(duplicated_names, collapse = ", "), ".")
+    }
+    invalid <- unique(prior_names[!vapply(priors_j, is_valid_prior, logical(1))])
+    invalid_coefficients <- setdiff(invalid, "epsilon")
+    if (length(invalid_coefficients) > 0) {
+      add_problem(
+        "prior for ", paste(invalid_coefficients, collapse = ", "),
+        " must be list(mean, variance) with a positive variance."
+      )
+    }
+    if ("epsilon" %in% invalid) {
+      add_problem(
+        "error-term prior (epsilon) must be list(df, scale) with a positive scale."
+      )
+    }
+  }
+
+  if (length(problems) > 0) {
+    problems <- gsub("([{}])", "\\1\\1", problems)
+    cli::cli_abort(c(
+      "!" = "Invalid priors in {.code sys_eq$priors}:",
+      stats::setNames(problems, rep("x", length(problems))),
+      "i" = "The error-term prior is named {.val epsilon}."
+    ), call = call)
+  }
+
+  invisible(TRUE)
+}
+
 #' Validate Forecast Restrictions
 #'
 #' Checks the structure of user-supplied forecast restrictions before any

@@ -118,6 +118,55 @@ test_that("system_of_equations", {
   format(result)
 })
 
+test_that("format.koma_seq shows the priors stored in the system", {
+  equations <- "consumption ~ {0,1000}1 + {0.4,0.1}gdp + consumption.L(1:2) + {3,0.001},
+gdp == 0.5*consumption + 0.5*x"
+  result <- system_of_equations(equations, exogenous_variables = "x")
+  out <- cli::ansi_strip(format(result))
+
+  expect_match(
+    out[1],
+    "~  {0, 1000} constant + {0.4, 0.1} gdp + consumption.L(1) + consumption.L(2) + {3, 0.001}",
+    fixed = TRUE
+  )
+  # identities have no priors and are printed as before
+  expect_match(out[2], "== 0.5 * consumption + 0.5 * x", fixed = TRUE)
+
+  # priors changed after the system was created show up in the print
+  result$priors[[1]][["consumption.L(1)"]] <- list(0.9, 10)
+  result$priors[[1]]$gdp <- NULL
+  out <- cli::ansi_strip(format(result))
+  expect_match(
+    out[1],
+    "~  {0, 1000} constant + gdp + {0.9, 10} consumption.L(1) + consumption.L(2) + {3, 0.001}",
+    fixed = TRUE
+  )
+})
+
+test_that("format.koma_seq shows the equation settings stored in the system", {
+  equations <- "consumption ~ gdp + {3,0.001} [tau=1.2, ndraws=100],
+service ~ gdp,
+gdp == 0.5*consumption + 0.5*service"
+  result <- system_of_equations(equations)
+  out <- cli::ansi_strip(format(result))
+
+  expect_match(
+    out[1], "~  constant + gdp + {3, 0.001} [tau = 1.2, ndraws = 100]",
+    fixed = TRUE
+  )
+  # equations without settings are printed as before
+  expect_match(out[2], "~  constant \\+ gdp\\s*$")
+  expect_match(out[3], "== 0.5 * consumption + 0.5 * service", fixed = TRUE)
+
+  # settings changed after the system was created show up in the print
+  result$equation_settings$consumption <- list()
+  result$equation_settings$service <- list(tau = 0.5)
+  out <- cli::ansi_strip(format(result))
+  expect_match(out[1], "~  constant + gdp + {3, 0.001}", fixed = TRUE)
+  expect_no_match(out[1], "[", fixed = TRUE)
+  expect_match(out[2], "~  constant + gdp [tau = 0.5]", fixed = TRUE)
+})
+
 test_that("system_of_equation", {
   # returns without error when already processed equations are given as input
   equations <- c(

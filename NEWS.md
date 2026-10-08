@@ -4,6 +4,11 @@
 
 * `estimate(..., estimates = )` is now ignored with a warning, and all equations are always estimated. The check for changed equations missed changes to contemporaneous regressors, priors, the sample and the data, and then returned stale draws.
 
+## New features
+
+* Printing a system of equations now shows its priors, e.g. `{0.4, 0.1} gdp`, the error-term prior and the equation settings, e.g. `[tau = 1.2]`. The print reads them from the object, so it reflects later changes to them.
+* `estimate()` now checks the priors stored in the system of equations and errors on invalid ones, e.g. a prior for a term that is not in the equation or a variance that is not positive. Before, priors changed by hand after `system_of_equations()` were not checked.
+
 ## Changed results
 
 The following fixes change the estimates or forecasts of affected models. Re-estimate them.

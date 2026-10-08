@@ -409,6 +409,14 @@ test_that("estimate throws error", {
     "`sys_eq` must be of class"
   )
 
+  # priors changed by hand to something invalid
+  invalid_sys_eq <- sys_eq
+  invalid_sys_eq$priors[[1]]$gdp <- list(0.4, -0.1)
+  expect_error(
+    estimate(ts_data, invalid_sys_eq, dates),
+    "Invalid priors"
+  )
+
   # y_matrix or x_matrix contain NA values (move estimation start and warn)
   equations <-
     "real_interest_rate ~ gdp + service,

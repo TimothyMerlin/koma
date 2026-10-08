@@ -164,6 +164,7 @@ estimate.list <- function(ts_data, sys_eq, dates,
       "You provided a {class(sys_eq)}."
     ))
   }
+  validate_sys_eq_priors(sys_eq)
   vars <- c(sys_eq$endogenous_variables, sys_eq$exogenous_variables, sys_eq$weight_variables)
   if (any(!vars %in% names(ts_data))) {
     cli::cli_abort(c(
