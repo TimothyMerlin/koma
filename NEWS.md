@@ -32,6 +32,7 @@ The following fixes change the estimates or forecasts of affected models. Re-est
 ### Estimation and forecasting
 
 * Sampler initialization now handles equations whose exogenous coefficients, including the intercept, are all restricted to zero.
+* Both samplers now handle equations with no free coefficients, drawing only their error variance.
 * `estimate()` now stops with an error that names each failed equation and the reason, instead of returning an estimate that fails later in `summary()` or `forecast()`.
 * Sampler settings that save no draws (e.g. `ndraws = 0`, or `nstore` larger than the draws after burn-in) now fail early.
 * Invalid error covariance matrices (not a matrix, not square, or of the wrong size) now produce clear errors.

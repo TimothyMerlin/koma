@@ -1,3 +1,24 @@
+test_that("draw_parameters_j_informative handles an equation with no free coefficients", {
+  x_matrix <- cbind(1, seq_len(20))
+  y_matrix <- cbind(rep(c(-1, 1), 10), seq_len(20))
+  character_gamma_matrix <- diag(2)
+  character_beta_matrix <- matrix(c("0", "0", "beta_12", "beta_22"), 2)
+  gibbs_sampler <- new_gibbs_spec(6, 0.5, 1, 1.1)
+
+  result <- draw_parameters_j_informative(
+    y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
+    1, gibbs_sampler, priors = list(list())
+  )
+
+  expect_length(result$beta_jw, 3)
+  expect_true(all(lengths(result$beta_jw) == 0))
+  expect_equal(result$theta_jw, rep(list(matrix(0, 2, 1)), 3))
+  expect_true(all(is.na(unlist(result$gamma_jw))))
+  expect_true(all(is.finite(unlist(result$omega_jw))))
+  expect_true(all(unlist(result$omega_jw) > 0))
+  expect_equal(result$omega_tilde_jw, result$omega_jw)
+})
+
 test_that("informative targets warn when called directly without gamma parameters", {
   expect_silent(equation_data <- construct_equation_data(
     simulated_data$y_matrix, simulated_data$x_matrix,

@@ -1,3 +1,24 @@
+test_that("draw_parameters_j handles an equation with no free coefficients", {
+  x_matrix <- cbind(1, seq_len(20))
+  y_matrix <- cbind(rep(c(-1, 1), 10), seq_len(20))
+  character_gamma_matrix <- diag(2)
+  character_beta_matrix <- matrix(c("0", "0", "beta_12", "beta_22"), 2)
+  gibbs_sampler <- new_gibbs_spec(6, 0.5, 1, 1.1)
+
+  result <- draw_parameters_j(
+    y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
+    1, gibbs_sampler
+  )
+
+  expect_length(result$beta_jw, 3)
+  expect_true(all(lengths(result$beta_jw) == 0))
+  expect_true(all(lengths(result$theta_jw) == 0))
+  expect_true(all(is.na(unlist(result$gamma_jw))))
+  expect_true(all(is.finite(unlist(result$omega_jw))))
+  expect_true(all(unlist(result$omega_jw) > 0))
+  expect_equal(result$omega_tilde_jw, result$omega_jw)
+})
+
 test_that("draw_parameters returns correct parameters for equation 1", {
   skip_on_cran()
   y_matrix <- simulated_data$y_matrix

@@ -497,7 +497,11 @@ draw_theta_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
     xi_tilde <- xi_p11
   }
 
-  theta_pw1 <- multivariate_norm(n = 1, theta_tilde, xi_tilde)
+  theta_pw1 <- if (length(theta_tilde) == 0) {
+    numeric(0)
+  } else {
+    multivariate_norm(n = 1, theta_tilde, xi_tilde)
+  }
 
   # Construct full theta_p vector
   theta_pw <- c(theta_pw1, matrix(0, length(theta_p2), 1))
