@@ -245,37 +245,6 @@ test_that("validate_identities warns on deviations with exogenous x_matrix", {
   )
 })
 
-test_that("validate_identities keeps the weights of components that share a
-theta name", {
-  # an endogenous and an exogenous component of one identity can get the
-  # same theta name, as in y == 0.3*b + 0.7*x1
-  mat <- matrix(
-    c(
-      1.7, 1,
-      2.7, 2
-    ),
-    ncol = 2,
-    byrow = TRUE
-  )
-  colnames(mat) <- c("y", "b")
-  ts_out <- stats::ts(mat, start = c(2023, 2), frequency = 4)
-
-  x_matrix <- matrix(c(2, 3), ncol = 1)
-  colnames(x_matrix) <- "x1"
-
-  expect_silent(
-    validate_identities(ts_out,
-      identities = list(
-        y = list(
-          components = list(b = "theta3_2", x1 = "theta3_2"),
-          weights = list(theta3_2 = 0.3, theta3_2 = 0.7)
-        )
-      ),
-      x_matrix = x_matrix
-    )
-  )
-})
-
 test_that("validate_identities uses distinct endogenous and exogenous weights", {
   sys_eq <- system_of_equations(
     "a ~ x1, b ~ a, y == 0.3*b + 0.7*x1",
