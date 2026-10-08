@@ -619,7 +619,9 @@ validate_identities <- function(ts_out, identities, tol = 1e-8,
     )
     new_cols <- setdiff(colnames(ts_x), colnames(ts_out))
     if (length(new_cols)) {
+      output_names <- c(colnames(ts_out), new_cols)
       ts_out <- cbind(ts_out, ts_x[, new_cols, drop = FALSE])
+      colnames(ts_out) <- output_names
     }
   }
 
@@ -629,9 +631,10 @@ validate_identities <- function(ts_out, identities, tol = 1e-8,
     comps <- names(iden$components)
     if (!length(comps)) next
 
-    weights <- vapply(comps, function(comp) {
-      weight_name <- iden$components[[comp]]
-      wt <- iden$weights[[weight_name]]
+    # Identity weights are stored in component order, including legacy
+    # identities whose gamma and beta components share a theta name.
+    weights <- vapply(seq_along(comps), function(index) {
+      wt <- iden$weights[[index]]
       suppressWarnings(as.numeric(wt))
     }, numeric(1))
 
