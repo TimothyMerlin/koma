@@ -13,7 +13,8 @@ draw_theta_j(
   gamma_parameters_j,
   omega_tilde_jw,
   xtx,
-  inverse_xtx = solve(xtx)
+  inverse_xtx = solve(xtx),
+  theta_permutation = NULL
 )
 }
 \arguments{
@@ -45,6 +46,9 @@ Gibbs draws, so it is computed once instead of on every call.}
 
 \item{inverse_xtx}{Precomputed inverse of \eqn{x_matrix'x_matrix}. Same
 rationale as \code{xtx}.}
+
+\item{theta_permutation}{Precomputed order of the elements of theta, as
+returned by \code{\link[=construct_theta_permutation]{construct_theta_permutation()}}. Same rationale as \code{xtx}.}
 }
 \value{
 List containing theta_jw and beta_jw

@@ -71,6 +71,11 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
   } else {
     xbtxb <- xtx
   }
+  theta_permutation <- construct_theta_permutation(
+    character_beta_matrix, jx,
+    nrow(character_beta_matrix) *
+      (length(grep("gamma", character_gamma_matrix[, jx])) + 1)
+  )
 
   ##### 1. Initialize sampler:
   # get starting value for Metropolis-Hastings algorithm
@@ -107,7 +112,7 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
     ##### 2. Draw Theta_j from multivariate normal distribution
     results_draw_theta_j <- draw_theta_j_informative(
       y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
-      jx, gamma_jw, omega_jw, priors_j, xtx
+      jx, gamma_jw, omega_jw, priors_j, xtx, theta_permutation
     )
 
     # Get theta matrix
@@ -397,12 +402,15 @@ draw_omega_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
 #' @inheritParams draw_gamma_j_informative
 #' @param xtx Precomputed \eqn{x_matrix'x_matrix}. This is invariant across
 #' Gibbs draws, so it is computed once instead of on every call.
+#' @param theta_permutation Precomputed order of the elements of theta, as
+#' returned by [construct_theta_permutation()]. Same rationale as `xtx`.
 #'
 #' @return List containing theta_jw and beta_jw
 #' @keywords internal
 draw_theta_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
                                      character_beta_matrix, jx, gamma_jw,
-                                     omega_jw, priors_j, xtx) {
+                                     omega_jw, priors_j, xtx,
+                                     theta_permutation = NULL) {
   number_endogenous_in_j <-
     length(grep("gamma", character_gamma_matrix[, jx]))
   number_of_exogenous <- nrow(character_beta_matrix)
@@ -434,9 +442,11 @@ draw_theta_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
   # parameters and the second block contains all parameters that are
   # restricted to zero.
   # Zero restrictions only on betas, i.e. first column of theta_hat
-  theta_permutation <- construct_theta_permutation(
-    character_beta_matrix, jx, length(theta_bar)
-  )
+  if (is.null(theta_permutation)) {
+    theta_permutation <- construct_theta_permutation(
+      character_beta_matrix, jx, length(theta_bar)
+    )
+  }
   permutation <- theta_permutation$permutation
   seperate_blocks_at <- theta_permutation$seperate_blocks_at
 

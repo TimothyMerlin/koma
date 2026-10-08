@@ -60,6 +60,11 @@ draw_parameters_j <- function(y_matrix, x_matrix, character_gamma_matrix,
   # whole loop below. Compute them once here instead of on every call.
   xtx <- crossprod(x_matrix)
   inverse_xtx <- solve(xtx)
+  theta_permutation <- construct_theta_permutation(
+    character_beta_matrix, jx,
+    nrow(character_beta_matrix) *
+      (length(grep("gamma", character_gamma_matrix[, jx])) + 1)
+  )
   indices_to_remove <- grep("\\b0\\b", character_beta_matrix[, jx])
   if (length(indices_to_remove) > 0) {
     xbtxb <- crossprod(x_matrix[, -indices_to_remove, drop = FALSE])
@@ -121,7 +126,8 @@ draw_parameters_j <- function(y_matrix, x_matrix, character_gamma_matrix,
     ##### Draw 4. Theta_j from multivariate normal distribution
     results_draw_theta_j <- draw_theta_j(
       y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
-      jx, gamma_jw, results_draw_omega_j$omega_tilde_jw, xtx, inverse_xtx
+      jx, gamma_jw, results_draw_omega_j$omega_tilde_jw, xtx, inverse_xtx,
+      theta_permutation
     )
 
     ##### Save draws
@@ -374,12 +380,15 @@ draw_omega_j <- function(y_matrix, x_matrix, character_gamma_matrix,
 #' @inheritParams draw_gamma_j
 #' @param inverse_xtx Precomputed inverse of \eqn{x_matrix'x_matrix}. Same
 #' rationale as `xtx`.
+#' @param theta_permutation Precomputed order of the elements of theta, as
+#' returned by [construct_theta_permutation()]. Same rationale as `xtx`.
 #'
 #' @return List containing theta_jw and beta_jw
 #' @keywords internal
 draw_theta_j <- function(y_matrix, x_matrix, character_gamma_matrix,
                          character_beta_matrix, jx, gamma_parameters_j,
-                         omega_tilde_jw, xtx, inverse_xtx = solve(xtx)) {
+                         omega_tilde_jw, xtx, inverse_xtx = solve(xtx),
+                         theta_permutation = NULL) {
   number_endogenous_in_j <- length(grep("gamma", character_gamma_matrix[, jx]))
 
   if (number_endogenous_in_j == 0) {
@@ -399,9 +408,11 @@ draw_theta_j <- function(y_matrix, x_matrix, character_gamma_matrix,
   # parameters and the second block contains all parameters that are
   # restricted to zero.
   # Zero restrictions only on betas, i.e. first column of theta_hat
-  theta_permutation <- construct_theta_permutation(
-    character_beta_matrix, jx, length(theta_hat)
-  )
+  if (is.null(theta_permutation)) {
+    theta_permutation <- construct_theta_permutation(
+      character_beta_matrix, jx, length(theta_hat)
+    )
+  }
   permutation <- theta_permutation$permutation
   seperate_blocks_at <- theta_permutation$seperate_blocks_at
 
