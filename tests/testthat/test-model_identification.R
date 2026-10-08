@@ -179,6 +179,25 @@ test_that("model_identification leaves the random number generator untouched", {
   expect_equal(runif(1), expected)
 })
 
+test_that("model_identification does not create a seed when none exists", {
+  equations <-
+    "a ~ b + a.L(1) + x,
+    b ~ a + b.L(1) + x"
+
+  sys_eq <- system_of_equations(equations, "x")
+
+  withr::local_preserve_seed()
+  rm(".Random.seed", envir = globalenv())
+
+  model_identification(
+    sys_eq$character_gamma_matrix,
+    sys_eq$character_beta_matrix,
+    sys_eq$identities
+  )
+
+  expect_false(exists(".Random.seed", envir = globalenv(), inherits = FALSE))
+})
+
 test_that("model_identification counts an excluded constant", {
   # b includes both exogenous variables but has no constant, which a includes
   equations <-

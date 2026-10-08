@@ -56,10 +56,10 @@ model_identification <- function(character_gamma_matrix,
   # number generator afterwards, so the check does not change later draws.
   old_seed <- get0(".Random.seed", envir = globalenv(), inherits = FALSE)
   on.exit(
-    if (is.null(old_seed)) {
-      rm(".Random.seed", envir = globalenv())
-    } else {
+    if (!is.null(old_seed)) {
       assign(".Random.seed", old_seed, envir = globalenv())
+    } else if (exists(".Random.seed", envir = globalenv(), inherits = FALSE)) {
+      rm(".Random.seed", envir = globalenv())
     },
     add = TRUE
   )
@@ -391,6 +391,8 @@ beta_vectorization <- function(character_beta_matrix, identity_weights) {
   number_of_exogenous <- nrow(character_beta_matrix)
   number_of_endogenous <- ncol(character_beta_matrix)
   character_vector <- c(character_beta_matrix)
+  # Parameter names without the leading minus sign
+  parameter_names <- gsub("^-", "", character_vector)
 
   parameters <- get_parameters(character_beta_matrix, "beta")
 
@@ -399,9 +401,7 @@ beta_vectorization <- function(character_beta_matrix, identity_weights) {
     0, number_of_endogenous * number_of_exogenous, length(parameters)
   )
   for (ix in seq_along(parameters)) {
-    transformation_matrix[
-      gsub("^-", "", character_vector) == parameters[ix], ix
-    ] <- 1
+    transformation_matrix[parameter_names == parameters[ix], ix] <- 1
   }
 
   theta_parameters <- get_parameters(character_beta_matrix, "theta")
@@ -410,7 +410,7 @@ beta_vectorization <- function(character_beta_matrix, identity_weights) {
 
   for (ix in seq_along(theta_parameters)) {
     constant_vector[
-      character_vector == theta_parameters[ix]
+      parameter_names == theta_parameters[ix]
     ] <- theta_parameters[ix]
   }
 
