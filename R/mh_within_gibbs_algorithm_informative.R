@@ -536,28 +536,23 @@ target_j_informative <- function(y_matrix, x_matrix, character_gamma_matrix,
     a_matrix_j[, 1] <- c(1, -gamma_jw)
   }
 
-  # explicit gamma priors specified
+  # Evaluate log of target function
+  # (multiply by -1: maximize instead of minimize)
+  # Likelihood term
+  target_result <-
+    0.5 * sum(diag(t(solve(a_matrix_j)) %*%
+      t(z_matrix_j - x_matrix %*% theta_jw) %*%
+      (z_matrix_j - x_matrix %*% theta_jw) %*%
+      solve(a_matrix_j) %*% solve(omega_jw)))
+
+  # Prior term, only if explicit gamma priors are specified
   if (!is.null(priors_j[["gamma_mean"]]) && !is.null(priors_j[["gamma_vcv"]])) {
-    # Evaluate log of target function
-    # (multiply by -1: maximize instead of minimize)
-    target_result <-
-      -multivariate_norm_pdf(
+    target_result <- target_result -
+      multivariate_norm_pdf(
         gamma_jw,
         mu = priors_j[["gamma_mean"]], sigma = priors_j[["gamma_vcv"]],
         log = TRUE
-      ) +
-      0.5 * sum(diag(t(solve(a_matrix_j)) %*%
-        t(z_matrix_j - x_matrix %*% theta_jw) %*%
-        (z_matrix_j - x_matrix %*% theta_jw) %*%
-        solve(a_matrix_j) %*% solve(omega_jw)))
-  } else {
-    # Evaluate log of target function
-    # (multiply by -1: maximize instead of minimize)
-    target_result <-
-      0.5 * sum(diag(t(solve(a_matrix_j)) %*%
-        t(z_matrix_j - x_matrix %*% theta_jw) %*%
-        (z_matrix_j - x_matrix %*% theta_jw) %*%
-        solve(a_matrix_j) %*% solve(omega_jw)))
+      )
   }
   target_result
 }
