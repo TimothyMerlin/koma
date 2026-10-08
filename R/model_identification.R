@@ -329,22 +329,29 @@ gamma_vectorization <- function(character_gamma_matrix, identity_weights) {
 #' be adjusted.
 #' @param identity_weights A list where each element corresponds to a set of
 #' identity rules.
+#' @param matrix_name Either `"gamma"` or `"beta"`, the matrix the constant
+#' vector belongs to.
 #' @return The adjusted constant vector in numeric form with modified values
 #' based on the identity weights.
 #' @keywords internal
-adjust_constant_vector <- function(constant_vector, identity_weights) {
+adjust_constant_vector <- function(constant_vector, identity_weights,
+                                   matrix_name = "gamma") {
   # Iterate through indices in identity_weights
   for (idx in seq_along(identity_weights)) {
-    # Get the names of elements in identity_weights at the current index
-    weight_name <- names(identity_weights[[idx]]$weights)
-    for (ix in weight_name) {
+    weights <- identity_weights[[idx]]$weights
+    # A component in the gamma matrix and one in the beta matrix can share a
+    # theta name, so only use the weights that belong to this matrix
+    component_matrix <- identity_weights[[idx]]$matrix
+    if (!is.null(component_matrix)) {
+      weights <- weights[component_matrix == matrix_name]
+    }
+    for (ix in seq_along(weights)) {
       # Find matching elements in constant_vector
-      matches <- which(constant_vector == ix)
+      matches <- which(constant_vector == names(weights)[ix])
 
       if (length(matches) > 0) {
         # Replace with corresponding numeric value
-        constant_vector[matches] <-
-          -as.numeric(identity_weights[[idx]]$weights[ix])
+        constant_vector[matches] <- -as.numeric(weights[[ix]])
       }
     }
   }
@@ -402,7 +409,9 @@ beta_vectorization <- function(character_beta_matrix,
   }
 
   # Identity weights enter the beta matrix with a positive sign
-  constant_vector <- -adjust_constant_vector(constant_vector, identity_weights)
+  constant_vector <- -adjust_constant_vector(
+    constant_vector, identity_weights, "beta"
+  )
 
   return(list(
     transformation_matrix = transformation_matrix,

@@ -468,6 +468,36 @@ test_that("vectorization matches parameter names exactly", {
   )
 })
 
+test_that("vectorization keeps the weights of identity components that share
+a theta name", {
+  # b is the second endogenous variable and x1 the second row of the beta
+  # matrix, so both components of y are named theta3_2
+  exogenous_variables <- c("x1", "x2")
+
+  sys_eq <- system_of_equations(
+    "a ~ b + x1,
+    b ~ a + x2,
+    y == 0.3*b + 0.7*x1",
+    exogenous_variables
+  )
+  beta_vec <- beta_vectorization(
+    sys_eq$character_beta_matrix, sys_eq$identities
+  )
+  expect_equal(sum(beta_vec$constant_vector), 0.7)
+
+  sys_eq <- system_of_equations(
+    "a ~ b + x1,
+    b ~ a + x2,
+    y == 0.7*x1 + 0.3*b",
+    exogenous_variables
+  )
+  gamma_vec <- gamma_vectorization(
+    sys_eq$character_gamma_matrix, sys_eq$identities
+  )
+  # three ones on the diagonal and the weight of b
+  expect_equal(sum(gamma_vec$constant_vector), 3 - 0.3)
+})
+
 test_that("vector_to_matrix", {
   transformation_matrix <- matrix(c(1, 0, 0, 0, 0, 0, 1, 0), nrow = 4, ncol = 2)
   parameters <- c(1, 2)
