@@ -186,31 +186,45 @@ test_that("initial_omega_j returns a covariance that maps to the residuals", {
   )
 })
 
-test_that("draw_gamma_j_informative rejects the candidate when the target is NA", {
-  # real data does not produce this, so the target is replaced
-  testthat::local_mocked_bindings(target_j_informative = function(...) NA_real_)
-
-  gamma_jw <- structure(-0.34996818653039, dim = c(1L, 1L))
+test_that("draw_gamma_j_informative handles a target that is not a number", {
+  current_gamma_jw <- structure(-0.34996818653039, dim = c(1L, 1L))
   cholesky_of_inverse_hessian <- structure(0.175744390195533, dim = c(1L, 1L))
 
   # omega, theta and the priors are only used by the replaced target
-  result <- withr::with_seed(
-    7,
-    draw_gamma_j_informative(
-      simulated_data$y_matrix,
-      simulated_data$x_matrix,
-      simulated_data$character_gamma_matrix,
-      simulated_data$character_beta_matrix,
-      jx = 1,
-      gamma_jw,
-      tau = 1.1,
-      cholesky_of_inverse_hessian,
-      omega_jw = NULL,
-      theta_jw = NULL,
-      priors_j = NULL
+  draw <- function() {
+    withr::with_seed(
+      7,
+      draw_gamma_j_informative(
+        simulated_data$y_matrix,
+        simulated_data$x_matrix,
+        simulated_data$character_gamma_matrix,
+        simulated_data$character_beta_matrix,
+        jx = 1,
+        current_gamma_jw,
+        tau = 1.1,
+        cholesky_of_inverse_hessian,
+        omega_jw = NULL,
+        theta_jw = NULL,
+        priors_j = NULL
+      )
     )
+  }
+  is_current <- function(gamma) isTRUE(all.equal(gamma, current_gamma_jw))
+
+  # real data does not produce this, so the target is replaced
+  # at the candidate only: the candidate is rejected
+  testthat::local_mocked_bindings(
+    target_j_informative = function(..., gamma_jw) {
+      if (is_current(gamma_jw)) 100 else NA_real_
+    }
   )
-  expect_equal(result, gamma_jw)
+  expect_equal(draw(), current_gamma_jw)
+
+  # at the current value: the chain could never move, so stop
+  testthat::local_mocked_bindings(target_j_informative = function(...) NA_real_)
+  expect_error(draw(), "not finite at the current")
+  testthat::local_mocked_bindings(target_j_informative = function(...) Inf)
+  expect_error(draw(), "not finite at the current")
 })
 
 test_that("draw_parameters_j_informative with diffuse priors", {

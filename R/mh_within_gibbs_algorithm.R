@@ -277,6 +277,14 @@ draw_gamma_j <- function(y_matrix, x_matrix, character_gamma_matrix,
       xtx = xtx,
       xbtxb = xbtxb
     )
+    if (!is.finite(target_evaluation_previous)) {
+      cli::cli_abort(c(
+        "The Metropolis-Hastings target is not finite at the current value
+        of gamma.",
+        "i" = "The chain cannot move from here. Check the equation for
+        constant or collinear series."
+      ))
+    }
     # Acceptance probability
     alpha <- min(
       1,

@@ -281,10 +281,7 @@ the one endogenous variable case", {
   )
 })
 
-test_that("draw_gamma_j rejects the candidate when the target is not a number", {
-  # real data does not produce this, so the target is replaced
-  testthat::local_mocked_bindings(target_j = function(...) NaN)
-
+test_that("draw_gamma_j handles a target that is not a number", {
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix
   character_gamma_matrix <- simulated_data$character_gamma_matrix
@@ -293,22 +290,39 @@ test_that("draw_gamma_j rejects the candidate when the target is not a number", 
   gamma_parameters_1 <- structure(-0.34996818653039, dim = c(1L, 1L))
   cholesky_of_inverse_hessian <- structure(0.175744390195533, dim = c(1L, 1L))
 
-  new_gamma_parameters_1 <- withr::with_seed(
-    7,
-    draw_gamma_j(
-      y_matrix,
-      x_matrix,
-      character_gamma_matrix,
-      character_beta_matrix,
-      jx,
-      gamma_parameters_1,
-      tau = 1.1,
-      cholesky_of_inverse_hessian,
-      crossprod(x_matrix),
-      xbtxb_for(x_matrix, character_beta_matrix, jx)
+  draw <- function() {
+    withr::with_seed(
+      7,
+      draw_gamma_j(
+        y_matrix,
+        x_matrix,
+        character_gamma_matrix,
+        character_beta_matrix,
+        jx,
+        gamma_parameters_1,
+        tau = 1.1,
+        cholesky_of_inverse_hessian,
+        crossprod(x_matrix),
+        xbtxb_for(x_matrix, character_beta_matrix, jx)
+      )
     )
+  }
+  is_current <- function(gamma) isTRUE(all.equal(gamma, gamma_parameters_1))
+
+  # real data does not produce this, so the target is replaced
+  # at the candidate only: the candidate is rejected
+  testthat::local_mocked_bindings(
+    target_j = function(..., gamma_parameters_j) {
+      if (is_current(gamma_parameters_j)) 100 else NaN
+    }
   )
-  expect_equal(new_gamma_parameters_1, gamma_parameters_1)
+  expect_equal(draw(), gamma_parameters_1)
+
+  # at the current value: the chain could never move, so stop
+  testthat::local_mocked_bindings(target_j = function(...) NaN)
+  expect_error(draw(), "not finite at the current")
+  testthat::local_mocked_bindings(target_j = function(...) Inf)
+  expect_error(draw(), "not finite at the current")
 })
 
 test_that("draw_gamma_j returns 0 when there are no endogenous variables", {
