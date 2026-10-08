@@ -230,8 +230,8 @@ calculate_eq_weights <- function(ts_data, iden, start, end) {
 #' names and "weights" for identity weights.
 #'
 #' Example:
-#' \code{list(gdp = list(components = list(manufacturing = "theta6_4"),
-#'                 weights = list(theta6_4 = NULL)))}
+#' \code{list(gdp = list(components = list(manufacturing = "theta_gamma6_4"),
+#'                 weights = list(theta_gamma6_4 = NULL)))}
 #'
 #' @return A named list containing the updated identity weights for each
 #' equation and its variables, in the same structure as the input `identities`.

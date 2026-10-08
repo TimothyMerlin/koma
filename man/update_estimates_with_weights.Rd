@@ -23,7 +23,7 @@ A list containing:
 \description{
 This function injects identity weights into the structural coefficient
 matrices. For each identity component, it finds the target entry encoded in
-the theta name (e.g., "theta6_4") and replaces the corresponding value in
+the theta name (e.g., "theta_gamma6_4") and replaces the corresponding value in
 \eqn{\Gamma} or \eqn{B}.
 }
 \seealso{

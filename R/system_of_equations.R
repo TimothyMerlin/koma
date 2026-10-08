@@ -391,7 +391,7 @@ extract_endogenous_variables <- function(equations) {
 #' mismatched variables.
 #'
 #' @param character_weights Character vector of theta placeholder strings
-#' (e.g. `"theta6_4"`), as extracted from the gamma/beta matrices.
+#' (e.g. `"theta_gamma6_4"`), as extracted from the gamma/beta matrices.
 #' @param character_gamma_matrix,character_beta_matrix The character
 #' matrices `character_weights` was extracted from.
 #' @keywords internal

@@ -19,8 +19,8 @@ similar to \code{weights}. The equation has sublists "components" for variable
 names and "weights" for identity weights.
 
 Example:
-\code{list(gdp = list(components = list(manufacturing = "theta6_4"),
-                weights = list(theta6_4 = NULL)))}}
+\code{list(gdp = list(components = list(manufacturing = "theta_gamma6_4"),
+                weights = list(theta_gamma6_4 = NULL)))}}
 }
 \value{
 A named list containing the updated identity weights for each
