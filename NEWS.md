@@ -2,37 +2,45 @@
 
 ## Breaking changes
 
-* `estimate(..., estimates = )` no longer re-estimates only the equations that changed. The argument is now ignored with a warning and all equations are estimated. The check for changed equations only compared the lagged and exogenous regressors of each equation, so a changed contemporaneous endogenous regressor, prior, estimation sample or data set was not noticed and the previous draws were returned unchanged. It also failed for systems with a single stochastic equation.
+* `estimate(..., estimates = )` is now ignored with a warning, and all equations are always estimated. The check for changed equations missed changes to contemporaneous regressors, priors, the sample and the data, and then returned stale draws.
 
-## Performance
+## Changed results
 
-* Both Gibbs samplers now compute the endogenous and restricted exogenous subsets, coefficient positions, and parameter counts once per equation and reuse them throughout initialization and sampling. This avoids repeated subsetting and name searches. The draws are unchanged.
-* The informative Gibbs sampler now computes the inverse prior covariance for theta and its product with the prior mean once per equation instead of on every draw. This reduces repeated matrix calculations, especially for equations with many regressors. The draws are unchanged.
-* `estimate()` is faster for equations with contemporaneous endogenous regressors. The sampler converted time series objects in every draw; it now works on plain matrices. In a small example the time per equation dropped from about 1.5 to 0.6 seconds for 2000 draws. The draws are unchanged.
-* `estimate()` is faster for large systems. The sampler moved the zero restrictions of an equation to the end by multiplying with a permutation matrix in every draw; it now reorders by index. For a synthetic system with 91 regressors, 400 draws of one equation take about 1.3 s instead of 2.7 s. The inverse of `X'X` is now also computed once per equation instead of in every draw. The draws are unchanged.
+The following fixes change the estimates or forecasts of affected models. Re-estimate them.
+
+* Priors on contemporaneous endogenous regressors (e.g. `{0,1}gdp` with endogenous `gdp`) ignored the data, so the posterior was just the prior. It now combines prior and likelihood.
+* Tight priors on such regressors far from the data estimate (e.g. `{1000,0.00001}gdp`) left the chain stuck at its start value. It now moves towards the prior, but can need many draws to converge; check the trace plot.
+* A prior in front of `dummies()` (e.g. `{0,1}dummies(covid, 1:8)`) now applies to all dummies, not only the first.
+* Identity weights that mix endogenous and exogenous components (e.g. `y == 0.3*b + 0.7*x1`) could overwrite each other, so estimation, forecasting and the identification check failed or used the wrong weight. Rebuild such models with `system_of_equations()`.
+* `forecast()` could drop or misplace lagged endogenous regressors when an equation skips lower lags (e.g. only `x.L(4)`), uses lags of 10 or more, or has variable names that share a prefix or contain digits. Estimation is affected only where a ragged edge is filled.
+* The identification check no longer advances the random number generator, so models with contemporaneous endogenous regressors give different draws for the same seed.
+* For equations with priors and contemporaneous endogenous regressors, the saved error variance used the coefficients of the previous draw. Density forecasts change slightly.
+* The starting value of the error covariance for equations with priors was far too large. This only matters with `burnin_ratio = 0` or a very short burn-in.
 
 ## Bug fixes
 
-* Forecasting now stops with a clear error if the model's `character_beta_matrix` is missing. Previously, lag dynamics were silently omitted.
-* Invalid error covariance matrices now produce clear validation errors when they are not matrices, are not square, or have dimensions incompatible with the model. Previously, matrix operations could fail before these checks ran.
-* Fixed identity weights that mix endogenous and exogenous components, such as `y == 0.3*b + 0.7*x1`. Internal weight names are now distinct for the two kinds of components. Previously, dynamic weights could overwrite each other and leave an unresolved weight, causing estimation or forecasting to fail; the identification check, identity checks and printed equations could also use the wrong weight. Affected models should be rebuilt with `system_of_equations()` and re-estimated.
-* Fixed forecast identity checks when exogenous series are supplied. Adding these series renamed forecast columns and silently skipped identity validation. Incorrect identities now produce the intended warning.
-* Fixed priors in front of `dummies()`. `{0,1}dummies(covid, 1:8)` now sets the prior on all eight dummies. Previously it was set on `covid_1` only and the others kept the default prior. **Estimates of models that put a prior in front of `dummies()` will change.**
-* Fixed how `forecast()` handles lagged endogenous regressors. A lag could be dropped or misplaced when an equation skips the lower lags of a variable (e.g. only `x.L(4)`), when variable names share a prefix or contain digits, or for lags of 10 or more. Forecasts of such models change. Estimation is not affected, except where a ragged edge is filled.
-* `estimate()` now stops with an error that names each equation whose sampler failed and the reason. Previously it only stopped when all equations failed; otherwise it returned an estimate without the failed equations, which then failed in `summary()` or `forecast()` with an unrelated error.
-* Fixed the error variance saved for equations with priors and contemporaneous endogenous regressors. It was computed with the coefficients of the previous draw; it now uses those of the draw it is saved with. Density forecasts of such models change slightly.
-* Gibbs sampler settings that would save no draws now fail early, e.g. `ndraws = 0`, or an `nstore` larger than the number of draws after burn-in. Previously such settings were accepted.
-* Fixed the starting value of the error covariance in the sampler for equations with priors. It was not divided by the number of observations and was therefore far too large. The starting value only influences the first draws, which the default burn-in discards; with `burnin_ratio = 0` or a very short burn-in, the first saved draws change.
-* The Metropolis-Hastings step now rejects a proposal whose acceptance probability is not a number, instead of stopping with `missing value where TRUE/FALSE needed`. If the target is not finite at the current value of the chain, so that it could never move, `estimate()` stops with an error that says so. These are safeguards; no known model triggers them.
-* Fixed priors on contemporaneous endogenous regressors (e.g. `{0,1}gdp` where `gdp` is endogenous). The likelihood was dropped from the Metropolis-Hastings target for these coefficients, so the data was ignored and their posterior was just the prior. The posterior now combines the prior with the data. **Estimates of models that set such a prior will change.** Priors on lags, exogenous variables, the constant and the error term were not affected.
-* Fixed tight priors on contemporaneous endogenous regressors whose mean is far from the data estimate (e.g. `{1000,0.00001}gdp`). The prior density underflowed to zero at the chain's start value, so every Metropolis-Hastings proposal was rejected and the coefficient stayed at its start value with a 0% acceptance rate. The log prior density is now computed directly, so the chain moves towards the prior. It still starts at the data estimate and moves in small steps, so a prior this far away can need many more draws to converge; check the trace plot.
-* Fixed the identification check for simultaneous systems with at most one lagged or exogenous variable (e.g. `a ~ b + x, b ~ a` or `a ~ b, b ~ a`). It failed with `incorrect number of dimensions` or `0 x 0 matrix`; it now reports which identification condition is not satisfied.
-* Fixed the identification check for large systems, where a parameter name could also match longer names that start with it (e.g. `theta6_4` and `theta6_40`). An identity weight could then be replaced by the weight of another component in the rank condition.
-* Fixed the identification check for identities with exogenous components (e.g. `c ~ y + z, y == 1*c + 1*i + 1*g` with exogenous `i` and `g`). Their weights were ignored, so a model identified through such components was rejected with `rank condition not satisfied`.
-* `model_identification()` now works for identities with dynamic weights that are not computed yet (e.g. `y == (nom_c)*c + (nom_s)*s`), treating them as unknown non-zero weights. Called directly on the output of `system_of_equations()` it failed with `NA/NaN/Inf in foreign function call`. `estimate()` was not affected, as it computes the weights first.
-* Fixed the identification check for equations without a constant (e.g. `b ~ 0 + a + x1 + x2`). The constant was left out of the check, so an equation identified by excluding the constant that another equation includes was rejected with `order condition not satisfied`.
-* The identification error now lists the equations that fail, instead of printing a table of all equations before the error. For the order condition it shows the number of endogenous regressors and the number of excluded lagged or exogenous variables of each failing equation; an equation fails when the first is larger than the second. For the rank condition it shows the rank and the required rank. Previously the order table was mislabelled and showed other counts.
-* The identification check no longer advances the random number generator. It draws random parameter values for the rank condition, which shifted the seed before the sampler started, so the draws for a given seed depended on the number of coefficients in the model. **For models with contemporaneous endogenous regressors, `estimate()` returns different draws for the same seed than before.**
+### Identification
+
+* `model_identification()` failed or wrongly rejected identified models for:
+  * simultaneous systems with at most one lagged or exogenous variable (e.g. `a ~ b, b ~ a`);
+  * identities with exogenous components (e.g. `y == 1*c + 1*i + 1*g` with exogenous `i` and `g`);
+  * equations without a constant (e.g. `b ~ 0 + a + x1 + x2`);
+  * identities with dynamic weights, when called directly on the output of `system_of_equations()`;
+  * large systems with parameter names that share a prefix (e.g. `theta6_4` and `theta6_40`).
+* The identification error now lists only the failing equations, with the counts behind the order condition or the rank behind the rank condition.
+
+### Estimation and forecasting
+
+* `estimate()` now stops with an error that names each failed equation and the reason, instead of returning an estimate that fails later in `summary()` or `forecast()`.
+* Sampler settings that save no draws (e.g. `ndraws = 0`, or `nstore` larger than the draws after burn-in) now fail early.
+* Invalid error covariance matrices (not a matrix, not square, or of the wrong size) now produce clear errors.
+* `forecast()` now stops if `character_beta_matrix` is missing, instead of silently omitting lag dynamics.
+* Forecast identity checks were skipped when exogenous series were supplied; incorrect identities now warn.
+* The Metropolis-Hastings step now guards against an acceptance probability that is not a number. No known model triggers this.
+
+## Performance
+
+* `estimate()` is about 2 to 3 times faster than in 0.4.0 (e.g. the small macro model vignette: about 6 s to 2 s). The Gibbs samplers now compute per-equation quantities (regressor subsets, the inverse of `X'X`, the prior precision) once instead of in every draw, and work on plain matrices. The draws are unchanged.
 
 # koma 0.4.0
 
