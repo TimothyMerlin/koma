@@ -240,6 +240,27 @@ test_that("initial_omega_j returns a covariance that maps to the residuals", {
   )
 })
 
+test_that("draw_parameters_j_informative explains why the sampler cannot
+start", {
+  # A constant endogenous regressor leaves the target flat in gamma, so the
+  # Hessian at the optimum is zero. This used to fail inside solve() with
+  # "Lapack routine dgesv: system is exactly singular".
+  x_matrix <- cbind(1, seq_len(20))
+  y_matrix <- cbind(rep(c(-1, 1), 10) + seq_len(20), rep(3, 20))
+  character_gamma_matrix <- matrix(c("1", "-gamma1_2", "0", "1"), 2)
+  character_beta_matrix <- matrix(
+    c("constant1", "beta1_2", "constant2", "beta2_2"), 2
+  )
+
+  expect_error(
+    draw_parameters_j_informative(
+      y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
+      1, new_gibbs_spec(6, 0.5, 1, 1.1), list(list())
+    ),
+    "cannot be started"
+  )
+})
+
 test_that("draw_gamma_j_informative handles a target that is not a number", {
   current_gamma_jw <- structure(-0.34996818653039, dim = c(1L, 1L))
   cholesky_of_inverse_hessian <- structure(0.175744390195533, dim = c(1L, 1L))

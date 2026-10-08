@@ -210,16 +210,44 @@ initialize_sampler <- function(y_matrix, x_matrix, character_gamma_matrix,
 
     # Use maximum as initial condition
     gamma_parameters_j <- optimize_residuals$par
-    # Use inverse of Hessian to approximate dispersion of target function
-    inverse_hessian <- solve(optimize_residuals$hessian)
-    # Cholesky factor of inverse of Hessian
-    cholesky_of_inverse_hessian <- t(chol(inverse_hessian))
+    cholesky_of_inverse_hessian <-
+      construct_cholesky_of_inverse_hessian(optimize_residuals$hessian)
 
     list(
       gamma_parameters_j = gamma_parameters_j,
       cholesky_of_inverse_hessian = cholesky_of_inverse_hessian
     )
   }
+}
+
+#' Cholesky factor of the inverse Hessian
+#'
+#' Computes the Cholesky factor \eqn{L} of the inverse of the Hessian
+#' \eqn{M^{-1}} of the target function at its optimum, used to draw the
+#' candidate gamma in the MH algorithm.
+#'
+#' @param hessian The Hessian of the target function at its optimum, as
+#' returned by [stats::optim()].
+#'
+#' @return The lower triangular Cholesky factor of the inverse Hessian. Stops
+#' with an error if the Hessian is not positive definite, i.e. the target has
+#' no proper optimum to start the sampler from.
+#' @keywords internal
+construct_cholesky_of_inverse_hessian <- function(hessian) {
+  eigenvalues <- if (all(is.finite(hessian))) {
+    eigen(hessian, symmetric = TRUE, only.values = TRUE)$values
+  }
+  if (is.null(eigenvalues) || any(eigenvalues <= 0)) {
+    cli::cli_abort(c(
+      "The Metropolis-Hastings sampler cannot be started.",
+      "x" = "The target is flat or not at a maximum in some direction of
+      gamma, so its curvature cannot scale the proposal.",
+      "i" = "Check the equation for constant or collinear series, and
+      whether its gamma parameters are identified by the data."
+    ))
+  }
+  # Use inverse of Hessian to approximate dispersion of target function
+  t(chol(solve(hessian)))
 }
 
 #' Draw gamma parameters for equation j

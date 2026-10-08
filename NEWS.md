@@ -38,6 +38,7 @@ The following fixes change the estimates or forecasts of affected models. Re-est
 ### Estimation and forecasting
 
 * Sampler initialization now handles equations whose exogenous coefficients, including the intercept, are all restricted to zero.
+* If the sampler cannot be started because the target has no proper maximum in gamma (e.g. a constant endogenous regressor), `estimate()` now says so, instead of failing with `Lapack routine dgesv: system is exactly singular` or a Cholesky error.
 * Both samplers now handle equations with no free coefficients, drawing only their error variance.
 * The saved `theta_jw` draws of equations without priors now hold the full coefficient vector, with the restricted coefficients as zeros, in the same form as for equations with priors. They used to hold only the free coefficients, in a different order.
 * `estimate()` now stops with an error that names each failed equation and the reason, instead of returning an estimate that fails later in `summary()` or `forecast()`.

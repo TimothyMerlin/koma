@@ -244,10 +244,8 @@ initialize_sampler_informative <- function(y_matrix, x_matrix,
 
     # Use maximum as initial condition
     gamma_jw <- optimize_residuals$par
-    # Use inverse of Hessian to approximate dispersion of target function
-    inverse_hessian <- solve(optimize_residuals$hessian)
-    # Cholesky factor of inverse of Hessian
-    cholesky_of_inverse_hessian <- t(chol(inverse_hessian))
+    cholesky_of_inverse_hessian <-
+      construct_cholesky_of_inverse_hessian(optimize_residuals$hessian)
 
     list(
       gamma_jw = gamma_jw,

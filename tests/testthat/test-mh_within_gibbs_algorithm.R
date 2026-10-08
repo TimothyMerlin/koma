@@ -274,6 +274,44 @@ when there are no endogenous variables in equation", {
   expect_identical(result_without_endogenous$cholesky_of_inverse_hessian, NA)
 })
 
+test_that("draw_parameters_j explains why the sampler cannot start", {
+  # A constant endogenous regressor leaves the target flat in gamma, so the
+  # Hessian at the optimum is zero. This used to fail inside solve() with
+  # "Lapack routine dgesv: system is exactly singular".
+  x_matrix <- cbind(1, seq_len(20))
+  y_matrix <- cbind(rep(c(-1, 1), 10) + seq_len(20), rep(3, 20))
+  character_gamma_matrix <- matrix(c("1", "-gamma1_2", "0", "1"), 2)
+  character_beta_matrix <- matrix(
+    c("constant1", "beta1_2", "constant2", "beta2_2"), 2
+  )
+
+  expect_error(
+    draw_parameters_j(
+      y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
+      1, new_gibbs_spec(6, 0.5, 1, 1.1)
+    ),
+    "cannot be started"
+  )
+})
+
+test_that("construct_cholesky_of_inverse_hessian needs a positive definite
+Hessian", {
+  hessian <- matrix(c(4, 1, 1, 2), 2)
+  expect_equal(
+    construct_cholesky_of_inverse_hessian(hessian),
+    t(chol(solve(hessian)))
+  )
+  # not at a maximum in one direction
+  expect_error(
+    construct_cholesky_of_inverse_hessian(matrix(c(4, 0, 0, -1), 2)),
+    "cannot be started"
+  )
+  expect_error(
+    construct_cholesky_of_inverse_hessian(matrix(NaN)),
+    "cannot be started"
+  )
+})
+
 # Test Draw Gamma j
 test_that("draw_gamma_j correctly accepts the candidate gamma paramater for
 the one endogenous variable case", {
