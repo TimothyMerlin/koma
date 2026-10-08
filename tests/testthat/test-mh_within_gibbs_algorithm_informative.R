@@ -525,6 +525,32 @@ test_that("draw_parameters_j_informative lets the data update a gamma prior", {
   expect_lt(sd(gamma_draws), 0.5)
 })
 
+test_that("draw_theta_j_informative stops on a permutation of the wrong
+length", {
+  y_matrix <- simulated_data$y_matrix
+  x_matrix <- simulated_data$x_matrix
+  character_gamma_matrix <- simulated_data$character_gamma_matrix
+  character_beta_matrix <- simulated_data$character_beta_matrix
+  jx <- 3
+  priors_j <- construct_priors_j(
+    list(list(), list(), list(), list(), list(), list()),
+    character_gamma_matrix, character_beta_matrix, jx
+  )
+  # one parameter too many
+  theta_permutation <- construct_theta_permutation(
+    character_beta_matrix, jx, nrow(character_beta_matrix) + 1
+  )
+
+  expect_error(
+    draw_theta_j_informative(
+      y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
+      jx, 0, matrix(0.08), priors_j, crossprod(x_matrix),
+      theta_permutation = theta_permutation
+    ),
+    "permutation"
+  )
+})
+
 test_that("construct_priors_j, with two endogenous", {
   equations <-
     "consumption ~ {0.1,1000}1 + {0.4,0.1}gdp + {1,10}service + {0.9,10}consumption.L(1) + {0.1,1000}consumption.L(2) {4,0.002},

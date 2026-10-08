@@ -524,10 +524,11 @@ test_that("vectorization matches parameter names exactly", {
   )
 })
 
-test_that("vectorization keeps the weights of identity components that share
-a theta name", {
+test_that("vectorization keeps the weights of endogenous and exogenous
+identity components at the same index apart", {
   # b is the second endogenous variable and x1 the second row of the beta
-  # matrix, so both components of y are named theta3_2
+  # matrix, so both components of y have index 3_2 (theta_gamma3_2 and
+  # theta_beta3_2)
   exogenous_variables <- c("x1", "x2")
 
   sys_eq <- system_of_equations(
