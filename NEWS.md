@@ -49,6 +49,10 @@ The following fixes change the estimates or forecasts of affected models. Re-est
 * Forecast identity checks were skipped when exogenous series were supplied; incorrect identities now warn.
 * The Metropolis-Hastings step now guards against an acceptance probability that is not a number. No known model triggers this.
 
+### Data
+
+* `simulated_sem` was rebuilt with the current `system_of_equations()`. Its `sys_eq` now uses the current identity weight names (e.g. `theta_gamma6_4` instead of `theta6_4`).
+
 ## Performance
 
 * `estimate()` is about 2 to 3 times faster than in 0.4.0 (e.g. the small macro model vignette: about 6 s to 2 s). The Gibbs samplers now compute per-equation quantities (regressor subsets, the inverse of `X'X`, the prior precision) once instead of in every draw, and work on plain matrices. The draws are unchanged.

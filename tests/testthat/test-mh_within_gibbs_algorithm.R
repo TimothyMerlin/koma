@@ -257,7 +257,7 @@ when there are no endogenous variables in equation", {
   x_matrix <- simulated_data$x_matrix
   character_gamma_matrix <- simulated_data$character_gamma_matrix
   character_beta_matrix <- simulated_data$character_beta_matrix
-  jx <- 6
+  jx <- 3
 
   result_without_endogenous <- initialize_sampler(
     y_matrix,
@@ -436,9 +436,9 @@ test_that("draw_gamma_j returns 0 when there are no endogenous variables", {
   x_matrix <- simulated_data$x_matrix
   character_gamma_matrix <- simulated_data$character_gamma_matrix
   character_beta_matrix <- simulated_data$character_beta_matrix
-  jx <- 6
+  jx <- 3
   tau <- 1.1
-  gamma_parameters_6 <- 0
+  gamma_parameters_3 <- 0
   cholesky_of_inverse_hessian <- NA
 
   result <- draw_gamma_j(
@@ -447,7 +447,7 @@ test_that("draw_gamma_j returns 0 when there are no endogenous variables", {
     character_gamma_matrix,
     character_beta_matrix,
     jx,
-    gamma_parameters_6,
+    gamma_parameters_3,
     tau,
     cholesky_of_inverse_hessian,
     equation_data = construct_equation_data(
@@ -697,7 +697,7 @@ test_that("target_j returns NA when there are no gamma parameters
   y_matrix <- simulated_data$y_matrix
   character_gamma_matrix <- simulated_data$character_gamma_matrix
   character_beta_matrix <- simulated_data$character_beta_matrix
-  jx <- 6
+  jx <- 3
 
   parameters <- NA
 
@@ -714,7 +714,7 @@ test_that("target_j returns NA when there are no gamma parameters
         character_beta_matrix, jx
       )
     ),
-    "Equation 6 does not contain any gamma parameters. Returning NA.",
+    "Equation 3 does not contain any gamma parameters. Returning NA.",
     fixed = TRUE
   )
 

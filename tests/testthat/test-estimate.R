@@ -1248,8 +1248,8 @@ test_that("summary.koma_estimate, respects digits", {
   out2 <- capture_summary(variables = "consumption", digits = 2)
   out4 <- capture_summary(variables = "consumption", digits = 4)
 
-  expect_match(out2, "1.84", fixed = TRUE)
-  expect_match(out4, "1.8361", fixed = TRUE)
+  expect_match(out2, "1.83", fixed = TRUE)
+  expect_match(out4, "1.8296", fixed = TRUE)
   expect_false(identical(out2, out4))
 })
 
@@ -1277,7 +1277,7 @@ test_that("summary.koma_estimate respects digits in texreg output", {
       )
     )
   )
-  expect_match(out_texreg, "1.83612", fixed = TRUE)
+  expect_match(out_texreg, "1.82956", fixed = TRUE)
 })
 
 test_that("summary.koma_estimate errors when texreg missing", {

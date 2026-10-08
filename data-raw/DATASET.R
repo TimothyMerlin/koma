@@ -60,7 +60,7 @@ character_gamma_matrix <- sys_eq$character_gamma_matrix
 character_beta_matrix <- sys_eq$character_beta_matrix
 
 #### Simulation
-identity_weights <- list(gdp = c(theta6_4 = 0.5, theta6_5 = 0.5))
+identity_weights <- list(gdp = c(theta_gamma6_4 = 0.5, theta_gamma6_5 = 0.5))
 
 gamma_matrix <- matrix(
   c(
