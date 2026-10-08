@@ -106,6 +106,44 @@ test_that("construct_posterior posterior matrices are not complete", {
   )
 })
 
+test_that("construct_posterior validates sigma_matrix before using it", {
+  system_of_equations <- simulated_data[c(
+    "equations", "endogenous_variables", "total_exogenous_variables",
+    "character_gamma_matrix", "character_beta_matrix"
+  )]
+  system_of_equations$identities <- list(
+    gdp = list(
+      equation = "gdp==manufacturing+service",
+      components = list(
+        manufacturing = "theta6_4", service = "theta6_5"
+      ),
+      weights = list(
+        theta6_4 = 0.5,
+        theta6_5 = 0.5
+      ),
+      matrix = c("gamma", "gamma")
+    )
+  )
+  estimate <- extract_estimates_from_draws(
+    system_of_equations, simulated_data$estimates
+  )
+  phi_positions <- find_phi_positions(system_of_equations)
+
+  with_sigma <- function(sigma_matrix) {
+    estimate$sigma_matrix <- sigma_matrix
+    construct_posterior(system_of_equations, estimate, phi_positions)
+  }
+  sigma_matrix <- estimate$sigma_matrix
+
+  expect_error(with_sigma(diag(sigma_matrix)), "must be a matrix")
+  expect_error(with_sigma(sigma_matrix[, 1:5]), "must be square")
+  expect_error(with_sigma(sigma_matrix[1:5, 1:5]), "incompatible")
+
+  # gdp is an identity and must not have a variance
+  sigma_matrix[6, 6] <- 1
+  expect_error(with_sigma(sigma_matrix), "zero variance")
+})
+
 test_that("construct_posterior returns estimates for draw jx", {
   system_of_equations <- list(
     endogenous_variables = NULL,

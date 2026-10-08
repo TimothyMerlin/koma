@@ -79,21 +79,20 @@ construct_posterior <- function(sys_eq, estimate, phi_positions) {
   phi_matrix <- construct_phi(phi_positions, posterior$beta_matrix)
 
   sigma_matrix <- estimate$sigma_matrix
-  dimnames(sigma_matrix) <- dimnames(posterior$gamma_matrix)
-  gamma_matrix_inv <- solve(posterior$gamma_matrix)
-  omega_matrix <- t(gamma_matrix_inv) %*% sigma_matrix %*% gamma_matrix_inv
 
   # Validate Sigma matrix
   if (!is.matrix(sigma_matrix)) {
     cli::cli_abort(
-      "{.arg sigma_matrix} must be a matrix."
+      "{.arg sigma_matrix} must be a matrix.",
+      call = call
     )
   }
 
   if (nrow(sigma_matrix) != ncol(sigma_matrix)) {
     cli::cli_abort(
       "{.arg sigma_matrix} must be square. Found {nrow(sigma_matrix)} x
-     {ncol(sigma_matrix)}."
+     {ncol(sigma_matrix)}.",
+      call = call
     )
   }
 
@@ -101,10 +100,14 @@ construct_posterior <- function(sys_eq, estimate, phi_positions) {
     cli::cli_abort(
       "{.arg sigma_matrix} and {.arg gamma_matrix} have incompatible dimensions:
      Sigma is {nrow(sigma_matrix)} x {ncol(sigma_matrix)}, while Gamma is
-     {nrow(posterior$gamma_matrix)} x {ncol(posterior$gamma_matrix)}."
+     {nrow(posterior$gamma_matrix)} x {ncol(posterior$gamma_matrix)}.",
+      call = call
     )
   }
 
+  dimnames(sigma_matrix) <- dimnames(posterior$gamma_matrix)
+  gamma_matrix_inv <- solve(posterior$gamma_matrix)
+  omega_matrix <- t(gamma_matrix_inv) %*% sigma_matrix %*% gamma_matrix_inv
 
   id_idx <- match(names(sys_eq$identities),
     colnames(sigma_matrix),
