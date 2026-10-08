@@ -3,6 +3,7 @@
 ## Breaking changes
 
 * `estimate(..., estimates = )` is now ignored with a warning, and all equations are always estimated. The check for changed equations missed changes to contemporaneous regressors, priors, the sample and the data, and then returned stale draws.
+* Identity weights are now named `theta_gamma<eq>_<col>` for endogenous components and `theta_beta<eq>_<row>` for exogenous ones (e.g. `theta_gamma6_4` instead of `theta6_4`). Code that sets weights by the old names, e.g. `sys_eq$identities$gdp$weights$theta6_4 <- 0.5`, no longer has any effect; use the new names. The `sys_eq` in `simulated_sem` was rebuilt with the new names.
 
 ## New features
 
@@ -32,7 +33,7 @@ The following fixes change the estimates or forecasts of affected models. Re-est
   * identities with exogenous components (e.g. `y == 1*c + 1*i + 1*g` with exogenous `i` and `g`);
   * equations without a constant (e.g. `b ~ 0 + a + x1 + x2`);
   * identities with dynamic weights, when called directly on the output of `system_of_equations()`;
-  * large systems with parameter names that share a prefix (e.g. `theta6_4` and `theta6_40`).
+  * large systems with parameter names that share a prefix (e.g. `theta_gamma6_4` and `theta_gamma6_40`).
 * The identification error now lists only the failing equations, with the counts behind the order condition or the rank behind the rank condition.
 
 ### Estimation and forecasting
@@ -48,10 +49,6 @@ The following fixes change the estimates or forecasts of affected models. Re-est
 * `forecast()` now stops if `character_beta_matrix` is missing, instead of silently omitting lag dynamics.
 * Forecast identity checks were skipped when exogenous series were supplied; incorrect identities now warn.
 * The Metropolis-Hastings step now guards against an acceptance probability that is not a number. No known model triggers this.
-
-### Data
-
-* `simulated_sem` was rebuilt with the current `system_of_equations()`. Its `sys_eq` now uses the current identity weight names (e.g. `theta_gamma6_4` instead of `theta6_4`).
 
 ## Performance
 
