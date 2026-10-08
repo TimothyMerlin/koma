@@ -17,3 +17,5 @@ fred_key.R
 .pre-commit-config.yaml
 /scripts
 AGENTS.md
+.claude/
+.serena/

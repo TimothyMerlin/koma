@@ -5,6 +5,7 @@
 ^README\.Rmd$
 ^\.Rproj\.user$
 ^\.claude$
+^\.serena$
 ^\.drone\.yaml$
 ^\.github$
 ^\.gitlab-ci\.yml$
