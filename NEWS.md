@@ -16,6 +16,7 @@ The following fixes change the estimates or forecasts of affected models. Re-est
 * The identification check no longer advances the random number generator, so models with contemporaneous endogenous regressors give different draws for the same seed.
 * For equations with priors and contemporaneous endogenous regressors, the saved error variance used the coefficients of the previous draw. Density forecasts change slightly.
 * The starting value of the error covariance for equations with priors was far too large. This only matters with `burnin_ratio = 0` or a very short burn-in.
+* `system_of_equations()` now rejects priors with a variance or error-term scale that is not positive (e.g. `{0,-0.01}gdp`). A negative variance used to pass silently and push the estimate away from the prior mean; a zero variance failed later with an unclear error.
 
 ## Bug fixes
 

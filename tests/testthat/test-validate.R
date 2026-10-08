@@ -350,6 +350,18 @@ test_that("validate_priors accepts a negative prior mean", {
   expect_no_error(validate_priors("consumption~{-.4,.1}gdp"))
 })
 
+test_that("validate_priors rejects a prior variance that is not positive", {
+  # A negative variance used to pass, and the sampler then pushed the
+  # coefficient away from the prior mean instead of towards it.
+  expect_error(
+    validate_priors("consumption~{0,-0.01}gdp"),
+    "\\{0,-0.01\\}"
+  )
+  expect_error(validate_priors("consumption~{0,0}gdp"), "\\{0,0\\}")
+  # the same applies to the scale of the error term prior
+  expect_error(validate_priors("consumption~gdp+{3,-0.001}"), "\\{3,-0.001\\}")
+})
+
 test_that("validate_priors reports the full malformed prior, not a
 fragment truncated at a '-'", {
   # Same root cause as above: get_variables()'s hyphen-splitting used to cut

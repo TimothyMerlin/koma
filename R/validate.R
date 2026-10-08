@@ -433,7 +433,24 @@ validate_priors <- function(equation) {
   number <- "-?(?:[0-9]+\\.?[0-9]*|\\.[0-9]+)"
   valid_prior_pattern <- paste0("^\\{", number, ",", number, "\\}$")
 
-  invalid_groups <- brace_groups[!grepl(valid_prior_pattern, brace_groups)]
+  invalid_format <- !grepl(valid_prior_pattern, brace_groups)
+  # The second number is a variance (or the scale of the error term prior),
+  # so it must be positive.
+  variance <- suppressWarnings(
+    as.numeric(sub("^\\{[^,]*,([^}]*)\\}$", "\\1", brace_groups))
+  )
+  invalid_variance <- !invalid_format & !(variance > 0)
+  if (any(invalid_variance)) {
+    invalid_groups <- brace_groups[invalid_variance]
+    invalid_groups <- gsub("\\{", "{{", invalid_groups)
+    invalid_groups <- gsub("\\}", "}}", invalid_groups)
+    cli::cli_abort(c(
+      "!" = "Prior variances must be positive:",
+      "x" = invalid_groups
+    ))
+  }
+
+  invalid_groups <- brace_groups[invalid_format]
   if (length(invalid_groups) > 0) {
     invalid_groups <- gsub("\\{", "{{", invalid_groups)
     invalid_groups <- gsub("\\}", "}}", invalid_groups)
