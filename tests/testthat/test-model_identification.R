@@ -196,6 +196,25 @@ test_that("model_identification counts an excluded constant", {
   )
 })
 
+test_that("model_identification does not count a constant no equation uses", {
+  # a includes every variable of the system; the constant appears in no
+  # equation, so leaving it out is not an exclusion restriction
+  equations <-
+    "a ~ 0 + b + x,
+    b ~ 0 + a"
+
+  sys_eq <- system_of_equations(equations, "x")
+
+  expect_error(
+    model_identification(
+      sys_eq$character_gamma_matrix,
+      sys_eq$character_beta_matrix,
+      sys_eq$identities
+    ),
+    "a: 1 endogenous regressor, 0 excluded lagged or exogenous variables"
+  )
+})
+
 test_that("model_identification counts exogenous identity components", {
   # c is identified through i and g, which it excludes and which enter the
   # identity for y

@@ -97,8 +97,10 @@ model_identification <- function(character_gamma_matrix,
   )
   # The constants are not beta parameters. Draw a value for each equation
   # that has one, so an excluded constant counts as an exclusion restriction.
-  has_constant <- character_beta_matrix[1, ] != "0"
-  beta_matrix[1, has_constant] <- stats::rnorm(sum(has_constant))
+  is_constant <- grepl("^constant[0-9]+$", character_beta_matrix)
+  beta_matrix[is_constant] <- stats::rnorm(sum(is_constant))
+  # A variable that no equation uses is not excluded from any of them
+  beta_matrix <- beta_matrix[rowSums(beta_matrix != 0) > 0, , drop = FALSE]
 
   identity_positions <- which(
     colnames(character_beta_matrix) %in% names(identity_weights)
