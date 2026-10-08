@@ -4,11 +4,7 @@
 \alias{adjust_constant_vector}
 \title{Adjust Constant Vector Using Identity Weights}
 \usage{
-adjust_constant_vector(
-  constant_vector,
-  identity_weights,
-  matrix_name = "gamma"
-)
+adjust_constant_vector(constant_vector, identity_weights)
 }
 \arguments{
 \item{constant_vector}{A numeric vector representing the constant terms to
@@ -16,9 +12,6 @@ be adjusted.}
 
 \item{identity_weights}{A list where each element corresponds to a set of
 identity rules.}
-
-\item{matrix_name}{Either \code{"gamma"} or \code{"beta"}, the matrix the constant
-vector belongs to.}
 }
 \value{
 The adjusted constant vector in numeric form with modified values
