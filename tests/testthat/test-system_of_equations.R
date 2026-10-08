@@ -44,8 +44,8 @@ test_that("system_of_equations", {
   expected_identities <-
     list(gdp = list(
       equation = "gdp==0.6*manufacturing+0.4*service",
-      components = list(manufacturing = "theta6_4", service = "theta6_5"),
-      weights = list(theta6_4 = 0.6, theta6_5 = 0.4),
+      components = list(manufacturing = "theta_gamma6_4", service = "theta_gamma6_5"),
+      weights = list(theta_gamma6_4 = 0.6, theta_gamma6_5 = 0.4),
       matrix = c("gamma", "gamma")
     ))
   expect_identical(
@@ -56,7 +56,7 @@ test_that("system_of_equations", {
     "1", "0", "0", "0", "0", "-gamma1_6", "0", "1", "0",
     "0", "0", "-gamma2_6", "0", "0", "1", "0", "0", "0", "0", "0",
     "0", "1", "0", "0", "0", "0", "0", "0", "1", "-gamma5_6", "0",
-    "0", "0", "-theta6_4", "-theta6_5", "1"
+    "0", "0", "-theta_gamma6_4", "-theta_gamma6_5", "1"
   ), dim = c(6L, 6L), dimnames = list(
     c(
       "consumption", "investment", "current_account", "manufacturing",

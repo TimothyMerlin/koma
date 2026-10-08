@@ -466,8 +466,9 @@ get_parameters <- function(character_matrix, pattern) {
   elements <- gsub("^-", "", elements)
 
   # Use grep to find all elements that start with the given prefix
+  prefix <- if (pattern == "theta") "theta(_gamma|_beta)?" else pattern
   matching_elements <- grep(
-    paste0("^", pattern, "([0-9]*_[0-9]*)"), elements,
+    paste0("^", prefix, "([0-9]*_[0-9]*)"), elements,
     value = TRUE
   )
 

@@ -512,8 +512,8 @@ test_that("print", {
   exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
 
   sys_eq <- system_of_equations(equations, exogenous_variables)
-  sys_eq$identities$gdp$weights$theta6_1 <- 1
-  sys_eq$identities$gdp$weights$theta6_5 <- -0.1
+  sys_eq$identities$gdp$weights$theta_gamma6_1 <- 1
+  sys_eq$identities$gdp$weights$theta_gamma6_5 <- -0.1
 
   x <- structure(
     list(

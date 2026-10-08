@@ -174,7 +174,7 @@ update_estimates_with_weights <- function(identities, gamma_matrix, beta_matrix)
       matrix <- identity_equation$matrix[[idx]]
       value_weight <- identity_equation$weights[[idx]]
 
-      indices <- gsub("[^0-9_]", "", character_weight)
+      indices <- sub("^[^0-9]*", "", character_weight)
       indices <- unlist(strsplit(indices, "_"))
       indices <- as.integer(indices)
       col_index <- indices[1]

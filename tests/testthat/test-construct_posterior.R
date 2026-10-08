@@ -272,6 +272,32 @@ test_that("construct_posterior returns estimates for draw jx", {
   expect_identical(result$phi_matrix, expected_phi_matrix)
 })
 
+test_that("mixed dynamic identity weights produce numeric model coefficients", {
+  sys_eq <- system_of_equations(
+    "a ~ x1, b ~ a, y == (nom_b)*b + (nom_x1)*x1",
+    exogenous_variables = "x1"
+  )
+  identities <- update_identity_weights(
+    list(y = list(b = 0.3, x1 = 0.7)),
+    sys_eq$identities
+  )
+  gamma_matrix <- diag(3)
+  dimnames(gamma_matrix) <- dimnames(sys_eq$character_gamma_matrix)
+  beta_matrix <- matrix(
+    0, nrow = nrow(sys_eq$character_beta_matrix),
+    ncol = ncol(sys_eq$character_beta_matrix),
+    dimnames = dimnames(sys_eq$character_beta_matrix)
+  )
+
+  coefficients <- update_estimates_with_weights(
+    identities, gamma_matrix, beta_matrix
+  )
+
+  expect_identical(coefficients$gamma_matrix["b", "y"], -0.3)
+  expect_true(is.numeric(coefficients$beta_matrix))
+  expect_identical(coefficients$beta_matrix["x1", "y"], 0.7)
+})
+
 test_that("update_estimates_with_weights", {
   equations <-
     "consumption ~ gdp + consumption.L(1) + consumption.L(2),

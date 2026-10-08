@@ -41,7 +41,7 @@ construct_gamma_matrix <- function(equations, endogenous_variables) {
 
         # if identity equation
         if (!grepl("\\~", equation)) {
-          weight <- paste0("theta", ix, "_", variable)
+          weight <- paste0("theta_gamma", ix, "_", variable)
           gamma_matrix[which_variable, ix] <-
             paste0("-", weight)
 
@@ -107,7 +107,7 @@ construct_beta_matrix <- function(equations, exogenous_variables) {
             beta_matrix[which_variable, ix] <- parameter
           }
         } else {
-          weight <- paste0("theta", ix, "_", which_variable)
+          weight <- paste0("theta_beta", ix, "_", which_variable)
           beta_matrix[which_variable, ix] <- weight
         }
       }

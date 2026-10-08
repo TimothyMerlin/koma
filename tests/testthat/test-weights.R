@@ -35,8 +35,8 @@ test_that("get_seq_weights", {
   )
   seq_weights <- get_seq_weights(ts_data, identities, dates)
 
-  expect_equal(seq_weights$gdp$weights$theta6_4, weight_manufacturing)
-  expect_equal(seq_weights$gdp$weights$theta6_5, weight_service)
+  expect_equal(seq_weights$gdp$weights$theta_gamma6_4, weight_manufacturing)
+  expect_equal(seq_weights$gdp$weights$theta_gamma6_5, weight_service)
 })
 
 test_that("validate_dynamic_weights_dates stops when dates are missing", {
@@ -355,9 +355,22 @@ test_that("update_identity_weights", {
 
   result <- update_identity_weights(weights, identities)
 
-  expect_identical(result$gdp$weights$theta6_4, manufacturing_weight)
-  expect_identical(result$gdp$weights$theta6_5, service_weight)
-  expect_identical(result$gdp$weights$theta6_12, 1)
+  expect_identical(result$gdp$weights$theta_gamma6_4, manufacturing_weight)
+  expect_identical(result$gdp$weights$theta_gamma6_5, service_weight)
+  expect_identical(result$gdp$weights$theta_beta6_12, 1)
+})
+
+test_that("dynamic identity weights retain endogenous and exogenous values", {
+  # b and x1 occupy row 2 in their respective coefficient matrices.
+  sys_eq <- system_of_equations(
+    "a ~ x1, b ~ a, y == (nom_b)*b + (nom_x1)*x1",
+    exogenous_variables = "x1"
+  )
+  calculated_weights <- list(y = list(b = c(0.2, 0.3), x1 = c(0.8, 0.7)))
+
+  identities <- update_identity_weights(calculated_weights, sys_eq$identities)
+
+  expect_identical(unname(identities$y$weights), list(0.3, 0.7))
 })
 
 test_that("update_identity_weights throws error when NA", {
