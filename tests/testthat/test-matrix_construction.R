@@ -151,6 +151,27 @@ test_that("construct_beta_hat_j_matrix computes beta_hat_j correctly", {
   expect_equal(result, expected_output)
 })
 
+test_that("construct_beta_hat_j_matrix returns zeros when no betas are free", {
+  x_matrix <- cbind(1, seq_len(8))
+  y_matrix <- cbind(seq_len(8), seq_len(8)^2)
+  character_beta_matrix <- matrix("0", nrow = 2, ncol = 2)
+  character_gamma_matrix <- matrix(c("1", "gamma_21", "0", "1"), 2)
+  equation_data <- construct_equation_data(
+    y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix, 1
+  )
+  z_matrix_j <- construct_z_matrix_j(
+    0.5, y_matrix, equation_data$y_matrix_j, 1
+  )
+
+  expect_equal(
+    construct_beta_hat_j_matrix(
+      x_matrix, z_matrix_j, character_beta_matrix, 1,
+      crossprod(equation_data$x_b), equation_data
+    ),
+    matrix(0, nrow = 2, ncol = 1)
+  )
+})
+
 test_that("construct_pi_hat_0 correctly computes pi_hat_0", {
   set.seed(7)
   x_matrix <- matrix(stats::rnorm(24),

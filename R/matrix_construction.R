@@ -120,9 +120,12 @@ construct_beta_hat_j_matrix <- function(x_matrix, z_matrix_j,
   beta_positions <- equation_data$beta_positions
   x_b <- equation_data$x_b
   number_of_exogenous <- equation_data$number_of_exogenous
+  beta_hat_j <- matrix(0, number_of_exogenous, 1)
+  if (length(beta_positions) == 0) {
+    return(beta_hat_j)
+  }
   beta_hat_b <- solve(xbtxb, crossprod(x_b, z_matrix_j[, 1]))
 
-  beta_hat_j <- matrix(0, number_of_exogenous, 1)
   beta_hat_j[beta_positions] <-
     beta_hat_b
 
