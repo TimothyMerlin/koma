@@ -6,6 +6,7 @@
 
 ## Performance
 
+* Both Gibbs samplers now compute the endogenous and restricted exogenous subsets, coefficient positions, and parameter counts once per equation and reuse them throughout initialization and sampling. This avoids repeated subsetting and name searches. The draws are unchanged.
 * The informative Gibbs sampler now computes the inverse prior covariance for theta and its product with the prior mean once per equation instead of on every draw. This reduces repeated matrix calculations, especially for equations with many regressors. The draws are unchanged.
 * `estimate()` is faster for equations with contemporaneous endogenous regressors. The sampler converted time series objects in every draw; it now works on plain matrices. In a small example the time per equation dropped from about 1.5 to 0.6 seconds for 2000 draws. The draws are unchanged.
 * `estimate()` is faster for large systems. The sampler moved the zero restrictions of an equation to the end by multiplying with a permutation matrix in every draw; it now reorders by index. For a synthetic system with 91 regressors, 400 draws of one equation take about 1.3 s instead of 2.7 s. The inverse of `X'X` is now also computed once per equation instead of in every draw. The draws are unchanged.

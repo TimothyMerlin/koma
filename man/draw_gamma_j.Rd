@@ -14,7 +14,8 @@ draw_gamma_j(
   tau,
   cholesky_of_inverse_hessian,
   xtx,
-  xbtxb
+  xbtxb,
+  equation_data
 )
 }
 \arguments{
@@ -52,6 +53,9 @@ Gibbs draws, so it is computed once instead of on every call.}
 \item{xbtxb}{Precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
 \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
 rationale as \code{xtx}.}
+
+\item{equation_data}{Fixed equation subsets and counts returned by
+\code{\link[=construct_equation_data]{construct_equation_data()}}. The samplers compute this once per equation.}
 }
 \value{
 A \eqn{(n_j \times 1)} matrix with the either accepted candidate or

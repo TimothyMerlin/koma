@@ -14,7 +14,8 @@ draw_theta_j(
   omega_tilde_jw,
   xtx,
   inverse_xtx = solve(xtx),
-  theta_permutation
+  theta_permutation,
+  equation_data
 )
 }
 \arguments{
@@ -49,6 +50,9 @@ rationale as \code{xtx}.}
 
 \item{theta_permutation}{Precomputed order of the elements of theta, as
 returned by \code{\link[=construct_theta_permutation]{construct_theta_permutation()}}. Same rationale as \code{xtx}.}
+
+\item{equation_data}{Fixed equation subsets and counts returned by
+\code{\link[=construct_equation_data]{construct_equation_data()}}. The samplers compute this once per equation.}
 }
 \value{
 List containing theta_jw and beta_jw

@@ -9,7 +9,8 @@ construct_beta_hat_j_matrix(
   z_matrix_j,
   character_beta_matrix,
   jx,
-  xbtxb
+  xbtxb,
+  equation_data
 )
 }
 \arguments{
@@ -29,6 +30,9 @@ exogenous variables and \eqn{n} the number of equations.}
 \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. This
 is invariant across Gibbs draws for a given equation, so it is computed
 once per equation instead of on every call.}
+
+\item{equation_data}{Fixed equation subsets and counts returned by
+\code{\link[=construct_equation_data]{construct_equation_data()}}. The samplers compute this once per equation.}
 }
 \value{
 \eqn{\hat{\beta_j}} with dimensions \eqn{k \times 1}.

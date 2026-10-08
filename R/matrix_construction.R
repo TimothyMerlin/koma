@@ -1,3 +1,27 @@
+#' Cache fixed data for an equation
+#'
+#' @inheritParams draw_parameters_j
+#' @return A list containing the endogenous subset, restricted exogenous
+#'   subset, beta positions, parameter counts, and observation count.
+#' @keywords internal
+construct_equation_data <- function(y_matrix, x_matrix, character_gamma_matrix,
+                                    character_beta_matrix, jx) {
+  gamma_count <- length(grep("gamma", character_gamma_matrix[, jx]))
+  beta_positions <- grep("^0", character_beta_matrix[, jx], invert = TRUE)
+  list(
+    y_matrix_j = if (gamma_count > 0) {
+      construct_y_matrix_j(y_matrix, character_gamma_matrix, jx)
+    } else {
+      NA
+    },
+    x_b = x_matrix[, beta_positions, drop = FALSE],
+    beta_positions = beta_positions,
+    gamma_count = gamma_count,
+    number_of_observations = nrow(y_matrix),
+    number_of_exogenous = nrow(character_beta_matrix)
+  )
+}
+
 #' Constructs a matrix of endogenous variables appearing in equation j
 #'
 #' This extracts a \eqn{(T x n_j)} matrix of endogenous variables appearing in
@@ -87,23 +111,19 @@ construct_z_matrix_j <- function(gamma_parameters_j, y_matrix, y_matrix_j, jx) {
 #' once per equation instead of on every call.
 #'
 #' @return \eqn{\hat{\beta_j}} with dimensions \eqn{k \times 1}.
+#' @param equation_data Fixed equation subsets and counts returned by
+#'   [construct_equation_data()]. The samplers compute this once per equation.
 #' @keywords internal
 construct_beta_hat_j_matrix <- function(x_matrix, z_matrix_j,
                                         character_beta_matrix, jx,
-                                        xbtxb) {
-  number_of_exogenous <- nrow(character_beta_matrix)
-
-  indices_to_remove <- grep("\\b0\\b", character_beta_matrix[, jx])
-
-  if (length(indices_to_remove) > 0) {
-    x_b <- x_matrix[, -indices_to_remove, drop = FALSE]
-  } else {
-    x_b <- x_matrix # Keep the original matrix if no matches are found
-  }
+                                        xbtxb, equation_data) {
+  beta_positions <- equation_data$beta_positions
+  x_b <- equation_data$x_b
+  number_of_exogenous <- equation_data$number_of_exogenous
   beta_hat_b <- solve(xbtxb, crossprod(x_b, z_matrix_j[, 1]))
 
   beta_hat_j <- matrix(0, number_of_exogenous, 1)
-  beta_hat_j[grep("^0", character_beta_matrix[, jx], invert = TRUE)] <-
+  beta_hat_j[beta_positions] <-
     beta_hat_b
 
   return(beta_hat_j)

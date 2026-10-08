@@ -187,7 +187,11 @@ when there is one endogenous variable", {
     character_beta_matrix,
     jx,
     crossprod(x_matrix),
-    xbtxb_for(x_matrix, character_beta_matrix, jx)
+    xbtxb_for(x_matrix, character_beta_matrix, jx),
+    equation_data = construct_equation_data(
+      y_matrix, x_matrix, character_gamma_matrix,
+      character_beta_matrix, jx
+    )
   )
   expect_equal(
     result_with_endogenous$gamma_parameters_j,
@@ -212,7 +216,11 @@ when there are no endogenous variables in equation", {
     x_matrix,
     character_gamma_matrix,
     character_beta_matrix,
-    jx
+    jx,
+    equation_data = construct_equation_data(
+      y_matrix, x_matrix, character_gamma_matrix,
+      character_beta_matrix, jx
+    )
   )
   expect_identical(result_without_endogenous$gamma_parameters_j, 0)
   expect_identical(result_without_endogenous$cholesky_of_inverse_hessian, NA)
@@ -242,7 +250,11 @@ the one endogenous variable case", {
     tau,
     cholesky_of_inverse_hessian,
     crossprod(x_matrix),
-    xbtxb_for(x_matrix, character_beta_matrix, jx)
+    xbtxb_for(x_matrix, character_beta_matrix, jx),
+    equation_data = construct_equation_data(
+      y_matrix, x_matrix, character_gamma_matrix,
+      character_beta_matrix, jx
+    )
   )
   expect_equal(
     new_gamma_parameters_1,
@@ -273,7 +285,11 @@ the one endogenous variable case", {
     tau,
     cholesky_of_inverse_hessian,
     crossprod(x_matrix),
-    xbtxb_for(x_matrix, character_beta_matrix, jx)
+    xbtxb_for(x_matrix, character_beta_matrix, jx),
+    equation_data = construct_equation_data(
+      y_matrix, x_matrix, character_gamma_matrix,
+      character_beta_matrix, jx
+    )
   )
   expect_equal(
     new_gamma_parameters_1,
@@ -303,7 +319,11 @@ test_that("draw_gamma_j handles a target that is not a number", {
         tau = 1.1,
         cholesky_of_inverse_hessian,
         crossprod(x_matrix),
-        xbtxb_for(x_matrix, character_beta_matrix, jx)
+        xbtxb_for(x_matrix, character_beta_matrix, jx),
+        equation_data = construct_equation_data(
+          y_matrix, x_matrix, character_gamma_matrix,
+          character_beta_matrix, jx
+        )
       )
     )
   }
@@ -343,7 +363,11 @@ test_that("draw_gamma_j returns 0 when there are no endogenous variables", {
     jx,
     gamma_parameters_6,
     tau,
-    cholesky_of_inverse_hessian
+    cholesky_of_inverse_hessian,
+    equation_data = construct_equation_data(
+      y_matrix, x_matrix, character_gamma_matrix,
+      character_beta_matrix, jx
+    )
   )
 
   expect_true(is.na(result))
@@ -364,7 +388,11 @@ test_that("draw_omega_j correctly returns the Omega", {
       y_matrix, x_matrix, character_gamma_matrix,
       character_beta_matrix, jx, gamma_parameters_1,
       crossprod(x_matrix),
-      xbtxb_for(x_matrix, character_beta_matrix, jx)
+      xbtxb_for(x_matrix, character_beta_matrix, jx),
+      equation_data = construct_equation_data(
+        y_matrix, x_matrix, character_gamma_matrix,
+        character_beta_matrix, jx
+      )
     )
   )
 
@@ -404,7 +432,11 @@ the one endogenous variables case", {
     draw_theta_j(
       y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
       jx, gamma_parameters_j, omega_tilde_jw, crossprod(x_matrix),
-      theta_permutation = theta_permutation
+      theta_permutation = theta_permutation,
+      equation_data = construct_equation_data(
+        y_matrix, x_matrix, character_gamma_matrix,
+        character_beta_matrix, jx
+      )
     )
   )
 
@@ -448,7 +480,11 @@ the no endogenous variables case", {
     draw_theta_j(
       y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
       jx, gamma_parameters_j, omega_tilde_jw, crossprod(x_matrix),
-      theta_permutation = theta_permutation
+      theta_permutation = theta_permutation,
+      equation_data = construct_equation_data(
+        y_matrix, x_matrix, character_gamma_matrix,
+        character_beta_matrix, jx
+      )
     )
   )
 
@@ -479,7 +515,11 @@ test_that("draw_theta_j stops on a permutation of the wrong length", {
     draw_theta_j(
       y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
       jx, 0, matrix(0.08), crossprod(x_matrix),
-      theta_permutation = theta_permutation
+      theta_permutation = theta_permutation,
+      equation_data = construct_equation_data(
+        y_matrix, x_matrix, character_gamma_matrix,
+        character_beta_matrix, jx
+      )
     ),
     "permutation"
   )
@@ -504,7 +544,11 @@ test_that("target_j correctly computes the target function
     jx,
     parameters,
     crossprod(x_matrix),
-    xbtxb_for(x_matrix, character_beta_matrix, jx)
+    xbtxb_for(x_matrix, character_beta_matrix, jx),
+    equation_data = construct_equation_data(
+      y_matrix, x_matrix, character_gamma_matrix,
+      character_beta_matrix, jx
+    )
   )
 
   # Check that the result is a single double value
@@ -524,7 +568,11 @@ test_that("target_j correctly computes the target function
     jx,
     new_parameters,
     crossprod(x_matrix),
-    xbtxb_for(x_matrix, character_beta_matrix, jx)
+    xbtxb_for(x_matrix, character_beta_matrix, jx),
+    equation_data = construct_equation_data(
+      y_matrix, x_matrix, character_gamma_matrix,
+      character_beta_matrix, jx
+    )
   )
 
   # Check that the result has changed
@@ -541,7 +589,11 @@ test_that("target_j correctly computes the target function
       jx,
       parameters,
       crossprod(x_matrix),
-      xbtxb_for(x_matrix, character_beta_matrix, jx)
+      xbtxb_for(x_matrix, character_beta_matrix, jx),
+      equation_data = construct_equation_data(
+        y_matrix, x_matrix, character_gamma_matrix,
+        character_beta_matrix, jx
+      )
     ),
     "number of gamma parameters"
   )
@@ -559,15 +611,21 @@ test_that("target_j returns NA when there are no gamma parameters
 
   parameters <- NA
 
-  suppressWarnings(
+  expect_warning(
     result <- target_j(
       y_matrix,
       x_matrix,
       character_gamma_matrix,
       character_beta_matrix,
       jx,
-      parameters
-    )
+      parameters,
+      equation_data = construct_equation_data(
+        y_matrix, x_matrix, character_gamma_matrix,
+        character_beta_matrix, jx
+      )
+    ),
+    "Equation 6 does not contain any gamma parameters. Returning NA.",
+    fixed = TRUE
   )
 
   expect_true(is.na(result))

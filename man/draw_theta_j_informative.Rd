@@ -16,7 +16,8 @@ draw_theta_j_informative(
   omega_jw,
   priors_j,
   xtx,
-  theta_permutation
+  theta_permutation,
+  equation_data
 )
 }
 \arguments{
@@ -50,6 +51,9 @@ Gibbs draws, so it is computed once instead of on every call.}
 
 \item{theta_permutation}{Precomputed order of the elements of theta, as
 returned by \code{\link[=construct_theta_permutation]{construct_theta_permutation()}}. Same rationale as \code{xtx}.}
+
+\item{equation_data}{Fixed equation subsets and counts returned by
+\code{\link[=construct_equation_data]{construct_equation_data()}}. The samplers compute this once per equation.}
 }
 \value{
 List containing theta_jw and beta_jw

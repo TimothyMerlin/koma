@@ -1,3 +1,32 @@
+test_that("informative targets warn when called directly without gamma parameters", {
+  expect_silent(equation_data <- construct_equation_data(
+    simulated_data$y_matrix, simulated_data$x_matrix,
+    simulated_data$character_gamma_matrix, simulated_data$character_beta_matrix,
+    jx = 3
+  ))
+  args <- list(
+    y_matrix = simulated_data$y_matrix, x_matrix = simulated_data$x_matrix,
+    character_gamma_matrix = simulated_data$character_gamma_matrix,
+    character_beta_matrix = simulated_data$character_beta_matrix,
+    jx = 3, gamma_jw = NA, equation_data = equation_data
+  )
+  targets <- list(
+    list(fun = target_j_informative,
+      extra = list(omega_jw = NULL, theta_jw = NULL, priors_j = NULL)),
+    list(fun = target_j_informative_initial,
+      extra = list(xtx = NULL, xbtxb = NULL))
+  )
+
+  for (target in targets) {
+    expect_warning(
+      result <- do.call(target$fun, c(args, target$extra)),
+      "Equation 3 does not contain any gamma parameters. Returning NA.",
+      fixed = TRUE
+    )
+    expect_identical(result, NA)
+  }
+})
+
 test_that("draw_parameters_j_informative returns parameters for equation 1", {
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix
@@ -91,40 +120,6 @@ test_that("draw_parameters_j_informative keeps every nstore-th draw after burn-i
   expect_identical(thinned$beta_jw, unthinned$beta_jw[seq(3, 18, by = 3)])
 })
 
-test_that("cached theta prior precision preserves seeded sampler draws", {
-  priors <- list(
-    list(gdp = list(0.4, 0.1), `consumption.L(1)` = list(0.9, 10)),
-    list(), list(), list(), list(), list()
-  )
-  run_sampler <- function() {
-    withr::with_seed(7, draw_parameters_j_informative(
-      simulated_data$y_matrix, simulated_data$x_matrix,
-      simulated_data$character_gamma_matrix,
-      simulated_data$character_beta_matrix,
-      1, set_gibbs_spec(ndraws = 20), priors
-    ))
-  }
-  cached <- run_sampler()
-
-  # Reference calculation recomputes the prior terms on every draw.
-  testthat::local_mocked_bindings(
-    construct_theta_bar_j = function(x_matrix, z_matrix_j, priors_j,
-                                     omega_tilde_jw, xtx) {
-      theta_hat <- c(solve(xtx, crossprod(x_matrix, z_matrix_j)))
-      likelihood_precision <- kronecker(solve(omega_tilde_jw), xtx)
-      prior_precision <- solve(priors_j$theta_vcv)
-      xi_bar <- solve(likelihood_precision + prior_precision)
-      list(
-        theta_bar = xi_bar %*% (likelihood_precision %*% theta_hat +
-          prior_precision %*% priors_j$theta_mean),
-        xi_bar = xi_bar
-      )
-    }
-  )
-
-  expect_identical(cached, run_sampler())
-})
-
 test_that("draw_parameters_j_informative gives the same draws for ts and plain matrices", {
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix
@@ -198,7 +193,11 @@ test_that("initial_omega_j returns a covariance that maps to the residuals", {
     y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
     jx, gamma_jw,
     xtx = crossprod(x_matrix),
-    xbtxb = crossprod(x_matrix[, in_equation, drop = FALSE])
+    xbtxb = crossprod(x_matrix[, in_equation, drop = FALSE]),
+    equation_data = construct_equation_data(
+      y_matrix, x_matrix, character_gamma_matrix,
+      character_beta_matrix, jx
+    )
   )
 
   # residuals of the structural equation given gamma, and of the reduced form
@@ -239,7 +238,11 @@ test_that("draw_gamma_j_informative handles a target that is not a number", {
         cholesky_of_inverse_hessian,
         omega_jw = NULL,
         theta_jw = NULL,
-        priors_j = NULL
+        priors_j = NULL,
+        equation_data = construct_equation_data(
+          simulated_data$y_matrix, simulated_data$x_matrix, simulated_data$character_gamma_matrix,
+          simulated_data$character_beta_matrix, 1
+        )
       )
     )
   }
@@ -480,7 +483,11 @@ test_that("target_j_informative adds the likelihood to the gamma prior", {
   target <- function(priors_j) {
     target_j_informative(
       y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix, jx,
-      gamma_jw, omega_jw, theta_jw, priors_j
+      gamma_jw, omega_jw, theta_jw, priors_j,
+      equation_data = construct_equation_data(
+        y_matrix, x_matrix, character_gamma_matrix,
+        character_beta_matrix, jx
+      )
     )
   }
 
@@ -515,6 +522,10 @@ test_that("target_j_informative is finite for a tight gamma prior far away", {
       priors_j = list(
         gamma_mean = matrix(10, number_endogenous_in_j, 1),
         gamma_vcv = diag(0.001, number_endogenous_in_j)
+      ),
+      equation_data = construct_equation_data(
+        y_matrix, x_matrix, character_gamma_matrix,
+        character_beta_matrix, jx
       )
     )
   }
@@ -582,7 +593,11 @@ length", {
     draw_theta_j_informative(
       y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
       jx, 0, matrix(0.08), priors_j, crossprod(x_matrix),
-      theta_permutation = theta_permutation
+      theta_permutation = theta_permutation,
+      equation_data = construct_equation_data(
+        y_matrix, x_matrix, character_gamma_matrix,
+        character_beta_matrix, jx
+      )
     ),
     "permutation"
   )

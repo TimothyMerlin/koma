@@ -12,7 +12,8 @@ draw_omega_j_informative(
   jx,
   gamma_jw,
   theta_jw,
-  priors_j
+  priors_j,
+  equation_data
 )
 }
 \arguments{
@@ -43,6 +44,9 @@ equation \eqn{j}.}
 endogenous variables in equation \eqn{j}.}
 
 \item{priors_j}{The priors for \eqn{\omega} in equation \eqn{j}.}
+
+\item{equation_data}{Fixed equation subsets and counts returned by
+\code{\link[=construct_equation_data]{construct_equation_data()}}. The samplers compute this once per equation.}
 }
 \value{
 List containing \eqn{{\tilde{\Omega}}_j^{(w)}} as \code{omega_tilde_jw}

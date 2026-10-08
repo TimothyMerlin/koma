@@ -12,7 +12,8 @@ target_j(
   jx,
   gamma_parameters_j,
   xtx,
-  xbtxb
+  xbtxb,
+  equation_data
 )
 }
 \arguments{
@@ -45,6 +46,9 @@ Gibbs draws, so it is computed once instead of on every call.}
 \item{xbtxb}{Precomputed \eqn{x_b'x_b}, where \eqn{x_b} is
 \eqn{x_matrix} restricted to the columns kept for equation \eqn{j}. Same
 rationale as \code{xtx}.}
+
+\item{equation_data}{Fixed equation subsets and counts returned by
+\code{\link[=construct_equation_data]{construct_equation_data()}}. The samplers compute this once per equation.}
 }
 \value{
 The function returns the evaluation of the target function,

@@ -1,3 +1,30 @@
+test_that("construct_equation_data preserves subsets and dimensions", {
+  y_matrix <- matrix(seq_len(24), 8, 3)
+  x_matrix <- matrix(seq_len(32), 8, 4)
+  gamma <- matrix("0", 3, 3)
+  diag(gamma) <- "1"
+  gamma[2, 1] <- "-gamma1_2"
+  gamma[c(1, 3), 2] <- c("-gamma2_1", "-gamma2_3")
+  beta <- matrix("0", 4, 3)
+  beta[c(1, 3), 1] <- c("constant1", "beta1_3")
+  beta[, 2] <- paste0("beta2_", seq_len(4))
+  beta[2, 3] <- "beta3_2"
+
+  for (jx in seq_len(3)) {
+    result <- construct_equation_data(y_matrix, x_matrix, gamma, beta, jx)
+    gamma_positions <- grep("gamma", gamma[, jx])
+    beta_positions <- grep("^0", beta[, jx], invert = TRUE)
+    expected_y <- if (length(gamma_positions)) y_matrix[, gamma_positions] else NA
+
+    expect_identical(result$y_matrix_j, expected_y)
+    expect_identical(result$x_b, x_matrix[, beta_positions, drop = FALSE])
+    expect_identical(result$beta_positions, beta_positions)
+    expect_identical(result$gamma_count, length(gamma_positions))
+    expect_identical(result$number_of_observations, nrow(y_matrix))
+    expect_identical(result$number_of_exogenous, nrow(beta))
+  }
+})
+
 test_that("construct_theta_bar_j uses precomputed prior precision", {
   x_matrix <- cbind(1, c(-2, -1, 0, 1, 2))
   z_matrix_j <- cbind(c(1, 3, 2, 5, 4), c(2, 1, 4, 3, 6))
@@ -113,7 +140,11 @@ test_that("construct_beta_hat_j_matrix computes beta_hat_j correctly", {
 
   result <- construct_beta_hat_j_matrix(
     x_matrix, z_matrix_j, character_beta_matrix, jx,
-    xbtxb_for(x_matrix, character_beta_matrix, jx)
+    xbtxb_for(x_matrix, character_beta_matrix, jx),
+    equation_data = construct_equation_data(
+      z_matrix_j, x_matrix, matrix("0", 1, ncol(character_beta_matrix)),
+      character_beta_matrix, jx
+    )
   )
 
   expected_output <- matrix(c(1.5, -1, 0), nrow = 3)

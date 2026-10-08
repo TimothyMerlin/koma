@@ -13,7 +13,8 @@ target_j_informative(
   gamma_jw,
   omega_jw,
   theta_jw,
-  priors_j
+  priors_j,
+  equation_data
 )
 }
 \arguments{
@@ -44,6 +45,9 @@ equation \eqn{j}.}
 
 \item{theta_jw}{A \eqn{(k \times nj+1)}, where \eqn{n_j} is the number of
 endogenous variables in equation \eqn{j}.}
+
+\item{equation_data}{Fixed equation subsets and counts returned by
+\code{\link[=construct_equation_data]{construct_equation_data()}}. The samplers compute this once per equation.}
 }
 \value{
 The function returns the evaluation of the target function,

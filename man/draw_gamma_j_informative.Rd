@@ -15,7 +15,8 @@ draw_gamma_j_informative(
   cholesky_of_inverse_hessian,
   omega_jw,
   theta_jw,
-  priors_j
+  priors_j,
+  equation_data
 )
 }
 \arguments{
@@ -51,6 +52,9 @@ inverse Hessian matrix \eqn{M^{-1}} used to generate candidate draws.}
 
 \item{theta_jw}{A \eqn{(k \times nj+1)}, where \eqn{n_j} is the number of
 endogenous variables in equation \eqn{j}.}
+
+\item{equation_data}{Fixed equation subsets and counts returned by
+\code{\link[=construct_equation_data]{construct_equation_data()}}. The samplers compute this once per equation.}
 }
 \value{
 A \eqn{(n_j \times 1)} matrix with the either accepted candidate or
