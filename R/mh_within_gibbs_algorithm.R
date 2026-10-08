@@ -468,16 +468,17 @@ draw_theta_j <- function(y_matrix, x_matrix, character_gamma_matrix,
   }
 
   # Construct full theta_p vector
-  # theta_pw <- c(theta_pw1, matrix(0, length(theta_p2), 1))
+  theta_pw <- c(theta_pw1, matrix(0, length(theta_p2), 1))
 
   # Permute back to original ordering
-  # theta_jw <- t(permutation_matrix) %*% theta_pw
+  theta_jw <- matrix(0, length(theta_pw), 1)
+  theta_jw[permutation] <- theta_pw
 
   beta_positions <- equation_data$beta_positions
   # Select beta vector
   beta_jw <- theta_pw1[seq_along(beta_positions)]
 
-  list(theta_jw = theta_pw1, beta_jw = beta_jw)
+  list(theta_jw = theta_jw, beta_jw = beta_jw)
 }
 
 #' Compute the target function for the jth equation

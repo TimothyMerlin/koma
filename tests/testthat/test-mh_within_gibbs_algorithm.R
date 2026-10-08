@@ -12,11 +12,38 @@ test_that("draw_parameters_j handles an equation with no free coefficients", {
 
   expect_length(result$beta_jw, 3)
   expect_true(all(lengths(result$beta_jw) == 0))
-  expect_true(all(lengths(result$theta_jw) == 0))
+  expect_equal(result$theta_jw, rep(list(matrix(0, 2, 1)), 3))
   expect_true(all(is.na(unlist(result$gamma_jw))))
   expect_true(all(is.finite(unlist(result$omega_jw))))
   expect_true(all(unlist(result$omega_jw) > 0))
   expect_equal(result$omega_tilde_jw, result$omega_jw)
+})
+
+test_that("draw_parameters_j saves theta_jw in the same form as the informative
+sampler", {
+  y_matrix <- simulated_data$y_matrix
+  x_matrix <- simulated_data$x_matrix
+  character_gamma_matrix <- simulated_data$character_gamma_matrix
+  character_beta_matrix <- simulated_data$character_beta_matrix
+  jx <- 1
+  gibbs_sampler <- new_gibbs_spec(6, 0.5, 1, 1.1)
+
+  result <- withr::with_seed(7, draw_parameters_j(
+    y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
+    jx, gibbs_sampler
+  ))
+  result_informative <- withr::with_seed(7, draw_parameters_j_informative(
+    y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
+    jx, gibbs_sampler, list(list())
+  ))
+
+  # The full vectorized Theta_j: 10 exogenous rows times 2 columns, with the
+  # betas restricted to zero (rows 4 to 10 of the first column) as zeros
+  theta_jw <- result$theta_jw[[1]]
+  expect_identical(dim(theta_jw), dim(result_informative$theta_jw[[1]]))
+  expect_identical(dim(theta_jw), c(20L, 1L))
+  expect_true(all(theta_jw[4:10] == 0))
+  expect_equal(theta_jw[1:3], result$beta_jw[[1]])
 })
 
 test_that("draw_parameters returns correct parameters for equation 1", {
@@ -461,13 +488,16 @@ the one endogenous variables case", {
     )
   )
 
-  expected_result_theta_jw <- c(
+  # theta_jw is the full vectorized Theta_j, with the betas restricted to
+  # zero (rows 4 to 10 of the first column) included as zeros
+  expected_result_theta_jw <- matrix(c(
     1.33785213690464, 0.553200107134962, 0.132042350013386,
+    rep(0, 7),
     0.395058533772247, 0.0262040643823067,
     -0.127070095171351, -0.017387429595745, -0.150109902894841,
     -0.100230761546029, 0.0219065823268252, -0.0852778937502962,
     -0.24161797439946, -0.047251981429159
-  )
+  ), ncol = 1)
 
   expected_result_beta_jw <- c(
     1.33785213690464, 0.553200107134962, 0.132042350013386
@@ -509,13 +539,14 @@ the no endogenous variables case", {
     )
   )
 
-  expected_result_theta_jw <- c(
-    1.62903143338742, -0.577349603700648, 0.501512145598412
-  )
-
   expected_result_beta_jw <- c(
     1.62903143338742, -0.577349603700648, 0.501512145598412
   )
+
+  # theta_jw is the full vectorized Theta_j: the free betas sit at their
+  # rows (constant, current_account.L(1), world_gdp), the rest are zero
+  expected_result_theta_jw <- matrix(0, 10, 1)
+  expected_result_theta_jw[c(1, 5, 9)] <- expected_result_beta_jw
 
   expect_equal(result$theta_jw, expected_result_theta_jw)
   expect_equal(result$beta_jw, expected_result_beta_jw)
