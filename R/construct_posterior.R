@@ -262,6 +262,11 @@ construct_phi <- function(phi_positions, beta_matrix) {
 find_phi_positions <- function(sys_eq) {
   endogenous_variables <- sys_eq$endogenous_variables
   character_beta_matrix <- sys_eq$character_beta_matrix
+  if (is.null(character_beta_matrix)) {
+    cli::cli_abort(
+      "{.arg sys_eq} must contain {.field character_beta_matrix}."
+    )
+  }
 
   #### Find rows of the beta matrix that hold a lagged endogenous variable
   regressors <- rownames(character_beta_matrix)

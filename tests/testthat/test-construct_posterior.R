@@ -551,6 +551,13 @@ test_that("construct_phi returns the lags in order", {
   ))
 })
 
+test_that("find_phi_positions needs the character beta matrix", {
+  sys_eq <- system_of_equations("a ~ a.L(1) + x, b ~ a.L(2) + x", "x")
+  sys_eq$character_beta_matrix <- NULL
+
+  expect_error(find_phi_positions(sys_eq), "character_beta_matrix")
+})
+
 test_that("construct_phi with lagged identity", {
   equations <-
     "consumption ~ gdp + consumption.L(1) + consumption.L(2),
