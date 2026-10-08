@@ -352,8 +352,13 @@ adjust_constant_vector <- function(constant_vector, identity_weights,
       matches <- which(constant_vector == names(weights)[ix])
 
       if (length(matches) > 0) {
+        value <- suppressWarnings(as.numeric(weights[[ix]]))
+        # A weight that is not resolved yet is unknown, but not zero
+        if (anyNA(value)) {
+          value <- 1
+        }
         # Replace with corresponding numeric value
-        constant_vector[matches] <- -as.numeric(weights[[ix]])
+        constant_vector[matches] <- -value
       }
     }
   }
@@ -382,8 +387,7 @@ adjust_constant_vector <- function(constant_vector, identity_weights,
 #'     \item{constant_vector}{A numeric vector for constant terms.}
 #'   }
 #' @keywords internal
-beta_vectorization <- function(character_beta_matrix,
-                               identity_weights = list()) {
+beta_vectorization <- function(character_beta_matrix, identity_weights) {
   number_of_exogenous <- nrow(character_beta_matrix)
   number_of_endogenous <- ncol(character_beta_matrix)
   character_vector <- c(character_beta_matrix)

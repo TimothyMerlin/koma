@@ -4,7 +4,7 @@
 \alias{beta_vectorization}
 \title{Vectorize Beta Matrix}
 \usage{
-beta_vectorization(character_beta_matrix, identity_weights = list())
+beta_vectorization(character_beta_matrix, identity_weights)
 }
 \arguments{
 \item{character_beta_matrix}{A character matrix representing the

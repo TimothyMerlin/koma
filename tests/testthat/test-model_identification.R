@@ -215,6 +215,24 @@ test_that("model_identification does not count a constant no equation uses", {
   )
 })
 
+test_that("model_identification works with weights that are not resolved yet", {
+  # dynamic weights are placeholders until estimate() computes them
+  equations <-
+    "c ~ y + z,
+    y == (w1)*c + (w2)*i"
+
+  sys_eq <- system_of_equations(equations, c("z", "i"))
+
+  expect_no_warning(
+    result <- model_identification(
+      sys_eq$character_gamma_matrix,
+      sys_eq$character_beta_matrix,
+      sys_eq$identities
+    )
+  )
+  expect_true(result)
+})
+
 test_that("model_identification counts exogenous identity components", {
   # c is identified through i and g, which it excludes and which enter the
   # identity for y
@@ -387,7 +405,7 @@ test_that("beta_vectorization works", {
     )
   )
 
-  result <- beta_vectorization(character_beta_matrix)
+  result <- beta_vectorization(character_beta_matrix, list())
 
   expected_result <- list(
     transformation_matrix = structure(
@@ -449,7 +467,7 @@ test_that("vectorization matches parameter names exactly", {
     nrow = 3, ncol = 1
   )
 
-  result <- beta_vectorization(character_beta_matrix)
+  result <- beta_vectorization(character_beta_matrix, list())
 
   expect_equal(
     result$transformation_matrix,
