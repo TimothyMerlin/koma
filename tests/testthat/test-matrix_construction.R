@@ -1,3 +1,33 @@
+test_that("construct_theta_bar_j uses precomputed prior precision", {
+  x_matrix <- cbind(1, c(-2, -1, 0, 1, 2))
+  z_matrix_j <- cbind(c(1, 3, 2, 5, 4), c(2, 1, 4, 3, 6))
+  theta_vcv <- diag(c(2, 3, 4, 5))
+  theta_vcv[1, 2] <- theta_vcv[2, 1] <- 0.5
+  theta_mean <- matrix(c(0.2, -0.3, 0.4, 0.1), ncol = 1)
+  theta_precision <- solve(theta_vcv)
+  priors_j <- list(
+    theta_precision = theta_precision,
+    theta_precision_mean = theta_precision %*% theta_mean
+  )
+  xtx <- crossprod(x_matrix)
+
+  for (omega_tilde_jw in list(diag(2), matrix(c(2, 0.3, 0.3, 1), 2))) {
+    likelihood_precision <- kronecker(solve(omega_tilde_jw), xtx)
+    expected_vcv <- solve(likelihood_precision + solve(theta_vcv))
+    theta_hat <- c(solve(xtx, crossprod(x_matrix, z_matrix_j)))
+    expected_mean <- expected_vcv %*% (
+      likelihood_precision %*% theta_hat + solve(theta_vcv) %*% theta_mean
+    )
+
+    result <- construct_theta_bar_j(
+      x_matrix, z_matrix_j, priors_j, omega_tilde_jw, xtx
+    )
+
+    expect_equal(result$xi_bar, expected_vcv)
+    expect_equal(result$theta_bar, expected_mean)
+  }
+})
+
 test_that("construct_y_matrix_j returns the correct subset of y_matrix", {
   y_matrix <- matrix(c(1:24), ncol = 3, dimnames = list(c(), c("a", "b", "c")))
   character_gamma_matrix <- matrix(

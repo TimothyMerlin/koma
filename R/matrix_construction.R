@@ -194,12 +194,11 @@ construct_theta_bar_j <- function(x_matrix, z_matrix_j, priors_j,
     solve(omega_tilde_jw),
     xtx
   )
-  inverse_theta_vcv <- solve(priors_j[["theta_vcv"]])
   xi_bar <- solve(
-    omega_kron_xtx + inverse_theta_vcv
+    omega_kron_xtx + priors_j$theta_precision
   )
   theta_bar <- xi_bar %*% (omega_kron_xtx %*% theta_hat +
-    inverse_theta_vcv %*% priors_j[["theta_mean"]])
+    priors_j$theta_precision_mean)
 
   return(list(
     theta_bar = theta_bar,

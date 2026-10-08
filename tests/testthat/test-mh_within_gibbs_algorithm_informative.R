@@ -91,6 +91,40 @@ test_that("draw_parameters_j_informative keeps every nstore-th draw after burn-i
   expect_identical(thinned$beta_jw, unthinned$beta_jw[seq(3, 18, by = 3)])
 })
 
+test_that("cached theta prior precision preserves seeded sampler draws", {
+  priors <- list(
+    list(gdp = list(0.4, 0.1), `consumption.L(1)` = list(0.9, 10)),
+    list(), list(), list(), list(), list()
+  )
+  run_sampler <- function() {
+    withr::with_seed(7, draw_parameters_j_informative(
+      simulated_data$y_matrix, simulated_data$x_matrix,
+      simulated_data$character_gamma_matrix,
+      simulated_data$character_beta_matrix,
+      1, set_gibbs_spec(ndraws = 20), priors
+    ))
+  }
+  cached <- run_sampler()
+
+  # Reference calculation recomputes the prior terms on every draw.
+  testthat::local_mocked_bindings(
+    construct_theta_bar_j = function(x_matrix, z_matrix_j, priors_j,
+                                     omega_tilde_jw, xtx) {
+      theta_hat <- c(solve(xtx, crossprod(x_matrix, z_matrix_j)))
+      likelihood_precision <- kronecker(solve(omega_tilde_jw), xtx)
+      prior_precision <- solve(priors_j$theta_vcv)
+      xi_bar <- solve(likelihood_precision + prior_precision)
+      list(
+        theta_bar = xi_bar %*% (likelihood_precision %*% theta_hat +
+          prior_precision %*% priors_j$theta_mean),
+        xi_bar = xi_bar
+      )
+    }
+  )
+
+  expect_identical(cached, run_sampler())
+})
+
 test_that("draw_parameters_j_informative gives the same draws for ts and plain matrices", {
   y_matrix <- simulated_data$y_matrix
   x_matrix <- simulated_data$x_matrix
@@ -537,6 +571,9 @@ length", {
     character_gamma_matrix, character_beta_matrix, jx
   )
   # one parameter too many
+  priors_j$theta_precision <- solve(priors_j$theta_vcv)
+  priors_j$theta_precision_mean <-
+    priors_j$theta_precision %*% priors_j$theta_mean
   theta_permutation <- construct_theta_permutation(
     character_beta_matrix, jx, nrow(character_beta_matrix) + 1
   )

@@ -44,6 +44,10 @@ draw_parameters_j_informative <- function(y_matrix, x_matrix,
   priors_j <- construct_priors_j(
     priors, character_gamma_matrix, character_beta_matrix, jx
   )
+  # These prior terms are fixed for the equation across all Gibbs draws.
+  priors_j$theta_precision <- solve(priors_j$theta_vcv)
+  priors_j$theta_precision_mean <-
+    priors_j$theta_precision %*% priors_j$theta_mean
 
   # pre-define matrices for saving
   out <- list()
