@@ -64,6 +64,13 @@ new_gibbs_spec <- function(ndraws, burnin_ratio, nstore, tau, ...) {
     )
   }
 
+  if (!is.numeric(tau) || is.complex(tau) || length(tau) == 0 ||
+    any(!is.finite(tau)) || any(tau <= 0)) {
+    cli::cli_abort("tau must contain finite, positive numbers",
+      call = rlang::caller_env()
+    )
+  }
+
   ## check that each arg is length 1 or same as the longest
   lens <- lengths(list(ndraws, burnin_ratio, nstore, tau))
   maxlen <- max(lens)

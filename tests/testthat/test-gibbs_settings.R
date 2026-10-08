@@ -69,6 +69,25 @@ test_that("set_gibbs_spec, error on invalid burnin_ratio", {
   expect_error(set_gibbs_spec(burnin_ratio = NA), "burnin_ratio must be in")
 })
 
+test_that("set_gibbs_spec rejects invalid tau values", {
+  invalid <- list(
+    0, -1, NA_real_, NaN, Inf, -Inf, "1", TRUE, 1 + 1i,
+    numeric(0), list(1), c(1, 0), c(1, NA_real_), c(1, Inf)
+  )
+  for (tau in invalid) {
+    expect_error(
+      set_gibbs_spec(tau = tau),
+      "tau must contain finite, positive numbers"
+    )
+  }
+})
+
+test_that("set_gibbs_spec accepts positive finite tau values", {
+  expect_equal(set_gibbs_spec(tau = 0.01)$tau, 0.01)
+  expect_equal(set_gibbs_spec(tau = c(0.5, 2))$tau, c(0.5, 2))
+  expect_equal(set_gibbs_spec(ndraws = c(100, 200), tau = 1)$tau, c(1, 1))
+})
+
 test_that("set_gibbs_spec, error on zero nstore", {
   expect_error(set_gibbs_spec(nstore = 0), "nstore must be a positive integer")
 })
