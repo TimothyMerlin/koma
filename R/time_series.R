@@ -54,6 +54,7 @@ new_ets <- function(x = stats::ts(), ...) {
 }
 
 #' @importFrom stats is.ts
+#' @exportS3Method
 new_ets.ts <- function(x = stats::ts(), ...) {
   stopifnot(stats::is.ts(x))
   args <- list(...)
@@ -70,6 +71,7 @@ new_ets.ts <- function(x = stats::ts(), ...) {
 }
 
 #' @importFrom stats is.mts
+#' @exportS3Method
 new_ets.mts <- function(x = stats::ts(), ...) {
   stopifnot(stats::is.mts(x))
 
