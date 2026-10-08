@@ -11,6 +11,13 @@
 
 ## Bug fixes
 
+* Identification checks now ignore exogenous variables that no equation uses. Previously, unused variables could inflate the number of exclusion restrictions reported by the order condition.
+* Forecasting now stops with a clear error if the model's `character_beta_matrix` is missing. Previously, lag dynamics were silently omitted.
+* Invalid error covariance matrices now produce clear validation errors when they are not matrices, are not square, or have dimensions incompatible with the model. Previously, matrix operations could fail before these checks ran.
+
+* Fixed identity weights that mix endogenous and exogenous components, such as `y == 0.3*b + 0.7*x1`. Internal weight names are now distinct for the two kinds of components. Previously, dynamic weights could overwrite each other and leave an unresolved weight, causing estimation or forecasting to fail; identity checks and printed equations could also use the wrong weight. Affected models should be rebuilt with `system_of_equations()` and re-estimated.
+* Fixed forecast identity checks when exogenous series are supplied. Adding these series renamed forecast columns and silently skipped identity validation. Incorrect identities now produce the intended warning.
+
 * Fixed priors in front of `dummies()`. `{0,1}dummies(covid, 1:8)` now sets the prior on all eight dummies. Previously it was set on `covid_1` only and the others kept the default prior. **Estimates of models that put a prior in front of `dummies()` will change.**
 * Fixed how `forecast()` handles lagged endogenous regressors. A lag could be dropped or misplaced when an equation skips the lower lags of a variable (e.g. only `x.L(4)`), when variable names share a prefix or contain digits, or for lags of 10 or more. Forecasts of such models change. Estimation is not affected, except where a ragged edge is filled.
 * `estimate()` now stops with an error that names each equation whose sampler failed and the reason. Previously it only stopped when all equations failed; otherwise it returned an estimate without the failed equations, which then failed in `summary()` or `forecast()` with an unrelated error.
