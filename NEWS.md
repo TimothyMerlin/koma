@@ -11,6 +11,7 @@
 
 ## Bug fixes
 
+* Fixed priors in front of `dummies()`. `{0,1}dummies(covid, 1:8)` now sets the prior on all eight dummies. Previously it was set on `covid_1` only and the others kept the default prior. **Estimates of models that put a prior in front of `dummies()` will change.**
 * Fixed how `forecast()` handles lagged endogenous regressors. A lag could be dropped or misplaced when an equation skips the lower lags of a variable (e.g. only `x.L(4)`), when variable names share a prefix or contain digits, or for lags of 10 or more. Forecasts of such models change. Estimation is not affected, except where a ragged edge is filled.
 * `estimate()` now stops with an error that names each equation whose sampler failed and the reason. Previously it only stopped when all equations failed; otherwise it returned an estimate without the failed equations, which then failed in `summary()` or `forecast()` with an unrelated error.
 * Fixed the error variance saved for equations with priors and contemporaneous endogenous regressors. It was computed with the coefficients of the previous draw; it now uses those of the draw it is saved with. Density forecasts of such models change slightly.

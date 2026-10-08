@@ -1173,6 +1173,34 @@ equation-specific setting", {
   expect_equal(result$equation_settings$y$tau, 1.2)
 })
 
+test_that("expand_dummies repeats a prior for every dummy", {
+  expect_equal(
+    expand_dummies("y~x1+{0,1}dummies(covid,1:2)"),
+    "y~x1+{0,1}covid_1+{0,1}covid_2"
+  )
+  # a prior on another term stays where it is
+  expect_equal(
+    expand_dummies("y~{2,3}x1+dummies(covid,1:2)"),
+    "y~{2,3}x1+covid_1+covid_2"
+  )
+})
+
+test_that("system_of_equations applies a prior to every dummy in dummies()", {
+  result <- system_of_equations(
+    "y ~ x1 + {0.5, 2} dummies(covid, 1:3)",
+    exogenous_variables = c("x1", paste0("covid_", 1:3))
+  )
+
+  expect_equal(
+    result$priors[[1]],
+    list(
+      covid_1 = list(0.5, 2),
+      covid_2 = list(0.5, 2),
+      covid_3 = list(0.5, 2)
+    )
+  )
+})
+
 test_that("no settings yields empty list", {
   equation <- "y~x1+x2"
   expect_equal(extract_settings(equation), list())

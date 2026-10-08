@@ -888,7 +888,9 @@ extract_from_matches <- function(equation, pattern) {
 #' variable names `prefix_1+prefix_2+...`, where the indices come from
 #' `spec` (parsed by `parse_index_spec()`, the same "single value or range,
 #' comma-separated" grammar used by lag notation). For example,
-#' `dummies(covid, 1:8)` becomes `covid_1+covid_2+...+covid_8`.
+#' `dummies(covid, 1:8)` becomes `covid_1+covid_2+...+covid_8`. A prior in
+#' front of the call is repeated for every dummy, so
+#' `{0,1}dummies(covid, 1:2)` becomes `{0,1}covid_1+{0,1}covid_2`.
 #'
 #' This runs before any other equation processing (priors, settings,
 #' validation), so the expanded terms are indistinguishable from terms the
@@ -910,7 +912,9 @@ extract_from_matches <- function(equation, pattern) {
 #' expanded.
 #' @keywords internal
 expand_dummies <- function(equations) {
-  loose_pattern <- "dummies\\(([^,()]*),([^()]*)\\)"
+  # An optional prior "{mean,variance}" directly in front of the call is
+  # captured too, so that it can be repeated for every dummy.
+  loose_pattern <- "(\\{[^}]*\\})?dummies\\(([^,()]*),([^()]*)\\)"
   prefix_pattern <- "^[a-zA-Z][a-zA-Z0-9_]*$"
   spec_pattern <- "^[0-9:,]+$"
 
@@ -921,8 +925,9 @@ expand_dummies <- function(equations) {
     for (expr in raw_matches) {
       m <- regexec(loose_pattern, expr, perl = TRUE)
       parts <- regmatches(expr, m)[[1]]
-      prefix <- trimws(parts[2])
-      spec <- trimws(gsub(" ", "", parts[3]))
+      prior <- parts[2]
+      prefix <- trimws(parts[3])
+      spec <- trimws(gsub(" ", "", parts[4]))
 
       indices <- if (grepl(prefix_pattern, prefix) && grepl(spec_pattern, spec)) {
         tryCatch(parse_index_spec(spec), error = function(e) integer(0))
@@ -940,7 +945,12 @@ expand_dummies <- function(equations) {
         ))
       }
 
-      replacement <- paste(paste0(prefix, "_", indices), collapse = "+")
+      # A prior in front of dummies() applies to every dummy it expands to,
+      # e.g. "{0,1}dummies(covid,1:2)" becomes "{0,1}covid_1+{0,1}covid_2".
+      replacement <- paste(
+        paste0(prior, prefix, "_", indices),
+        collapse = "+"
+      )
       equation <- sub(expr, replacement, equation, fixed = TRUE)
     }
 

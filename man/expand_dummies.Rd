@@ -18,7 +18,9 @@ Rewrites \code{dummies(prefix, spec)} calls into an additive series of plain
 variable names \code{prefix_1+prefix_2+...}, where the indices come from
 \code{spec} (parsed by \code{parse_index_spec()}, the same "single value or range,
 comma-separated" grammar used by lag notation). For example,
-\code{dummies(covid, 1:8)} becomes \code{covid_1+covid_2+...+covid_8}.
+\code{dummies(covid, 1:8)} becomes \code{covid_1+covid_2+...+covid_8}. A prior in
+front of the call is repeated for every dummy, so
+\verb{\{0,1\}dummies(covid, 1:2)} becomes \verb{\{0,1\}covid_1+\{0,1\}covid_2}.
 
 This runs before any other equation processing (priors, settings,
 validation), so the expanded terms are indistinguishable from terms the
