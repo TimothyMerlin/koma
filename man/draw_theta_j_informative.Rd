@@ -16,7 +16,7 @@ draw_theta_j_informative(
   omega_jw,
   priors_j,
   xtx,
-  theta_permutation = NULL
+  theta_permutation
 )
 }
 \arguments{

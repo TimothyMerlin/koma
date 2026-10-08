@@ -395,11 +395,16 @@ the one endogenous variables case", {
     0.17, 0.22, 0.22, 0.82
   ), nrow = 2, ncol = 2, byrow = TRUE)
 
+  theta_permutation <- construct_theta_permutation(
+    character_beta_matrix, jx, nrow(character_beta_matrix) * 2
+  )
+
   result <- withr::with_seed(
     7,
     draw_theta_j(
       y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
-      jx, gamma_parameters_j, omega_tilde_jw, crossprod(x_matrix)
+      jx, gamma_parameters_j, omega_tilde_jw, crossprod(x_matrix),
+      theta_permutation = theta_permutation
     )
   )
 
@@ -434,11 +439,16 @@ the no endogenous variables case", {
     0.08
   ), nrow = 1, byrow = TRUE)
 
+  theta_permutation <- construct_theta_permutation(
+    character_beta_matrix, jx, nrow(character_beta_matrix)
+  )
+
   result <- withr::with_seed(
     7,
     draw_theta_j(
       y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
-      jx, gamma_parameters_j, omega_tilde_jw, crossprod(x_matrix)
+      jx, gamma_parameters_j, omega_tilde_jw, crossprod(x_matrix),
+      theta_permutation = theta_permutation
     )
   )
 
@@ -452,6 +462,27 @@ the no endogenous variables case", {
 
   expect_equal(result$theta_jw, expected_result_theta_jw)
   expect_equal(result$beta_jw, expected_result_beta_jw)
+})
+
+test_that("draw_theta_j stops on a permutation of the wrong length", {
+  y_matrix <- simulated_data$y_matrix
+  x_matrix <- simulated_data$x_matrix
+  character_gamma_matrix <- simulated_data$character_gamma_matrix
+  character_beta_matrix <- simulated_data$character_beta_matrix
+  jx <- 3
+  # one parameter too many
+  theta_permutation <- construct_theta_permutation(
+    character_beta_matrix, jx, nrow(character_beta_matrix) + 1
+  )
+
+  expect_error(
+    draw_theta_j(
+      y_matrix, x_matrix, character_gamma_matrix, character_beta_matrix,
+      jx, 0, matrix(0.08), crossprod(x_matrix),
+      theta_permutation = theta_permutation
+    ),
+    "permutation"
+  )
 })
 
 # Test Target j

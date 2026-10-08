@@ -388,7 +388,7 @@ draw_omega_j <- function(y_matrix, x_matrix, character_gamma_matrix,
 draw_theta_j <- function(y_matrix, x_matrix, character_gamma_matrix,
                          character_beta_matrix, jx, gamma_parameters_j,
                          omega_tilde_jw, xtx, inverse_xtx = solve(xtx),
-                         theta_permutation = NULL) {
+                         theta_permutation) {
   number_endogenous_in_j <- length(grep("gamma", character_gamma_matrix[, jx]))
 
   if (number_endogenous_in_j == 0) {
@@ -408,20 +408,23 @@ draw_theta_j <- function(y_matrix, x_matrix, character_gamma_matrix,
   # parameters and the second block contains all parameters that are
   # restricted to zero.
   # Zero restrictions only on betas, i.e. first column of theta_hat
-  if (is.null(theta_permutation)) {
-    theta_permutation <- construct_theta_permutation(
-      character_beta_matrix, jx, length(theta_hat)
-    )
-  }
   permutation <- theta_permutation$permutation
   seperate_blocks_at <- theta_permutation$seperate_blocks_at
+  if (length(permutation) != length(theta_hat)) {
+    cli::cli_abort(
+      "The theta permutation has {length(permutation)} elements, but there
+      are {length(theta_hat)} parameters."
+    )
+  }
 
   # Permute theta_hat
   theta_p <- theta_hat[permutation]
 
   # Construct the two blocks
-  theta_p1 <- theta_p[1:seperate_blocks_at]
-  theta_p2 <- theta_p[-(1:seperate_blocks_at)]
+  free <- seq_len(seperate_blocks_at)
+  restricted <- setdiff(seq_along(theta_p), free)
+  theta_p1 <- theta_p[free]
+  theta_p2 <- theta_p[restricted]
 
   # Compute unrestricted posterior variance
   xi <- kronecker(omega_tilde_jw, inverse_xtx)
@@ -430,11 +433,11 @@ draw_theta_j <- function(y_matrix, x_matrix, character_gamma_matrix,
   xi_p <- xi[permutation, permutation, drop = FALSE]
 
   # Construct the two blocks
-  xi_p11 <- xi_p[1:seperate_blocks_at, 1:seperate_blocks_at, drop = FALSE]
+  xi_p11 <- xi_p[free, free, drop = FALSE]
   if (length(theta_p2) != 0) {
-    xi_p12 <- xi_p[1:seperate_blocks_at, (seperate_blocks_at + 1):length(theta_hat), drop = FALSE]
+    xi_p12 <- xi_p[free, restricted, drop = FALSE]
     xi_p21 <- t(xi_p12)
-    xi_p22 <- xi_p[(seperate_blocks_at + 1):length(theta_hat), (seperate_blocks_at + 1):length(theta_hat), drop = FALSE]
+    xi_p22 <- xi_p[restricted, restricted, drop = FALSE]
 
     # Compute update of posterior mean and posterior variance
     inverse_xi_p22 <- solve(xi_p22)

@@ -14,7 +14,7 @@ draw_theta_j(
   omega_tilde_jw,
   xtx,
   inverse_xtx = solve(xtx),
-  theta_permutation = NULL
+  theta_permutation
 )
 }
 \arguments{
