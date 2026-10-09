@@ -349,20 +349,25 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
     gdp = list(horizon = 1L, value = 0)
   )
 
-  res_projection <- withr::with_seed(
-    11,
-    forecast(
-      estimates, dates,
-      restrictions = restrictions,
-      options = list(conditional_innov_method = "projection")
+  # No warnings: the draws of both methods have to satisfy the identities.
+  expect_no_warning(
+    res_projection <- withr::with_seed(
+      11,
+      forecast(
+        estimates, dates,
+        restrictions = restrictions,
+        options = list(conditional_innov_method = "projection")
+      )
     )
   )
-  res_eigen <- withr::with_seed(
-    11,
-    forecast(
-      estimates, dates,
-      restrictions = restrictions,
-      options = list(conditional_innov_method = "eigen")
+  expect_no_warning(
+    res_eigen <- withr::with_seed(
+      11,
+      forecast(
+        estimates, dates,
+        restrictions = restrictions,
+        options = list(conditional_innov_method = "eigen")
+      )
     )
   )
 
@@ -679,22 +684,62 @@ test_that("forecast stops when exogenous series don't extend to forecast end", {
 })
 
 test_that("shorten_forecast_horizon shortens to available exogenous data", {
-  forecast_dates <- list(start = 2023.25, end = 2024.75)
   x_matrix <- stats::ts(
     cbind(a = 1:7, b = c(1:5, NA, NA)),
     start = c(2023, 2), frequency = 4
   )
 
-  expect_equal(shorten_forecast_horizon(7, NULL, forecast_dates), 7)
+  expect_equal(shorten_forecast_horizon(7, NULL), 7)
   expect_equal(
-    shorten_forecast_horizon(7, x_matrix[, "a", drop = FALSE], forecast_dates),
+    shorten_forecast_horizon(7, x_matrix[, "a", drop = FALSE]),
     7
   )
   expect_warning(
-    horizon <- shorten_forecast_horizon(7, x_matrix, forecast_dates),
+    horizon <- shorten_forecast_horizon(7, x_matrix),
     "shortened to 5"
   )
   expect_equal(horizon, 5)
+})
+
+test_that("shorten_forecast_horizon rejects gaps that are not trailing", {
+  x_matrix <- function(b) {
+    stats::ts(cbind(a = 1:4, b = b), start = c(2023, 2), frequency = 4)
+  }
+
+  # missing at the forecast start
+  expect_error(
+    shorten_forecast_horizon(4, x_matrix(c(NA, 2, 3, 4))),
+    "Exogenous data is missing"
+  )
+  # missing at the forecast start and at the end
+  expect_error(
+    shorten_forecast_horizon(4, x_matrix(c(NA, 2, 3, NA))),
+    "Exogenous data is missing"
+  )
+  # missing in between
+  expect_error(
+    shorten_forecast_horizon(4, x_matrix(c(1, NA, 3, 4))),
+    "Exogenous data is missing"
+  )
+})
+
+test_that("shorten_forecast_horizon handles a single period of exogenous data", {
+  x_matrix <- stats::ts(
+    cbind(a = 1:2, b = c(1, NA)),
+    start = c(2023, 2), frequency = 4
+  )
+
+  # the gap lies beyond the horizon
+  expect_no_warning(
+    horizon <- shorten_forecast_horizon(1, x_matrix)
+  )
+  expect_equal(horizon, 1)
+
+  expect_warning(
+    horizon <- shorten_forecast_horizon(2, x_matrix),
+    "shortened to 1"
+  )
+  expect_equal(horizon, 1)
 })
 
 test_that("summarise_draw_conditions groups messages by first line", {
@@ -1029,11 +1074,14 @@ test_that("forecast without lags and with restrictions", {
     tolerance = 1e-12
   )
 
-  out_eigen <- withr::with_seed(
-    7,
-    forecast(est, dates,
-      restrictions = restrictions,
-      options = list(conditional_innov_method = "eigen")
+  # No warnings: the eigen draws have to satisfy the identities.
+  expect_no_warning(
+    out_eigen <- withr::with_seed(
+      7,
+      forecast(est, dates,
+        restrictions = restrictions,
+        options = list(conditional_innov_method = "eigen")
+      )
     )
   )
 

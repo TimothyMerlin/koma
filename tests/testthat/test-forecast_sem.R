@@ -349,3 +349,50 @@ test_that("projection and eigen conditional draws match empirically", {
   # and due to dropping small eigenvalues (> tol)
   expect_lt(max(abs(eig_resid)), 1e-6)
 })
+
+test_that("eigen conditional draws keep variances of a small scale", {
+  set.seed(123)
+
+  # restrict the first variable only
+  R <- matrix(c(1, 0), nrow = 1)
+  r <- matrix(0)
+
+  eigen_draws <- function(omega) {
+    A <- R %*% omega %*% t(R)
+    vapply(seq_len(2000), function(i) {
+      koma:::draw_conditional_innovations(
+        v_uncond_vec = c(0, 0),
+        omega_matrix_h = omega,
+        R = R,
+        r = r,
+        A = A,
+        method = "eigen"
+      )$draw_vec
+    }, numeric(2))
+  }
+
+  # all variances are small
+  draws <- eigen_draws(diag(c(1e-12, 1e-12)))
+  expect_equal(draws[1, ], rep(0, 2000))
+  # the unrestricted variable keeps its variance of 1e-12
+  expect_equal(stats::var(draws[2, ]) / 1e-12, 1, tolerance = 0.2)
+})
+
+test_that("eigen conditional draws meet restrictions on every variable", {
+  set.seed(123)
+
+  omega <- crossprod(matrix(rnorm(36), nrow = 6))
+  R <- diag(6)
+  r <- matrix(1:6)
+
+  draw <- koma:::draw_conditional_innovations(
+    v_uncond_vec = rep(0, 6),
+    omega_matrix_h = omega,
+    R = R,
+    r = r,
+    A = R %*% omega %*% t(R),
+    method = "eigen"
+  )
+
+  expect_equal(draw$draw_vec, as.vector(r), tolerance = 1e-8)
+})

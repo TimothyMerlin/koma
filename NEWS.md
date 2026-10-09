@@ -49,6 +49,9 @@ The following fixes change the estimates or forecasts of affected models. Re-est
 * Invalid error covariance matrices (not a matrix, not square, or of the wrong size) now produce clear errors.
 * `forecast()` now stops if `character_beta_matrix` is missing, instead of silently omitting lag dynamics.
 * Forecast identity checks were skipped when exogenous series were supplied; incorrect identities now warn.
+* `forecast()` now stops if an exogenous series has missing values at the forecast start or between observations. Such a gap was not detected and gave `NA` forecasts, or a horizon shortened to the wrong periods. Missing values at the end still shorten the horizon with a warning.
+* `forecast()` failed with "invalid time series parameters" when the exogenous data covered only the first forecast period. The horizon is now shortened to one period.
+* `conditional_innov_method = "eigen"` dropped all innovation variances below `1e-10`, so conditional forecasts of series on a very small scale lost their uncertainty. The cutoff is now relative to the scale of the covariance.
 * The Metropolis-Hastings step now guards against an acceptance probability that is not a number. No known model triggers this.
 
 ## Performance

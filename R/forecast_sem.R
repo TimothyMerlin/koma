@@ -22,7 +22,7 @@ forecast_sem <- function(sys_eq, estimates,
                          conditional_innov_method = "projection") {
   # The same for every draw, so shorten (and warn) once in the main process
   # instead of per draw, where multisession workers cannot share the state.
-  horizon <- shorten_forecast_horizon(horizon, forecast_x_matrix, forecast_dates)
+  horizon <- shorten_forecast_horizon(horizon, forecast_x_matrix)
 
   # Validate against the possibly shortened horizon, so restrictions beyond it
   # fail once here instead of in every draw.
@@ -177,26 +177,50 @@ forecast_sem <- function(sys_eq, estimates,
 #'
 #' If the exogenous variables end before the forecast end date, the horizon is
 #' shortened to the number of periods with complete exogenous data, and a
-#' warning names the variables that end early.
+#' warning names the variables that end early. Missing values that are followed
+#' by data, or that start in the first forecast period, cannot be handled by
+#' shortening the horizon and raise an error.
 #'
 #' @inheritParams forecast_sem
 #'
 #' @return The (possibly shortened) forecast horizon.
 #' @keywords internal
-shorten_forecast_horizon <- function(horizon, forecast_x_matrix, forecast_dates) {
+shorten_forecast_horizon <- function(horizon, forecast_x_matrix) {
   if (is.null(forecast_x_matrix)) {
     return(horizon)
   }
 
-  max_date <- max(stats::time(stats::na.omit(forecast_x_matrix)))
-  if (forecast_dates$end <= max_date) {
+  # Row h holds the exogenous data of forecast period h; rows beyond the
+  # horizon are not used.
+  is_missing <- is.na(as.matrix(forecast_x_matrix))
+  is_missing <- is_missing[
+    seq_len(min(horizon, nrow(is_missing))), ,
+    drop = FALSE
+  ]
+  complete <- rowSums(is_missing) == 0
+  available <- max(which(complete), 0)
+
+  # Only gaps at the end can be handled by shortening the horizon.
+  required <- seq_len(max(available, 1))
+  gap_columns <- colnames(forecast_x_matrix)[
+    colSums(is_missing[required, , drop = FALSE]) > 0
+  ]
+  if (length(gap_columns) > 0) {
+    cli::cli_abort(c(
+      "x" = "Exogenous data is missing within the forecast horizon.",
+      ">" = "Only missing values at the end shorten the horizon.",
+      ">" = "The following variables have earlier missing values: {gap_columns}"
+    ))
+  }
+
+  if (available >= horizon) {
     return(horizon)
   }
 
-  horizon <- nrow(stats::na.omit(forecast_x_matrix))
+  horizon <- available
 
   # Identify variables that contain NAs
-  na_columns <- colnames(forecast_x_matrix)[apply(is.na(forecast_x_matrix), 2, any)]
+  na_columns <- colnames(forecast_x_matrix)[colSums(is_missing) > 0]
 
   # If no columns with NAs, set all columns as ending before forecast end date
   if (length(na_columns) == 0) na_columns <- colnames(forecast_x_matrix)
@@ -538,7 +562,9 @@ draw_conditional_innovations <- function(v_uncond_vec,
     omega_matrix_h %*% t(R) %*% solve(A) %*% R %*% omega_matrix_h
   Omega_c <- 0.5 * (Omega_c + t(Omega_c))
   ev <- eigen(Omega_c, symmetric = TRUE)
-  idx <- ev$values > tol
+  # Drop eigenvalues that are zero up to numerical noise. The cutoff is
+  # relative to the scale of the covariance, so small variances are kept.
+  idx <- ev$values > tol * max(abs(diag(omega_matrix_h)))
   U <- ev$vectors[, idx, drop = FALSE]
   D <- ev$values[idx]
   z <- rnorm(length(D))
