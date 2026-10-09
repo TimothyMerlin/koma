@@ -46,6 +46,8 @@ the name collisions above. Both are documented in NEWS.md.
 
 0 errors | 0 warnings | 0 notes
 
+* CRAN's incoming check may note the short interval since 0.4.0; see
+  "Early update" above.
 * If flagged, "Rathke" and "Sarferaz" in the DESCRIPTION are proper names
   (surnames of the authors of the referenced forthcoming paper) and are
   spelled correctly.
