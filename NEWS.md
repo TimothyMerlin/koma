@@ -38,6 +38,7 @@ The following fixes change the estimates or forecasts of affected models. Re-est
 
 ### Estimation and forecasting
 
+* `estimate()` failed for equations without priors that have many endogenous regressors or series on a very large or small scale, because the residual determinant overflowed or underflowed. Its logarithm is now computed directly.
 * Sampler initialization now handles equations whose exogenous coefficients, including the intercept, are all restricted to zero.
 * If the sampler cannot be started because the target has no proper maximum in gamma (e.g. a constant endogenous regressor), `estimate()` now says so, instead of failing with `Lapack routine dgesv: system is exactly singular` or a Cholesky error.
 * Both samplers now handle equations with no free coefficients, drawing only their error variance.

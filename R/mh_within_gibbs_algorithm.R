@@ -564,9 +564,27 @@ target_j <- function(y_matrix, x_matrix, character_gamma_matrix,
 
   # Evaluate log of target function
   # (multiply by -1: maximize instead of minimize)
+  residuals <- z_matrix_j - x_matrix %*% theta_hat
   target_result <- ((number_of_observations - number_of_exogenous) / 2) *
-    log(det(t(z_matrix_j - x_matrix %*% theta_hat) %*%
-      (z_matrix_j - x_matrix %*% theta_hat)))
+    log_determinant(crossprod(residuals))
 
   target_result
+}
+
+#' Logarithm of a determinant
+#'
+#' Computes \eqn{\log(\det(x))} without forming the determinant itself, which
+#' overflows or underflows for matrices on a very large or small scale.
+#'
+#' @param x A square numeric matrix.
+#'
+#' @return The logarithm of the determinant of `x`, `-Inf` if `x` is singular
+#' and `NaN` if the determinant is negative.
+#' @keywords internal
+log_determinant <- function(x) {
+  x_determinant <- determinant(x, logarithm = TRUE)
+  if (x_determinant$sign < 0) {
+    return(NaN)
+  }
+  as.numeric(x_determinant$modulus)
 }

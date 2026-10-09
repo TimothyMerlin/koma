@@ -689,6 +689,47 @@ test_that("target_j correctly computes the target function
   )
 })
 
+test_that("target_j stays finite when the residual determinant overflows
+ or underflows", {
+  withr::local_seed(1)
+  n <- 100
+  x_matrix <- cbind(1, rnorm(n))
+  y_matrix <- cbind(rnorm(n), rnorm(n))
+  character_gamma_matrix <- matrix(c("1", "gamma_21", "0", "1"), 2)
+  character_beta_matrix <- matrix(c("beta_11", "0", "beta_12", "beta_22"), 2)
+
+  evaluate_target <- function(scale) {
+    scaled_y <- y_matrix * scale
+    equation_data <- construct_equation_data(
+      scaled_y, x_matrix, character_gamma_matrix, character_beta_matrix, 1
+    )
+    target_j(
+      scaled_y, x_matrix, character_gamma_matrix, character_beta_matrix,
+      1, 0, crossprod(x_matrix), crossprod(equation_data$x_b), equation_data
+    )
+  }
+
+  baseline <- evaluate_target(1)
+  for (scale in c(1e-90, 1e90)) {
+    result <- evaluate_target(scale)
+    expect_true(is.finite(result))
+    # Two residual columns each scale by scale, so the determinant scales
+    # by scale^4. The target multiplies its logarithm by (n - 2) / 2.
+    expect_equal(result, baseline + 2 * (n - 2) * log(scale))
+  }
+})
+
+test_that("log_determinant matches log(det()) and handles singular and
+ negative determinants", {
+  x <- matrix(c(4, 1, 1, 3), 2)
+  expect_equal(log_determinant(x), log(det(x)))
+  expect_identical(log_determinant(matrix(1, 2, 2)), -Inf)
+  # A negative determinant has no logarithm. No warning, since the sampler
+  # evaluates the target on every draw.
+  expect_no_warning(result <- log_determinant(matrix(c(1, 0, 0, -1), 2)))
+  expect_true(is.nan(result))
+})
+
 test_that("target_j returns NA when there are no gamma parameters
  in the jth equation", {
   # Test case when there is no gamma coefficient in equation j and
