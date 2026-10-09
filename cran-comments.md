@@ -1,43 +1,51 @@
-## Resubmission of an archived package
+## Early update
 
-koma was archived on 2026-09-27 because a check issue was not corrected in
-time. The issue was a test failure on the tests-MKL additional check
-(r-devel, Fedora Linux 44):
+This is a bug-fix release one week after 0.4.0 (published 2026-10-02). We
+apologize for the quick resubmission. After the release we found bugs that
+silently give wrong results without any error or warning. They have been in
+koma since its first CRAN release, so users of all published versions are
+affected. We therefore ask for an early update instead of waiting the usual
+interval:
 
-* `test-mh_within_gibbs_algorithm_informative.R`, "draw_parameters_j_informative
-  with diffuse priors and no gamma priors", compared an MCMC posterior quantile
-  against a fixed expected value with too tight a tolerance (0.2136 vs. 0.21).
-  This sampler path shows small cross-environment drift (BLAS/LAPACK-level
-  floating point differences compounding over 200 iterations) despite a fixed
-  seed. The tolerance has been widened to 0.28, with headroom for this drift
-  without weakening the test's ability to catch real regressions.
+* A prior on a contemporaneous endogenous regressor (e.g. `{0,1}gdp` with
+  endogenous `gdp`) made the estimate ignore the data: a line break before a
+  `+` dropped the likelihood term, so the posterior was just the prior.
+* A tight prior on such a regressor froze the sampler at its start value,
+  because the prior density underflowed to zero.
+* `forecast()` could drop or misplace lagged endogenous regressors (e.g. for
+  lags of 10 or more, or variable names that share a prefix).
+* `estimate(..., estimates = )` returned the previous draws when the model had
+  changed. This option is now ignored with a warning and all equations are
+  re-estimated.
+* Identity weights mixing endogenous and exogenous components could overwrite
+  each other, so estimation and forecasting used the wrong weight.
 
-## Submission
+Before this submission we reviewed the estimation, sampler and forecasting
+code to find remaining problems in the same areas, and fixed them in this
+release, so that no further early update should be needed. The other fixes
+correct the identification check, which wrongly rejected some identified
+models, and improve input validation and error messages. See NEWS.md for
+details.
 
-This is a feature release (0.3.1 -> 0.4.0). Besides the fix above, it adds
-new equation syntax and theme options, fixes several bugs in estimation,
-forecasting and plotting, tightens input validation, and speeds up estimation
-and forecasting. See NEWS.md for details.
+The release contains two intentional changes that may affect user code: the
+`estimates` argument of `estimate()` is ignored (see above), and identity
+weights are renamed (e.g. `theta_gamma6_4` instead of `theta6_4`) to prevent
+the name collisions above. Both are documented in NEWS.md.
 
 ## Test environments
 
 * local: macOS Tahoe 26.7.1 (aarch64-apple-darwin23), R 4.6.1
 * R-hub (R Consortium runners):
-  * linux: R-devel (2026-09-29 r90598)
-  * windows: R-devel (2026-09-30 r90605 ucrt)
-  * macos: x86_64-apple-darwin20, R-devel (2026-09-29 r90598)
-  * mkl: Intel MKL container, R-devel (2026-09-30 r90605)
-
-All R-hub platforms: Status OK. The mkl container mirrors the tests-MKL
-additional check that led to the archival; the previously failing test passes
-there.
+  * linux: R-devel (2026-10-06 r90643)
+  * windows: R-devel (2026-10-06 r90643 ucrt)
+  * macos: x86_64-apple-darwin20, R-devel (2026-10-08 r90646)
+  * mkl: Intel MKL container, R-devel (2026-10-06 r90643)
+* win-builder: R-devel, R-release
 
 ## R CMD check results
 
 0 errors | 0 warnings | 0 notes
 
-* The incoming checks are expected to note that the package was archived;
-  see "Resubmission of an archived package" above.
 * If flagged, "Rathke" and "Sarferaz" in the DESCRIPTION are proper names
   (surnames of the authors of the referenced forthcoming paper) and are
   spelled correctly.
