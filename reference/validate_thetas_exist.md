@@ -25,8 +25,8 @@ validate_thetas_exist(
 
 - character_weights:
 
-  Character vector of theta placeholder strings (e.g. `"theta6_4"`), as
-  extracted from the gamma/beta matrices.
+  Character vector of theta placeholder strings (e.g.
+  `"theta_gamma6_4"`), as extracted from the gamma/beta matrices.
 
 - character_gamma_matrix, character_beta_matrix:
 

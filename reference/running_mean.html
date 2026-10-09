@@ -11,7 +11,7 @@ included when available."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,7 +33,7 @@ included when available."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Running Means for koma_estimate Objects</h1>
-      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/R/running_mean.R" class="external-link"><code>R/running_mean.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/0.4.1/R/running_mean.R" class="external-link"><code>R/running_mean.R</code></a></small>
       <div class="d-none name"><code>running_mean.Rd</code></div>
     </div>
 
@@ -117,22 +117,15 @@ variances (no covariances) from each covariance draw.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Estimation</span> <span style="color: #00BBBB;">──────────────────────────────────────────────────────────────────</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="color: #BB0000; font-weight: bold;">⚠ MCMC Acceptance Probability Warnings</span> <span style="color: #00BBBB;">──────────────────────────────────────</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> • <span style="font-weight: bold;">consumption</span>: 80.0%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Some acceptance probabilities are outside the recommended range (20%-60%).</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Consider revising the equations, tuning each equation's tau, or adjusting your priors.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="va">rm_df</span> <span class="op">&lt;-</span> <span class="fu">running_mean</span><span class="op">(</span><span class="va">fit</span>, params <span class="op">=</span> <span class="st">"beta"</span>, max_draws <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">rm_df</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   draw     value    variable param             coef draw_position</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    1 1.1419010 consumption  beta         constant             1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2    1 0.4979447 consumption  beta consumption.L(1)             1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3    1 0.2243029 consumption  beta consumption.L(2)             1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4    2 1.3458769 consumption  beta         constant             2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5    2 0.4591917 consumption  beta consumption.L(1)             2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 6    2 0.2293820 consumption  beta consumption.L(2)             2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    1 1.0786305 consumption  beta         constant             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2    1 0.4568034 consumption  beta consumption.L(1)             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3    1 0.2709837 consumption  beta consumption.L(2)             1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4    2 1.1079817 consumption  beta         constant             2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5    2 0.5100500 consumption  beta consumption.L(1)             2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6    2 0.2207444 consumption  beta consumption.L(2)             2</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   in_grace_window                             label</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1            TRUE         consumption:beta:constant</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2            TRUE consumption:beta:consumption.L(1)</span>

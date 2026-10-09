@@ -111,16 +111,16 @@ rmse <- model_evaluation(
 #> ── Gibbs Sampler Settings ──────────────────────────────────────────────────────
 #> 
 #> ── System Wide Settings ──
-#>   • Number of draws (`ndraws`): 10
-#>   • Burn-in ratio (`burnin_ratio`): 0.5
-#>   • Burn-in (`burnin`): 5
-#>   • Store frequency (`nstore`): 1
-#>   • Number of saved draws (`nsave`): 5
-#>   • Tau (`tau`): 1.1
+#> • Number of draws (`ndraws`): 10
+#> • Burn-in ratio (`burnin_ratio`): 0.5
+#> • Burn-in (`burnin`): 5
+#> • Store frequency (`nstore`): 1
+#> • Number of saved draws (`nsave`): 5
+#> • Tau (`tau`): 1.1
 #> 
 #> 
 #> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
-#> • investment: 80.0%
+#> • consumption: 70.0%
 #> 
 #> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
 #> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
@@ -133,5 +133,5 @@ rmse <- model_evaluation(
 #> ✔ Forecasting completed.
 head(rmse)
 #>   consumption investment
-#> 1    12581.77   73408.67
+#> 1    15403.83   75467.31
 ```

@@ -28,11 +28,9 @@ conditional_fill(ts_data, sys_eq, dates, estimates, fill_method)
 
 - estimates:
 
-  Optional. A `koma_estimate` object (see
+  A `koma_estimate` object (see
   [`estimate`](https://timothymerlin.github.io/koma/reference/estimate.md))
-  containing the estimates of the previously estimated simultaneous
-  equations model. Use this parameter when some equations of the system
-  need to be re-estimated.
+  containing the estimates of the simultaneous equations model.
 
 - fill_method:
 

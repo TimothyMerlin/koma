@@ -12,7 +12,8 @@ construct_beta_hat_j_matrix(
   z_matrix_j,
   character_beta_matrix,
   jx,
-  xbtxb
+  xbtxb,
+  equation_data
 )
 ```
 
@@ -44,6 +45,12 @@ construct_beta_hat_j_matrix(
   the columns kept for equation \\j\\. This is invariant across Gibbs
   draws for a given equation, so it is computed once per equation
   instead of on every call.
+
+- equation_data:
+
+  Fixed equation subsets and counts returned by
+  [`construct_equation_data()`](https://timothymerlin.github.io/koma/reference/construct_equation_data.md).
+  The samplers compute this once per equation.
 
 ## Value
 

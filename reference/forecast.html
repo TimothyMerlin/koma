@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,7 +29,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Forecast the Simultaneous Equations Model (SEM)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/R/forecast.R" class="external-link"><code>R/forecast.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/0.4.1/R/forecast.R" class="external-link"><code>R/forecast.R</code></a></small>
       <div class="d-none name"><code>forecast.Rd</code></div>
     </div>
 
@@ -194,22 +194,15 @@ For more details, see the
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Gibbs Sampler Settings</span> <span style="color: #00BBBB;">──────────────────────────────────────────────────────</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">System Wide Settings</span> ──</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Number of draws (`ndraws`): 10</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Burn-in ratio (`burnin_ratio`): 0.5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Burn-in (`burnin`): 5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Store frequency (`nstore`): 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Number of saved draws (`nsave`): 5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Tau (`tau`): 1.1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Number of draws (`ndraws`): 10</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Burn-in ratio (`burnin_ratio`): 0.5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Burn-in (`burnin`): 5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Store frequency (`nstore`): 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Number of saved draws (`nsave`): 5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Tau (`tau`): 1.1</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Estimation</span> <span style="color: #00BBBB;">──────────────────────────────────────────────────────────────────</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="color: #BB0000; font-weight: bold;">⚠ MCMC Acceptance Probability Warnings</span> <span style="color: #00BBBB;">──────────────────────────────────────</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> • <span style="font-weight: bold;">consumption</span>: 80.0%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Some acceptance probabilities are outside the recommended range (20%-60%).</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Consider revising the equations, tuning each equation's tau, or adjusting your priors.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="va">fc</span> <span class="op">&lt;-</span> <span class="fu">forecast</span><span class="op">(</span><span class="va">fit</span>, dates <span class="op">=</span> <span class="va">dates</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Forecast</span> <span style="color: #00BBBB;">────────────────────────────────────────────────────────────────────</span></span>
@@ -223,10 +216,10 @@ For more details, see the
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> series:</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         consumption investment current_account manufacturing service     gdp</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2025 Q1      5.9971     4.4651          0.4067        0.0040 -0.0289 -0.0157</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2025 Q2      5.8354     4.8972          1.2844        0.5227 -0.2147  0.0803</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2025 Q3      5.5752     3.7639         -0.4847       -0.0543  0.0127 -0.0141</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2025 Q4      5.1550     3.3069          2.9297        1.0349 -0.4408  0.1495</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2025 Q1      6.4738     4.5367          0.8352        0.5733 -0.3877 -0.0033</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2025 Q2      5.3499     4.2385          1.1044        0.4406 -0.1163  0.1064</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2025 Q3      5.4708     4.3407         -0.4310       -0.5032 -0.1463 -0.2890</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2025 Q4      5.1219     3.5070          2.4524        1.1098 -0.4564  0.1701</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>         real_interest_rate world_gdp population</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2025 Q1            -1.0418   -0.9163     0.9900</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 2025 Q2            -0.3902    0.0282    -0.3553</span>

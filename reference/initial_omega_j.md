@@ -14,7 +14,8 @@ initial_omega_j(
   jx,
   gamma_jw,
   xtx,
-  xbtxb
+  xbtxb,
+  equation_data
 )
 ```
 
@@ -64,8 +65,14 @@ initial_omega_j(
   Precomputed \\x_b'x_b\\, where \\x_b\\ is \\x_matrix\\ restricted to
   the columns kept for equation \\j\\. Same rationale as `xtx`.
 
+- equation_data:
+
+  Fixed equation subsets and counts returned by
+  [`construct_equation_data()`](https://timothymerlin.github.io/koma/reference/construct_equation_data.md).
+  The samplers compute this once per equation.
+
 ## Value
 
-The function returns the evaluation of the target function, which is
-used to decide whether to accept or reject proposed states in the MH
-algorithm. Returns NA if there are no gamma parameters.
+A \\((1 + n_j) \times (1 + n_j))\\ matrix with the initial value for
+\\\Omega_j\\, the residual covariance at the initial \\\gamma_j\\.
+Returns NA if the endogenous regressors contain NA.

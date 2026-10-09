@@ -28,16 +28,16 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/TimothyMerlin/koma/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/TimothyMerlin/koma/blob/0.4.1/DESCRIPTION)
 
 Sarferaz S, Scherer M (2026). *koma: Bayesian Simultaneous Equation
-Models for Forecasting*. R package version 0.4.0,
+Models for Forecasting*. R package version 0.4.1,
 <https://timothymerlin.github.io/koma/>.
 
     @Manual{,
       title = {koma: Bayesian Simultaneous Equation Models for Forecasting},
       author = {Samad Sarferaz and Merlin Scherer},
       year = {2026},
-      note = {R package version 0.4.0},
+      note = {R package version 0.4.1},
       url = {https://timothymerlin.github.io/koma/},
     }

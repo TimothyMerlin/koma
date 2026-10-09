@@ -11,7 +11,7 @@ both density and point forecasts."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,7 +33,7 @@ both density and point forecasts."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Estimate the Simultaneous Equations Model (SEM)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/R/estimate.R" class="external-link"><code>R/estimate.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/0.4.1/R/estimate.R" class="external-link"><code>R/estimate.R</code></a></small>
       <div class="d-none name"><code>estimate.Rd</code></div>
     </div>
 
@@ -96,10 +96,9 @@ during estimation.</p></li>
 
 
 <dt id="arg-estimates">estimates<a class="anchor" aria-label="anchor" href="#arg-estimates"></a></dt>
-<dd><p>Optional. A <code>koma_estimate</code> object
-(see <code>estimate</code>) containing the estimates of the previously
-estimated simultaneous equations model. Use this parameter when some
-equations of the system need to be re-estimated.</p></dd>
+<dd><p>Ignored. Re-estimating only some equations of a previously
+estimated model is currently disabled; passing a <code>koma_estimate</code> object
+gives a warning and all equations are estimated.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -218,30 +217,23 @@ Default is 1.1.</p></li>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Gibbs Sampler Settings</span> <span style="color: #00BBBB;">──────────────────────────────────────────────────────</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">System Wide Settings</span> ──</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Number of draws (`ndraws`): 10</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Burn-in ratio (`burnin_ratio`): 0.5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Burn-in (`burnin`): 5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Store frequency (`nstore`): 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Number of saved draws (`nsave`): 5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Tau (`tau`): 1.1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Number of draws (`ndraws`): 10</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Burn-in ratio (`burnin_ratio`): 0.5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Burn-in (`burnin`): 5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Store frequency (`nstore`): 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Number of saved draws (`nsave`): 5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Tau (`tau`): 1.1</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Estimation</span> <span style="color: #00BBBB;">──────────────────────────────────────────────────────────────────</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="color: #BB0000; font-weight: bold;">⚠ MCMC Acceptance Probability Warnings</span> <span style="color: #00BBBB;">──────────────────────────────────────</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> • <span style="font-weight: bold;">consumption</span>: 80.0%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Some acceptance probabilities are outside the recommended range (20%-60%).</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Consider revising the equations, tuning each equation's tau, or adjusting your priors.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">fit</span><span class="op">)</span></span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Estimates</span> <span style="color: #00BBBB;">───────────────────────────────────────────────────────────────────</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="font-weight: bold;">consumption</span> ~  1.33 - 0.3 * gdp  +  0.47 * consumption.L(1)  +  0.23 * consumption.L(2)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      <span style="font-weight: bold;">investment</span> ~  2.28 - 1.26 * gdp  +  0.44 * investment.L(1)  +  0.37 * real_interest_rate</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">current_account</span> ~  1.52 - 0.51 * current_account.L(1)  +  0.53 * world_gdp</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="font-weight: bold;">manufacturing</span> ~  0.57  +  0.06 * manufacturing.L(1)  +  0.32 * world_gdp</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         <span style="font-weight: bold;">service</span> ~  - 0.01  +  0.16 * service.L(1)  +  0.05 * population - 0.83 * gdp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     <span style="font-weight: bold;">consumption</span> ~  1.23 - 0.33 * gdp  +  0.49 * consumption.L(1)  +  0.22 * consumption.L(2)</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>      <span style="font-weight: bold;">investment</span> ~  2.47 - 1.32 * gdp  +  0.41 * investment.L(1)  +  0.35 * real_interest_rate</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="font-weight: bold;">current_account</span> ~  1.53 - 0.51 * current_account.L(1)  +  0.5 * world_gdp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="font-weight: bold;">manufacturing</span> ~  0.59  +  0.05 * manufacturing.L(1)  +  0.34 * world_gdp</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>         <span style="font-weight: bold;">service</span> ~  0.04  +  0.12 * service.L(1)  +  0.08 * population - 0.74 * gdp</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>             <span style="font-weight: bold;">gdp</span> == 0.4 * manufacturing  +  0.6 * service </span>
 <span class="r-in"><span></span></span>
 </code></pre></div>

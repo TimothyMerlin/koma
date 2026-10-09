@@ -6,7 +6,9 @@ variable names `prefix_1+prefix_2+...`, where the indices come from
 [`parse_index_spec()`](https://timothymerlin.github.io/koma/reference/parse_index_spec.md),
 the same "single value or range, comma-separated" grammar used by lag
 notation). For example, `dummies(covid, 1:8)` becomes
-`covid_1+covid_2+...+covid_8`.
+`covid_1+covid_2+...+covid_8`. A prior in front of the call is repeated
+for every dummy, so `{0,1}dummies(covid, 1:2)` becomes
+`{0,1}covid_1+{0,1}covid_2`.
 
 This runs before any other equation processing (priors, settings,
 validation), so the expanded terms are indistinguishable from terms the

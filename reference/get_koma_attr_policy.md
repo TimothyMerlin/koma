@@ -35,7 +35,7 @@ get_koma_attr_policy("anker")
 #> $merge
 #> function (left, right, attr, op = NULL, template = NULL) 
 #> NA
-#> <environment: 0x556cb353dfd0>
+#> <environment: 0x562c9364d9a8>
 #> 
 #> $lag
 #> NULL

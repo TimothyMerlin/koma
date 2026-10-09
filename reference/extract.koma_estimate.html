@@ -9,7 +9,7 @@ can be rendered with texreg::screenreg() or similar helpers."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,7 +31,7 @@ can be rendered with texreg::screenreg() or similar helpers."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Extract a texreg summary from a koma_estimate</h1>
-      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/R/estimate.R" class="external-link"><code>R/estimate.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/0.4.1/R/estimate.R" class="external-link"><code>R/estimate.R</code></a></small>
       <div class="d-none name"><code>extract.koma_estimate.Rd</code></div>
     </div>
 
@@ -116,29 +116,22 @@ summary output with optional <span class="pkg">texreg</span> formatting.</p></di
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Gibbs Sampler Settings</span> <span style="color: #00BBBB;">──────────────────────────────────────────────────────</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">System Wide Settings</span> ──</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Number of draws (`ndraws`): 10</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Burn-in ratio (`burnin_ratio`): 0.5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Burn-in (`burnin`): 5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Store frequency (`nstore`): 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Number of saved draws (`nsave`): 5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Tau (`tau`): 1.1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Number of draws (`ndraws`): 10</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Burn-in ratio (`burnin_ratio`): 0.5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Burn-in (`burnin`): 5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Store frequency (`nstore`): 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Number of saved draws (`nsave`): 5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Tau (`tau`): 1.1</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Estimation</span> <span style="color: #00BBBB;">──────────────────────────────────────────────────────────────────</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="color: #BB0000; font-weight: bold;">⚠ MCMC Acceptance Probability Warnings</span> <span style="color: #00BBBB;">──────────────────────────────────────</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> • <span style="font-weight: bold;">consumption</span>: 80.0%</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Some acceptance probabilities are outside the recommended range (20%-60%).</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Consider revising the equations, tuning each equation's tau, or adjusting your priors.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> Model name: KOMANo decimal places were defined for the GOF statistics.</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>                       coef.   lower CI   upper CI</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> constant          1.3310507  1.0846858  1.6364938</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> consumption.L(1)  0.4655126  0.4251005  0.4949979</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> consumption.L(2)  0.2276586  0.1882462  0.2601377</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> gdp              -0.2991305 -0.3646066 -0.1849941</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> constant          1.2315823  1.0903710  1.5150503</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> consumption.L(1)  0.4887485  0.4242359  0.5610555</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> consumption.L(2)  0.2172775  0.1705978  0.2699137</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> gdp              -0.3345256 -0.3900799 -0.2511942</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> No GOF block defined.</span>
 </code></pre></div>

@@ -8,7 +8,7 @@ vec(character_beta_matrix)
 ## Usage
 
 ``` r
-beta_vectorization(character_beta_matrix)
+beta_vectorization(character_beta_matrix, identity_weights)
 ```
 
 ## Arguments
@@ -16,6 +16,10 @@ beta_vectorization(character_beta_matrix)
 - character_beta_matrix:
 
   A character matrix representing the beta structure of the model.
+
+- identity_weights:
+
+  A list of identity weights for adjusting constant vectors.
 
 ## Value
 

@@ -13,7 +13,7 @@ Markov chain."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,7 +35,7 @@ Markov chain."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Compute the target function for the jth equation</h1>
-      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/R/mh_within_gibbs_algorithm.R" class="external-link"><code>R/mh_within_gibbs_algorithm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/0.4.1/R/mh_within_gibbs_algorithm.R" class="external-link"><code>R/mh_within_gibbs_algorithm.R</code></a></small>
       <div class="d-none name"><code>target_j.Rd</code></div>
     </div>
 
@@ -56,7 +56,8 @@ Markov chain.</p>
 <span>  <span class="va">jx</span>,</span>
 <span>  <span class="va">gamma_parameters_j</span>,</span>
 <span>  <span class="va">xtx</span>,</span>
-<span>  <span class="va">xbtxb</span></span>
+<span>  <span class="va">xbtxb</span>,</span>
+<span>  <span class="va">equation_data</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -108,6 +109,11 @@ Gibbs draws, so it is computed once instead of on every call.</p></dd>
 <dd><p>Precomputed \(x_b'x_b\), where \(x_b\) is
 \(x_matrix\) restricted to the columns kept for equation \(j\). Same
 rationale as <code>xtx</code>.</p></dd>
+
+
+<dt id="arg-equation-data">equation_data<a class="anchor" aria-label="anchor" href="#arg-equation-data"></a></dt>
+<dd><p>Fixed equation subsets and counts returned by
+<code><a href="construct_equation_data.html">construct_equation_data()</a></code>. The samplers compute this once per equation.</p></dd>
 
 </dl></div>
     <div class="section level2">

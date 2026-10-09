@@ -221,10 +221,10 @@ estimates <- estimate(
 print(estimates)
 #> 
 #> ── Estimates ───────────────────────────────────────────────────────────────────
-#>         consumption ~  0.35 - 0.01 * gdp  +  0.1 * consumption.L(1)
-#>          investment ~  0.45  +  0.21 * investment.L(1)
-#>             exports ~  - 1083.18  +  2.87 * world_gdp - 0.19 * exports.L(1) - 0.24 * exports_level.L(1)  +  0.55 * world_gdp_level.L(1)  +  0.06 * exchange_rate_level.L(1)
-#>             imports ~  - 0.01 - 0.01 * exports  +  1.51 * consumption  +  0.98 * investment - 0.13 * imports.L(1)
+#>         consumption ~  0.36 - 0.02 * gdp  +  0.1 * consumption.L(1)
+#>          investment ~  0.46  +  0.21 * investment.L(1)
+#>             exports ~  - 1092.88  +  2.84 * world_gdp - 0.19 * exports.L(1) - 0.24 * exports_level.L(1)  +  0.56 * world_gdp_level.L(1)  +  0.06 * exchange_rate_level.L(1)
+#>             imports ~  0.07  +  0.01 * exports  +  1.36 * consumption  +  0.91 * investment - 0.12 * imports.L(1)
 #>                 gdp == 0.6 * consumption  +  0.6 * domestic_demand  +  0.5 * exports - 0.4 * imports
 #>     domestic_demand == 0.6 * consumption  +  0.4 * investment
 #>       exports_level == 1 * exports  +  1 * exports_level.L(1)
@@ -239,18 +239,18 @@ summary(estimates, variables = "exports")
 #> =============================================
 #>                           exports            
 #> ---------------------------------------------
-#> constant                   -1083.18          
-#>                           [-1643.61; -529.64]
+#> constant                   -1092.88          
+#>                           [-1707.82; -489.90]
 #> exports.L(1)                  -0.19          
-#>                           [   -0.37;   -0.01]
+#>                           [   -0.37;   -0.03]
 #> exports_level.L(1)            -0.24          
-#>                           [   -0.37;   -0.11]
-#> world_gdp_level.L(1)           0.55          
-#>                           [    0.27;    0.84]
+#>                           [   -0.38;   -0.10]
+#> world_gdp_level.L(1)           0.56          
+#>                           [    0.25;    0.87]
 #> exchange_rate_level.L(1)       0.06          
 #>                           [    0.01;    0.11]
-#> world_gdp                      2.87          
-#>                           [    1.93;    3.76]
+#> world_gdp                      2.84          
+#>                           [    1.93;    3.70]
 #> =============================================
 #> Posterior mean (90% credible interval: [5.0%, 95.0%])
 #> Estimation period: 1996 Q1 - 2019 Q4
@@ -270,12 +270,12 @@ sprintf(
     long_run_world_gdp,
     long_run_exchange_rate
 )
-#> [1] "Adjustment speed: -0.242, Long-run world GDP: 2.284, Exchange rate: 0.247"
+#> [1] "Adjustment speed: -0.243, Long-run world GDP: 2.290, Exchange rate: 0.253"
 ```
 
 The adjustment speed is -0.24, which is negative and implies about 24%
 of the gap closes each period. The long-run elasticities imply that a 1%
-rise in world GDP is associated with roughly 2.28% higher exports in the
+rise in world GDP is associated with roughly 2.29% higher exports in the
 long run, while a 1% increase in the exchange-rate index implies 0.25%
 higher exports if higher values indicate depreciation (here the exchange
 rate is CHF/EUR, so higher values mean depreciation; flip the sign if
@@ -296,6 +296,10 @@ forecasts <- forecast(
 )
 #> 
 #> ── Forecast ────────────────────────────────────────────────────────────────────
+#> Warning: ! Forecast draws raised warnings:
+#> • 1000 of 1000 draws: ! Identity "exports_level" could not be checked.
+#> • 1000 of 1000 draws: ! Identity "world_gdp_level" could not be checked.
+#> • 1000 of 1000 draws: ! Identity "exchange_rate_level" could not be checked.
 print(forecasts)
 #> <koma_ts>
 #> attributes:
@@ -305,23 +309,23 @@ print(forecasts)
 #> 
 #> series:
 #>         consumption investment exports imports    gdp domestic_demand
-#> 2023 Q1      0.3744     0.3695  0.8694  1.0240 0.4732          0.3725
-#> 2023 Q2      0.3811     0.4639  0.7411  0.7756 0.5375          0.4142
-#> 2023 Q3      0.3715     0.5915  0.6576  0.9964 0.4288          0.4595
-#> 2023 Q4      0.3993     0.5453  0.3011  0.9752 0.2747          0.4577
-#> 2024 Q1      0.3912     0.5046  0.8663  0.8814 0.5772          0.4365
-#> 2024 Q2      0.3897     0.4520  0.6658  0.8568 0.4727          0.4146
-#> 2024 Q3      0.3862     0.5442  1.3584  0.9559 0.7982          0.4494
-#> 2024 Q4      0.4009     0.5277  0.5384  1.1220 0.3319          0.4516
+#> 2023 Q1      0.3633     0.3662  0.6760  1.0907 0.3384          0.3644
+#> 2023 Q2      0.3909     0.6123  0.6867  1.1159 0.4192          0.4795
+#> 2023 Q3      0.3880     0.5712  0.8183  0.8603 0.5746          0.4613
+#> 2023 Q4      0.3907     0.6095  0.1604  1.0972 0.1627          0.4782
+#> 2024 Q1      0.3781     0.5003  1.1389  0.7743 0.7427          0.4270
+#> 2024 Q2      0.3783     0.5461  0.5293  0.9950 0.3608          0.4454
+#> 2024 Q3      0.3882     0.5323  1.3523  0.9453 0.7984          0.4458
+#> 2024 Q4      0.3855     0.6270  0.7458  1.1638 0.4280          0.4821
 #>         exports_level world_gdp_level exchange_rate_level world_gdp
-#> 2023 Q1      1168.965        2474.282             -0.7646    0.4827
-#> 2023 Q2      1169.706        2474.690             -2.1510    0.4083
-#> 2023 Q3      1170.364        2475.116             -3.9379    0.4259
-#> 2023 Q4      1170.665        2475.407             -4.6881    0.2906
-#> 2024 Q1      1171.531        2475.865             -5.2093    0.4586
-#> 2024 Q2      1172.197        2476.261             -2.6797    0.3955
-#> 2024 Q3      1173.555        2476.770             -4.9959    0.5096
-#> 2024 Q4      1174.094        2477.210             -6.6168    0.4393
+#> 2023 Q1      1168.772        2474.282             -0.7646    0.4827
+#> 2023 Q2      1169.458        2474.690             -2.1510    0.4083
+#> 2023 Q3      1170.277        2475.116             -3.9379    0.4259
+#> 2023 Q4      1170.437        2475.407             -4.6881    0.2906
+#> 2024 Q1      1171.576        2475.865             -5.2093    0.4586
+#> 2024 Q2      1172.105        2476.261             -2.6797    0.3955
+#> 2024 Q3      1173.458        2476.770             -4.9959    0.5096
+#> 2024 Q4      1174.204        2477.210             -6.6168    0.4393
 #>         exchange_rate
 #> 2023 Q1        0.9217
 #> 2023 Q2       -1.3863
@@ -344,8 +348,8 @@ rate(forecasts$mean$exports)
 #> 
 #> series:
 #>           Qtr1      Qtr2      Qtr3      Qtr4
-#> 2023 0.8693943 0.7411222 0.6576243 0.3011234
-#> 2024 0.8662591 0.6657588 1.3583590 0.5383926
+#> 2023 0.6759805 0.6866861 0.8183252 0.1604028
+#> 2024 1.1389034 0.5292635 1.3523289 0.7457637
 level(forecasts$mean$exports)
 #> <koma_ts>
 #> attributes:
@@ -355,6 +359,6 @@ level(forecasts$mean$exports)
 #> series:
 #>          Qtr1     Qtr2     Qtr3     Qtr4
 #> 2022                            118297.6
-#> 2023 119330.5 120218.2 121011.4 121376.3
-#> 2024 122432.3 123250.2 124935.8 125610.2
+#> 2023 119100.0 119920.6 120906.0 121100.1
+#> 2024 122487.2 123137.2 124813.7 125748.0
 ```

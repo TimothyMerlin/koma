@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -52,7 +52,7 @@
       <h1>Equation Syntax Reference</h1>
             
       
-      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/vignettes/koma-equations.Rmd" class="external-link"><code>vignettes/koma-equations.Rmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/0.4.1/vignettes/koma-equations.Rmd" class="external-link"><code>vignettes/koma-equations.Rmd</code></a></small>
       <div class="d-none name"><code>koma-equations.Rmd</code></div>
     </div>
 
@@ -176,6 +176,8 @@ appears without a variable name.</li>
 <li>A prior in front of lag shorthand (<code>x.L(1:3)</code>,
 <code>x.L(1, 3)</code>, <code>lag(x, 1:3)</code>) applies to every lag
 it expands to.</li>
+<li>A prior in front of <code>dummies()</code> (see section 7) applies
+to every dummy it expands to.</li>
 <li>The dependent variable cannot have a prior.</li>
 <li>The error-term prior must be the last prior in the equation.</li>
 </ul>
@@ -204,6 +206,10 @@ or a comma-separated mix).</p>
 <span><span class="co"># Equivalent to:</span></span>
 <span><span class="va">consp</span> <span class="op">~</span> <span class="va">ydispbr</span> <span class="op">+</span> <span class="fu">consp.L</span><span class="op">(</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">covid_1</span> <span class="op">+</span> <span class="va">covid_2</span> <span class="op">+</span> <span class="va">covid_3</span> <span class="op">+</span> <span class="va">covid_4</span> <span class="op">+</span> <span class="va">covid_5</span> <span class="op">+</span> <span class="va">covid_6</span> <span class="op">+</span> <span class="va">covid_7</span> <span class="op">+</span> <span class="va">covid_8</span></span></code></pre></div>
+<p>A prior in front of <code>dummies()</code> is set on every dummy:
+<code>{0, 1} dummies(covid, 1:8)</code> is the same as writing
+<code>{0, 1}</code> in front of each of <code>covid_1</code> to
+<code>covid_8</code>.</p>
 <p><code>dummies()</code> only expands the <em>equation string</em> - it
 does not create any data. It is expanded before validation, so the
 expanded names are treated exactly like any hand-typed variable, which

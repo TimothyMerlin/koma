@@ -9,7 +9,7 @@ gamma_j'"></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -31,7 +31,7 @@ gamma_j'"></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Compute initial omega for the jth equation</h1>
-      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/R/mh_within_gibbs_algorithm_informative.R" class="external-link"><code>R/mh_within_gibbs_algorithm_informative.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/0.4.1/R/mh_within_gibbs_algorithm_informative.R" class="external-link"><code>R/mh_within_gibbs_algorithm_informative.R</code></a></small>
       <div class="d-none name"><code>initial_omega_j.Rd</code></div>
     </div>
 
@@ -50,7 +50,8 @@ gamma_j'</p>
 <span>  <span class="va">jx</span>,</span>
 <span>  <span class="va">gamma_jw</span>,</span>
 <span>  <span class="va">xtx</span>,</span>
-<span>  <span class="va">xbtxb</span></span>
+<span>  <span class="va">xbtxb</span>,</span>
+<span>  <span class="va">equation_data</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -103,12 +104,17 @@ Gibbs draws, so it is computed once instead of on every call.</p></dd>
 \(x_matrix\) restricted to the columns kept for equation \(j\). Same
 rationale as <code>xtx</code>.</p></dd>
 
+
+<dt id="arg-equation-data">equation_data<a class="anchor" aria-label="anchor" href="#arg-equation-data"></a></dt>
+<dd><p>Fixed equation subsets and counts returned by
+<code><a href="construct_equation_data.html">construct_equation_data()</a></code>. The samplers compute this once per equation.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>The function returns the evaluation of the target function,
-which is used to decide whether to accept or reject proposed states
-in the MH algorithm. Returns NA if there are no gamma parameters.</p>
+    <p>A \(((1 + n_j) \times (1 + n_j))\) matrix with the initial value
+for \(\Omega_j\), the residual covariance at the initial
+\(\gamma_j\). Returns NA if the endogenous regressors contain NA.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

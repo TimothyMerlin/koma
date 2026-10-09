@@ -61,13 +61,13 @@ hdi(x, probs = c(0.5, 0.9))
 #> ==========
 #> level_50
 #> --------
-#> Median: 0.008
-#> Intervals: [-0.626; 0.671]
+#> Median: 0.001
+#> Intervals: [-0.626; 0.68]
 #> 
 #> level_90
 #> --------
-#> Median: 0.008
-#> Intervals: [-1.596; 1.652]
+#> Median: 0.001
+#> Intervals: [-1.55; 1.714]
 #> 
 #> ==========
 #> Median, [HDI] 
@@ -85,22 +85,15 @@ fit <- estimate(
 #> ── Gibbs Sampler Settings ──────────────────────────────────────────────────────
 #> 
 #> ── System Wide Settings ──
-#>   • Number of draws (`ndraws`): 10
-#>   • Burn-in ratio (`burnin_ratio`): 0.5
-#>   • Burn-in (`burnin`): 5
-#>   • Store frequency (`nstore`): 1
-#>   • Number of saved draws (`nsave`): 5
-#>   • Tau (`tau`): 1.1
+#> • Number of draws (`ndraws`): 10
+#> • Burn-in ratio (`burnin_ratio`): 0.5
+#> • Burn-in (`burnin`): 5
+#> • Store frequency (`nstore`): 1
+#> • Number of saved draws (`nsave`): 5
+#> • Tau (`tau`): 1.1
 #> 
 #> 
 #> ── Estimation ──────────────────────────────────────────────────────────────────
-#> 
-#> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
-#> • consumption: 80.0%
-#> 
-#> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
-#> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
-#> 
 hdi_fit <- hdi(fit, probs = c(0.5, 0.9))
 names(hdi_fit$intervals)
 #> [1] "consumption"     "investment"      "current_account" "manufacturing"  

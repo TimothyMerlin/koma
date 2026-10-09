@@ -32,7 +32,9 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/construct_balanced_data.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/construct_beta_hat_j_matrix.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/construct_beta_matrix.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/construct_cholesky_of_inverse_hessian.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/construct_companion_matrix.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/construct_equation_data.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/construct_gamma_matrix.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/construct_phi.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/construct_pi_hat_0.html</loc></url>
@@ -41,6 +43,7 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/construct_reduced_form.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/construct_theta_bar_j.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/construct_theta_hat_j.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/construct_theta_permutation.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/construct_y_matrix_j.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/construct_z_matrix_j.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/create_annotations.html</loc></url>
@@ -106,13 +109,13 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/init_koma_theme.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/initial_omega_j.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/initialize_sampler.html</loc></url>
-<url><loc>https://timothymerlin.github.io/koma/reference/initialize_sampler_informative.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/is_system_of_equations.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/iterate_n_periods.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/klein.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/koma.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/koma_ts.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/level.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/log_determinant.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/merge_koma_attrs.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/merge_theme.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/model_evaluation.html</loc></url>
@@ -172,7 +175,6 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/system_of_equations.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/target_j.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/target_j_informative.html</loc></url>
-<url><loc>https://timothymerlin.github.io/koma/reference/target_j_informative_initial.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/the.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/to_long.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/trace_plot.html</loc></url>
@@ -187,6 +189,7 @@
 <url><loc>https://timothymerlin.github.io/koma/reference/validate_identity_lag_collinearity.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/validate_model_evaluation_input.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/validate_restrictions.html</loc></url>
+<url><loc>https://timothymerlin.github.io/koma/reference/validate_sys_eq_priors.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/validate_system_of_equations.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/validate_thetas_exist.html</loc></url>
 <url><loc>https://timothymerlin.github.io/koma/reference/validate_unique_endogenous_variables.html</loc></url>

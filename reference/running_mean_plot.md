@@ -75,12 +75,5 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 #> 
 #> 
 #> ── Estimation ──────────────────────────────────────────────────────────────────
-#> 
-#> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
-#> • consumption: 80.0%
-#> 
-#> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
-#> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
-#> 
 
 ```

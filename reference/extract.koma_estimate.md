@@ -82,29 +82,22 @@ if (requireNamespace("texreg", quietly = TRUE)) {
 #> ── Gibbs Sampler Settings ──────────────────────────────────────────────────────
 #> 
 #> ── System Wide Settings ──
-#>   • Number of draws (`ndraws`): 10
-#>   • Burn-in ratio (`burnin_ratio`): 0.5
-#>   • Burn-in (`burnin`): 5
-#>   • Store frequency (`nstore`): 1
-#>   • Number of saved draws (`nsave`): 5
-#>   • Tau (`tau`): 1.1
+#> • Number of draws (`ndraws`): 10
+#> • Burn-in ratio (`burnin_ratio`): 0.5
+#> • Burn-in (`burnin`): 5
+#> • Store frequency (`nstore`): 1
+#> • Number of saved draws (`nsave`): 5
+#> • Tau (`tau`): 1.1
 #> 
 #> 
 #> ── Estimation ──────────────────────────────────────────────────────────────────
-#> 
-#> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
-#> • consumption: 80.0%
-#> 
-#> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
-#> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
-#> 
 #> Model name: KOMANo decimal places were defined for the GOF statistics.
 #> 
 #>                       coef.   lower CI   upper CI
-#> constant          1.3310507  1.0846858  1.6364938
-#> consumption.L(1)  0.4655126  0.4251005  0.4949979
-#> consumption.L(2)  0.2276586  0.1882462  0.2601377
-#> gdp              -0.2991305 -0.3646066 -0.1849941
+#> constant          1.2315823  1.0903710  1.5150503
+#> consumption.L(1)  0.4887485  0.4242359  0.5610555
+#> consumption.L(2)  0.2172775  0.1705978  0.2699137
+#> gdp              -0.3345256 -0.3900799 -0.2511942
 #> 
 #> No GOF block defined.
 ```

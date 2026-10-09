@@ -82,22 +82,15 @@ fit <- estimate(
 #> 
 #> 
 #> ── Estimation ──────────────────────────────────────────────────────────────────
-#> 
-#> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
-#> • consumption: 80.0%
-#> 
-#> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
-#> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
-#> 
 rm_df <- running_mean(fit, params = "beta", max_draws = 100)
 head(rm_df)
 #>   draw     value    variable param             coef draw_position
-#> 1    1 1.1419010 consumption  beta         constant             1
-#> 2    1 0.4979447 consumption  beta consumption.L(1)             1
-#> 3    1 0.2243029 consumption  beta consumption.L(2)             1
-#> 4    2 1.3458769 consumption  beta         constant             2
-#> 5    2 0.4591917 consumption  beta consumption.L(1)             2
-#> 6    2 0.2293820 consumption  beta consumption.L(2)             2
+#> 1    1 1.0786305 consumption  beta         constant             1
+#> 2    1 0.4568034 consumption  beta consumption.L(1)             1
+#> 3    1 0.2709837 consumption  beta consumption.L(2)             1
+#> 4    2 1.1079817 consumption  beta         constant             2
+#> 5    2 0.5100500 consumption  beta consumption.L(1)             2
+#> 6    2 0.2207444 consumption  beta consumption.L(2)             2
 #>   in_grace_window                             label
 #> 1            TRUE         consumption:beta:constant
 #> 2            TRUE consumption:beta:consumption.L(1)

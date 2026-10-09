@@ -17,7 +17,8 @@ draw_gamma_j(
   tau,
   cholesky_of_inverse_hessian,
   xtx,
-  xbtxb
+  xbtxb,
+  equation_data
 )
 ```
 
@@ -75,6 +76,12 @@ draw_gamma_j(
 
   Precomputed \\x_b'x_b\\, where \\x_b\\ is \\x_matrix\\ restricted to
   the columns kept for equation \\j\\. Same rationale as `xtx`.
+
+- equation_data:
+
+  Fixed equation subsets and counts returned by
+  [`construct_equation_data()`](https://timothymerlin.github.io/koma/reference/construct_equation_data.md).
+  The samplers compute this once per equation.
 
 ## Value
 

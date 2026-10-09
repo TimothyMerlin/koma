@@ -28,7 +28,7 @@ update_identity_weights(weights, identities)
   and "weights" for identity weights.
 
   Example:
-  `list(gdp = list(components = list(manufacturing = "theta6_4"), weights = list(theta6_4 = NULL)))`
+  `list(gdp = list(components = list(manufacturing = "theta_gamma6_4"), weights = list(theta_gamma6_4 = NULL)))`
 
 ## Value
 

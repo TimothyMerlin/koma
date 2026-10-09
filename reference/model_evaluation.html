@@ -11,7 +11,7 @@ until the specified horizon equals the end date in the forecast period."></head>
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,7 +33,7 @@ until the specified horizon equals the end date in the forecast period."></head>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Calculate Out-of-Sample RMSE for a Specified Horizon</h1>
-      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/R/model_evaluation.R" class="external-link"><code>R/model_evaluation.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/0.4.1/R/model_evaluation.R" class="external-link"><code>R/model_evaluation.R</code></a></small>
       <div class="d-none name"><code>model_evaluation.Rd</code></div>
     </div>
 
@@ -145,16 +145,16 @@ In each iteration, a quarter is added to both the in-sample data and to
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="font-weight: bold;">Gibbs Sampler Settings</span> <span style="color: #00BBBB;">──────────────────────────────────────────────────────</span></span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> ── <span style="font-weight: bold;">System Wide Settings</span> ──</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Number of draws (`ndraws`): 10</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Burn-in ratio (`burnin_ratio`): 0.5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Burn-in (`burnin`): 5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Store frequency (`nstore`): 1</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Number of saved draws (`nsave`): 5</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span>   • Tau (`tau`): 1.1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Number of draws (`ndraws`): 10</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Burn-in ratio (`burnin_ratio`): 0.5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Burn-in (`burnin`): 5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Store frequency (`nstore`): 1</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Number of saved draws (`nsave`): 5</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • Tau (`tau`): 1.1</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">──</span> <span style="color: #BB0000; font-weight: bold;">⚠ MCMC Acceptance Probability Warnings</span> <span style="color: #00BBBB;">──────────────────────────────────────</span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> • <span style="font-weight: bold;">investment</span>: 80.0%</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> • <span style="font-weight: bold;">consumption</span>: 70.0%</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BBBB;">ℹ</span> Some acceptance probabilities are outside the recommended range (20%-60%).</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Consider revising the equations, tuning each equation's tau, or adjusting your priors.</span>
@@ -167,7 +167,7 @@ In each iteration, a quarter is added to both the in-sample data and to
 <span class="r-msg co"><span class="r-pr">#&gt;</span> <span style="color: #00BB00;">✔</span> Forecasting completed.</span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">rmse</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   consumption investment</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1    12581.77   73408.67</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1    15403.83   75467.31</span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
     </div>

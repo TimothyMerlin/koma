@@ -170,22 +170,15 @@ fit <- estimate(
 #> ── Gibbs Sampler Settings ──────────────────────────────────────────────────────
 #> 
 #> ── System Wide Settings ──
-#>   • Number of draws (`ndraws`): 10
-#>   • Burn-in ratio (`burnin_ratio`): 0.5
-#>   • Burn-in (`burnin`): 5
-#>   • Store frequency (`nstore`): 1
-#>   • Number of saved draws (`nsave`): 5
-#>   • Tau (`tau`): 1.1
+#> • Number of draws (`ndraws`): 10
+#> • Burn-in ratio (`burnin_ratio`): 0.5
+#> • Burn-in (`burnin`): 5
+#> • Store frequency (`nstore`): 1
+#> • Number of saved draws (`nsave`): 5
+#> • Tau (`tau`): 1.1
 #> 
 #> 
 #> ── Estimation ──────────────────────────────────────────────────────────────────
-#> 
-#> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
-#> • consumption: 80.0%
-#> 
-#> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
-#> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
-#> 
 fc <- forecast(fit, dates = dates)
 #> 
 #> ── Forecast ────────────────────────────────────────────────────────────────────
@@ -199,10 +192,10 @@ print(fc)
 #> 
 #> series:
 #>         consumption investment current_account manufacturing service     gdp
-#> 2025 Q1      5.9971     4.4651          0.4067        0.0040 -0.0289 -0.0157
-#> 2025 Q2      5.8354     4.8972          1.2844        0.5227 -0.2147  0.0803
-#> 2025 Q3      5.5752     3.7639         -0.4847       -0.0543  0.0127 -0.0141
-#> 2025 Q4      5.1550     3.3069          2.9297        1.0349 -0.4408  0.1495
+#> 2025 Q1      6.4738     4.5367          0.8352        0.5733 -0.3877 -0.0033
+#> 2025 Q2      5.3499     4.2385          1.1044        0.4406 -0.1163  0.1064
+#> 2025 Q3      5.4708     4.3407         -0.4310       -0.5032 -0.1463 -0.2890
+#> 2025 Q4      5.1219     3.5070          2.4524        1.1098 -0.4564  0.1701
 #>         real_interest_rate world_gdp population
 #> 2025 Q1            -1.0418   -0.9163     0.9900
 #> 2025 Q2            -0.3902    0.0282    -0.3553

@@ -11,7 +11,7 @@ by construct_phi() for every draw."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,7 +33,7 @@ by construct_phi() for every draw."></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Find the Positions of Lagged Endogenous Regressors</h1>
-      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/R/construct_posterior.R" class="external-link"><code>R/construct_posterior.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/0.4.1/R/construct_posterior.R" class="external-link"><code>R/construct_posterior.R</code></a></small>
       <div class="d-none name"><code>find_phi_positions.Rd</code></div>
     </div>
 
@@ -54,15 +54,16 @@ by <code><a href="construct_phi.html">construct_phi()</a></code> for every draw.
 
 <dl><dt id="arg-sys-eq">sys_eq<a class="anchor" aria-label="anchor" href="#arg-sys-eq"></a></dt>
 <dd><p>A list containing the system of equations. Must
-include <code>$equations</code> with the equations of the system,
-<code>$endogenous_variables</code> with the names of the endogenous variables, and
-<code>$total_exogenous_variables</code> with the names of all exogenous variables.</p></dd>
+include <code>$endogenous_variables</code> with the names of the endogenous variables
+and <code>$character_beta_matrix</code> with the character beta matrix.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>A nested list indexed by lag, equation and endogenous variable,
-holding the row in the beta matrix and the row in \(\Phi(\ell)\).</p>
+holding the row in the beta matrix and the row in \(\Phi(\ell)\). It has
+one entry for every lag up to the largest one, in order, so that
+<code><a href="construct_phi.html">construct_phi()</a></code> returns \(\Phi(1), \ldots, \Phi(L)\) without gaps.</p>
     </div>
 
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

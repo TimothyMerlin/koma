@@ -139,6 +139,8 @@ Rules:
   variable name.
 - A prior in front of lag shorthand (`x.L(1:3)`, `x.L(1, 3)`,
   `lag(x, 1:3)`) applies to every lag it expands to.
+- A prior in front of `dummies()` (see section 7) applies to every dummy
+  it expands to.
 - The dependent variable cannot have a prior.
 - The error-term prior must be the last prior in the equation.
 
@@ -168,6 +170,10 @@ consp ~ ydispbr + consp.L(1) + dummies(covid, 1:8)
 consp ~ ydispbr + consp.L(1) +
   covid_1 + covid_2 + covid_3 + covid_4 + covid_5 + covid_6 + covid_7 + covid_8
 ```
+
+A prior in front of `dummies()` is set on every dummy:
+`{0, 1} dummies(covid, 1:8)` is the same as writing `{0, 1}` in front of
+each of `covid_1` to `covid_8`.
 
 `dummies()` only expands the *equation string* - it does not create any
 data. It is expanded before validation, so the expanded names are

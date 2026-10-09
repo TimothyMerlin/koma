@@ -1,5 +1,156 @@
 # Changelog
 
+## koma 0.4.1
+
+### Breaking changes
+
+- `estimate(..., estimates = )` is now ignored with a warning, and all
+  equations are always estimated. The check for changed equations missed
+  changes to contemporaneous regressors, priors, the sample and the
+  data, and then returned stale draws.
+- Identity weights are now named `theta_gamma<eq>_<col>` for endogenous
+  components and `theta_beta<eq>_<row>` for exogenous ones
+  (e.g. `theta_gamma6_4` instead of `theta6_4`). Code that sets weights
+  by the old names,
+  e.g. `sys_eq$identities$gdp$weights$theta6_4 <- 0.5`, no longer has
+  any effect; use the new names. The `sys_eq` in `simulated_sem` was
+  rebuilt with the new names.
+
+### New features
+
+- Printing a system of equations now shows its priors,
+  e.g. `{0.4, 0.1} gdp`, the error-term prior and the equation settings,
+  e.g. `[tau = 1.2]`. The print reads them from the object, so it
+  reflects later changes to them.
+- [`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md)
+  now checks the priors stored in the system of equations and errors on
+  invalid ones, e.g. a prior for a term that is not in the equation or a
+  variance that is not positive. Before, priors changed by hand after
+  [`system_of_equations()`](https://timothymerlin.github.io/koma/reference/system_of_equations.md)
+  were not checked.
+
+### Changed results
+
+The following fixes change the estimates or forecasts of affected
+models. Re-estimate them.
+
+- Priors on contemporaneous endogenous regressors (e.g. `{0,1}gdp` with
+  endogenous `gdp`) ignored the data, so the posterior was just the
+  prior. It now combines prior and likelihood.
+- Tight priors on such regressors far from the data estimate
+  (e.g. `{1000,0.00001}gdp`) left the chain stuck at its start value. It
+  now moves towards the prior, but can need many draws to converge;
+  check the trace plot.
+- A prior in front of `dummies()` (e.g. `{0,1}dummies(covid, 1:8)`) now
+  applies to all dummies, not only the first.
+- Identity weights that mix endogenous and exogenous components
+  (e.g. `y == 0.3*b + 0.7*x1`) could overwrite each other, so
+  estimation, forecasting and the identification check failed or used
+  the wrong weight. Rebuild such models with
+  [`system_of_equations()`](https://timothymerlin.github.io/koma/reference/system_of_equations.md).
+- [`forecast()`](https://timothymerlin.github.io/koma/reference/forecast.md)
+  could drop or misplace lagged endogenous regressors when an equation
+  skips lower lags (e.g. only `x.L(4)`), uses lags of 10 or more, or has
+  variable names that share a prefix or contain digits. Estimation is
+  affected only where a ragged edge is filled.
+- The identification check no longer advances the random number
+  generator, so models with contemporaneous endogenous regressors give
+  different draws for the same seed.
+- For equations with priors and contemporaneous endogenous regressors,
+  the saved error variance used the coefficients of the previous draw.
+  Density forecasts change slightly.
+- The starting value of the error covariance for equations with priors
+  was far too large. This only matters with `burnin_ratio = 0` or a very
+  short burn-in.
+- [`system_of_equations()`](https://timothymerlin.github.io/koma/reference/system_of_equations.md)
+  now rejects priors with a variance or error-term scale that is not
+  positive (e.g. `{0,-0.01}gdp`). A negative variance used to pass
+  silently and push the estimate away from the prior mean; a zero
+  variance failed later with an unclear error.
+
+### Bug fixes
+
+#### Identification
+
+- [`model_identification()`](https://timothymerlin.github.io/koma/reference/model_identification.md)
+  failed or wrongly rejected identified models for:
+  - simultaneous systems with at most one lagged or exogenous variable
+    (e.g. `a ~ b, b ~ a`);
+  - identities with exogenous components (e.g. `y == 1*c + 1*i + 1*g`
+    with exogenous `i` and `g`);
+  - equations without a constant (e.g. `b ~ 0 + a + x1 + x2`);
+  - identities with dynamic weights, when called directly on the output
+    of
+    [`system_of_equations()`](https://timothymerlin.github.io/koma/reference/system_of_equations.md);
+  - large systems with parameter names that share a prefix
+    (e.g. `theta_gamma6_4` and `theta_gamma6_40`).
+- The identification error now lists only the failing equations, with
+  the counts behind the order condition or the rank behind the rank
+  condition.
+
+#### Estimation and forecasting
+
+- [`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md)
+  failed for equations without priors that have many endogenous
+  regressors or series on a very large or small scale, because the
+  residual determinant overflowed or underflowed. Its logarithm is now
+  computed directly.
+- Sampler initialization now handles equations whose exogenous
+  coefficients, including the intercept, are all restricted to zero.
+- If the sampler cannot be started because the target has no proper
+  maximum in gamma (e.g. a constant endogenous regressor),
+  [`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md)
+  now says so, instead of failing with
+  `Lapack routine dgesv: system is exactly singular` or a Cholesky
+  error.
+- Both samplers now handle equations with no free coefficients, drawing
+  only their error variance.
+- The saved `theta_jw` draws of equations without priors now hold the
+  full coefficient vector, with the restricted coefficients as zeros, in
+  the same form as for equations with priors. They used to hold only the
+  free coefficients, in a different order.
+- [`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md)
+  now stops with an error that names each failed equation and the
+  reason, instead of returning an estimate that fails later in
+  [`summary()`](https://rdrr.io/r/base/summary.html) or
+  [`forecast()`](https://timothymerlin.github.io/koma/reference/forecast.md).
+- Sampler settings that save no draws (e.g. `ndraws = 0`, or `nstore`
+  larger than the draws after burn-in) now fail early.
+- The sampler proposal scale `tau` must now contain finite, positive
+  numbers. In particular, `tau = 0` is rejected instead of silently
+  freezing the gamma draws.
+- Invalid error covariance matrices (not a matrix, not square, or of the
+  wrong size) now produce clear errors.
+- [`forecast()`](https://timothymerlin.github.io/koma/reference/forecast.md)
+  now stops if `character_beta_matrix` is missing, instead of silently
+  omitting lag dynamics.
+- Forecast identity checks were skipped when exogenous series were
+  supplied; incorrect identities now warn.
+- [`forecast()`](https://timothymerlin.github.io/koma/reference/forecast.md)
+  now stops if an exogenous series has missing values at the forecast
+  start or between observations. Such a gap was not detected and gave
+  `NA` forecasts, or a horizon shortened to the wrong periods. Missing
+  values at the end still shorten the horizon with a warning.
+- [`forecast()`](https://timothymerlin.github.io/koma/reference/forecast.md)
+  failed with “invalid time series parameters” when the exogenous data
+  covered only the first forecast period. The horizon is now shortened
+  to one period.
+- `conditional_innov_method = "eigen"` dropped all innovation variances
+  below `1e-10`, so conditional forecasts of series on a very small
+  scale lost their uncertainty. The cutoff is now relative to the scale
+  of the covariance.
+- The Metropolis-Hastings step now guards against an acceptance
+  probability that is not a number. No known model triggers this.
+
+### Performance
+
+- [`estimate()`](https://timothymerlin.github.io/koma/reference/estimate.md)
+  is about 2 to 3 times faster than in 0.4.0 (e.g. the small macro model
+  vignette: about 6 s to 2 s). The Gibbs samplers now compute
+  per-equation quantities (regressor subsets, the inverse of `X'X`, the
+  prior precision) once instead of in every draw, and work on plain
+  matrices. The draws are unchanged.
+
 ## koma 0.4.0
 
 CRAN release: 2026-10-02

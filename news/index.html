@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,9 +29,83 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/TimothyMerlin/koma/blob/0.4.1/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.1" id="koma-041">koma 0.4.1<a class="anchor" aria-label="anchor" href="#koma-041"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-0-4-1">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-4-1"></a></h3>
+<ul><li>
+<code>estimate(..., estimates = )</code> is now ignored with a warning, and all equations are always estimated. The check for changed equations missed changes to contemporaneous regressors, priors, the sample and the data, and then returned stale draws.</li>
+<li>Identity weights are now named <code>theta_gamma&lt;eq&gt;_&lt;col&gt;</code> for endogenous components and <code>theta_beta&lt;eq&gt;_&lt;row&gt;</code> for exogenous ones (e.g. <code>theta_gamma6_4</code> instead of <code>theta6_4</code>). Code that sets weights by the old names, e.g. <code>sys_eq$identities$gdp$weights$theta6_4 &lt;- 0.5</code>, no longer has any effect; use the new names. The <code>sys_eq</code> in <code>simulated_sem</code> was rebuilt with the new names.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="new-features-0-4-1">New features<a class="anchor" aria-label="anchor" href="#new-features-0-4-1"></a></h3>
+<ul><li>Printing a system of equations now shows its priors, e.g. <code>{0.4, 0.1} gdp</code>, the error-term prior and the equation settings, e.g. <code>[tau = 1.2]</code>. The print reads them from the object, so it reflects later changes to them.</li>
+<li>
+<code><a href="../reference/estimate.html">estimate()</a></code> now checks the priors stored in the system of equations and errors on invalid ones, e.g. a prior for a term that is not in the equation or a variance that is not positive. Before, priors changed by hand after <code><a href="../reference/system_of_equations.html">system_of_equations()</a></code> were not checked.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-results-0-4-1">Changed results<a class="anchor" aria-label="anchor" href="#changed-results-0-4-1"></a></h3>
+<p>The following fixes change the estimates or forecasts of affected models. Re-estimate them.</p>
+<ul><li>Priors on contemporaneous endogenous regressors (e.g. <code>{0,1}gdp</code> with endogenous <code>gdp</code>) ignored the data, so the posterior was just the prior. It now combines prior and likelihood.</li>
+<li>Tight priors on such regressors far from the data estimate (e.g. <code>{1000,0.00001}gdp</code>) left the chain stuck at its start value. It now moves towards the prior, but can need many draws to converge; check the trace plot.</li>
+<li>A prior in front of <code>dummies()</code> (e.g. <code>{0,1}dummies(covid, 1:8)</code>) now applies to all dummies, not only the first.</li>
+<li>Identity weights that mix endogenous and exogenous components (e.g. <code>y == 0.3*b + 0.7*x1</code>) could overwrite each other, so estimation, forecasting and the identification check failed or used the wrong weight. Rebuild such models with <code><a href="../reference/system_of_equations.html">system_of_equations()</a></code>.</li>
+<li>
+<code><a href="../reference/forecast.html">forecast()</a></code> could drop or misplace lagged endogenous regressors when an equation skips lower lags (e.g. only <code>x.L(4)</code>), uses lags of 10 or more, or has variable names that share a prefix or contain digits. Estimation is affected only where a ragged edge is filled.</li>
+<li>The identification check no longer advances the random number generator, so models with contemporaneous endogenous regressors give different draws for the same seed.</li>
+<li>For equations with priors and contemporaneous endogenous regressors, the saved error variance used the coefficients of the previous draw. Density forecasts change slightly.</li>
+<li>The starting value of the error covariance for equations with priors was far too large. This only matters with <code>burnin_ratio = 0</code> or a very short burn-in.</li>
+<li>
+<code><a href="../reference/system_of_equations.html">system_of_equations()</a></code> now rejects priors with a variance or error-term scale that is not positive (e.g. <code>{0,-0.01}gdp</code>). A negative variance used to pass silently and push the estimate away from the prior mean; a zero variance failed later with an unclear error.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="bug-fixes-0-4-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-4-1"></a></h3>
+<div class="section level4">
+<h4 id="identification-0-4-1">Identification<a class="anchor" aria-label="anchor" href="#identification-0-4-1"></a></h4>
+<ul><li>
+<code><a href="../reference/model_identification.html">model_identification()</a></code> failed or wrongly rejected identified models for:
+<ul><li>simultaneous systems with at most one lagged or exogenous variable (e.g. <code>a ~ b, b ~ a</code>);</li>
+<li>identities with exogenous components (e.g. <code>y == 1*c + 1*i + 1*g</code> with exogenous <code>i</code> and <code>g</code>);</li>
+<li>equations without a constant (e.g. <code>b ~ 0 + a + x1 + x2</code>);</li>
+<li>identities with dynamic weights, when called directly on the output of <code><a href="../reference/system_of_equations.html">system_of_equations()</a></code>;</li>
+<li>large systems with parameter names that share a prefix (e.g. <code>theta_gamma6_4</code> and <code>theta_gamma6_40</code>).</li>
+</ul></li>
+<li>The identification error now lists only the failing equations, with the counts behind the order condition or the rank behind the rank condition.</li>
+</ul></div>
+<div class="section level4">
+<h4 id="estimation-and-forecasting-0-4-1">Estimation and forecasting<a class="anchor" aria-label="anchor" href="#estimation-and-forecasting-0-4-1"></a></h4>
+<ul><li>
+<code><a href="../reference/estimate.html">estimate()</a></code> failed for equations without priors that have many endogenous regressors or series on a very large or small scale, because the residual determinant overflowed or underflowed. Its logarithm is now computed directly.</li>
+<li>Sampler initialization now handles equations whose exogenous coefficients, including the intercept, are all restricted to zero.</li>
+<li>If the sampler cannot be started because the target has no proper maximum in gamma (e.g. a constant endogenous regressor), <code><a href="../reference/estimate.html">estimate()</a></code> now says so, instead of failing with <code>Lapack routine dgesv: system is exactly singular</code> or a Cholesky error.</li>
+<li>Both samplers now handle equations with no free coefficients, drawing only their error variance.</li>
+<li>The saved <code>theta_jw</code> draws of equations without priors now hold the full coefficient vector, with the restricted coefficients as zeros, in the same form as for equations with priors. They used to hold only the free coefficients, in a different order.</li>
+<li>
+<code><a href="../reference/estimate.html">estimate()</a></code> now stops with an error that names each failed equation and the reason, instead of returning an estimate that fails later in <code><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary()</a></code> or <code><a href="../reference/forecast.html">forecast()</a></code>.</li>
+<li>Sampler settings that save no draws (e.g. <code>ndraws = 0</code>, or <code>nstore</code> larger than the draws after burn-in) now fail early.</li>
+<li>The sampler proposal scale <code>tau</code> must now contain finite, positive numbers. In particular, <code>tau = 0</code> is rejected instead of silently freezing the gamma draws.</li>
+<li>Invalid error covariance matrices (not a matrix, not square, or of the wrong size) now produce clear errors.</li>
+<li>
+<code><a href="../reference/forecast.html">forecast()</a></code> now stops if <code>character_beta_matrix</code> is missing, instead of silently omitting lag dynamics.</li>
+<li>Forecast identity checks were skipped when exogenous series were supplied; incorrect identities now warn.</li>
+<li>
+<code><a href="../reference/forecast.html">forecast()</a></code> now stops if an exogenous series has missing values at the forecast start or between observations. Such a gap was not detected and gave <code>NA</code> forecasts, or a horizon shortened to the wrong periods. Missing values at the end still shorten the horizon with a warning.</li>
+<li>
+<code><a href="../reference/forecast.html">forecast()</a></code> failed with “invalid time series parameters” when the exogenous data covered only the first forecast period. The horizon is now shortened to one period.</li>
+<li>
+<code>conditional_innov_method = "eigen"</code> dropped all innovation variances below <code>1e-10</code>, so conditional forecasts of series on a very small scale lost their uncertainty. The cutoff is now relative to the scale of the covariance.</li>
+<li>The Metropolis-Hastings step now guards against an acceptance probability that is not a number. No known model triggers this.</li>
+</ul></div>
+</div>
+<div class="section level3">
+<h3 id="performance-0-4-1">Performance<a class="anchor" aria-label="anchor" href="#performance-0-4-1"></a></h3>
+<ul><li>
+<code><a href="../reference/estimate.html">estimate()</a></code> is about 2 to 3 times faster than in 0.4.0 (e.g. the small macro model vignette: about 6 s to 2 s). The Gibbs samplers now compute per-equation quantities (regressor subsets, the inverse of <code>X'X</code>, the prior precision) once instead of in every draw, and work on plain matrices. The draws are unchanged.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="koma-040">koma 0.4.0<a class="anchor" aria-label="anchor" href="#koma-040"></a></h2><p class="text-muted">CRAN release: 2026-10-02</p>
 <div class="section level3">

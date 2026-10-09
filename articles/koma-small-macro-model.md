@@ -209,21 +209,15 @@ estimates <- estimate(
 ## 
 ## 
 ## ── Estimation ──────────────────────────────────────────────────────────────────
-## 
-## ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
-## • consumption: 60.7%
-## 
-## ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
-## Consider revising the equations, tuning each equation's tau, or adjusting your priors.
 print(estimates)
 ## 
 ## ── Estimates ───────────────────────────────────────────────────────────────────
 ##     consumption ~  0.36 - 0.03 * gdp  +  0.11 * consumption.L(1)
-##      investment ~  0.45  +  0.21 * investment.L(1)
-##         exports ~  - 0.29  +  3.2 * world_gdp - 0.3 * exports.L(1)
-##         imports ~  - 0.05  +  2.61 * domestic_demand - 0.11 * imports.L(1)
-##          prices ~  0.04  +  0.03 * exchange_rate  +  0.01 * oil_price  +  0.56 * prices.L(1)
-##   interest_rate ~  - 0.51  +  0.47 * prices  +  0.57 * interest_rate_germany - 0.19 * prices.L(1)
+##      investment ~  0.46  +  0.21 * investment.L(1)
+##         exports ~  - 0.3  +  3.19 * world_gdp - 0.29 * exports.L(1)
+##         imports ~  - 0.06  +  2.64 * domestic_demand - 0.11 * imports.L(1)
+##          prices ~  0.03  +  0.03 * exchange_rate  +  0.01 * oil_price  +  0.55 * prices.L(1)
+##   interest_rate ~  - 0.51  +  0.48 * prices  +  0.57 * interest_rate_germany - 0.19 * prices.L(1)
 ##             gdp == 0.6 * consumption  +  0.6 * domestic_demand  +  0.5 * exports - 0.4 * imports
 ## domestic_demand == 0.6 * consumption  +  0.4 * investment
 ```
@@ -235,32 +229,32 @@ summary(estimates)
 ## ===============================================================================================================
 ##                        consumption    investment    exports         imports        prices        interest_rate 
 ## ---------------------------------------------------------------------------------------------------------------
-## constant                 0.36          0.45          -0.29           -0.05          0.04          -0.51        
-##                        [ 0.28; 0.46]  [0.19; 0.71]  [-0.86;  0.32]  [-0.56; 0.44]  [0.01; 0.06]  [-0.63; -0.40]
+## constant                 0.36          0.46          -0.30           -0.06          0.03          -0.51        
+##                        [ 0.27; 0.45]  [0.17; 0.75]  [-0.87;  0.28]  [-0.52; 0.39]  [0.01; 0.06]  [-0.63; -0.40]
 ## consumption.L(1)         0.11                                                                                  
-##                        [-0.08; 0.28]                                                                           
+##                        [-0.07; 0.30]                                                                           
 ## gdp                     -0.03                                                                                  
 ##                        [-0.13; 0.06]                                                                           
 ## investment.L(1)                        0.21                                                                    
-##                                       [0.03; 0.40]                                                             
-## exports.L(1)                                         -0.30                                                     
-##                                                     [-0.48; -0.13]                                             
-## world_gdp                                             3.20                                                     
-##                                                     [ 2.27;  4.05]                                             
+##                                       [0.02; 0.39]                                                             
+## exports.L(1)                                         -0.29                                                     
+##                                                     [-0.46; -0.12]                                             
+## world_gdp                                             3.19                                                     
+##                                                     [ 2.32;  4.04]                                             
 ## imports.L(1)                                                         -0.11                                     
-##                                                                     [-0.28; 0.06]                              
-## domestic_demand                                                       2.61                                     
-##                                                                     [ 1.62; 3.74]                              
-## prices.L(1)                                                                         0.56          -0.19        
-##                                                                                    [0.46; 0.66]  [-0.61;  0.21]
+##                                                                     [-0.27; 0.05]                              
+## domestic_demand                                                       2.64                                     
+##                                                                     [ 1.72; 3.58]                              
+## prices.L(1)                                                                         0.55          -0.19        
+##                                                                                    [0.45; 0.65]  [-0.62;  0.22]
 ## exchange_rate                                                                       0.03                       
 ##                                                                                    [0.02; 0.05]                
 ## oil_price                                                                           0.01                       
 ##                                                                                    [0.01; 0.01]                
 ## interest_rate_germany                                                                              0.57        
 ##                                                                                                  [ 0.52;  0.62]
-## prices                                                                                             0.47        
-##                                                                                                  [ 0.05;  0.96]
+## prices                                                                                             0.48        
+##                                                                                                  [ 0.02;  0.93]
 ## ===============================================================================================================
 ## Posterior mean (90% credible interval: [5.0%, 95.0%])
 ## Estimation period: 1996 Q1 - 2019 Q4
@@ -273,10 +267,10 @@ summary(estimates, variables = "investment")
 ## =============================
 ##                  investment  
 ## -----------------------------
-## constant          0.45       
-##                  [0.19; 0.71]
+## constant          0.46       
+##                  [0.17; 0.75]
 ## investment.L(1)   0.21       
-##                  [0.03; 0.40]
+##                  [0.02; 0.39]
 ## =============================
 ## Posterior mean (90% credible interval: [5.0%, 95.0%])
 ## Estimation period: 1996 Q1 - 2019 Q4
@@ -346,15 +340,15 @@ print(forecasts)
 ## 
 ## series:
 ##         consumption investment exports imports  prices interest_rate    gdp
-## 2023 Q1      0.3944     0.4953  1.2033  1.0678 -0.0586        0.8380 0.6720
-## 2023 Q2      0.3831     0.4917  0.6258  0.9768 -0.0702        1.2684 0.4080
-## 2023 Q3      0.3845     0.5117  0.7445  0.9274  0.0100        1.5658 0.4932
-## 2023 Q4      0.3887     0.5711  0.3600  0.9964 -0.0113        1.6940 0.2917
+## 2023 Q1      0.3932     0.5515  1.2474  0.9310 -0.0646        0.8350 0.7611
+## 2023 Q2      0.3911     0.4945  0.7718  1.0458 -0.0682        1.2454 0.4617
+## 2023 Q3      0.3869     0.5671  0.7748  1.0961  0.0142        1.5702 0.4565
+## 2023 Q4      0.3959     0.5870  0.3702  1.0052 -0.0167        1.6897 0.3040
 ##         domestic_demand world_gdp interest_rate_germany exchange_rate oil_price
-## 2023 Q1          0.4348    0.4827                2.3887        0.9217   -8.7520
-## 2023 Q2          0.4266    0.4083                3.1460       -1.3863   -3.3787
-## 2023 Q3          0.4354    0.4259                3.6393       -1.7869    9.9001
-## 2023 Q4          0.4617    0.2906                3.8850       -0.7502   -3.3373
+## 2023 Q1          0.4565    0.4827                2.3887        0.9217   -8.7520
+## 2023 Q2          0.4325    0.4083                3.1460       -1.3863   -3.3787
+## 2023 Q3          0.4590    0.4259                3.6393       -1.7869    9.9001
+## 2023 Q4          0.4723    0.2906                3.8850       -0.7502   -3.3373
 ```
 
 ``` r
@@ -364,11 +358,11 @@ rate(forecasts$mean$gdp)
 ## attributes:
 ##   series_type:  chr "rate"
 ##   method:  chr "diff_log"
-##   anker:  num [1:2] 192517 2023
+##   anker:  num [1:2] 192373 2023
 ## 
 ## series:
 ##           Qtr1      Qtr2      Qtr3      Qtr4
-## 2023 0.6720110 0.4079898 0.4932285 0.2916674
+## 2023 0.7611416 0.4617057 0.4564697 0.3039906
 level(forecasts$mean$gdp)
 ## <koma_ts>
 ## attributes:
@@ -377,8 +371,8 @@ level(forecasts$mean$gdp)
 ## 
 ## series:
 ##          Qtr1     Qtr2     Qtr3     Qtr4
-## 2022                            192516.7
-## 2023 193814.8 194607.2 195569.4 196140.6
+## 2022                            192372.7
+## 2023 193842.6 194739.6 195630.6 196226.2
 ```
 
 ### Conditional Forecasting

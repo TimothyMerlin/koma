@@ -141,13 +141,13 @@ hdr(x, probs = c(0.5, 0.9))
 #> ==========
 #> level_50
 #> --------
-#> Mode: 2.008
-#> Intervals: [-2.455; -1.532]; [1.546; 2.467]
+#> Mode: 2.01
+#> Intervals: [-2.455; -1.547]; [1.556; 2.467]
 #> 
 #> level_90
 #> --------
-#> Mode: 2.008
-#> Intervals: [-3.154; -0.842]; [0.861; 3.157]
+#> Mode: 2.01
+#> Intervals: [-3.133; -0.869]; [0.886; 3.128]
 #> 
 #> ==========
 
@@ -164,22 +164,15 @@ fit <- estimate(
 #> ── Gibbs Sampler Settings ──────────────────────────────────────────────────────
 #> 
 #> ── System Wide Settings ──
-#>   • Number of draws (`ndraws`): 10
-#>   • Burn-in ratio (`burnin_ratio`): 0.5
-#>   • Burn-in (`burnin`): 5
-#>   • Store frequency (`nstore`): 1
-#>   • Number of saved draws (`nsave`): 5
-#>   • Tau (`tau`): 1.1
+#> • Number of draws (`ndraws`): 10
+#> • Burn-in ratio (`burnin_ratio`): 0.5
+#> • Burn-in (`burnin`): 5
+#> • Store frequency (`nstore`): 1
+#> • Number of saved draws (`nsave`): 5
+#> • Tau (`tau`): 1.1
 #> 
 #> 
 #> ── Estimation ──────────────────────────────────────────────────────────────────
-#> 
-#> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
-#> • consumption: 80.0%
-#> 
-#> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
-#> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
-#> 
 hdr_fit <- hdr(fit, probs = c(0.5, 0.9))
 names(hdr_fit$intervals)
 #> [1] "consumption"     "investment"      "current_account" "manufacturing"  

@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -29,7 +29,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Draw Theta from multivariate normal distribution for equation j</h1>
-      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/R/mh_within_gibbs_algorithm.R" class="external-link"><code>R/mh_within_gibbs_algorithm.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/0.4.1/R/mh_within_gibbs_algorithm.R" class="external-link"><code>R/mh_within_gibbs_algorithm.R</code></a></small>
       <div class="d-none name"><code>draw_theta_j.Rd</code></div>
     </div>
 
@@ -47,7 +47,10 @@
 <span>  <span class="va">jx</span>,</span>
 <span>  <span class="va">gamma_parameters_j</span>,</span>
 <span>  <span class="va">omega_tilde_jw</span>,</span>
-<span>  <span class="va">xtx</span></span>
+<span>  <span class="va">xtx</span>,</span>
+<span>  inverse_xtx <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/solve.html" class="external-link">solve</a></span><span class="op">(</span><span class="va">xtx</span><span class="op">)</span>,</span>
+<span>  <span class="va">theta_permutation</span>,</span>
+<span>  <span class="va">equation_data</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -93,6 +96,21 @@ equation \(j\).</p></dd>
 <dt id="arg-xtx">xtx<a class="anchor" aria-label="anchor" href="#arg-xtx"></a></dt>
 <dd><p>Precomputed \(x_matrix'x_matrix\). This is invariant across
 Gibbs draws, so it is computed once instead of on every call.</p></dd>
+
+
+<dt id="arg-inverse-xtx">inverse_xtx<a class="anchor" aria-label="anchor" href="#arg-inverse-xtx"></a></dt>
+<dd><p>Precomputed inverse of \(x_matrix'x_matrix\). Same
+rationale as <code>xtx</code>.</p></dd>
+
+
+<dt id="arg-theta-permutation">theta_permutation<a class="anchor" aria-label="anchor" href="#arg-theta-permutation"></a></dt>
+<dd><p>Precomputed order of the elements of theta, as
+returned by <code><a href="construct_theta_permutation.html">construct_theta_permutation()</a></code>. Same rationale as <code>xtx</code>.</p></dd>
+
+
+<dt id="arg-equation-data">equation_data<a class="anchor" aria-label="anchor" href="#arg-equation-data"></a></dt>
+<dd><p>Fixed equation subsets and counts returned by
+<code><a href="construct_equation_data.html">construct_equation_data()</a></code>. The samplers compute this once per equation.</p></dd>
 
 </dl></div>
     <div class="section level2">

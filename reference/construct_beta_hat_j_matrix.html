@@ -11,7 +11,7 @@ with \(x_b\) being the predetermined variables and constant of equation
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -33,7 +33,7 @@ with \(x_b\) being the predetermined variables and constant of equation
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Construct \(\hat{\beta_j}\)</h1>
-      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/R/matrix_construction.R" class="external-link"><code>R/matrix_construction.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/0.4.1/R/matrix_construction.R" class="external-link"><code>R/matrix_construction.R</code></a></small>
       <div class="d-none name"><code>construct_beta_hat_j_matrix.Rd</code></div>
     </div>
 
@@ -50,7 +50,8 @@ with \(x_b\) being the predetermined variables and constant of equation
 <span>  <span class="va">z_matrix_j</span>,</span>
 <span>  <span class="va">character_beta_matrix</span>,</span>
 <span>  <span class="va">jx</span>,</span>
-<span>  <span class="va">xbtxb</span></span>
+<span>  <span class="va">xbtxb</span>,</span>
+<span>  <span class="va">equation_data</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -83,6 +84,11 @@ exogenous variables and \(n\) the number of equations.</p></dd>
 \(x_matrix\) restricted to the columns kept for equation \(j\). This
 is invariant across Gibbs draws for a given equation, so it is computed
 once per equation instead of on every call.</p></dd>
+
+
+<dt id="arg-equation-data">equation_data<a class="anchor" aria-label="anchor" href="#arg-equation-data"></a></dt>
+<dd><p>Fixed equation subsets and counts returned by
+<code><a href="construct_equation_data.html">construct_equation_data()</a></code>. The samplers compute this once per equation.</p></dd>
 
 </dl></div>
     <div class="section level2">

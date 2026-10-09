@@ -3,7 +3,9 @@
 variable names prefix_1+prefix_2+..., where the indices come from
 spec (parsed by parse_index_spec(), the same "single value or range,
 comma-separated" grammar used by lag notation). For example,
-dummies(covid, 1:8) becomes covid_1+covid_2+...+covid_8.
+dummies(covid, 1:8) becomes covid_1+covid_2+...+covid_8. A prior in
+front of the call is repeated for every dummy, so
+{0,1}dummies(covid, 1:2) becomes {0,1}covid_1+{0,1}covid_2.
 This runs before any other equation processing (priors, settings,
 validation), so the expanded terms are indistinguishable from terms the
 user typed by hand for every downstream step - including
@@ -19,7 +21,9 @@ shown verbatim if either is invalid.'><meta property="og:description" content='R
 variable names prefix_1+prefix_2+..., where the indices come from
 spec (parsed by parse_index_spec(), the same "single value or range,
 comma-separated" grammar used by lag notation). For example,
-dummies(covid, 1:8) becomes covid_1+covid_2+...+covid_8.
+dummies(covid, 1:8) becomes covid_1+covid_2+...+covid_8. A prior in
+front of the call is repeated for every dummy, so
+{0,1}dummies(covid, 1:2) becomes {0,1}covid_1+{0,1}covid_2.
 This runs before any other equation processing (priors, settings,
 validation), so the expanded terms are indistinguishable from terms the
 user typed by hand for every downstream step - including
@@ -39,7 +43,7 @@ shown verbatim if either is invalid.'></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">koma</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -61,7 +65,7 @@ shown verbatim if either is invalid.'></head><body>
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Expand Indexed Dummy-Variable Shorthand</h1>
-      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/main/R/system_of_equations.R" class="external-link"><code>R/system_of_equations.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/TimothyMerlin/koma/blob/0.4.1/R/system_of_equations.R" class="external-link"><code>R/system_of_equations.R</code></a></small>
       <div class="d-none name"><code>expand_dummies.Rd</code></div>
     </div>
 
@@ -70,7 +74,9 @@ shown verbatim if either is invalid.'></head><body>
 variable names <code>prefix_1+prefix_2+...</code>, where the indices come from
 <code>spec</code> (parsed by <code><a href="parse_index_spec.html">parse_index_spec()</a></code>, the same "single value or range,
 comma-separated" grammar used by lag notation). For example,
-<code>dummies(covid, 1:8)</code> becomes <code>covid_1+covid_2+...+covid_8</code>.</p>
+<code>dummies(covid, 1:8)</code> becomes <code>covid_1+covid_2+...+covid_8</code>. A prior in
+front of the call is repeated for every dummy, so
+<code>{0,1}dummies(covid, 1:2)</code> becomes <code>{0,1}covid_1+{0,1}covid_2</code>.</p>
 <p>This runs before any other equation processing (priors, settings,
 validation), so the expanded terms are indistinguishable from terms the
 user typed by hand for every downstream step - including

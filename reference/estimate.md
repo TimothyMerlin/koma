@@ -63,10 +63,9 @@ estimate(
 
 - estimates:
 
-  Optional. A `koma_estimate` object (see `estimate`) containing the
-  estimates of the previously estimated simultaneous equations model.
-  Use this parameter when some equations of the system need to be
-  re-estimated.
+  Ignored. Re-estimating only some equations of a previously estimated
+  model is currently disabled; passing a `koma_estimate` object gives a
+  warning and all equations are estimated.
 
 ## Value
 
@@ -197,29 +196,22 @@ fit <- estimate(
 #> ── Gibbs Sampler Settings ──────────────────────────────────────────────────────
 #> 
 #> ── System Wide Settings ──
-#>   • Number of draws (`ndraws`): 10
-#>   • Burn-in ratio (`burnin_ratio`): 0.5
-#>   • Burn-in (`burnin`): 5
-#>   • Store frequency (`nstore`): 1
-#>   • Number of saved draws (`nsave`): 5
-#>   • Tau (`tau`): 1.1
+#> • Number of draws (`ndraws`): 10
+#> • Burn-in ratio (`burnin_ratio`): 0.5
+#> • Burn-in (`burnin`): 5
+#> • Store frequency (`nstore`): 1
+#> • Number of saved draws (`nsave`): 5
+#> • Tau (`tau`): 1.1
 #> 
 #> 
 #> ── Estimation ──────────────────────────────────────────────────────────────────
-#> 
-#> ── ⚠ MCMC Acceptance Probability Warnings ──────────────────────────────────────
-#> • consumption: 80.0%
-#> 
-#> ℹ Some acceptance probabilities are outside the recommended range (20%-60%).
-#> Consider revising the equations, tuning each equation's tau, or adjusting your priors.
-#> 
 print(fit)
 #> 
 #> ── Estimates ───────────────────────────────────────────────────────────────────
-#>     consumption ~  1.33 - 0.3 * gdp  +  0.47 * consumption.L(1)  +  0.23 * consumption.L(2)
-#>      investment ~  2.28 - 1.26 * gdp  +  0.44 * investment.L(1)  +  0.37 * real_interest_rate
-#> current_account ~  1.52 - 0.51 * current_account.L(1)  +  0.53 * world_gdp
-#>   manufacturing ~  0.57  +  0.06 * manufacturing.L(1)  +  0.32 * world_gdp
-#>         service ~  - 0.01  +  0.16 * service.L(1)  +  0.05 * population - 0.83 * gdp
+#>     consumption ~  1.23 - 0.33 * gdp  +  0.49 * consumption.L(1)  +  0.22 * consumption.L(2)
+#>      investment ~  2.47 - 1.32 * gdp  +  0.41 * investment.L(1)  +  0.35 * real_interest_rate
+#> current_account ~  1.53 - 0.51 * current_account.L(1)  +  0.5 * world_gdp
+#>   manufacturing ~  0.59  +  0.05 * manufacturing.L(1)  +  0.34 * world_gdp
+#>         service ~  0.04  +  0.12 * service.L(1)  +  0.08 * population - 0.74 * gdp
 #>             gdp == 0.4 * manufacturing  +  0.6 * service 
 ```
