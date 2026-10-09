@@ -37,7 +37,7 @@ the name collisions above. Both are documented in NEWS.md.
 * local: macOS Tahoe 26.7.1 (aarch64-apple-darwin23), R 4.6.1
 * R-hub (R Consortium runners):
   * linux: R-devel (2026-10-06 r90643)
-  * windows: R-devel (2026-10-06 r90643 ucrt)
+  * windows: R-devel (2026-10-08 r90650 ucrt)
   * macos: x86_64-apple-darwin20, R-devel (2026-10-08 r90646)
   * mkl: Intel MKL container, R-devel (2026-10-06 r90643)
 * win-builder: R-devel, R-release
