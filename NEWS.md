@@ -1,3 +1,9 @@
+# koma (development version)
+
+## New features
+
+* Restrictions for conditional forecasts can now name the forecast period instead of the horizon, either as a time series, e.g. `list(gdp = ts(c(0.5, 0.4), start = c(2025, 1), frequency = 4))`, or with `date`, e.g. `list(gdp = list(value = 0.5, date = c(2025, 2)))` (#88).
+
 # koma 0.4.1
 
 ## Breaking changes

@@ -8,7 +8,23 @@
 #' used in the estimation.
 #' @inheritParams estimate
 #' @param ... Additional parameters.
-#' @param restrictions List of model constraints. Default is empty.
+#' @param restrictions Named list of restrictions for conditional forecasts,
+#' one element per endogenous variable, in rates. Default is empty. Each
+#' element is one of:
+#' \itemize{
+#'   \item \code{list(value = , horizon = )}: values for forecast horizons,
+#'   e.g. \code{list(value = c(0.5, 0.4), horizon = 1:2)}.
+#'   \item \code{list(value = , date = )}: values for forecast periods, given
+#'   as \code{c(year, period)}, numeric dates or a list of \code{c(year,
+#'   period)}, e.g. \code{list(value = 0.5, date = c(2025, 2))} or
+#'   \code{list(value = c(0.5, 0.4), date = c(2025, 2025.25))}.
+#'   \item a \code{ts} whose time index is the forecast period, e.g.
+#'   \code{ts(c(0.5, 0.4), start = c(2025, 1), frequency = 4)}. Missing
+#'   values leave that period unrestricted.
+#' }
+#' Dates use the frequency of the data: for quarterly data,
+#' \code{c(2025, 2)} is the second quarter, for monthly data February. A
+#' \code{ts} must have the frequency of the data.
 #' @param options Optional settings for forecasting. Use
 #' \code{list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
 #' conditional_innov_method = "projection")}.
@@ -190,6 +206,9 @@ new_forecast <- function(estimates, dates, restrictions, options) {
 
   horizon <- length(seq(dates$forecast$start, dates$forecast$end, by = 1 / frequency))
 
+  restrictions <- restrictions_to_horizon(
+    restrictions, dates$forecast$start, horizon, frequency
+  )
   restrictions <- validate_restrictions(
     restrictions,
     estimates$sys_eq$endogenous_variables,

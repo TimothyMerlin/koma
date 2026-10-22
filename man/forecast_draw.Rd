@@ -36,7 +36,23 @@ variables.}
 
 \item{forecast_dates}{List containing 'start' and 'end' dates for forecast.}
 
-\item{restrictions}{List of model constraints. Default is empty.}
+\item{restrictions}{Named list of restrictions for conditional forecasts,
+one element per endogenous variable, in rates. Default is empty. Each
+element is one of:
+\itemize{
+\item \code{list(value = , horizon = )}: values for forecast horizons,
+e.g. \code{list(value = c(0.5, 0.4), horizon = 1:2)}.
+\item \code{list(value = , date = )}: values for forecast periods, given
+as \code{c(year, period)}, numeric dates or a list of \code{c(year,
+  period)}, e.g. \code{list(value = 0.5, date = c(2025, 2))} or
+\code{list(value = c(0.5, 0.4), date = c(2025, 2025.25))}.
+\item a \code{ts} whose time index is the forecast period, e.g.
+\code{ts(c(0.5, 0.4), start = c(2025, 1), frequency = 4)}. Missing
+values leave that period unrestricted.
+}
+Dates use the frequency of the data: for quarterly data,
+\code{c(2025, 2)} is the second quarter, for monthly data February. A
+\code{ts} must have the frequency of the data.}
 
 \item{phi_positions}{Positions of the lagged endogenous regressors, as
 returned by \code{\link[=find_phi_positions]{find_phi_positions()}}.}

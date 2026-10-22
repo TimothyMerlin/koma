@@ -39,3 +39,115 @@ set_restrictions <- function(ts_data, variables_to_restrict,
 
   return(restrictions)
 }
+
+#' Convert Dated Restrictions to Forecast Horizons
+#'
+#' Restrictions can be given as a `ts`, whose time index is the forecast
+#' period, or as a list with `date` and `value`. Both are converted to the
+#' list with `horizon` and `value` that the forecast uses. Other restrictions
+#' are returned unchanged and checked by [validate_restrictions()].
+#'
+#' A `date` is a numeric date (e.g. `2025.25`), a `c(year, period)` vector
+#' (e.g. `c(2025, 2)`), or a list of these. A numeric vector of length two
+#' whose second element is a whole number between 1 and `frequency` is read
+#' as `c(year, period)`; otherwise each element is a numeric date. Missing
+#' values in a `ts` mean that the period is not restricted.
+#'
+#' @param restrictions `NULL` or a named list of restrictions.
+#' @param forecast_start Start of the forecast, as numeric date or
+#' `c(year, period)`.
+#' @param horizon Integer forecast horizon.
+#' @param frequency Number of periods per year.
+#' @param call The environment from which the error is called.
+#'
+#' @return The restrictions with `horizon` and `value` for every dated entry.
+#' @keywords internal
+restrictions_to_horizon <- function(restrictions, forecast_start, horizon,
+                                    frequency, call = rlang::caller_env()) {
+  if (!is.list(restrictions) || is.data.frame(restrictions)) {
+    return(restrictions)
+  }
+
+  forecast_start <- dates_to_num(forecast_start, frequency)
+  forecast_end <- iterate_n_periods(forecast_start, horizon - 1, frequency)
+  period_str <- function(x) dates_to_str(num_to_dates(x, frequency), frequency)
+
+  for (i in seq_along(restrictions)) {
+    variable <- if (is.null(names(restrictions))) i else names(restrictions)[i]
+    restriction <- restrictions[[i]]
+    abort <- function(message) {
+      cli::cli_abort(c(
+        "!" = "Invalid restriction for {.val {variable}}:",
+        "x" = message
+      ), call = call, .envir = parent.frame())
+    }
+
+    if (stats::is.ts(restriction)) {
+      if (is_ets(restriction) && identical(attr(restriction, "series_type"), "level")) {
+        abort("Restrictions must be in rates, not levels. Use {.fn rate} first.")
+      }
+      if (NCOL(restriction) != 1L) {
+        abort("Must be a single time series.")
+      }
+      if (stats::frequency(restriction) != frequency) {
+        abort(paste(
+          "The frequency of the time series ({stats::frequency(restriction)})",
+          "does not match the frequency of the data ({frequency})."
+        ))
+      }
+      value <- as.numeric(restriction)
+      observed <- !is.na(value)
+      if (!any(observed)) {
+        abort("The time series has no values.")
+      }
+      restriction <- list(
+        date = as.numeric(stats::time(restriction))[observed],
+        value = value[observed]
+      )
+    } else if (!is.list(restriction) || !"date" %in% names(restriction)) {
+      next
+    }
+
+    if ("horizon" %in% names(restriction)) {
+      abort("Use either {.field date} or {.field horizon}, not both.")
+    }
+
+    date <- restriction[["date"]]
+    if (is.list(date)) {
+      if (!all(vapply(date, function(d) is.numeric(d) && length(d) %in% 1:2, logical(1)))) {
+        abort("Every {.field date} must be a numeric date or {.code c(year, period)}.")
+      }
+      date <- vapply(date, dates_to_num, numeric(1), frequency = frequency)
+    } else if (!is.numeric(date) || length(date) == 0L) {
+      abort("{.field date} must be numeric dates or {.code c(year, period)}.")
+    } else if (length(date) == 2L && isTRUE(date[2] == round(date[2])) &&
+      isTRUE(date[2] >= 1 && date[2] <= frequency)) {
+      date <- dates_to_num(date, frequency)
+    }
+    if (any(!is.finite(date))) {
+      abort("{.field date} must not contain missing or infinite values.")
+    }
+    if (length(date) != length(restriction[["value"]])) {
+      abort("{.field date} and {.field value} must have the same length.")
+    }
+
+    hx <- (date - forecast_start) * frequency + 1
+    off_grid <- abs(hx - round(hx)) > 1e-6
+    if (any(off_grid)) {
+      abort("{.field date} {.val {date[off_grid]}} does not fall on a period of the data.")
+    }
+    hx <- as.integer(round(hx))
+    outside <- hx < 1L | hx > horizon
+    if (any(outside)) {
+      outside_str <- vapply(date[outside], period_str, character(1))
+      abort(paste(
+        "{.val {outside_str}} must lie between {period_str(forecast_start)}",
+        "and {period_str(forecast_end)}."
+      ))
+    }
+
+    restrictions[[i]] <- list(horizon = hx, value = restriction[["value"]])
+  }
+
+  restrictions
+}

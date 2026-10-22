@@ -1172,6 +1172,54 @@ test_that("restricting aggregate alone keeps identity intact", {
   )
 })
 
+test_that("restrictions as ts, date or horizon give the same forecast", {
+  skip_on_cran()
+  dates <- list(
+    estimation = list(start = c(1977, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 2), end = c(2025, 4))
+  )
+
+  equations <- "manufacturing ~ world_gdp + manufacturing.L(1) + manufacturing.L(2),
+      service ~ population + gdp,
+      gdp == 0.5*manufacturing + 0.5*service"
+  exogenous_variables <- c("world_gdp", "population")
+  sys_eq <- system_of_equations(equations, exogenous_variables)
+
+  ts_data <- simulated_data$ts_data
+  dates_current <- c(2023, 1)
+  ts_data[sys_eq$endogenous_variables] <- lapply(
+    sys_eq$endogenous_variables,
+    function(x) stats::window(ts_data[[x]], end = dates_current)
+  )
+
+  est <- withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
+  )
+  run <- function(restrictions) {
+    forecast(est, dates,
+      restrictions = restrictions, options = list(approximate = TRUE)
+    )$mean
+  }
+
+  by_horizon <- run(list(
+    manufacturing = list(value = c(0.5, 0.7), horizon = c(2, 3)),
+    service = list(value = 0.2, horizon = 1)
+  ))
+  by_ts <- run(list(
+    manufacturing = stats::ts(c(0.5, 0.7), start = c(2023, 3), frequency = 4),
+    service = stats::ts(0.2, start = c(2023, 2), frequency = 4)
+  ))
+  by_date <- run(list(
+    manufacturing = list(date = list(c(2023, 3), c(2023, 4)), value = c(0.5, 0.7)),
+    service = list(date = 2023.25, value = 0.2)
+  ))
+
+  expect_equal(by_horizon$manufacturing[2:3], c(0.5, 0.7))
+  expect_equal(by_ts, by_horizon)
+  expect_equal(by_date, by_horizon)
+})
+
 test_that("conflicting restrictions on identity error", {
   skip_on_cran()
   dates <- list(

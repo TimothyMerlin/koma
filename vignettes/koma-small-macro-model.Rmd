@@ -239,3 +239,10 @@ forecasts <- forecast(estimates,
 plot(forecasts, fig = fig, variables = "prices")
 forecasts$mean$prices
 ```
+
+Instead of the forecast horizon, a restriction can also name the forecast period, either as a time series or with `date`. The following restrictions are equivalent to the one above:
+
+```{R, eval=FALSE}
+restrictions <- list(prices = ts(0.5, start = c(2023, 1), frequency = 4))
+restrictions <- list(prices = list(value = 0.5, date = c(2023, 1)))
+```
