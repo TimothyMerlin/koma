@@ -3,6 +3,7 @@
 ## New features
 
 * Restrictions for conditional forecasts can now name the forecast period instead of the horizon, either as a time series, e.g. `list(gdp = ts(c(0.5, 0.4), start = c(2025, 1), frequency = 4))`, or with `date`, e.g. `list(gdp = list(value = 0.5, date = c(2025, 2)))` (#88).
+* New `residuals()` and `fitted()` methods for `koma_estimate` return the in-sample residuals and fitted values of the stochastic equations, at the mean or median of the coefficients and optionally with quantiles over the draws, e.g. `residuals(fit, probs = c(0.05, 0.95))` (#83).
 
 # koma 0.4.1
 

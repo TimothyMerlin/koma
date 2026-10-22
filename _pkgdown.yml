@@ -67,6 +67,7 @@ reference:
     contents:
       - summary.koma_estimate
       - print.koma_estimate
+      - residuals.koma_estimate
       - plot.koma_forecast
       - print.koma_forecast
       - init_koma_theme
