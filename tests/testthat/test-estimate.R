@@ -6,11 +6,17 @@ test_that("new_prepare_estimation", {
     end = c(2019, 4)
   ))
 
+  # one endogenous series ends earlier than the others
+  variable <- sys_eq$endogenous_variables[1]
+  ts_data[[variable]] <- stats::window(ts_data[[variable]], end = c(2021, 4))
+
   out <- new_prepare_estimation(ts_data, sys_eq, dates,
     fill_method = "median"
   )
 
-  expect_length(out, 4)
+  expect_length(out, 5)
+  expect_named(out$observed_end, sys_eq$endogenous_variables)
+  expect_equal(out$observed_end[[variable]], 2021.75)
 })
 
 test_that("validate_estimation_dates stops when estimation dates are missing", {
@@ -71,7 +77,7 @@ test_that("estimate correctly estimates model", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 8)
+  expect_length(out, 9)
   expect_identical(
     names(out$estimates),
     c(
@@ -232,7 +238,7 @@ test_that("estimate correctly returns when parallel", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 8)
+  expect_length(out, 9)
   expect_identical(
     names(out$estimates),
     c(
@@ -611,7 +617,7 @@ test_that("estimate correctly estimates model with informative priors", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 8)
+  expect_length(out, 9)
   expect_identical(
     names(out$estimates),
     c(
@@ -657,7 +663,7 @@ test_that("estimate with informative priors, that are too far from true value", 
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 8)
+  expect_length(out, 9)
   expect_identical(
     names(out$estimates),
     c(
@@ -695,7 +701,7 @@ test_that("estimate with no gamma parameters", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 8)
+  expect_length(out, 9)
   expect_identical(
     names(out$estimates),
     c("manufacturing", "service")
@@ -726,7 +732,7 @@ test_that("estimate with only one exogenous variable", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 8)
+  expect_length(out, 9)
   expect_identical(
     names(out$estimates),
     c("manufacturing", "service")
@@ -748,7 +754,7 @@ test_that("estimate with only one exogenous variable", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 8)
+  expect_length(out, 9)
   expect_identical(
     names(out$estimates),
     c("manufacturing", "service")
@@ -777,7 +783,7 @@ test_that("estimate with only one equation", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 8)
+  expect_length(out, 9)
   expect_identical(names(out$estimates), c("manufacturing"))
   expect_true(inherits(out, "koma_estimate"))
   expect_length(out$estimates$manufacturing[["beta_jw"]], 100)
@@ -792,7 +798,7 @@ test_that("estimate with only one equation", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  expect_length(out, 8)
+  expect_length(out, 9)
   expect_identical(names(out$estimates), c("manufacturing"))
   expect_true(inherits(out, "koma_estimate"))
   expect_length(out$estimates$manufacturing[["beta_jw"]], 100)

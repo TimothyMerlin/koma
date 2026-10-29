@@ -60,6 +60,8 @@
 #'   supplied as plain `ts` (not `koma_ts`) in `ts_data`. These are assumed to
 #'   already be in rates and tagged accordingly; see the "Plain ts input"
 #'   section below.}
+#'   \item{observed_end}{Named numeric vector with the last observed period of
+#'   each endogenous series, before a ragged edge is filled.}
 #' }
 #'
 #' @section Plain ts input:
@@ -205,7 +207,8 @@ estimate.list <- function(ts_data, sys_eq, dates,
       x_matrix = pre$x_matrix,
       gibbs_specifications = get_gibbs_settings(),
       dates = dates,
-      plain_ts_names = plain_ts_names
+      plain_ts_names = plain_ts_names,
+      observed_end = pre$observed_end
     ),
     class = "koma_estimate"
   )
@@ -301,6 +304,12 @@ new_prepare_estimation <- function(ts_data, sys_eq, dates, fill_method) {
     call = rlang::caller_env()
   )
 
+  # Last observed period of each endogenous series, before the ragged edge is
+  # filled; forecast() needs it to start adjustments at the last residual.
+  observed_end <- vapply(sys_eq$endogenous_variables, function(x) {
+    stats::tsp(stats::na.omit(rate(ts_data[[x]])))[2]
+  }, numeric(1))
+
   ##### Fill ragged edge
   ts_data <- fill_ragged_edge(
     rate(ts_data), sys_eq, sys_eq$exogenous_variables, dates, fill_method
@@ -326,7 +335,8 @@ new_prepare_estimation <- function(ts_data, sys_eq, dates, fill_method) {
       sys_eq = sys_eq,
       ts_data = ts_data,
       y_matrix = balanced_data$y_matrix,
-      x_matrix = balanced_data$x_matrix
+      x_matrix = balanced_data$x_matrix,
+      observed_end = observed_end
     )
   )
 }

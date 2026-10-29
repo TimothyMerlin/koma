@@ -72,6 +72,11 @@ period until the end of the forecast, e.g.
 It starts in the first forecast period, or at a single \code{horizon} or
 \code{date}. \code{decay = 0} shifts one period only, \code{decay = 1}
 all periods by the same value.
+\item \code{list(init = "last", decay = )}: as before, but starting at
+the residual of the equation in the period before the forecast, at the
+mean of the coefficients (see \code{\link[=residuals.koma_estimate]{residuals}}).
+The variables of the equation must be observed in that period; if one
+is filled because its series ends earlier, \code{forecast()} fails.
 }}
 
 \item{options}{Optional settings for forecasting. Use

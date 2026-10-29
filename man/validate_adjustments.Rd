@@ -16,7 +16,9 @@ validate_adjustments(
 \item{adjustments}{\code{NULL} or a named list. Each element is either a list
 with numeric \code{value} and \code{horizon} vectors of equal length, or a list with
 a single \code{value}, a \code{decay} between 0 and 1 and optionally a single start
-\code{horizon}.}
+\code{horizon}. Instead of \code{value}, a decaying adjustment can have
+\code{init = "last"}; it is only checked here, the value is set by
+\code{\link[=check_last_residuals]{check_last_residuals()}} and \code{last_residuals()}.}
 
 \item{endogenous_variables}{Character vector of endogenous variable names.}
 

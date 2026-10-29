@@ -70,6 +70,8 @@ sampling.}
 supplied as plain \code{ts} (not \code{koma_ts}) in \code{ts_data}. These are assumed to
 already be in rates and tagged accordingly; see the "Plain ts input"
 section below.}
+\item{observed_end}{Named numeric vector with the last observed period of
+each endogenous series, before a ragged edge is filled.}
 }
 }
 \description{

@@ -71,14 +71,8 @@ in_sample_fit <- function(object, type, central_tendency, probs,
   equations <- sys_eq$stochastic_equations
   y_matrix <- object$y_matrix
 
-  # Structural form: y %*% gamma = x %*% beta + u, with one column per equation
-  # and the equation's own variable on the diagonal of gamma.
   compute <- function(...) {
-    coefficients <- extract_estimates_from_draws(sys_eq, object$estimates, ...)
-    u <- y_matrix[, sys_eq$endogenous_variables, drop = FALSE] %*%
-      coefficients$gamma_matrix -
-      object$x_matrix[, rownames(coefficients$beta_matrix), drop = FALSE] %*%
-        coefficients$beta_matrix
+    u <- structural_residuals(sys_eq, object$estimates, y_matrix, object$x_matrix, ...)
     out <- if (type == "residuals") u else y_matrix[, colnames(u)] - u
     out[, equations, drop = FALSE]
   }
@@ -106,4 +100,103 @@ in_sample_fit <- function(object, type, central_tendency, probs,
     colnames(out) <- c(central_tendency, quantile_names)
     as_series(out)
   }), equations)
+}
+
+# Structural form: y %*% gamma = x %*% beta + u, with one column per equation
+# and the equation's own variable on the diagonal of gamma. `...` selects the
+# coefficients, see extract_estimates_from_draws().
+structural_residuals <- function(sys_eq, estimates, y_matrix, x_matrix, ...) {
+  coefficients <- extract_estimates_from_draws(sys_eq, estimates, ...)
+  y_matrix[, sys_eq$endogenous_variables, drop = FALSE] %*%
+    coefficients$gamma_matrix -
+    x_matrix[, rownames(coefficients$beta_matrix), drop = FALSE] %*%
+      coefficients$beta_matrix
+}
+
+#' Start Adjustments at the Last Residual
+#'
+#' `check_last_residuals()` checks that the adjustments with `init = "last"`
+#' can start at the residual of the period before the forecast: all
+#' endogenous variables of the equation must be observed there, not filled.
+#' `last_residuals()` then sets the `value` of these adjustments to that
+#' residual, at the mean of the coefficients.
+#'
+#' @param adjustments Named list of adjustments, checked by
+#' [validate_adjustments()].
+#' @param estimates A `koma_estimate` object.
+#' @param current The period before the forecast, as numeric date.
+#' @param frequency Number of periods per year.
+#' @param y_matrix,x_matrix The data up to `current`, the last row is
+#' `current`.
+#' @param call The environment from which the error is called.
+#'
+#' @return `check_last_residuals()` returns `NULL` invisibly or fails.
+#' `last_residuals()` returns the adjustments with `value` instead of `init`.
+#' @keywords internal
+check_last_residuals <- function(adjustments, estimates, current, frequency,
+                                 call = rlang::caller_env()) {
+  gamma <- estimates$sys_eq$character_gamma_matrix
+  as_date <- function(x) dates_to_str(num_to_dates(x, frequency), frequency)
+
+  if (length(from_last_residual(adjustments)) && is.null(estimates$observed_end)) {
+    cli::cli_abort(c(
+      "x" = "{.code init = \"last\"} needs the last observed periods, which
+      this estimate does not store.",
+      "i" = "Re-estimate the model with {.fn estimate}."
+    ), call = call)
+  }
+
+  unobserved <- character(0)
+  for (eq in from_last_residual(adjustments)) {
+    variables <- rownames(gamma)[gamma[, eq] != "0"]
+    observed_end <- estimates$observed_end[variables]
+    # half a period of tolerance for the numeric dates
+    missing <- observed_end < current - 0.5 / frequency
+    if (any(missing)) {
+      unobserved <- c(unobserved, paste0(
+        eq, ": ",
+        paste0(variables[missing], " observed up to ", vapply(
+          observed_end[missing], as_date, character(1)
+        ), collapse = ", ")
+      ))
+    }
+  }
+
+  if (length(unobserved)) {
+    cli::cli_abort(c(
+      "x" = "{.code init = \"last\"} needs the residual of {as_date(current)},
+      the period before the forecast, from observed data:",
+      stats::setNames(unobserved, rep("*", length(unobserved))),
+      "i" = "Set the start value with {.field value} instead, e.g. from
+      {.fn residuals}."
+    ), call = call)
+  }
+  invisible(NULL)
+}
+
+#' @rdname check_last_residuals
+last_residuals <- function(adjustments, estimates, y_matrix, x_matrix) {
+  from_last <- from_last_residual(adjustments)
+  if (!length(from_last)) {
+    return(adjustments)
+  }
+
+  last <- nrow(y_matrix)
+  u <- structural_residuals(
+    estimates$sys_eq, estimates$estimates,
+    y_matrix[last, , drop = FALSE], x_matrix[last, , drop = FALSE],
+    central_tendency = "mean"
+  )
+  for (eq in from_last) {
+    adjustments[[eq]]$value <- u[1, eq]
+    adjustments[[eq]]$init <- NULL
+  }
+  adjustments
+}
+
+from_last_residual <- function(adjustments) {
+  names(adjustments)[vapply(
+    adjustments, function(x) is.list(x) && identical(x[["init"]], "last"),
+    logical(1)
+  )]
 }

@@ -660,7 +660,9 @@ validate_restrictions <- function(restrictions, endogenous_variables, horizon,
 #' @param adjustments `NULL` or a named list. Each element is either a list
 #' with numeric `value` and `horizon` vectors of equal length, or a list with
 #' a single `value`, a `decay` between 0 and 1 and optionally a single start
-#' `horizon`.
+#' `horizon`. Instead of `value`, a decaying adjustment can have
+#' `init = "last"`; it is only checked here, the value is set by
+#' [check_last_residuals()] and `last_residuals()`.
 #' @param identities Character vector of identity names. Identities cannot be
 #' adjusted.
 #' @inheritParams validate_restrictions
@@ -697,9 +699,24 @@ validate_adjustments <- function(adjustments, endogenous_variables, identities,
         ), call = call, .envir = parent.frame())
       }
 
-      unknown <- setdiff(names(adjustment), c("value", "horizon", "decay"))
+      unknown <- setdiff(names(adjustment), c("value", "horizon", "decay", "init"))
       if (length(unknown)) {
-        abort("Unknown element(s) {.field {unknown}}; use {.field value}, {.field horizon} and {.field decay}.")
+        abort("Unknown element(s) {.field {unknown}}; use {.field value}, {.field horizon}, {.field decay} and {.field init}.")
+      }
+      init <- adjustment[["init"]]
+      if (!is.null(init)) {
+        if (!identical(init, "last")) {
+          abort("{.field init} must be {.val last}.")
+        }
+        if (!is.null(adjustment[["value"]])) {
+          abort("Give either {.field init} or {.field value}, not both.")
+        }
+        if (is.null(adjustment[["decay"]])) {
+          abort("{.field init} needs a {.field decay}; use {.code decay = 1} to keep the residual over the forecast.")
+        }
+        # The residual is only known once the data up to the forecast are
+        # prepared, see last_residuals(); until then, check with a placeholder.
+        adjustment[["value"]] <- 0
       }
       if (is.null(adjustment[["decay"]])) {
         next

@@ -1220,17 +1220,22 @@ test_that("restrictions as ts, date or horizon give the same forecast", {
   expect_equal(by_date, by_horizon)
 })
 
-estimate_adjustment_model <- function(equations) {
+estimate_adjustment_model <- function(equations, estimation_end = c(2019, 4),
+                                      data_end = list()) {
   dates <- list(
-    estimation = list(start = c(1977, 1), end = c(2019, 4)),
+    estimation = list(start = c(1977, 1), end = estimation_end),
     forecast = list(start = c(2023, 2), end = c(2024, 1))
   )
   sys_eq <- system_of_equations(equations, c("world_gdp", "population"))
 
+  # endogenous data end in 2023 Q1, or earlier as given in data_end
   ts_data <- simulated_data$ts_data
   ts_data[sys_eq$endogenous_variables] <- lapply(
     sys_eq$endogenous_variables,
-    function(x) stats::window(ts_data[[x]], end = c(2023, 1))
+    function(x) {
+      end <- if (is.null(data_end[[x]])) c(2023, 1) else data_end[[x]]
+      stats::window(ts_data[[x]], end = end)
+    }
   )
 
   est <- withr::with_seed(
@@ -1393,6 +1398,81 @@ test_that("adjustments on identities fail before the draws", {
       adjustments = list(service = list(date = c(2025, 1), value = 0.5))
     ),
     "Invalid adjustment"
+  )
+})
+
+test_that("init = 'last' starts a decaying adjustment at the last residual", {
+  skip_on_cran()
+  equations <- "manufacturing ~ world_gdp + manufacturing.L(1),
+    service ~ population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
+  adjustments <- list(service = list(init = "last", decay = 0.5))
+
+  # estimated up to the quarter before the forecast
+  model <- estimate_adjustment_model(equations, estimation_end = c(2023, 1))
+  last <- as.numeric(utils::tail(residuals(model$est)$service, 1))
+  out <- forecast(model$est, model$dates,
+    adjustments = adjustments, options = list(approximate = TRUE)
+  )
+  expect_equal(
+    out$adjustments$service,
+    stats::ts(last * 0.5^(0:3), start = c(2023, 2), frequency = 4)
+  )
+  expect_identical(out$adjustments_spec, adjustments)
+  given <- forecast(model$est, model$dates,
+    adjustments = list(service = list(value = last, decay = 0.5)),
+    options = list(approximate = TRUE)
+  )
+  expect_equal(out$mean, given$mean)
+
+  # estimated up to 2019 Q4: the residual of 2023 Q1 uses the estimated
+  # coefficients and the data of that quarter
+  model <- estimate_adjustment_model(equations)
+  coefficients <- extract_estimates_from_draws(model$est$sys_eq, model$est$estimates)
+  rates <- function(x) as.numeric(stats::window(rate(x), start = c(2023, 1), end = c(2023, 1)))
+  data <- simulated_data$ts_data
+  gamma <- coefficients$gamma_matrix[, "service"]
+  beta <- coefficients$beta_matrix[, "service"]
+  expected <- rates(data$service) + gamma[["gdp"]] * rates(data$gdp) -
+    beta[["constant"]] - beta[["population"]] * rates(data$population)
+  out <- forecast(model$est, model$dates,
+    adjustments = adjustments, options = list(approximate = TRUE)
+  )
+  expect_equal(as.numeric(out$adjustments$service[1]), expected)
+})
+
+test_that("init = 'last' fails where the last residual would be filled", {
+  skip_on_cran()
+  equations <- "manufacturing ~ world_gdp + manufacturing.L(1),
+    service ~ population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
+  # service is observed one quarter less than the others
+  model <- estimate_adjustment_model(equations, data_end = list(service = c(2022, 4)))
+
+  expect_error(
+    forecast(model$est, model$dates,
+      adjustments = list(service = list(init = "last", decay = 0.5)),
+      options = list(approximate = TRUE)
+    ),
+    "service.*2022 Q4"
+  )
+  # manufacturing does not depend on service in the same quarter
+  expect_no_error(
+    forecast(model$est, model$dates,
+      adjustments = list(manufacturing = list(init = "last", decay = 0.5)),
+      options = list(approximate = TRUE)
+    )
+  )
+
+  # estimates from before the last observed periods were stored
+  est <- model$est
+  est$observed_end <- NULL
+  expect_error(
+    forecast(est, model$dates,
+      adjustments = list(manufacturing = list(init = "last", decay = 0.5)),
+      options = list(approximate = TRUE)
+    ),
+    "Re-estimate"
   )
 })
 

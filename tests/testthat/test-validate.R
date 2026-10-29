@@ -612,6 +612,10 @@ test_that("validate_adjustments expands decaying adjustments", {
   # immediate adjustments are kept
   adjustments <- list(service = list(value = c(0.2, 0.1), horizon = c(1, 2)))
   expect_equal(validate_adjustments(adjustments, endogenous, "gdp", 4), adjustments)
+  # starting at the last residual is accepted before the residual is known
+  expect_no_error(validate_adjustments(
+    list(service = list(init = "last", decay = 0.6, horizon = 2)), endogenous, "gdp", 4
+  ))
 })
 
 test_that("validate_adjustments rejects malformed adjustments", {
@@ -633,6 +637,12 @@ test_that("validate_adjustments rejects malformed adjustments", {
   check(list(service = list(value = 0.5, decay = 0.6, horizon = 1:2)), "single")
   check(list(service = list(value = 0.5, horizon = 5)), "Invalid adjustment.*between 1 and 4")
   check(list(service = list(value = 0.5)), "value.*horizon")
+  check(list(service = list(init = "first", decay = 0.6)), "last")
+  check(list(service = list(init = "last", value = 0.5, decay = 0.6)), "either")
+  check(list(service = list(init = "last")), "decay")
+  check(
+    list(service = list(init = "last", decay = 0.6, horizon = 1:2)), "single"
+  )
   check(
     list(service = list(value = 0.5, horizon = 1), service = list(value = 1, horizon = 2)),
     "Duplicate adjustments"

@@ -44,6 +44,11 @@
 #'   It starts in the first forecast period, or at a single \code{horizon} or
 #'   \code{date}. \code{decay = 0} shifts one period only, \code{decay = 1}
 #'   all periods by the same value.
+#'   \item \code{list(init = "last", decay = )}: as before, but starting at
+#'   the residual of the equation in the period before the forecast, at the
+#'   mean of the coefficients (see \code{\link[=residuals.koma_estimate]{residuals}}).
+#'   The variables of the equation must be observed in that period; if one
+#'   is filled because its series ends earlier, \code{forecast()} fails.
 #' }
 #' @param options Optional settings for forecasting. Use
 #' \code{list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
@@ -262,6 +267,7 @@ new_forecast <- function(estimates, dates, restrictions, adjustments, options) {
   adjustments <- adjustments[
     names(adjustments) %in% estimates$sys_eq$endogenous_variables
   ]
+  check_last_residuals(adjustments, estimates, dates$current, frequency)
 
   edge <- detect_edge(
     rate(ts_data[estimates$sys_eq$endogenous_variables]),
@@ -320,6 +326,9 @@ new_forecast <- function(estimates, dates, restrictions, adjustments, options) {
   )
 
   y_matrix <- balanced_data$y_matrix
+  adjustments <- last_residuals(
+    adjustments, estimates, y_matrix, balanced_data$x_matrix
+  )
   if (length(estimates$sys_eq$exogenous_variables) > 0) {
     x_matrix <- stats::window(
       as_mets(rate(ts_data[estimates$sys_eq$exogenous_variables])),
