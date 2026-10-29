@@ -249,37 +249,4 @@ restrictions <- list(prices = list(value = 0.5, date = c(2023, 1)))
 
 ## Residual Adjustments
 
-Residual adjustments (add-factors) add a value to the residual of selected stochastic equations in the forecast period, e.g. to include information the model does not capture.
-
-An adjustment can be given per period, in the same forms as a restriction, or as a shift that decays over the forecast horizon:
-
-```{R, eval=FALSE}
-adjustments <- list(
-  # 0.3 and 0.2 percentage points in the first two quarters
-  investment = list(value = c(0.3, 0.2), horizon = 1:2),
-  # 0.5 in the first quarter, then 0.5 * 0.6, 0.5 * 0.6^2, ...
-  exports = list(value = 0.5, decay = 0.6)
-)
-
-adjusted <- forecast(estimates,
-  dates = dates,
-  adjustments = adjustments
-)
-```
-
-The result also contains the forecast without adjustments, computed with the same shocks, and the applied adjustments by variable and forecast quarter:
-
-```{R, eval=FALSE}
-adjusted$mean$gdp
-adjusted$unadjusted$mean$gdp
-adjusted$adjustments$exports
-```
-
-A decaying adjustment starts in the first forecast quarter and runs to the end of the forecast. To start it later, give the start quarter as `horizon` or `date`; the quarters before are not adjusted. `decay = 0` adjusts the start quarter only, `decay = 1` all quarters from there on by the same value.
-
-```{R, eval=FALSE}
-# 0, 0.5, 0.3, 0.18 in 2023
-adjustments <- list(exports = list(value = 0.5, decay = 0.6, date = c(2023, 2)))
-```
-
-Identities cannot be adjusted, and adjustments cannot be combined with `restrictions`.
+Residual adjustments (add-factors) add a value to the residual of selected stochastic equations in the forecast period, e.g. to include information the model does not capture. See the [residual adjustments vignette](koma-residual-adjustments.html).

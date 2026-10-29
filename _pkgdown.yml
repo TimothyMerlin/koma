@@ -124,6 +124,10 @@ articles:
   - title: "Parallelization"
     contents:
       - koma-parallel
+
+  - title: "Residual Adjustments"
+    contents:
+      - koma-residual-adjustments
   
   - title: "Example: Klein Model"
     contents:
