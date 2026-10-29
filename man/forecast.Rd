@@ -135,6 +135,14 @@ computed from the predictive draws (with quantiles controlled by
 \code{options$probs}). When TRUE, point forecasts are computed from the mean
 and median of the coefficient draws for faster, approximate results.
 
+Each predictive draw uses the coefficients of one posterior draw and draws
+new structural shocks for every forecast period, so the quantiles include
+both parameter and shock uncertainty. The structural shocks are independent
+across equations, with the variance of the draw. Exogenous variables are
+taken as given, without uncertainty. Periods before the forecast that are
+filled because a series ends earlier (ragged edge) are filled once, with
+the mean or median coefficients, so their uncertainty is not included.
+
 The returned \code{koma_forecast} object keeps forecasts as named lists of
 \code{koma_ts} (for \code{mean}, \code{median}, and \code{quantiles}) alongside the input data
 and matrices used to produce them.

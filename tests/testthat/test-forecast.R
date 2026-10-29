@@ -185,6 +185,52 @@ test_that("approximate forecast: mean bias grows with horizon, median stays clos
   expect_true(all(median_diffs < 1e-3))
 })
 
+test_that("density forecast draws have the variance of the shocks", {
+  skip_on_cran()
+
+  y <- as_ets(
+    stats::ts(seq(1, 4.9, by = 0.1), start = c(2019, 1), frequency = 4),
+    series_type = "rate",
+    method = "none"
+  )
+  x <- as_ets(
+    stats::ts(seq(2, 9.8, by = 0.2), start = c(2019, 1), frequency = 4),
+    series_type = "rate",
+    method = "none"
+  )
+  sys_eq <- system_of_equations("y ~ y.L(1) + x", exogenous_variables = "x")
+  dates <- list(
+    estimation = list(start = c(2019, 2), end = c(2022, 4)),
+    forecast = list(start = c(2023, 1), end = c(2023, 3))
+  )
+
+  # the same coefficients in every draw, so only the shocks vary
+  ndraws <- 2000
+  phi <- 0.5
+  sigma2 <- 4
+  estimates <- structure(
+    list(
+      ts_data = list(y = stats::window(y, end = c(2022, 4)), x = x),
+      sys_eq = sys_eq,
+      estimates = list(y = list(
+        beta_jw = rep(list(c(constant = 0.2, `y.L(1)` = phi, x = 0.1)), ndraws),
+        gamma_jw = rep(list(0), ndraws),
+        omega_tilde_jw = rep(list(sigma2), ndraws)
+      ))
+    ),
+    class = "koma_estimate"
+  )
+
+  out <- withr::with_seed(1, forecast(estimates, dates))
+  draws <- t(vapply(
+    out$forecasts, function(draw) as.numeric(draw[, "y"]), numeric(3)
+  ))
+
+  # Var(y_{T+h}) = sigma^2 * (1 + phi^2 + ... + phi^(2(h-1)))
+  expected <- sigma2 * cumsum(phi^(2 * (0:2)))
+  expect_equal(apply(draws, 2, stats::var), expected, tolerance = 0.1)
+})
+
 test_that("estimate and forecast support monthly single-frequency data", {
   y <- as_ets(
     stats::ts(
