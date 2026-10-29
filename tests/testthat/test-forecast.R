@@ -1220,6 +1220,182 @@ test_that("restrictions as ts, date or horizon give the same forecast", {
   expect_equal(by_date, by_horizon)
 })
 
+estimate_adjustment_model <- function(equations) {
+  dates <- list(
+    estimation = list(start = c(1977, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 2), end = c(2024, 1))
+  )
+  sys_eq <- system_of_equations(equations, c("world_gdp", "population"))
+
+  ts_data <- simulated_data$ts_data
+  ts_data[sys_eq$endogenous_variables] <- lapply(
+    sys_eq$endogenous_variables,
+    function(x) stats::window(ts_data[[x]], end = c(2023, 1))
+  )
+
+  est <- withr::with_seed(
+    7,
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 100)))
+  )
+  list(est = est, dates = dates)
+}
+
+test_that("adjustments shift the residuals of the adjusted equation", {
+  skip_on_cran()
+  # without lags, an adjustment only acts in its own period
+  model <- estimate_adjustment_model(
+    "manufacturing ~ world_gdp,
+    service ~ population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
+  )
+  est <- model$est
+  dates <- model$dates
+
+  adjustments <- list(
+    service = list(value = c(1, -0.5), horizon = c(1, 3))
+  )
+  base <- forecast(est, dates, options = list(approximate = TRUE))
+  out <- forecast(est, dates,
+    adjustments = adjustments, options = list(approximate = TRUE)
+  )
+
+  # the unadjusted forecast is the forecast without adjustments
+  expect_equal(out$unadjusted$mean, base$mean)
+  expect_equal(out$unadjusted$median, base$median)
+
+  # a shift a of the structural residuals moves y by solve(t(gamma), a),
+  # with gamma including the identity weights
+  gamma <- construct_posterior(
+    est$sys_eq,
+    extract_estimates_from_draws(est$sys_eq, est$estimates),
+    find_phi_positions(est$sys_eq)
+  )$gamma_matrix
+  shift <- matrix(0, 3, 4, dimnames = list(colnames(gamma), NULL))
+  shift["service", ] <- c(1, 0, -0.5, 0)
+  effect <- solve(t(gamma), shift)
+  for (variable in colnames(gamma)) {
+    expect_equal(
+      as.numeric(out$mean[[variable]] - base$mean[[variable]]),
+      as.numeric(effect[variable, ]),
+      tolerance = 1e-10
+    )
+  }
+  # the identity still holds
+  expect_equal(
+    as.numeric(out$mean$gdp),
+    0.5 * as.numeric(out$mean$manufacturing) + 0.5 * as.numeric(out$mean$service)
+  )
+
+  # the applied adjustments are stored per variable and forecast quarter
+  expect_named(out$adjustments, "service")
+  expect_equal(
+    out$adjustments$service,
+    stats::ts(c(1, 0, -0.5, 0), start = c(2023, 2), frequency = 4)
+  )
+  expect_identical(out$adjustments_spec, adjustments)
+
+  # without adjustments there is nothing to compare
+  expect_null(base$unadjusted)
+  expect_null(base$adjustments)
+})
+
+test_that("decaying adjustments propagate through the dynamics", {
+  skip_on_cran()
+  model <- estimate_adjustment_model(
+    "manufacturing ~ world_gdp + manufacturing.L(1),
+    service ~ population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
+  )
+  est <- model$est
+  dates <- model$dates
+
+  # given as dates, starting in the second forecast quarter
+  adjustments <- list(
+    manufacturing = list(value = 0.8, decay = 0.5, date = c(2023, 3))
+  )
+  out <- forecast(est, dates,
+    adjustments = adjustments, options = list(approximate = TRUE)
+  )
+
+  expect_equal(
+    out$adjustments$manufacturing,
+    stats::ts(c(0, 0.8, 0.4, 0.2), start = c(2023, 2), frequency = 4)
+  )
+  effect <- out$mean$manufacturing - out$unadjusted$mean$manufacturing
+  expect_equal(effect[1], 0)
+  expect_equal(effect[2], 0.8, tolerance = 1e-10)
+  # later quarters add the lagged effect to the adjustment of the quarter
+  phi <- extract_estimates_from_draws(est$sys_eq, est$estimates)$beta_matrix[
+    "manufacturing.L(1)", "manufacturing"
+  ]
+  expect_equal(effect[3], 0.4 + phi * 0.8, tolerance = 1e-10)
+  # the effect reaches the other equations
+  expect_true(all(abs(out$mean$gdp - out$unadjusted$mean$gdp)[2:4] > 0))
+})
+
+test_that("density forecasts keep the unadjusted draws", {
+  skip_on_cran()
+  model <- estimate_adjustment_model(
+    "manufacturing ~ world_gdp + manufacturing.L(1),
+    service ~ population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
+  )
+  est <- model$est
+  dates <- model$dates
+  adjustments <- list(
+    service = stats::ts(c(0.5, 0.5), start = c(2023, 2), frequency = 4)
+  )
+
+  base <- withr::with_seed(3, forecast(est, dates, options = list(probs = c(0.1, 0.9))))
+  out <- withr::with_seed(3, forecast(est, dates,
+    adjustments = adjustments, options = list(probs = c(0.1, 0.9))
+  ))
+
+  # same shocks: the unadjusted part equals the forecast without adjustments
+  expect_equal(out$unadjusted$mean, base$mean)
+  expect_equal(out$unadjusted$quantiles, base$quantiles)
+  expect_true(out$mean$service[1] > base$mean$service[1])
+})
+
+test_that("restrictions and adjustments cannot be combined", {
+  skip_on_cran()
+  model <- estimate_adjustment_model(
+    "manufacturing ~ world_gdp + manufacturing.L(1),
+    service ~ population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
+  )
+  # different variables, still rejected before the draws
+  expect_error(
+    forecast(model$est, model$dates,
+      restrictions = list(manufacturing = list(value = 0.5, horizon = 2)),
+      adjustments = list(service = list(value = 0.3, horizon = 1))
+    ),
+    "cannot be combined"
+  )
+})
+
+test_that("adjustments on identities fail before the draws", {
+  skip_on_cran()
+  model <- estimate_adjustment_model(
+    "manufacturing ~ world_gdp,
+    service ~ population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
+  )
+
+  expect_error(
+    forecast(model$est, model$dates,
+      adjustments = list(gdp = list(value = 0.5, horizon = 1))
+    ),
+    "identit"
+  )
+  expect_error(
+    forecast(model$est, model$dates,
+      adjustments = list(service = list(date = c(2025, 1), value = 0.5))
+    ),
+    "Invalid adjustment"
+  )
+})
+
 test_that("conflicting restrictions on identity error", {
   skip_on_cran()
   dates <- list(

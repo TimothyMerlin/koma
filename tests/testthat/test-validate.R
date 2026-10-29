@@ -588,3 +588,66 @@ test_that("validate_restrictions drops non-endogenous variables with one warning
   )
   expect_equal(out, restrictions["gdp"])
 })
+
+test_that("validate_adjustments expands decaying adjustments", {
+  endogenous <- c("manufacturing", "service", "gdp")
+
+  expect_null(validate_adjustments(NULL, endogenous, "gdp", 4))
+  expect_equal(validate_adjustments(list(), endogenous, "gdp", 4), list())
+
+  # decay from the first forecast period
+  expect_equal(
+    validate_adjustments(
+      list(manufacturing = list(value = 0.5, decay = 0.6)), endogenous, "gdp", 4
+    ),
+    list(manufacturing = list(horizon = 1:4, value = 0.5 * 0.6^(0:3)))
+  )
+  # decay from a later period
+  expect_equal(
+    validate_adjustments(
+      list(service = list(value = 1, decay = 0.5, horizon = 3)), endogenous, "gdp", 4
+    ),
+    list(service = list(horizon = 3:4, value = c(1, 0.5)))
+  )
+  # immediate adjustments are kept
+  adjustments <- list(service = list(value = c(0.2, 0.1), horizon = c(1, 2)))
+  expect_equal(validate_adjustments(adjustments, endogenous, "gdp", 4), adjustments)
+})
+
+test_that("validate_adjustments rejects malformed adjustments", {
+  endogenous <- c("manufacturing", "service", "gdp")
+  check <- function(adjustments, pattern) {
+    expect_error(
+      validate_adjustments(adjustments, endogenous, "gdp", 4),
+      pattern,
+      class = "rlang_error"
+    )
+  }
+
+  check(list(gdp = list(value = 0.5, horizon = 1)), "identit")
+  check(list(service = list(value = 0.5, horizon = 1, scale = 2)), "scale")
+  check(list(service = list(value = c(0.5, 0.4), decay = 0.6)), "single")
+  check(list(service = list(value = 0.5, decay = 1.5)), "between 0 and 1")
+  check(list(service = list(value = 0.5, decay = NA_real_)), "between 0 and 1")
+  check(list(service = list(value = 0.5, decay = 0.6, horizon = 5)), "between 1 and 4")
+  check(list(service = list(value = 0.5, decay = 0.6, horizon = 1:2)), "single")
+  check(list(service = list(value = 0.5, horizon = 5)), "Invalid adjustment.*between 1 and 4")
+  check(list(service = list(value = 0.5)), "value.*horizon")
+  check(
+    list(service = list(value = 0.5, horizon = 1), service = list(value = 1, horizon = 2)),
+    "Duplicate adjustments"
+  )
+})
+
+test_that("validate_adjustments drops non-endogenous variables with one warning", {
+  adjustments <- list(
+    service = list(value = 0.5, horizon = 1),
+    consumption = list(value = 0.5, horizon = 1)
+  )
+
+  expect_warning(
+    out <- validate_adjustments(adjustments, c("service", "gdp"), "gdp", 4),
+    "consumption"
+  )
+  expect_equal(out, adjustments["service"])
+})

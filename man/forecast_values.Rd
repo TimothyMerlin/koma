@@ -17,7 +17,8 @@ forecast_values(
   restrictions,
   identities,
   conditional_innov_method = "projection",
-  stochastic = FALSE
+  stochastic = FALSE,
+  adjustment_matrix = NULL
 )
 }
 \arguments{

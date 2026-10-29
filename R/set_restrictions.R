@@ -40,12 +40,14 @@ set_restrictions <- function(ts_data, variables_to_restrict,
   return(restrictions)
 }
 
-#' Convert Dated Restrictions to Forecast Horizons
+#' Convert Dated Entries to Forecast Horizons
 #'
-#' Restrictions can be given as a `ts`, whose time index is the forecast
-#' period, or as a list with `date` and `value`. Both are converted to the
-#' list with `horizon` and `value` that the forecast uses. Other restrictions
-#' are returned unchanged and checked by [validate_restrictions()].
+#' Restrictions and adjustments can be given as a `ts`, whose time index is
+#' the forecast period, or as a list with `date` and `value`. Both are
+#' converted to the list with `horizon` and `value` that the forecast uses;
+#' other fields of a dated list, e.g. `decay`, are kept. Entries without a
+#' date are returned unchanged and checked by the caller, e.g. by
+#' [validate_restrictions()].
 #'
 #' A `date` is a numeric date (e.g. `2025.25`), a `c(year, period)` vector
 #' (e.g. `c(2025, 2)`), or a list of these. A numeric vector of length two
@@ -53,38 +55,41 @@ set_restrictions <- function(ts_data, variables_to_restrict,
 #' as `c(year, period)`; otherwise each element is a numeric date. Missing
 #' values in a `ts` mean that the period is not restricted.
 #'
-#' @param restrictions `NULL` or a named list of restrictions.
+#' @param entries `NULL` or a named list of restrictions or adjustments.
 #' @param forecast_start Start of the forecast, as numeric date or
 #' `c(year, period)`.
 #' @param horizon Integer forecast horizon.
 #' @param frequency Number of periods per year.
+#' @param what Kind of entry named in error messages, e.g. `"restriction"` or
+#' `"adjustment"`.
 #' @param call The environment from which the error is called.
 #'
-#' @return The restrictions with `horizon` and `value` for every dated entry.
+#' @return The entries with `horizon` instead of `date` for every dated entry.
 #' @keywords internal
-restrictions_to_horizon <- function(restrictions, forecast_start, horizon,
-                                    frequency, call = rlang::caller_env()) {
-  if (!is.list(restrictions) || is.data.frame(restrictions)) {
-    return(restrictions)
+dates_to_horizon <- function(entries, forecast_start, horizon, frequency,
+                             what = "restriction",
+                             call = rlang::caller_env()) {
+  if (!is.list(entries) || is.data.frame(entries)) {
+    return(entries)
   }
 
   forecast_start <- dates_to_num(forecast_start, frequency)
   forecast_end <- iterate_n_periods(forecast_start, horizon - 1, frequency)
   period_str <- function(x) dates_to_str(num_to_dates(x, frequency), frequency)
 
-  for (i in seq_along(restrictions)) {
-    variable <- if (is.null(names(restrictions))) i else names(restrictions)[i]
-    restriction <- restrictions[[i]]
+  for (i in seq_along(entries)) {
+    variable <- if (is.null(names(entries))) i else names(entries)[i]
+    restriction <- entries[[i]]
     abort <- function(message) {
       cli::cli_abort(c(
-        "!" = "Invalid restriction for {.val {variable}}:",
+        "!" = "Invalid {what} for {.val {variable}}:",
         "x" = message
       ), call = call, .envir = parent.frame())
     }
 
     if (stats::is.ts(restriction)) {
       if (is_ets(restriction) && identical(attr(restriction, "series_type"), "level")) {
-        abort("Restrictions must be in rates, not levels. Use {.fn rate} first.")
+        abort("Values must be in rates, not levels. Use {.fn rate} first.")
       }
       if (NCOL(restriction) != 1L) {
         abort("Must be a single time series.")
@@ -146,8 +151,9 @@ restrictions_to_horizon <- function(restrictions, forecast_start, horizon,
       ))
     }
 
-    restrictions[[i]] <- list(horizon = hx, value = restriction[["value"]])
+    restriction[["date"]] <- NULL
+    entries[[i]] <- c(list(horizon = hx), restriction)
   }
 
-  restrictions
+  entries
 }

@@ -562,19 +562,23 @@ validate_sys_eq_priors <- function(sys_eq, call = rlang::caller_env()) {
 #' numeric `value` and `horizon` vectors of equal length.
 #' @param endogenous_variables Character vector of endogenous variable names.
 #' @param horizon Integer forecast horizon.
+#' @param what Kind of entry named in messages, `"restriction"` or
+#' `"adjustment"`.
 #' @param call The environment from which the error is called.
 #'
 #' @return The restrictions without entries for non-endogenous variables.
 #' @keywords internal
 validate_restrictions <- function(restrictions, endogenous_variables, horizon,
+                                  what = "restriction",
                                   call = rlang::caller_env()) {
   if (is.null(restrictions) || identical(restrictions, list())) {
     return(restrictions)
   }
 
+  arg <- paste0(what, "s")
   if (!is.list(restrictions) || is.data.frame(restrictions)) {
     cli::cli_abort(c(
-      "!" = "Invalid {.arg restrictions}:",
+      "!" = "Invalid {.arg {arg}}:",
       "x" = "Must be {.code NULL} or a named list, not {.obj_type_friendly {restrictions}}."
     ), call = call)
   }
@@ -582,14 +586,14 @@ validate_restrictions <- function(restrictions, endogenous_variables, horizon,
   variables <- names(restrictions)
   if (is.null(variables) || anyNA(variables) || any(variables == "")) {
     cli::cli_abort(c(
-      "!" = "Invalid {.arg restrictions}:",
-      "x" = "Every restriction must be named after an endogenous variable."
+      "!" = "Invalid {.arg {arg}}:",
+      "x" = "Every {what} must be named after an endogenous variable."
     ), call = call)
   }
   if (anyDuplicated(variables)) {
     cli::cli_abort(c(
-      "!" = "Invalid {.arg restrictions}:",
-      "x" = "Duplicate restrictions for {.val {unique(variables[duplicated(variables)])}}.",
+      "!" = "Invalid {.arg {arg}}:",
+      "x" = "Duplicate {arg} for {.val {unique(variables[duplicated(variables)])}}.",
       "i" = "Combine them into one entry with vectors for {.field value} and {.field horizon}."
     ), call = call)
   }
@@ -598,7 +602,7 @@ validate_restrictions <- function(restrictions, endogenous_variables, horizon,
     restriction <- restrictions[[variable]]
     if (!is.list(restriction) || !all(c("value", "horizon") %in% names(restriction))) {
       cli::cli_abort(c(
-        "!" = "Invalid restriction for {.val {variable}}:",
+        "!" = "Invalid {what} for {.val {variable}}:",
         "x" = "Must be a list with elements {.field value} and {.field horizon}."
       ), call = call)
     }
@@ -608,25 +612,25 @@ validate_restrictions <- function(restrictions, endogenous_variables, horizon,
     if (!is.numeric(value) || !is.numeric(hx) ||
       length(value) == 0L || length(value) != length(hx)) {
       cli::cli_abort(c(
-        "!" = "Invalid restriction for {.val {variable}}:",
+        "!" = "Invalid {what} for {.val {variable}}:",
         "x" = "{.field value} and {.field horizon} must be numeric vectors of the same, non-zero length."
       ), call = call)
     }
     if (any(!is.finite(value)) || any(!is.finite(hx))) {
       cli::cli_abort(c(
-        "!" = "Invalid restriction for {.val {variable}}:",
+        "!" = "Invalid {what} for {.val {variable}}:",
         "x" = "{.field value} and {.field horizon} must not contain missing or infinite values."
       ), call = call)
     }
     if (any(hx != round(hx)) || any(hx < 1) || any(hx > horizon)) {
       cli::cli_abort(c(
-        "!" = "Invalid restriction for {.val {variable}}:",
+        "!" = "Invalid {what} for {.val {variable}}:",
         "x" = "{.field horizon} must contain whole numbers between 1 and {horizon}."
       ), call = call)
     }
     if (anyDuplicated(hx)) {
       cli::cli_abort(c(
-        "!" = "Invalid restriction for {.val {variable}}:",
+        "!" = "Invalid {what} for {.val {variable}}:",
         "x" = "{.field horizon} contains duplicates: {.val {unique(hx[duplicated(hx)])}}."
       ), call = call)
     }
@@ -634,12 +638,102 @@ validate_restrictions <- function(restrictions, endogenous_variables, horizon,
 
   unknown <- setdiff(variables, endogenous_variables)
   if (length(unknown)) {
+    label <- paste0(toupper(substr(what, 1, 1)), substring(what, 2))
     cli::cli_warn(c(
-      "x" = "Restriction(s) for variable(s) {.val {unknown}} ignored: not found among endogenous variables.",
-      "i" = "Please ensure all restriction names match endogenous variable names exactly. See ?forecast for details."
+      "x" = "{label}(s) for variable(s) {.val {unknown}} ignored: not found among endogenous variables.",
+      "i" = "Please ensure all {what} names match endogenous variable names exactly. See ?forecast for details."
     ))
     restrictions <- restrictions[variables %in% endogenous_variables]
   }
 
   restrictions
+}
+
+#' Validate Forecast Adjustments
+#'
+#' Checks residual adjustments before any forecast draw is computed and
+#' expands decaying adjustments, `list(value = , decay = )`, to one value per
+#' forecast period from their start (`horizon`, default 1) to the end of the
+#' forecast. The result has the form of restrictions and is checked by
+#' [validate_restrictions()].
+#'
+#' @param adjustments `NULL` or a named list. Each element is either a list
+#' with numeric `value` and `horizon` vectors of equal length, or a list with
+#' a single `value`, a `decay` between 0 and 1 and optionally a single start
+#' `horizon`.
+#' @param identities Character vector of identity names. Identities cannot be
+#' adjusted.
+#' @inheritParams validate_restrictions
+#'
+#' @return The adjustments with `horizon` and `value` for every entry, without
+#' entries for non-endogenous variables.
+#' @keywords internal
+validate_adjustments <- function(adjustments, endogenous_variables, identities,
+                                 horizon, call = rlang::caller_env()) {
+  if (is.null(adjustments) || identical(adjustments, list())) {
+    return(adjustments)
+  }
+
+  if (is.list(adjustments) && !is.data.frame(adjustments)) {
+    on_identity <- intersect(names(adjustments), identities)
+    if (length(on_identity)) {
+      cli::cli_abort(c(
+        "!" = "Invalid {.arg adjustments}:",
+        "x" = "Identities cannot be adjusted: {.val {on_identity}}.",
+        "i" = "Adjust the components of the identity instead."
+      ), call = call)
+    }
+
+    for (i in seq_along(adjustments)) {
+      variable <- names(adjustments)[i]
+      adjustment <- adjustments[[i]]
+      if (!is.list(adjustment)) {
+        next
+      }
+      abort <- function(message) {
+        cli::cli_abort(c(
+          "!" = "Invalid adjustment for {.val {variable}}:",
+          "x" = message
+        ), call = call, .envir = parent.frame())
+      }
+
+      unknown <- setdiff(names(adjustment), c("value", "horizon", "decay"))
+      if (length(unknown)) {
+        abort("Unknown element(s) {.field {unknown}}; use {.field value}, {.field horizon} and {.field decay}.")
+      }
+      if (is.null(adjustment[["decay"]])) {
+        next
+      }
+
+      value <- adjustment[["value"]]
+      decay <- adjustment[["decay"]]
+      start <- adjustment[["horizon"]]
+      if (is.null(start)) {
+        start <- 1
+      }
+      if (!is.numeric(value) || length(value) != 1L || !is.finite(value)) {
+        abort("A decaying adjustment needs a single, finite {.field value}.")
+      }
+      if (!is.numeric(decay) || length(decay) != 1L || !isTRUE(decay >= 0 && decay <= 1)) {
+        abort("{.field decay} must be a single number between 0 and 1.")
+      }
+      if (!is.numeric(start) || length(start) != 1L) {
+        abort("A decaying adjustment needs a single start {.field horizon}.")
+      }
+      if (!isTRUE(start == round(start) && start >= 1 && start <= horizon)) {
+        abort("{.field horizon} must be a whole number between 1 and {horizon}.")
+      }
+
+      hx <- seq.int(start, horizon)
+      adjustments[[i]] <- list(
+        horizon = hx,
+        value = value * decay^(hx - start)
+      )
+    }
+  }
+
+  validate_restrictions(
+    adjustments, endogenous_variables, horizon,
+    what = "adjustment", call = call
+  )
 }

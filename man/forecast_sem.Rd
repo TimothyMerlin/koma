@@ -15,7 +15,8 @@ forecast_sem(
   forecast_dates,
   approximate,
   probs,
-  conditional_innov_method = "projection"
+  conditional_innov_method = "projection",
+  adjustments = NULL
 )
 }
 \arguments{
@@ -52,9 +53,18 @@ variables.}
 \item{freq}{Frequency of the time series data.}
 
 \item{forecast_dates}{List containing 'start' and 'end' dates for forecast.}
+
+\item{adjustments}{Named list of residual adjustments, each a list with
+\code{horizon} and \code{value}, or with \code{value}, \code{decay} and optionally \code{horizon}.
+Adjustments given by date or as time series must already be converted to
+horizons by \code{\link[=dates_to_horizon]{dates_to_horizon()}}. Decaying adjustments are expanded here, to
+the possibly shortened horizon.}
 }
 \value{
-A list containing the forecast values.
+A list containing the forecast values. With adjustments, it also
+contains \code{unadjusted}, the forecast without adjustments (\code{mean}, \code{median}
+and \code{quantiles}), and \code{adjustment_matrix}, the adjustments by endogenous
+variable (rows) and forecast period (columns).
 }
 \description{
 This function performs forecasting based on the provided system of equations,

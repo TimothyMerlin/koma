@@ -8,6 +8,7 @@ validate_restrictions(
   restrictions,
   endogenous_variables,
   horizon,
+  what = "restriction",
   call = rlang::caller_env()
 )
 }
@@ -18,6 +19,9 @@ numeric \code{value} and \code{horizon} vectors of equal length.}
 \item{endogenous_variables}{Character vector of endogenous variable names.}
 
 \item{horizon}{Integer forecast horizon.}
+
+\item{what}{Kind of entry named in messages, \code{"restriction"} or
+\code{"adjustment"}.}
 
 \item{call}{The environment from which the error is called.}
 }

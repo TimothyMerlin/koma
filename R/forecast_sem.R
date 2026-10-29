@@ -11,15 +11,24 @@
 #' @param horizon Forecasting horizon, specifying the number of periods.
 #' @param freq Frequency of the time series data.
 #' @param forecast_dates List containing 'start' and 'end' dates for forecast.
+#' @param adjustments Named list of residual adjustments, each a list with
+#' `horizon` and `value`, or with `value`, `decay` and optionally `horizon`.
+#' Adjustments given by date or as time series must already be converted to
+#' horizons by [dates_to_horizon()]. Decaying adjustments are expanded here, to
+#' the possibly shortened horizon.
 #' @inheritParams forecast
 #' @inheritParams estimate
 #'
-#' @return A list containing the forecast values.
+#' @return A list containing the forecast values. With adjustments, it also
+#' contains `unadjusted`, the forecast without adjustments (`mean`, `median`
+#' and `quantiles`), and `adjustment_matrix`, the adjustments by endogenous
+#' variable (rows) and forecast period (columns).
 #' @keywords internal
 forecast_sem <- function(sys_eq, estimates,
                          restrictions, y_matrix, forecast_x_matrix, horizon,
                          freq, forecast_dates, approximate, probs,
-                         conditional_innov_method = "projection") {
+                         conditional_innov_method = "projection",
+                         adjustments = NULL) {
   # The same for every draw, so shorten (and warn) once in the main process
   # instead of per draw, where multisession workers cannot share the state.
   horizon <- shorten_forecast_horizon(horizon, forecast_x_matrix)
@@ -29,6 +38,26 @@ forecast_sem <- function(sys_eq, estimates,
   restrictions <- validate_restrictions(
     restrictions, sys_eq$endogenous_variables, horizon
   )
+  adjustments <- validate_adjustments(
+    adjustments, sys_eq$endogenous_variables, names(sys_eq$identities), horizon
+  )
+  if (length(restrictions) > 0 && length(adjustments) > 0) {
+    cli::cli_abort(c(
+      "x" = "{.arg restrictions} and {.arg adjustments} cannot be combined.",
+      "i" = "Use either conditional forecasting or residual adjustments."
+    ))
+  }
+  adjustment_matrix <- NULL
+  if (length(adjustments) > 0) {
+    adjustment_matrix <- matrix(0,
+      nrow = length(sys_eq$endogenous_variables), ncol = horizon,
+      dimnames = list(sys_eq$endogenous_variables, NULL)
+    )
+    for (variable in names(adjustments)) {
+      adjustment_matrix[variable, adjustments[[variable]]$horizon] <-
+        adjustments[[variable]]$value
+    }
+  }
 
   # Depends only on the system of equations, so find it once for all draws.
   phi_positions <- find_phi_positions(sys_eq)
@@ -37,23 +66,37 @@ forecast_sem <- function(sys_eq, estimates,
 
   set_progress_handler(operation = "forecasting")
 
+  # The unadjusted forecast is attached to each forecast as attribute.
+  split_unadjusted <- function(x) {
+    unadjusted <- attr(x, "unadjusted")
+    attr(x, "unadjusted") <- NULL
+    list(adjusted = x, unadjusted = unadjusted)
+  }
+
   if (approximate) {
-    out$mean <- forecast_draw(
-      sys_eq, estimates, NULL,
-      y_matrix, forecast_x_matrix, horizon, freq, forecast_dates, restrictions,
-      phi_positions,
-      conditional_innov_method = conditional_innov_method,
-      central_tendency = "mean"
-    )
-    out$median <- forecast_draw(
-      sys_eq, estimates, NULL,
-      y_matrix, forecast_x_matrix, horizon, freq, forecast_dates, restrictions,
-      phi_positions,
-      conditional_innov_method = conditional_innov_method,
-      central_tendency = "median"
-    )
+    point_forecast <- function(central_tendency) {
+      split_unadjusted(forecast_draw(
+        sys_eq, estimates, NULL,
+        y_matrix, forecast_x_matrix, horizon, freq, forecast_dates, restrictions,
+        phi_positions,
+        conditional_innov_method = conditional_innov_method,
+        central_tendency = central_tendency,
+        adjustment_matrix = adjustment_matrix
+      ))
+    }
+    mean_forecast <- point_forecast("mean")
+    median_forecast <- point_forecast("median")
+    out$mean <- mean_forecast$adjusted
+    out$median <- median_forecast$adjusted
     out$quantiles <- NULL
     out$forecasts <- NULL
+    if (!is.null(adjustment_matrix)) {
+      out$unadjusted <- list(
+        mean = mean_forecast$unadjusted,
+        median = median_forecast$unadjusted,
+        quantiles = NULL
+      )
+    }
     cli::cli_alert_success("Forecasting completed.")
   } else {
     `%dofuture%` <- doFuture::`%dofuture%` # load dofuture
@@ -76,6 +119,7 @@ forecast_sem <- function(sys_eq, estimates,
     force(freq)
     force(forecast_dates)
     force(conditional_innov_method)
+    force(adjustment_matrix)
 
     p <- progressr::progressor(steps = nsave)
 
@@ -88,7 +132,8 @@ forecast_sem <- function(sys_eq, estimates,
           sys_eq, estimates, draw_jx,
           y_matrix, forecast_x_matrix, horizon, freq, forecast_dates,
           restrictions, phi_positions,
-          conditional_innov_method = conditional_innov_method
+          conditional_innov_method = conditional_innov_method,
+          adjustment_matrix = adjustment_matrix
         ),
         warning = function(w) {
           warnings <<- c(warnings, conditionMessage(w))
@@ -149,27 +194,40 @@ forecast_sem <- function(sys_eq, estimates,
       forecasts <- forecasts[valid_forecasts]
     }
 
-    probs_for_summary <- if (is.null(probs)) 0.5 else unique(c(probs, 0.5))
-    summary <- quantiles_from_forecasts(
-      forecasts,
-      freq,
-      probs = probs_for_summary,
-      include_mean = TRUE
-    )
-    out$mean <- summary$q_mean
-    out$median <- summary$q_50
-    if (is.null(probs)) {
-      out$quantiles <- NULL
-    } else {
-      out$quantiles <- summary
-      out$quantiles$q_mean <- NULL
-      if (!0.5 %in% probs) {
-        out$quantiles$q_50 <- NULL
+    forecasts <- lapply(forecasts, split_unadjusted)
+    unadjusted_forecasts <- lapply(forecasts, `[[`, "unadjusted")
+    forecasts <- lapply(forecasts, `[[`, "adjusted")
+
+    summarise_forecasts <- function(forecasts) {
+      probs_for_summary <- if (is.null(probs)) 0.5 else unique(c(probs, 0.5))
+      summary <- quantiles_from_forecasts(
+        forecasts,
+        freq,
+        probs = probs_for_summary,
+        include_mean = TRUE
+      )
+      quantiles <- NULL
+      if (!is.null(probs)) {
+        quantiles <- summary
+        quantiles$q_mean <- NULL
+        if (!0.5 %in% probs) {
+          quantiles$q_50 <- NULL
+        }
       }
+      list(mean = summary$q_mean, median = summary$q_50, quantiles = quantiles)
     }
+
+    summary <- summarise_forecasts(forecasts)
+    out$mean <- summary$mean
+    out$median <- summary$median
+    out$quantiles <- summary$quantiles
     out$forecasts <- forecasts
+    if (!is.null(adjustment_matrix)) {
+      out$unadjusted <- summarise_forecasts(unadjusted_forecasts)
+    }
   }
 
+  out$adjustment_matrix <- adjustment_matrix
   out
 }
 
@@ -287,7 +345,8 @@ forecast_draw <- function(sys_eq, estimates, jx,
                           horizon, freq, forecast_dates,
                           restrictions, phi_positions,
                           conditional_innov_method = "projection",
-                          central_tendency = NULL) {
+                          central_tendency = NULL,
+                          adjustment_matrix = NULL) {
   if (is.null(jx)) {
     # Case point forecast with option to extract mean or median estimates
     estimates <- extract_estimates_from_draws(
@@ -309,7 +368,8 @@ forecast_draw <- function(sys_eq, estimates, jx,
     horizon, freq, forecast_dates$start, sys_eq$endogenous_variables,
     restrictions, sys_eq$identities,
     conditional_innov_method = conditional_innov_method,
-    stochastic = is.null(central_tendency)
+    stochastic = is.null(central_tendency),
+    adjustment_matrix = adjustment_matrix
   )
 }
 
@@ -337,7 +397,8 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
                             start_forecast, endogenous_variables,
                             restrictions, identities,
                             conditional_innov_method = "projection",
-                            stochastic = FALSE) {
+                            stochastic = FALSE,
+                            adjustment_matrix = NULL) {
   companion_gamma_matrix <- companion_matrix$gamma_matrix
   companion_pi <- reduced_form$companion_pi
   companion_theta <- reduced_form$companion_theta
@@ -375,36 +436,26 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
   # reduced-form innovations
   v_matrix <- solve(t(posterior$gamma_matrix), u_matrix) # = t(inv_gamma) %*% u_matrix
 
-  deterministic_uncond <- forecast_companion(
-    horizon,
-    y0,
-    companion_d,
-    forecast_x_matrix,
-    companion_pi,
-    companion_theta,
-    j_matrix,
-    vc = NULL
-  )
-
-  stochastic_uncond <- forecast_companion(
-    horizon,
-    y0,
-    companion_d,
-    forecast_x_matrix,
-    companion_pi,
-    companion_theta,
-    j_matrix,
-    vc = v_matrix
-  )
+  simulate <- function(vc) {
+    forecast_companion(
+      horizon,
+      y0,
+      companion_d,
+      forecast_x_matrix,
+      companion_pi,
+      companion_theta,
+      j_matrix,
+      vc = vc
+    )$forecast
+  }
 
   #### Compute restrictions matrix and draw from u conditional on restrictions
   if (length(names(restrictions)) == 0) {
-    out <- if (stochastic) {
-      stochastic_uncond$forecast
-    } else {
-      deterministic_uncond$forecast
-    }
+    vc <- if (stochastic) v_matrix else matrix(0, nrow = n, ncol = horizon)
   } else {
+    # use deterministic base forecast (expectation)
+    deterministic_uncond <- simulate(matrix(0, nrow = n, ncol = horizon))
+
     stopifnot(
       j_matrix %*% companion_gamma_matrix %*% t(j_matrix) ==
         unname(posterior$gamma_matrix)
@@ -443,8 +494,7 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
         core <- blocks[row_idx, , drop = FALSE] # 1 x (n*hx)
 
         R[rr, 1:(hx * n)] <- core
-        # use deterministic base forecast (expectation)
-        r[rr, 1] <- val_vec[nx] - deterministic_uncond$forecast[hx, row_idx]
+        r[rr, 1] <- val_vec[nx] - deterministic_uncond[hx, row_idx]
 
         rr <- rr + 1L
       }
@@ -499,46 +549,27 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
       A = A,
       method = conditional_innov_method
     )
-    v_cond_mean_vec <- v_cond$mean_vec
-    v_cond_mean <- matrix(v_cond_mean_vec, nrow = n, ncol = horizon)
-
-    deterministic_cond <- forecast_companion(
-      horizon,
-      y0,
-      companion_d,
-      forecast_x_matrix,
-      companion_pi,
-      companion_theta,
-      j_matrix,
-      vc = v_cond_mean
-    )
-
-    v_cond_draw_vec <- v_cond$draw_vec
-    v_cond_draw <- matrix(v_cond_draw_vec, nrow = n, ncol = horizon)
-
-    stochastic_cond <- forecast_companion(
-      horizon,
-      y0,
-      companion_d,
-      forecast_x_matrix,
-      companion_pi,
-      companion_theta,
-      j_matrix,
-      vc = v_cond_draw
-    )
-
-    out <- if (stochastic) {
-      stochastic_cond$forecast
-    } else {
-      deterministic_cond$forecast
-    }
+    v_cond_vec <- if (stochastic) v_cond$draw_vec else v_cond$mean_vec
+    vc <- matrix(v_cond_vec, nrow = n, ncol = horizon)
   }
 
-  colnames(out) <- endogenous_variables
-  ts_out <- stats::ts(out, start = start_forecast, frequency = freq)
+  as_forecast_ts <- function(out) {
+    colnames(out) <- endogenous_variables
+    ts_out <- stats::ts(out, start = start_forecast, frequency = freq)
+    validate_identities(ts_out, identities, x_matrix = forecast_x_matrix)
+    ts_out
+  }
 
-  validate_identities(ts_out, identities, x_matrix = forecast_x_matrix)
+  if (is.null(adjustment_matrix)) {
+    return(as_forecast_ts(simulate(vc)))
+  }
 
+  # Adjustments shift the structural residuals; like the shocks, they enter
+  # the forecast as reduced-form innovations. forecast_sem() rejects
+  # adjustments together with restrictions.
+  v_adjustment <- solve(t(posterior$gamma_matrix), adjustment_matrix)
+  ts_out <- as_forecast_ts(simulate(vc + v_adjustment))
+  attr(ts_out, "unadjusted") <- as_forecast_ts(simulate(vc))
   ts_out
 }
 

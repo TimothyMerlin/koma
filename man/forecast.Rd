@@ -10,6 +10,7 @@ forecast(
   dates,
   ...,
   restrictions = NULL,
+  adjustments = NULL,
   options = list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
     conditional_innov_method = "projection")
 )
@@ -19,6 +20,7 @@ forecast(
   dates,
   ...,
   restrictions = NULL,
+  adjustments = NULL,
   options = list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
     conditional_innov_method = "projection")
 )
@@ -50,6 +52,27 @@ values leave that period unrestricted.
 Dates use the frequency of the data: for quarterly data,
 \code{c(2025, 2)} is the second quarter, for monthly data February. A
 \code{ts} must have the frequency of the data.}
+
+\item{adjustments}{Named list of residual adjustments (add-factors), one
+element per stochastic equation, in rates. Default is empty. An adjustment
+adds its value to the residual of the equation. The model solves the
+equation together with all others, so through the contemporaneous
+coefficients and the lags the adjustment moves other variables and later
+periods too, and with contemporaneous feedback the adjusted variable
+itself changes by more or less than the value. Identities cannot be adjusted, and adjustments cannot be combined with
+\code{restrictions}. Each element is one of:
+\itemize{
+\item \code{list(value = , horizon = )}, \code{list(value = , date = )}
+or a \code{ts}, as for \code{restrictions}: the shift in each forecast
+period, e.g. \code{list(value = c(0.3, 0.2), horizon = 1:2)}.
+\item \code{list(value = , decay = )}: a shift that starts at
+\code{value} and decays by the factor \code{decay} (between 0 and 1) per
+period until the end of the forecast, e.g.
+\code{list(value = 0.5, decay = 0.6)} gives 0.5, 0.3, 0.18, \dots
+It starts in the first forecast period, or at a single \code{horizon} or
+\code{date}. \code{decay = 0} shifts one period only, \code{decay = 1}
+all periods by the same value.
+}}
 
 \item{options}{Optional settings for forecasting. Use
 \code{list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
@@ -85,6 +108,15 @@ forecasts for that quantile. This element is NULL if \code{quantiles = FALSE}.}
 \item{y_matrix}{The Y matrix constructed from the balanced data up to the
 current quarter, used for forecasting.}
 \item{x_matrix}{The X matrix used for forecasting.}
+}
+With \code{adjustments}, the list also contains:
+\describe{
+\item{unadjusted}{The forecast without adjustments (\code{mean}, \code{median}
+and \code{quantiles}), computed with the same shocks, so that the
+difference to \code{mean} is the effect of the adjustments.}
+\item{adjustments}{The applied adjustments as a named list of time series,
+one per adjusted variable, indexed by forecast period.}
+\item{adjustments_spec}{The \code{adjustments} as given.}
 }
 }
 \description{

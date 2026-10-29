@@ -4,6 +4,7 @@
 
 * Restrictions for conditional forecasts can now name the forecast period instead of the horizon, either as a time series, e.g. `list(gdp = ts(c(0.5, 0.4), start = c(2025, 1), frequency = 4))`, or with `date`, e.g. `list(gdp = list(value = 0.5, date = c(2025, 2)))` (#88).
 * New `residuals()` and `fitted()` methods for `koma_estimate` return the in-sample residuals and fitted values of the stochastic equations, at the mean or median of the coefficients and optionally with quantiles over the draws, e.g. `residuals(fit, probs = c(0.05, 0.95))` (#83).
+* `forecast()` gains `adjustments` to shift the residuals of stochastic equations over the forecast horizon (add-factors), either per period, e.g. `list(consumption = list(value = c(0.3, 0.2), horizon = 1:2))`, as a time series or by date, or decaying, e.g. `list(investment = list(value = 0.5, decay = 0.6))`. The result keeps the forecast without adjustments in `unadjusted` and the applied adjustments per variable and forecast period in `adjustments`. Adjustments cannot be combined with `restrictions` (#136).
 
 # koma 0.4.1
 

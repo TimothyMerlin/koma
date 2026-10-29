@@ -25,6 +25,26 @@
 #' Dates use the frequency of the data: for quarterly data,
 #' \code{c(2025, 2)} is the second quarter, for monthly data February. A
 #' \code{ts} must have the frequency of the data.
+#' @param adjustments Named list of residual adjustments (add-factors), one
+#' element per stochastic equation, in rates. Default is empty. An adjustment
+#' adds its value to the residual of the equation. The model solves the
+#' equation together with all others, so through the contemporaneous
+#' coefficients and the lags the adjustment moves other variables and later
+#' periods too, and with contemporaneous feedback the adjusted variable
+#' itself changes by more or less than the value. Identities cannot be adjusted, and adjustments cannot be combined with
+#' \code{restrictions}. Each element is one of:
+#' \itemize{
+#'   \item \code{list(value = , horizon = )}, \code{list(value = , date = )}
+#'   or a \code{ts}, as for \code{restrictions}: the shift in each forecast
+#'   period, e.g. \code{list(value = c(0.3, 0.2), horizon = 1:2)}.
+#'   \item \code{list(value = , decay = )}: a shift that starts at
+#'   \code{value} and decays by the factor \code{decay} (between 0 and 1) per
+#'   period until the end of the forecast, e.g.
+#'   \code{list(value = 0.5, decay = 0.6)} gives 0.5, 0.3, 0.18, \dots
+#'   It starts in the first forecast period, or at a single \code{horizon} or
+#'   \code{date}. \code{decay = 0} shifts one period only, \code{decay = 1}
+#'   all periods by the same value.
+#' }
 #' @param options Optional settings for forecasting. Use
 #' \code{list(approximate = FALSE, probs = NULL, fill = list(method = "mean"),
 #' conditional_innov_method = "projection")}.
@@ -60,6 +80,15 @@
 #'   \item{y_matrix}{The Y matrix constructed from the balanced data up to the
 #'   current quarter, used for forecasting.}
 #'   \item{x_matrix}{The X matrix used for forecasting.}
+#' }
+#' With \code{adjustments}, the list also contains:
+#' \describe{
+#'   \item{unadjusted}{The forecast without adjustments (`mean`, `median`
+#'   and `quantiles`), computed with the same shocks, so that the
+#'   difference to `mean` is the effect of the adjustments.}
+#'   \item{adjustments}{The applied adjustments as a named list of time series,
+#'   one per adjusted variable, indexed by forecast period.}
+#'   \item{adjustments_spec}{The \code{adjustments} as given.}
 #' }
 #'
 #' @examples
@@ -114,6 +143,7 @@
 #' @export
 forecast <- function(estimates, dates, ...,
                      restrictions = NULL,
+                     adjustments = NULL,
                      options = list(
                        approximate = FALSE,
                        probs = NULL,
@@ -131,6 +161,7 @@ forecast <- function(estimates, dates, ...,
 #' @export
 forecast.koma_estimate <- function(estimates, dates, ...,
                                    restrictions = NULL,
+                                   adjustments = NULL,
                                    options = list(
                                      approximate = FALSE,
                                      probs = NULL,
@@ -142,11 +173,12 @@ forecast.koma_estimate <- function(estimates, dates, ...,
   frequency <- get_single_frequency(estimates$ts_data)
   validate_forecast_input(estimates, dates, frequency = frequency)
   dates$current <- iterate_n_periods(dates$forecast$start, -1, frequency)
-  fo <- new_forecast(estimates, dates, restrictions, options)
+  fo <- new_forecast(estimates, dates, restrictions, adjustments, options)
   validate_forecast_output(fo)
 }
 
-new_forecast <- function(estimates, dates, restrictions, options) {
+new_forecast <- function(estimates, dates, restrictions, adjustments, options) {
+  adjustments_spec <- adjustments
   ts_data <- estimates$ts_data
   frequency <- get_single_frequency(ts_data)
   stopifnot(inherits(ts_data, "list"))
@@ -206,7 +238,7 @@ new_forecast <- function(estimates, dates, restrictions, options) {
 
   horizon <- length(seq(dates$forecast$start, dates$forecast$end, by = 1 / frequency))
 
-  restrictions <- restrictions_to_horizon(
+  restrictions <- dates_to_horizon(
     restrictions, dates$forecast$start, horizon, frequency
   )
   restrictions <- validate_restrictions(
@@ -214,6 +246,22 @@ new_forecast <- function(estimates, dates, restrictions, options) {
     estimates$sys_eq$endogenous_variables,
     horizon
   )
+  # Decaying adjustments are expanded in forecast_sem(), to the possibly
+  # shortened horizon; here they are only checked, before the fill below.
+  adjustments <- dates_to_horizon(
+    adjustments, dates$forecast$start, horizon, frequency,
+    what = "adjustment"
+  )
+  validate_adjustments(
+    adjustments,
+    estimates$sys_eq$endogenous_variables,
+    names(estimates$sys_eq$identities),
+    horizon
+  )
+  # validate_adjustments() has warned about them, so drop them here
+  adjustments <- adjustments[
+    names(adjustments) %in% estimates$sys_eq$endogenous_variables
+  ]
 
   edge <- detect_edge(
     rate(ts_data[estimates$sys_eq$endogenous_variables]),
@@ -286,7 +334,8 @@ new_forecast <- function(estimates, dates, restrictions, options) {
   forecasts <- forecast_sem(
     estimates$sys_eq, estimates$estimates, restrictions, y_matrix, x_matrix,
     horizon, balanced_data$freq, dates$forecast, approximate, probs,
-    conditional_innov_method
+    conditional_innov_method,
+    adjustments = adjustments
   )
 
   exogenous_ts_data <- rate(estimates$ts_data[estimates$sys_eq$exogenous_variables])
@@ -298,37 +347,54 @@ new_forecast <- function(estimates, dates, restrictions, options) {
     )
   })
 
-  out <- list()
-  out$mean <- c(
-    as_ets_list(forecasts$mean, rate(ts_data), central_tendency = "mean"),
-    exogenous_ts_data
-  )
+  as_output <- function(forecasts) {
+    out <- list()
+    out$mean <- c(
+      as_ets_list(forecasts$mean, rate(ts_data), central_tendency = "mean"),
+      exogenous_ts_data
+    )
 
-  out$median <- c(
-    as_ets_list(forecasts$median, rate(ts_data), central_tendency = "median"),
-    exogenous_ts_data
-  )
-  if (!is.null(forecasts$quantiles)) {
-    out$quantiles <- as_ets_list(forecasts$quantiles, rate(ts_data))
-    out$quantiles <- lapply(out$quantiles, function(x) {
-      x <- c(x, exogenous_ts_data)
-    })
-  } else {
-    out$quantiles <- NULL
+    out$median <- c(
+      as_ets_list(forecasts$median, rate(ts_data), central_tendency = "median"),
+      exogenous_ts_data
+    )
+    if (!is.null(forecasts$quantiles)) {
+      out$quantiles <- as_ets_list(forecasts$quantiles, rate(ts_data))
+      out$quantiles <- lapply(out$quantiles, function(x) {
+        x <- c(x, exogenous_ts_data)
+      })
+    } else {
+      out$quantiles <- NULL
+    }
+    out
   }
 
-  structure(
-    list(
-      mean = out$mean,
-      median = out$median,
-      forecasts = forecasts$forecasts,
-      quantiles = out$quantiles,
-      ts_data = ts_data,
-      y_matrix = y_matrix,
-      x_matrix = x_matrix
-    ),
-    class = "koma_forecast"
+  out <- as_output(forecasts)
+  result <- list(
+    mean = out$mean,
+    median = out$median,
+    forecasts = forecasts$forecasts,
+    quantiles = out$quantiles,
+    ts_data = ts_data,
+    y_matrix = y_matrix,
+    x_matrix = x_matrix
   )
+
+  if (!is.null(forecasts$adjustment_matrix)) {
+    result$unadjusted <- as_output(forecasts$unadjusted)
+    # the applied adjustment of each adjusted variable by forecast quarter
+    result$adjustments <- lapply(names(adjustments), function(variable) {
+      stats::ts(
+        unname(forecasts$adjustment_matrix[variable, ]),
+        start = dates$forecast$start,
+        frequency = frequency
+      )
+    })
+    names(result$adjustments) <- names(adjustments)
+    result$adjustments_spec <- adjustments_spec
+  }
+
+  structure(result, class = "koma_forecast")
 }
 
 validate_forecast_input <- function(estimates, dates, frequency = 4, ...) {

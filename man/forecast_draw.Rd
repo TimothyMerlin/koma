@@ -16,7 +16,8 @@ forecast_draw(
   restrictions,
   phi_positions,
   conditional_innov_method = "projection",
-  central_tendency = NULL
+  central_tendency = NULL,
+  adjustment_matrix = NULL
 )
 }
 \arguments{
