@@ -76,10 +76,13 @@ fill_ragged_edge <- function(ts_data, sys_eq,
     variables_to_restrict <- endogenous_variables[
       !endogenous_variables %in% edge$variable_names
     ]
-    restrictions <- set_restrictions(
-      ts_data, variables_to_restrict,
-      start = edge$date,
-      end = edge$date
+    restrictions <- drop_determined_identities(
+      set_restrictions(
+        ts_data, variables_to_restrict,
+        start = edge$date,
+        end = edge$date
+      ),
+      sys_eq
     )
 
     forecast_dates <- list()
@@ -174,9 +177,12 @@ fill_in_draws <- function(estimates, ts_data, dates, frequency) {
   })
   names(observed_data) <- endogenous_variables
   restricted <- endogenous_variables[observed_end > edge + 0.5 / frequency]
-  restrictions <- set_restrictions(
-    observed_data, restricted,
-    start = start, end = dates$current
+  restrictions <- drop_determined_identities(
+    set_restrictions(
+      observed_data, restricted,
+      start = start, end = dates$current
+    ),
+    sys_eq
   )
 
   y_matrix <- construct_balanced_data(
@@ -249,10 +255,13 @@ conditional_fill <- function(ts_data, sys_eq, dates,
   variables_to_restrict <- endogenous_variables[
     !endogenous_variables %in% edge$variable_names
   ]
-  restrictions <- set_restrictions(
-    ts_data, variables_to_restrict,
-    start = iterate_n_periods(edge$date, 1, frequency = frequency),
-    end = dates$current
+  restrictions <- drop_determined_identities(
+    set_restrictions(
+      ts_data, variables_to_restrict,
+      start = iterate_n_periods(edge$date, 1, frequency = frequency),
+      end = dates$current
+    ),
+    sys_eq
   )
 
   forecast_dates <- list()

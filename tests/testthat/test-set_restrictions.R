@@ -295,3 +295,94 @@ test_that("dates_to_horizon rejects invalid dates", {
     "rate"
   )
 })
+
+test_that("find_determined_identities finds identities fixed by their components", {
+  sys_eq <- system_of_equations(
+    "m ~ w + m.L(1), s ~ p, c ~ w,
+    a == 0.5*m + 0.5*s,
+    g == 0.3*a + 0.7*w,
+    d == m - m.L(1)",
+    c("w", "p")
+  )
+  restrict <- function(...) {
+    lapply(list(...), function(horizon) {
+      list(horizon = horizon, value = rep(0.1, length(horizon)))
+    })
+  }
+
+  # a and both components
+  expect_equal(
+    find_determined_identities(restrict(m = 1, s = 1, a = 1, c = 1), sys_eq),
+    list(a = 1)
+  )
+  # s is missing, so a determines it
+  expect_equal(find_determined_identities(restrict(m = 1, a = 1), sys_eq), list())
+  # g through a, which m and s determine, and the exogenous w
+  expect_equal(
+    find_determined_identities(restrict(m = 1, s = 1, g = 1), sys_eq),
+    list(g = 1)
+  )
+  # a is restricted and, with w, determines g; only one of them is redundant
+  expect_equal(
+    find_determined_identities(restrict(m = 1, a = 1, g = 1), sys_eq),
+    list(g = 1)
+  )
+  # per period: s is only restricted in the first
+  expect_equal(
+    find_determined_identities(restrict(m = 1:2, s = 1, a = 1:2), sys_eq),
+    list(a = 1)
+  )
+  # a lag is known before the first period and where it is restricted
+  expect_equal(
+    find_determined_identities(restrict(m = 1, d = 1:2), sys_eq),
+    list(d = 1)
+  )
+  expect_equal(
+    find_determined_identities(restrict(m = 1:2, d = 1:2), sys_eq),
+    list(d = 1:2)
+  )
+  expect_equal(find_determined_identities(restrict(m = 1, s = 1), sys_eq), list())
+})
+
+test_that("drop_determined_identities keeps the restrictions that add information", {
+  sys_eq <- system_of_equations(
+    "m ~ w, s ~ p, a == 0.5*m + 0.5*s",
+    c("w", "p")
+  )
+  restrictions <- list(
+    m = list(horizon = 1:2, value = c(0.1, 0.2)),
+    s = list(horizon = 1, value = 0.3),
+    a = list(horizon = 1:2, value = c(0.2, 0.4))
+  )
+  expect_equal(
+    drop_determined_identities(restrictions, sys_eq),
+    list(
+      m = list(horizon = 1:2, value = c(0.1, 0.2)),
+      s = list(horizon = 1, value = 0.3),
+      a = list(horizon = 2L, value = 0.4)
+    )
+  )
+  restrictions$s$horizon <- 1:2
+  restrictions$s$value <- c(0.3, 0.6)
+  expect_equal(
+    drop_determined_identities(restrictions, sys_eq),
+    restrictions[c("m", "s")]
+  )
+})
+
+test_that("check_identity_restrictions names the identity and its components", {
+  sys_eq <- system_of_equations(
+    "m ~ w, s ~ p, a == 0.5*m + 0.5*s",
+    c("w", "p")
+  )
+  restrictions <- list(
+    m = list(horizon = 1, value = 0.1),
+    s = list(horizon = 1, value = 0.3),
+    a = list(horizon = 1, value = 0.2)
+  )
+  expect_error(
+    check_identity_restrictions(restrictions, sys_eq),
+    "\"a\" and its components \"m\" and \"s\" at horizon 1"
+  )
+  expect_invisible(check_identity_restrictions(restrictions[c("m", "a")], sys_eq))
+})

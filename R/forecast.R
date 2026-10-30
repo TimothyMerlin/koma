@@ -267,6 +267,7 @@ new_forecast <- function(estimates, dates, restrictions, adjustments, options) {
     estimates$sys_eq$endogenous_variables,
     horizon
   )
+  check_identity_restrictions(restrictions, estimates$sys_eq)
   # Decaying adjustments are expanded in forecast_sem(), to the possibly
   # shortened horizon; here they are only checked, before the fill below.
   adjustments <- dates_to_horizon(

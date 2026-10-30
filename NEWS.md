@@ -13,6 +13,8 @@
 * The annual annotations in `plot()` of a forecast now average the quarters (or months) of a year instead of summing them. For rate series such as interest rates (`method = "none"`) and for `method = "diff"`, the annotations were a multiple of the actual value, e.g. 4% for a rate of 1% in every quarter. Annual growth rates of level series (`diff_log`, `percentage`) are unchanged (#134).
 * Printing an estimate now shows the computed weights of identities with data-based weights, e.g. `gdp == 0.55 * consumption` instead of `gdp == (nom_consumption/nom_gdp) * consumption` (#93).
 * Density forecasts with a ragged edge now include the uncertainty of the filled periods. Each draw fills the periods before the forecast with its own coefficients and shocks, conditional on the observed values, instead of starting from one path filled with the mean coefficients. This includes periods filled by `estimate()`. The bands are wider, mostly at the start of the forecast. `options = list(approximate = TRUE)` fills once, as before (#144).
+* `estimate()` and `forecast()` no longer fail with `A = R %*% Omega %*% t(R) is singular` when a series ends earlier (ragged edge) and an identity and all its components are observed in the filled periods. The identity is then left out of the restrictions, since its components determine it (#145).
+* Restrictions on an identity and all its components in the same period now fail before the draws with an error that names the identity, its components and the horizon, instead of `A = R %*% Omega %*% t(R) is singular`. Restrict the identity or one of its components, not both (#145).
 
 ## Performance
 

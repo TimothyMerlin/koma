@@ -1498,6 +1498,58 @@ test_that("density forecasts fill the ragged edge in each draw", {
   expect_equal(stats::start(out$mean$service), c(2023, 2))
 })
 
+test_that("the ragged edge is filled when an identity and its components are observed", {
+  skip_on_cran()
+  equations <- "manufacturing ~ world_gdp + manufacturing.L(1),
+    service ~ population + gdp,
+    consumption ~ world_gdp + consumption.L(1),
+    gdp == 0.5*manufacturing + 0.5*service"
+  # only consumption ends in 2022 Q4; gdp is implied by its components
+  model <- estimate_adjustment_model(
+    equations,
+    data_end = list(consumption = c(2022, 4))
+  )
+
+  out <- forecast(model$est, model$dates, options = list(approximate = TRUE))
+  expect_length(out$mean$consumption, 4)
+  out <- withr::with_seed(3, forecast(model$est, model$dates))
+  expect_length(out$mean$consumption, 4)
+
+  # service is missing as well, so the observed gdp determines it
+  model <- estimate_adjustment_model(
+    equations,
+    data_end = list(consumption = c(2022, 4), service = c(2022, 4))
+  )
+  out <- forecast(model$est, model$dates, options = list(approximate = TRUE))
+  observed <- function(x) {
+    as.numeric(stats::window(rate(simulated_data$ts_data[[x]]),
+      start = c(2023, 1), end = c(2023, 1)
+    ))
+  }
+  filled <- as.numeric(stats::window(out$ts_data$service,
+    start = c(2023, 1), end = c(2023, 1)
+  ))
+  expect_equal(filled, 2 * observed("gdp") - observed("manufacturing"))
+
+  # estimate() fills 2023 Q1 as well, and each draw fills it again, with a
+  # restriction of the user after it
+  testthat::local_mocked_bindings(
+    readline = function(...) "y",
+    .package = "base"
+  )
+  model <- estimate_adjustment_model(
+    equations,
+    estimation_end = c(2023, 1),
+    data_end = list(consumption = c(2022, 4))
+  )
+  out <- withr::with_seed(3, forecast(model$est, model$dates,
+    restrictions = list(gdp = list(value = 0.5, horizon = 1))
+  ))
+  for (draw in out$forecasts) {
+    expect_equal(unname(draw[1, "gdp"]), 0.5)
+  }
+})
+
 test_that("restrictions and adjustments cannot be combined", {
   skip_on_cran()
   model <- estimate_adjustment_model(
@@ -1612,7 +1664,7 @@ test_that("init = 'last' fails where the last residual would be filled", {
   )
 })
 
-test_that("conflicting restrictions on identity error", {
+test_that("restrictions on an identity and all its components error", {
   skip_on_cran()
   dates <- list(
     estimation = list(start = c(1977, 1), end = c(2019, 4)),
@@ -1638,28 +1690,56 @@ test_that("conflicting restrictions on identity error", {
     estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 200)))
   )
 
-  base <- withr::with_seed(7, forecast(est, dates))
-
   restrictions <- list(
-    manufacturing = list(value = base$mean$manufacturing[1], horizon = 1),
-    service = list(value = base$mean$service[1], horizon = 1),
-    gdp = list(value = base$mean$gdp[1] + 1, horizon = 1)
+    manufacturing = list(value = 0.4, horizon = 1),
+    service = list(value = 0.6, horizon = 1),
+    gdp = list(value = 0.5 * 0.4 + 0.5 * 0.6, horizon = 1)
+  )
+  message <- "\"gdp\" and its components \"manufacturing\" and \"service\" at horizon 1"
+
+  # consistent or not, before the draws and with or without approximate
+  expect_error(
+    forecast(est, dates,
+      restrictions = restrictions, options = list(approximate = TRUE)
+    ),
+    message
+  )
+  expect_error(forecast(est, dates, restrictions = restrictions), message)
+  restrictions$gdp$value <- restrictions$gdp$value + 1
+  expect_error(forecast(est, dates, restrictions = restrictions), message)
+
+  # the identity and one component determine the other
+  out <- forecast(est, dates,
+    restrictions = restrictions[c("manufacturing", "gdp")],
+    options = list(approximate = TRUE)
+  )
+  expect_equal(as.numeric(out$mean$gdp[1]), 1.5)
+  expect_equal(as.numeric(out$mean$service[1]), 2 * 1.5 - 0.4)
+  # in different periods they do not determine each other
+  restrictions$gdp$horizon <- 2
+  expect_no_error(forecast(est, dates,
+    restrictions = restrictions, options = list(approximate = TRUE)
+  ))
+})
+
+test_that("failed forecast draws are reported once", {
+  skip_on_cran()
+  model <- estimate_adjustment_model(
+    "manufacturing ~ world_gdp,
+    service ~ population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
   )
 
-  expect_error(
-    withr::with_seed(7, forecast(est, dates,
-      restrictions = restrictions,
-      options = list(approximate = TRUE)
-    )),
-    "singular"
-  )
   # the per-draw error is reported once, with its cause and the draw count
-  err <- expect_error(
-    withr::with_seed(7, forecast(est, dates, restrictions = restrictions)),
-    "All forecast draws failed.*100 of 100 draws: .*singular"
+  err <- testthat::with_mocked_bindings(
+    expect_error(
+      forecast(model$est, model$dates),
+      "All forecast draws failed.*50 of 50 draws: .*draw failed"
+    ),
+    forecast_draw = function(...) cli::cli_abort("draw failed")
   )
   # and chained as parent, including the backtrace of the failed draw
-  expect_match(conditionMessage(err$parent), "singular")
+  expect_match(conditionMessage(err$parent), "draw failed")
   expect_false(is.null(err$parent$trace))
 })
 
