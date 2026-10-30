@@ -4,7 +4,7 @@ extot1 ~ xworld + wkfreuro + extot1.L(1),
 imtot1 ~  domdemoi + imtot1.L(1),
 pconsp ~ wkfreuro + poilusd + pconsp.L(1),
 srate ~ pconsp + srate_ge + srate.L(1),
-gdpos ==  0.6*constot + 0.6*domdemoi + 0.5*extot1 - 0.4*imtot1,
+gdpos ==  0.9*domdemoi + 0.5*extot1 - 0.4*imtot1,
 domdemoi == 0.6*constot + 0.4*ifix"
 
 exogenous_variables <- c("xworld", "wkfreuro", "poilusd", "srate_ge")

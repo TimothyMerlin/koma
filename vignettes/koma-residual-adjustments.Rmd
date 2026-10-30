@@ -26,7 +26,7 @@ exports ~ world_gdp + exports.L(1),
 imports ~ domestic_demand + imports.L(1),
 prices ~ exchange_rate + oil_price + prices.L(1),
 interest_rate ~ prices + interest_rate_germany + prices.L(1),
-gdp == 0.6*consumption + 0.6*domestic_demand + 0.5*exports - 0.4*imports,
+gdp == 0.9*domestic_demand + 0.5*exports - 0.4*imports,
 domestic_demand == 0.6*consumption + 0.4*investment"
 
 exogenous_variables <- c("world_gdp", "interest_rate_germany", "exchange_rate", "oil_price")

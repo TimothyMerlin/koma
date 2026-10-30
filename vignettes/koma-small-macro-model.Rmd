@@ -13,10 +13,10 @@ vignette: >
 
 $$
 \begin{aligned}
-\text{Consumption}\quad C_t &= \beta_1 + \beta_{1,2} C_{t-1} + \gamma_{1,7} Y_t + \varepsilon_{1t},\\
+\text{Consumption}\quad C_t &= \beta_1 + \beta_{1,2} C_{t-1} + \gamma_{1,7} GDP_t + \varepsilon_{1t},\\
 \text{Investment}\quad I_t &= \beta_2 + \beta_{2,3} I_{t-1} + \varepsilon_{2t},\\
 \text{Exports}\quad X_t &= \beta_3 + \beta_{3,4} X_{t-1} + \beta_{3,7} WGDP_t + \varepsilon_{3t},\\
-\text{Imports}\quad M_t &= \beta_4 + \gamma_{4,8} D_t + \beta_{4,5} I_{t-1} + \varepsilon_{4t},\\
+\text{Imports}\quad M_t &= \beta_4 + \gamma_{4,8} D_t + \beta_{4,5} M_{t-1} + \varepsilon_{4t},\\
 \text{Prices}\quad P_t &= \beta_5 + \beta_{5,9} ER_t + \beta_{5,10} OP_t 
      + \beta_{5,6} P_{t-1} + \varepsilon_{5t},\\
 \text{Interest Rate}\quad R_t &= \beta_6 + \beta_{6,6} P_{t-1} + \beta_{6,8} R_{GE,t} 
@@ -28,7 +28,7 @@ $$
 
 $$
 \begin{aligned}
-\text{Equilibrium Ouput}\quad GDP_t &= 0.6*C_t + 0.6*D_t + 0.5*X_t - 0.4*I_t
+\text{Equilibrium Output}\quad GDP_t &= 0.9*D_t + 0.5*X_t - 0.4*M_t
 \end{aligned}
 $$
 
@@ -53,7 +53,7 @@ $$
 - $R_t$: Short-term interest rate at time $t$.
 - $D_t$: Domestic demand, defined by $D_t = 0.6 * C_t + 0.4 * I_t$.
 - $GDP_t$: Equilibrium output (demand), defined by
-  $GDP_t = 0.6 * C_t + 0.6 * D_t + 0.5 * X_t - 0.4 * I_t$.
+  $GDP_t = 0.9 * D_t + 0.5 * X_t - 0.4 * M_t$.
 
 **Exogenous variables**  
 
@@ -79,7 +79,7 @@ exports ~ world_gdp + exports.L(1),
 imports ~ domestic_demand + imports.L(1),
 prices ~ exchange_rate + oil_price + prices.L(1),
 interest_rate ~ prices + interest_rate_germany + prices.L(1),
-gdp == 0.6*consumption + 0.6*domestic_demand + 0.5*exports - 0.4*imports,
+gdp == 0.9*domestic_demand + 0.5*exports - 0.4*imports,
 domestic_demand == 0.6*consumption + 0.4*investment"
 
 exogenous_variables <- c("world_gdp", "interest_rate_germany", "exchange_rate", "oil_price")

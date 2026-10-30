@@ -34,7 +34,7 @@ Identity equations enforce exact relationships.
 # To aggregate the component growth rates into a growth rate for GDP we need to define weights.
 # This is done by specifying the weights in the equation. 
 # You can, e.g. use the nominal level weights of the last observed period.
-gdp == 0.7*consumption + 0.2*investment + 0.2*government - 0.1*net_exports 
+gdp == 0.5*consumption + 0.2*investment + 0.2*government + 0.1*net_exports
 ```
 
 ## 3. Injected Parameters
