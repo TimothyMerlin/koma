@@ -442,6 +442,35 @@ test_that("estimate throws error", {
   )
 })
 
+test_that("estimate errors on too few degrees of freedom for flat priors", {
+  # K = 10 regressors and T = 11 observations leave T - K = 1 degree of
+  # freedom, too few for equations with an endogenous regressor.
+  dates <- list(estimation = list(start = c(2000, 1), end = c(2002, 3)))
+
+  expect_error(
+    estimate(simulated_data$ts_data, simulated_data$sys_eq, dates),
+    "degrees of freedom"
+  )
+
+  err <- tryCatch(
+    estimate(simulated_data$ts_data, simulated_data$sys_eq, dates),
+    error = function(e) conditionMessage(e)
+  )
+  expect_match(err, "consumption")
+  expect_match(err, "service")
+  expect_no_match(err, "manufacturing")
+})
+
+test_that("estimate errors on more regressors than observations", {
+  # Before, this failed as a rank deficiency without naming any variables.
+  dates <- list(estimation = list(start = c(2000, 1), end = c(2002, 1)))
+
+  expect_error(
+    estimate(simulated_data$ts_data, simulated_data$sys_eq, dates),
+    "9 observations minus 10 regressors"
+  )
+})
+
 test_that("missing series in ts_data", {
   dates <- list(estimation = list(
     start = c(1977, 1),

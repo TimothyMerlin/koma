@@ -700,6 +700,50 @@ test_that("validate_full_rank errors and names the dependent columns", {
   expect_match(conditionMessage(err), "c")
 })
 
+test_that("validate_full_rank reports more columns than rows", {
+  x_matrix <- matrix(
+    c(1, 1, 2, 4, 5, 3),
+    nrow = 2, dimnames = list(NULL, c("constant", "a", "b"))
+  )
+
+  expect_error(
+    koma:::validate_full_rank(x_matrix),
+    "3 regressors.*2 observations"
+  )
+})
+
+test_that("validate_degrees_of_freedom checks equations with flat priors", {
+  sys_eq <- simulated_data$sys_eq
+  k <- nrow(sys_eq$character_beta_matrix)
+
+  # T - K = 2 is enough for one endogenous regressor
+  expect_true(
+    koma:::validate_degrees_of_freedom(sys_eq, matrix(0, k + 2, k))
+  )
+
+  # T - K = 1 is not; equations without one still pass
+  err <- tryCatch(
+    koma:::validate_degrees_of_freedom(sys_eq, matrix(0, k + 1, k)),
+    error = function(e) conditionMessage(e)
+  )
+  expect_match(err, "degrees of freedom")
+  expect_match(err, "consumption")
+  expect_no_match(err, "manufacturing")
+})
+
+test_that("validate_degrees_of_freedom skips equations with informative priors", {
+  sys_eq <- simulated_data$sys_eq
+  k <- nrow(sys_eq$character_beta_matrix)
+  stochastic <- which(!sys_eq$endogenous_variables %in% names(sys_eq$identities))
+  for (jx in stochastic) {
+    sys_eq$priors[[jx]] <- list(constant = list(0, 1000))
+  }
+
+  expect_true(
+    koma:::validate_degrees_of_freedom(sys_eq, matrix(0, k + 1, k))
+  )
+})
+
 test_that("find_dependent_columns identifies exactly the dependent columns", {
   a <- c(2, 4, 6, 8, 10)
   c <- c(6, 2, 8, 4, 0)

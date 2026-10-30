@@ -212,6 +212,24 @@ model_identification <- function(character_gamma_matrix,
 #' @keywords internal
 validate_full_rank <- function(x_matrix, tol = 1e-7, call = rlang::caller_env()) {
   n <- ncol(x_matrix)
+  number_of_observations <- nrow(x_matrix)
+
+  # With more columns than rows the rank is necessarily deficient; this is a
+  # sample-size problem, not collinearity between particular variables.
+  if (n > number_of_observations) {
+    cli::cli_abort(
+      c(
+        "!" = "The system has more regressors than observations: {n}
+        regressors, {number_of_observations} observations.",
+        "i" = "The regressors are the constant, exogenous and lagged variables
+        of all equations.",
+        ">" = "Start the estimation earlier, or reduce the number of lags or
+        exogenous variables."
+      ),
+      call = call
+    )
+  }
+
   rank <- qr(x_matrix, tol = tol)$rank
 
   if (rank == n) {
@@ -228,6 +246,57 @@ validate_full_rank <- function(x_matrix, tol = 1e-7, call = rlang::caller_env())
       used alongside lags of its own identity components elsewhere in the system.",
       ">" = "Remove one of the dependent variables, or avoid lagging both the identity
       and its components in the same system."
+    ),
+    call = call
+  )
+}
+
+#' Validate the degrees of freedom of equations with flat priors
+#'
+#' With flat priors, \eqn{\Omega_j} is drawn from an inverse Wishart with
+#' \eqn{T - K} degrees of freedom, where \eqn{K} is the number of regressors
+#' of the whole system (the reduced form of the endogenous regressors uses all
+#' of them). The draw needs at least \eqn{n_j + 1} degrees of freedom, with
+#' \eqn{n_j} the number of endogenous regressors of equation \eqn{j}.
+#' Equations with informative priors add the prior degrees of freedom and are
+#' not checked.
+#'
+#' @param sys_eq A `koma_seq` object.
+#' @param x_matrix A \eqn{(T \times K)} matrix \eqn{X} of observations on
+#' \eqn{K} exogenous variables.
+#' @param call The environment from which the error is called.
+#' @keywords internal
+validate_degrees_of_freedom <- function(sys_eq, x_matrix,
+                                        call = rlang::caller_env()) {
+  character_gamma_matrix <- sys_eq$character_gamma_matrix
+  degrees_of_freedom <- nrow(x_matrix) - ncol(x_matrix)
+
+  stochastic_positions <- which(
+    !sys_eq$endogenous_variables %in% names(sys_eq$identities)
+  )
+  flat <- stochastic_positions[
+    lengths(sys_eq$priors[stochastic_positions]) == 0
+  ]
+  required <- vapply(flat, function(jx) {
+    length(grep("gamma", character_gamma_matrix[, jx])) + 1
+  }, numeric(1))
+
+  failing <- colnames(character_gamma_matrix)[flat][degrees_of_freedom < required]
+  if (length(failing) == 0) {
+    return(invisible(TRUE))
+  }
+
+  cli::cli_abort(
+    c(
+      "!" = "Too few degrees of freedom to estimate {.var {failing}} with flat
+      priors.",
+      "x" = "{nrow(x_matrix)} observations minus {ncol(x_matrix)} regressors
+      leave {degrees_of_freedom} degree{?s} of freedom, but
+      {max(required[degrees_of_freedom < required])} are needed.",
+      "i" = "The regressors are the constant, exogenous and lagged variables
+      of all equations.",
+      ">" = "Add informative priors to these equations, start the estimation
+      earlier, or reduce the number of lags or exogenous variables."
     ),
     call = call
   )

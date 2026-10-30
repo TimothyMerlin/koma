@@ -9,6 +9,7 @@
 ## Bug fixes
 
 * `system_of_equations()` now warns about unknown equation settings, e.g. a typo like `[ndraw = 100]` or an unsupported option like `[dates = ...]`. Before, they were silently ignored (#121).
+* `estimate()` now errors early when the sample is too short for equations with flat priors, naming the equations and the degrees of freedom needed, and suggests informative priors. Before, this failed inside the sampler with `v must be >= dimension of S in rwish()`, or, with more regressors than observations, as a rank deficiency that blamed lagged identities (#85).
 
 # koma 0.4.1
 

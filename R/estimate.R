@@ -324,10 +324,9 @@ new_prepare_estimation <- function(ts_data, sys_eq, dates, fill_method) {
     warn = TRUE
   )
 
-  # Estimation inverts x_matrix (or t(x_matrix) %*% x_matrix); an exact
-  # linear dependency between columns (e.g. a lagged identity coinciding
-  # with lags of its own components) would otherwise only surface later as
-  # an opaque "computationally singular" error inside the Gibbs sampler.
+  validate_degrees_of_freedom(
+    sys_eq, balanced_data$x_matrix, call = rlang::caller_env()
+  )
   validate_full_rank(balanced_data$x_matrix, call = rlang::caller_env())
 
   structure(
