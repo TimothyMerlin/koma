@@ -15,6 +15,8 @@
 * Density forecasts with a ragged edge now include the uncertainty of the filled periods. Each draw fills the periods before the forecast with its own coefficients and shocks, conditional on the observed values, instead of starting from one path filled with the mean coefficients. This includes periods filled by `estimate()`. The bands are wider, mostly at the start of the forecast. `options = list(approximate = TRUE)` fills once, as before (#144).
 * `estimate()` and `forecast()` no longer fail with `A = R %*% Omega %*% t(R) is singular` when a series ends earlier (ragged edge) and an identity and all its components are observed in the filled periods. The identity is then left out of the restrictions, since its components determine it (#145).
 * Restrictions on an identity and all its components in the same period now fail before the draws with an error that names the identity, its components and the horizon, instead of `A = R %*% Omega %*% t(R) is singular`. Restrict the identity or one of its components, not both (#145).
+* Identities with a variable and its own lag, e.g. `d == 1*x - 1*x.L(1)`, now get the right weights. Before, the weight of `x` was read from both terms, and `estimate()` failed with an unrelated error about `dates$dynamic_weights` (#146).
+* Components of identities without a weight, e.g. `gdp == consumption + investment`, now have the weight 1, or -1 after a minus. Before, `estimate()` failed with the same error about `dates$dynamic_weights` (#146).
 
 ## Performance
 

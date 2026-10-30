@@ -35,6 +35,10 @@ Identity equations enforce exact relationships.
 # This is done by specifying the weights in the equation. 
 # You can, e.g. use the nominal level weights of the last observed period.
 gdp == 0.5*consumption + 0.2*investment + 0.2*government + 0.1*net_exports
+
+# A component without a weight has the weight 1, or -1 after a minus.
+# Components can be lagged, also the variable itself:
+change_in_stocks == stocks - stocks.L(1)
 ```
 
 ## 3. Injected Parameters

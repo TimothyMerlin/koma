@@ -42,7 +42,9 @@ by commas if provided as a single string.
 
 \itemize{
 \item Stochastic equations use \code{~} (e.g. \code{y ~ x1 + x2}).
-\item Identity equations use \code{==} (e.g. \code{y == 0.5*x1 + 0.5*x2}).
+\item Identity equations use \code{==} (e.g. \code{y == 0.5*x1 + 0.5*x2}). A component
+without a weight has the weight 1, or -1 after a minus (e.g.
+\code{d == x1 - x1.L(1)}).
 \item Lagged variables are denoted by \code{X.L(x)} for variable \code{X} and lag \code{L(x)}
 (e.g. \code{.L(1)}, \code{.L(2)}).
 \item Dummy variables can be written as

@@ -1055,6 +1055,59 @@ test_that("get_weights with lags", {
   expect_equal(result, expected_result)
 })
 
+test_that("get_weights separates a variable from its own lag", {
+  weights <- function(eq) unname(get_weights(eq)$gdp$weights)
+
+  expect_equal(weights("gdp==1*m-1*m.L(1)"), list(1, -1))
+  expect_equal(weights("gdp==0.5*m.L(1)+0.5*m"), list(0.5, 0.5))
+  expect_equal(weights("gdp==(nom_m/nom_gdp)*m-0.2*m.L(2)"), list("nom_m/nom_gdp", -0.2))
+})
+
+test_that("get_weights uses 1 for components without a weight", {
+  weights <- function(eq) unname(get_weights(eq)$gdp$weights)
+
+  expect_equal(weights("gdp==m+s"), list(1, 1))
+  expect_equal(weights("gdp==m-s"), list(1, -1))
+  expect_equal(weights("gdp==-m+0.5*s"), list(-1, 0.5))
+  expect_equal(weights("gdp==m-m.L(1)"), list(1, -1))
+  expect_equal(weights("gdp==m.L(1)+(nom_s/nom_gdp)*s"), list(1, "nom_s/nom_gdp"))
+})
+
+test_that("identities with own lags and without weights can be estimated", {
+  skip_on_cran()
+  dates <- list(
+    estimation = list(start = c(1977, 1), end = c(2019, 4)),
+    forecast = list(start = c(2023, 2), end = c(2024, 1))
+  )
+  sys_eq <- system_of_equations(
+    "manufacturing ~ world_gdp + manufacturing.L(1),
+    service ~ population + service.L(1),
+    gdp == manufacturing - manufacturing.L(1) + service",
+    c("world_gdp", "population")
+  )
+  expect_equal(unname(sys_eq$identities$gdp$weights), list(1, -1, 1))
+
+  ts_data <- simulated_data$ts_data
+  ts_data[sys_eq$endogenous_variables] <- lapply(
+    sys_eq$endogenous_variables,
+    function(x) stats::window(ts_data[[x]], end = c(2023, 1))
+  )
+  est <- withr::with_seed(7, estimate(
+    ts_data, sys_eq, dates,
+    options = list(gibbs = list(ndraws = 50))
+  ))
+  out <- forecast(est, dates, options = list(approximate = TRUE))
+  manufacturing <- as.numeric(out$mean$manufacturing)
+  last <- as.numeric(stats::window(
+    rate(simulated_data$ts_data$manufacturing),
+    start = c(2023, 1), end = c(2023, 1)
+  ))
+  expect_equal(
+    as.numeric(out$mean$gdp),
+    manufacturing - c(last, manufacturing[-4]) + as.numeric(out$mean$service)
+  )
+})
+
 test_that("get_weight_variables", {
   equations <- c(
     "gdp==0.3*manufacturing+(nom_service/nom_gdp)*service",

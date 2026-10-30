@@ -9,7 +9,9 @@
 #'
 #' @section Equations:
 #' - Stochastic equations use `~` (e.g. `y ~ x1 + x2`).
-#' - Identity equations use `==` (e.g. `y == 0.5*x1 + 0.5*x2`).
+#' - Identity equations use `==` (e.g. `y == 0.5*x1 + 0.5*x2`). A component
+#' without a weight has the weight 1, or -1 after a minus (e.g.
+#' `d == x1 - x1.L(1)`).
 #' - Lagged variables are denoted by `X.L(x)` for variable `X` and lag `L(x)`
 #'  (e.g. `.L(1)`, `.L(2)`).
 #' - Dummy variables can be written as
@@ -577,15 +579,25 @@ get_weights <- function(eq) {
 
   # Split RHS at '+', '-', '*', or '/'
   components <- unlist(strsplit(components, "\\+|\\-|\\*|\\/"))
+  # a leading sign, e.g. gdp == -m + s, leaves an empty first element
+  components <- components[nzchar(components)]
 
   weights <- list()
   for (component in components) {
-    pattern <- paste0("\\(([^)]*?)\\)\\*\\Q", component, "\\E(?!\\w)")
-    weight_str <- regmatches(rhs, gregexpr(pattern, rhs, perl = TRUE))
-
+    # (?![\w.]) so that a variable does not match its own lag, e.g. m in
+    # m.L(1)
+    end <- "\\E(?![\\w.])"
     # Capture only what is between the parentheses
-    pattern <- paste0("\\(([^)]*)\\)\\*\\Q", component, "\\E")
-    weight_str <- gsub(pattern, "\\1", weight_str)
+    pattern <- paste0("\\(([^)]*?)\\)\\*\\Q", component, end)
+    weight_str <- regmatches(rhs, regexec(pattern, rhs, perl = TRUE))[[1]][2]
+
+    if (is.na(weight_str)) {
+      # without a weight, e.g. gdp == m - s, the weight is 1 or -1
+      pattern <- paste0("(^|[+-])\\Q", component, end)
+      sign <- regmatches(rhs, regexec(pattern, rhs, perl = TRUE))[[1]][2]
+      weights <- c(weights, if (identical(sign, "-")) -1 else 1)
+      next
+    }
 
     weight_num <- suppressWarnings(as.numeric(weight_str))
 
