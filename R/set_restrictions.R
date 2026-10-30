@@ -44,7 +44,8 @@ set_restrictions <- function(ts_data, variables_to_restrict,
 #'
 #' An identity is determined in a period if all its components are known
 #' there: restricted, exogenous, lagged from a period that is known, or
-#' identities determined themselves. A restriction on a determined identity
+#' identities determined themselves. A known identity with a single unknown
+#' component determines that component. A restriction on a determined identity
 #' adds no information, and together with the others it makes the
 #' restrictions singular. Restricted identities that are not determined are
 #' known as well and can determine further identities; they are added one at
@@ -86,18 +87,30 @@ find_determined_identities <- function(restrictions, sys_eq) {
       }
       !component %in% sys_eq$endogenous_variables
     }
-    # adds the identities determined by the known variables
+    unknown_components <- function(identity) {
+      components <- names(identities[[identity]]$components)
+      components[!vapply(components, is_known, logical(1))]
+    }
+    # adds the identities determined by the known variables, and the one
+    # unknown component of a known identity
     close_known <- function() {
       repeat {
         candidates <- setdiff(names(identities), known[[h]])
         new <- candidates[vapply(candidates, function(identity) {
-          all(vapply(
-            names(identities[[identity]]$components), is_known, logical(1)
-          ))
+          !length(unknown_components(identity))
         }, logical(1))]
+        for (identity in intersect(known[[h]], names(identities))) {
+          unknown <- unknown_components(identity)
+          if (length(unknown) == 1 && unknown %in% sys_eq$endogenous_variables) {
+            new <- c(new, unknown)
+          }
+        }
+        new <- unique(new)
         if (!length(new)) {
           return(invisible())
         }
+        # restricted variables are known, so only restricted identities can
+        # be new
         for (identity in intersect(new, restricted)) {
           determined[[identity]] <<- c(determined[[identity]], h)
         }
@@ -151,11 +164,14 @@ drop_determined_identities <- function(restrictions, sys_eq) {
 #' identity, its components and the horizons.
 #'
 #' @inheritParams find_determined_identities
+#' @param offset Number of periods before the forecast that `restrictions`
+#' start with, see [fill_in_draws()]. The error reports the horizons of the
+#' forecast.
 #' @param call The environment from which the error is called.
 #'
 #' @return `restrictions`, invisibly.
 #' @keywords internal
-check_identity_restrictions <- function(restrictions, sys_eq,
+check_identity_restrictions <- function(restrictions, sys_eq, offset = 0,
                                         call = rlang::caller_env()) {
   determined <- find_determined_identities(restrictions, sys_eq)
   if (!length(determined)) {
@@ -167,7 +183,7 @@ check_identity_restrictions <- function(restrictions, sys_eq,
       sys_eq$endogenous_variables
     )
     cli::format_inline(
-      "{.val {identity}} and its components {.val {components}} at horizon {determined[[identity]]}"
+      "{.val {identity}} and its components {.val {components}} at horizon {determined[[identity]] - offset}"
     )
   }, character(1))
   cli::cli_abort(c(

@@ -18,7 +18,8 @@ determined in some period, the horizons of these periods.
 \description{
 An identity is determined in a period if all its components are known
 there: restricted, exogenous, lagged from a period that is known, or
-identities determined themselves. A restriction on a determined identity
+identities determined themselves. A known identity with a single unknown
+component determines that component. A restriction on a determined identity
 adds no information, and together with the others it makes the
 restrictions singular. Restricted identities that are not determined are
 known as well and can determine further identities; they are added one at

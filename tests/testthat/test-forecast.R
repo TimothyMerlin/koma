@@ -1722,6 +1722,48 @@ test_that("restrictions on an identity and all its components error", {
   ))
 })
 
+test_that("restrictions on identities with lags account for the ragged edge", {
+  skip_on_cran()
+  equations <- "manufacturing ~ world_gdp + manufacturing.L(1),
+    service ~ population + service.L(1),
+    gdp == 0.5*manufacturing + 0.5*service.L(1)"
+  restrictions <- list(
+    manufacturing = list(value = 0.4, horizon = 1),
+    gdp = list(value = 0.1, horizon = 1)
+  )
+
+  # service and gdp are missing in 2023 Q1, so the lag of service in 2023 Q2
+  # is filled in each draw, and the restriction on gdp fixes it
+  model <- estimate_adjustment_model(
+    equations,
+    data_end = list(service = c(2022, 4), gdp = c(2022, 4))
+  )
+  out <- withr::with_seed(3, forecast(model$est, model$dates,
+    restrictions = restrictions
+  ))
+  for (draw in out$forecasts) {
+    expect_equal(unname(draw[1, c("manufacturing", "gdp")]), c(0.4, 0.1))
+  }
+
+  # service is observed in 2023 Q1, so the restriction on gdp in 2023 Q2 is
+  # redundant; the horizon is the one of the restriction
+  model <- estimate_adjustment_model(
+    equations,
+    data_end = list(manufacturing = c(2022, 4))
+  )
+  message <- "\"gdp\" and its components \"manufacturing\" at horizon 1"
+  expect_error(
+    forecast(model$est, model$dates, restrictions = restrictions),
+    message
+  )
+  expect_error(
+    forecast(model$est, model$dates,
+      restrictions = restrictions, options = list(approximate = TRUE)
+    ),
+    message
+  )
+})
+
 test_that("failed forecast draws are reported once", {
   skip_on_cran()
   model <- estimate_adjustment_model(

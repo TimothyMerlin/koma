@@ -4,12 +4,21 @@
 \alias{check_identity_restrictions}
 \title{Check Restrictions on Identities and All Their Components}
 \usage{
-check_identity_restrictions(restrictions, sys_eq, call = rlang::caller_env())
+check_identity_restrictions(
+  restrictions,
+  sys_eq,
+  offset = 0,
+  call = rlang::caller_env()
+)
 }
 \arguments{
 \item{restrictions}{Named list of restrictions with \code{horizon} and \code{value}.}
 
 \item{sys_eq}{A system of equations (see \code{\link[=system_of_equations]{system_of_equations()}}).}
+
+\item{offset}{Number of periods before the forecast that \code{restrictions}
+start with, see \code{\link[=fill_in_draws]{fill_in_draws()}}. The error reports the horizons of the
+forecast.}
 
 \item{call}{The environment from which the error is called.}
 }

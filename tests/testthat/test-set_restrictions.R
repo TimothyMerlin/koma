@@ -342,6 +342,18 @@ test_that("find_determined_identities finds identities fixed by their components
     list(d = 1:2)
   )
   expect_equal(find_determined_identities(restrict(m = 1, s = 1), sys_eq), list())
+
+  # a known identity determines its one unknown component: d determines m,
+  # so the lag of m is known in the next period
+  expect_equal(
+    find_determined_identities(restrict(d = 1:2, m = 2), sys_eq),
+    list(d = 2)
+  )
+  # g and the exogenous w determine a; the restriction on a is redundant
+  expect_equal(
+    find_determined_identities(restrict(m = 1, g = 1, a = 1), sys_eq),
+    list(a = 1)
+  )
 })
 
 test_that("drop_determined_identities keeps the restrictions that add information", {

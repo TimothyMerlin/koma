@@ -267,7 +267,6 @@ new_forecast <- function(estimates, dates, restrictions, adjustments, options) {
     estimates$sys_eq$endogenous_variables,
     horizon
   )
-  check_identity_restrictions(restrictions, estimates$sys_eq)
   # Decaying adjustments are expanded in forecast_sem(), to the possibly
   # shortened horizon; here they are only checked, before the fill below.
   adjustments <- dates_to_horizon(
@@ -383,6 +382,7 @@ new_forecast <- function(estimates, dates, restrictions, adjustments, options) {
     fill_in_draws(estimates, rate(ts_data), dates, frequency)
   }
   if (is.null(fill)) {
+    check_identity_restrictions(restrictions, estimates$sys_eq)
     forecasts <- forecast_sem(
       estimates$sys_eq, estimates$estimates, restrictions, y_matrix, x_matrix,
       horizon, balanced_data$freq, dates$forecast, approximate, probs,
@@ -410,6 +410,12 @@ new_forecast <- function(estimates, dates, restrictions, adjustments, options) {
         )
       )
     }
+    # Checked together with the fill, which tells what is known before the
+    # forecast, e.g. for lags in identities.
+    check_identity_restrictions(
+      fill_restrictions, estimates$sys_eq,
+      offset = fill_periods
+    )
     forecasts <- forecast_sem(
       estimates$sys_eq, estimates$estimates, fill_restrictions,
       fill$y_matrix, fill$x_matrix, horizon + fill_periods,
