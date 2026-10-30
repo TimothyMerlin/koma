@@ -14,7 +14,10 @@ test_that("build_settings", {
 
   exogenous_variables <- c("real_interest_rate", "world_gdp", "population")
 
-  sys_eq <- system_of_equations(equations, exogenous_variables)
+  expect_warning(
+    sys_eq <- system_of_equations(equations, exogenous_variables),
+    "unused"
+  )
 
   equation_settings <- sys_eq$equation_settings
 

@@ -6,6 +6,10 @@
 * New `residuals()` and `fitted()` methods for `koma_estimate` return the in-sample residuals and fitted values of the stochastic equations, at the mean or median of the coefficients and optionally with quantiles over the draws, e.g. `residuals(fit, probs = c(0.05, 0.95))` (#83).
 * `forecast()` gains `adjustments` to shift the residuals of stochastic equations over the forecast horizon (add-factors), either per period, e.g. `list(consumption = list(value = c(0.3, 0.2), horizon = 1:2))`, as a time series or by date, or decaying, e.g. `list(investment = list(value = 0.5, decay = 0.6))`. A decaying adjustment can start at the residual of the period before the forecast with `init = "last"`, e.g. `list(imports = list(init = "last", decay = 0.6))`. The result keeps the forecast without adjustments in `unadjusted` and the applied adjustments per variable and forecast period in `adjustments`. Adjustments cannot be combined with `restrictions`. See `vignette("koma-residual-adjustments")` (#136).
 
+## Bug fixes
+
+* `system_of_equations()` now warns about unknown equation settings, e.g. a typo like `[ndraw = 100]` or an unsupported option like `[dates = ...]`. Before, they were silently ignored (#121).
+
 # koma 0.4.1
 
 ## Breaking changes

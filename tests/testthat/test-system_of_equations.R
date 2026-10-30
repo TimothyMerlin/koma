@@ -437,6 +437,31 @@ test_that("system_of_equations, with equation specific settings", {
   expect_equal(result$equation_settings, expected_equation_settings)
 })
 
+test_that("system_of_equations warns on unknown equation settings", {
+  # unsupported option
+  equations <- "consumption ~ gdp + consumption.L(1) [dates = list(estimation = list(start = c(1980, 1)))],
+    gdp == 1*consumption"
+  expect_warning(
+    system_of_equations(equations, character()),
+    "dates.*consumption"
+  )
+
+  # typo of a known option
+  equations <- "investment ~ gdp + investment.L(1) [ndraw = 100, tau = 1.2],
+    gdp == 1*investment"
+  expect_warning(
+    system_of_equations(equations, character()),
+    "ndraw.*investment"
+  )
+})
+
+test_that("system_of_equations, known equation settings do not warn", {
+  equations <- "consumption ~ gdp + consumption.L(1) [ndraws = 100, burnin_ratio = 0.3, nstore = 2, tau = 1.2, acceptance_prob = c(0.2, 0.7)],
+    gdp == 1*consumption"
+
+  expect_no_warning(system_of_equations(equations, character()))
+})
+
 test_that("parse_equation, with intercept", {
   expected_result <- "consumption~constant+gdp+consumption.L(1)+consumption.L(2)"
 

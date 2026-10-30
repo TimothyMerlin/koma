@@ -103,6 +103,7 @@ system_of_equations <- function(equations = vector(),
 
   priors <- lapply(equations, extract_priors)
   equation_settings <- lapply(equations, extract_settings)
+  validate_equation_settings(equation_settings, equations)
   equations <- sapply(equations, parse_equation, USE.NAMES = FALSE)
 
   # Validate variable names per single equation

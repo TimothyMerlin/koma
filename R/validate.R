@@ -398,6 +398,30 @@ validate_completeness <- function(equations, exogenous_variables) {
   }
 }
 
+# Warn about equation-specific settings that estimate() does not use.
+# build_settings() keeps only known keys, so anything else (a typo like
+# `ndraw`, or an unsupported option like `dates`) would be dropped silently.
+validate_equation_settings <- function(equation_settings, equations) {
+  known <- c(
+    names(get_default_gibbs_spec()),
+    names(get_default_acceptance_prob())
+  )
+  lhs <- trimws(sub("(~|==).*$", "", equations))
+
+  for (ix in seq_along(equation_settings)) {
+    unknown <- setdiff(names(equation_settings[[ix]]), known)
+    if (length(unknown) > 0) {
+      eq <- lhs[[ix]]
+      cli::cli_warn(c(
+        "!" = "Unknown setting{cli::qty(unknown)}{?s} {.field {unknown}} in the equation for
+        {.var {eq}} will be ignored.",
+        "i" = "Supported settings are {.field {known}}."
+      ))
+    }
+  }
+  invisible(TRUE)
+}
+
 validate_priors <- function(equation) {
   parts <- unlist(strsplit(equation, "==|~"))
   dependent_variable <- trimws(parts[1])
