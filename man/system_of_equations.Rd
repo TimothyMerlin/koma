@@ -44,7 +44,10 @@ by commas if provided as a single string.
 \item Stochastic equations use \code{~} (e.g. \code{y ~ x1 + x2}).
 \item Identity equations use \code{==} (e.g. \code{y == 0.5*x1 + 0.5*x2}). A component
 without a weight has the weight 1, or -1 after a minus (e.g.
-\code{d == x1 - x1.L(1)}).
+\code{d == x1 - x1.L(1)}). Weights computed from data are written in
+parentheses, e.g. \code{y == (nom_x1/nom_y)*x1 + (nom_x2/nom_y)*x2}, or shorter
+with the aggregate's weight on the left-hand side,
+\code{(nom_y)*y == (nom_x1)*x1 + (nom_x2)*x2}.
 \item Lagged variables are denoted by \code{X.L(x)} for variable \code{X} and lag \code{L(x)}
 (e.g. \code{.L(1)}, \code{.L(2)}).
 \item Dummy variables can be written as

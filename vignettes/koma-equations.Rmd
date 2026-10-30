@@ -45,8 +45,15 @@ change_in_stocks == stocks - stocks.L(1)
 
 ```r
 # Ratios computed from data:
-gdp == (nom_cons/nom_gdp) * cons
+gdp == (nom_cons/nom_gdp) * cons + (nom_inv/nom_gdp) * inv
+
+# Shorter, with the aggregate's weight on the left-hand side. Every
+# right-hand weight is divided by it, so this is the same identity:
+(nom_gdp) * gdp == (nom_cons) * cons + (nom_inv) * inv
 ```
+
+With a weight on the left-hand side, it must be a single variable, and every
+right-hand term needs a weight of variables joined by `*` or `/`.
 
 ## 4. Lag Notation
 Lags are specified with `L()` or `lag()` notation. Ranges and combinations are supported.

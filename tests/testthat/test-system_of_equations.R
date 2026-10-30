@@ -1265,6 +1265,73 @@ test_that("expand_dummies throws a clear error for an invalid prefix", {
   expect_error(expand_dummies("y~x1+dummies(1covid,1:8)"), "Invalid.*dummies")
 })
 
+test_that("expand_lhs_weight divides every right-hand weight by the
+aggregate's weight", {
+  expect_equal(
+    expand_lhs_weight("(nx)*x==(na)*a+(nb)*b"),
+    "x==(na/nx)*a+(nb/nx)*b"
+  )
+  expect_equal(
+    expand_lhs_weight("(nx)*x==(na)*a-(nb)*b.L(1)"),
+    "x==(na/nx)*a-(nb/nx)*b.L(1)"
+  )
+  expect_equal(
+    expand_lhs_weight("(nx)*x==(na/pa)*a+(-nb)*b"),
+    "x==(na/pa/nx)*a+(-nb/nx)*b"
+  )
+})
+
+test_that("expand_lhs_weight leaves other equations unchanged", {
+  equations <- c("y~x1+x2", "x==(na/nx)*a+(nb/nx)*b", "d==a-a.L(1)")
+  expect_equal(expand_lhs_weight(equations), equations)
+})
+
+test_that("expand_lhs_weight requires a single variable as aggregate weight", {
+  expect_error(
+    expand_lhs_weight("(nx/px)*x==(na)*a+(nb)*b"),
+    "Invalid.*weight"
+  )
+  expect_error(
+    expand_lhs_weight("(0.5)*x==(na)*a+(nb)*b"),
+    "Invalid.*weight"
+  )
+})
+
+test_that("expand_lhs_weight requires a variable weight on every
+right-hand term", {
+  # unweighted term
+  expect_error(
+    expand_lhs_weight("(nx)*x==(na)*a+b"),
+    "Invalid.*weight"
+  )
+  # numeric weight
+  expect_error(
+    expand_lhs_weight("(nx)*x==(na)*a+(0.5)*b"),
+    "Invalid.*weight"
+  )
+  # compound weight that cannot be divided without nested parentheses
+  expect_error(
+    expand_lhs_weight("(nx)*x==(na+nc)*a+(nb)*b"),
+    "Invalid.*weight"
+  )
+})
+
+test_that("system_of_equations treats a weight on the left-hand side of an
+identity like dividing every right-hand weight by it", {
+  stochastic <- c("a~a.L(1)", "b~b.L(1)")
+  short <- system_of_equations(
+    c(stochastic, "(nx) * x == (na) * a + (nb) * b"),
+    character()
+  )
+  long <- system_of_equations(
+    c(stochastic, "x == (na/nx) * a + (nb/nx) * b"),
+    character()
+  )
+
+  expect_equal(short, long)
+  expect_equal(short$weight_variables, c("na", "nb", "nx"))
+})
+
 test_that("system_of_equations expands dummies() and requires the expanded
 names to be declared as exogenous", {
   equation <- "consp~ydispbr+consp.L(1)+dummies(covid,1:8)"

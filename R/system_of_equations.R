@@ -11,7 +11,10 @@
 #' - Stochastic equations use `~` (e.g. `y ~ x1 + x2`).
 #' - Identity equations use `==` (e.g. `y == 0.5*x1 + 0.5*x2`). A component
 #' without a weight has the weight 1, or -1 after a minus (e.g.
-#' `d == x1 - x1.L(1)`).
+#' `d == x1 - x1.L(1)`). Weights computed from data are written in
+#' parentheses, e.g. `y == (nom_x1/nom_y)*x1 + (nom_x2/nom_y)*x2`, or shorter
+#' with the aggregate's weight on the left-hand side,
+#' `(nom_y)*y == (nom_x1)*x1 + (nom_x2)*x2`.
 #' - Lagged variables are denoted by `X.L(x)` for variable `X` and lag `L(x)`
 #'  (e.g. `.L(1)`, `.L(2)`).
 #' - Dummy variables can be written as
@@ -93,6 +96,7 @@ system_of_equations <- function(equations = vector(),
   # syntax the rest of the pipeline already understands, before priors,
   # settings, or validation ever see the equation.
   equations <- expand_dummies(equations)
+  equations <- expand_lhs_weight(equations)
 
   # Validate priors before parse_equation() strips the "{...}" syntax out of
   # the equation. validate_priors() needs to see the raw prior text to catch
@@ -875,6 +879,70 @@ expand_dummies <- function(equations) {
     }
 
     equation
+  }, character(1), USE.NAMES = FALSE)
+}
+
+#' Expand a Weight on the Left-Hand Side of an Identity
+#'
+#' @description
+#' Rewrites an identity with a weight on its aggregate, e.g.
+#' `(nx)*x==(na)*a+(nb)*b`, into the long form the rest of the pipeline
+#' understands, `x==(na/nx)*a+(nb/nx)*b`, by dividing every right-hand weight
+#' by the aggregate's weight. Both forms give the same identity weights.
+#'
+#' The aggregate's weight must be a single variable, and every right-hand
+#' term must have a weight made of variables joined by `*` or `/` (optionally
+#' negated). An unweighted or numeric term divided by the aggregate's weight
+#' would not be a share, and `+` or `-` inside a weight is not supported by
+#' the equation parser. Other equations are returned unchanged.
+#'
+#' @param equations A character vector of equation strings without spaces.
+#'
+#' @return A character vector of equations with every left-hand weight
+#' expanded.
+#' @keywords internal
+expand_lhs_weight <- function(equations) {
+  name <- "[A-Za-z][A-Za-z0-9_.]*"
+  lhs_pattern <- "^\\(([^()]*)\\)\\*([^=]*)==(.*)$"
+  term_pattern <- "^([+-]?)\\(([^()]*)\\)\\*(.+)$"
+  weight_pattern <- paste0("^-?", name, "([*/]", name, ")*$")
+
+  vapply(equations, function(equation) {
+    parts <- regmatches(equation, regexec(lhs_pattern, equation))[[1]]
+    if (length(parts) == 0) {
+      return(equation)
+    }
+    lhs_weight <- parts[2]
+    lhs <- parts[3]
+    rhs <- parts[4]
+
+    if (!grepl(paste0("^", name, "$"), lhs_weight)) {
+      cli::cli_abort(c(
+        "!" = "Invalid weight {.code ({lhs_weight})} on the left-hand side of
+        {.code {equation}}.",
+        "i" = "The aggregate's weight must be a single variable, e.g.
+        {.code (nx)*x==(na)*a+(nb)*b}."
+      ))
+    }
+
+    # split before every + or - that is not inside parentheses
+    terms <- strsplit(rhs, "(?<=.)(?=[+-](?![^(]*\\)))", perl = TRUE)[[1]]
+    terms <- vapply(terms, function(term) {
+      term_parts <- regmatches(term, regexec(term_pattern, term))[[1]]
+      if (length(term_parts) == 0 || !grepl(weight_pattern, term_parts[3])) {
+        cli::cli_abort(c(
+          "!" = "Invalid weight on term {.code {term}} in {.code {equation}}.",
+          "i" = "With a weight on the left-hand side, every right-hand term
+          needs a weight of variables joined by {.code *} or {.code /}, e.g.
+          {.code (na)*a}."
+        ))
+      }
+      paste0(
+        term_parts[2], "(", term_parts[3], "/", lhs_weight, ")*", term_parts[4]
+      )
+    }, character(1), USE.NAMES = FALSE)
+
+    paste0(lhs, "==", paste(terms, collapse = ""))
   }, character(1), USE.NAMES = FALSE)
 }
 
