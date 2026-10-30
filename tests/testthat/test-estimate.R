@@ -1440,6 +1440,31 @@ test_that("format.koma_estimate avoids substring replacement", {
   ))
 })
 
+test_that("format.koma_estimate shows the numeric identity weights", {
+  equations <- "y ~ x + y.L(1),
+  z == (nom_y/nom_z)*y + (nom_x/nom_z)*x"
+  sys_eq <- system_of_equations(equations, exogenous_variables = "x")
+  # estimate() replaces the weight expressions by their values
+  sys_eq$identities$z$weights <- list(theta_gamma2_1 = 0.6, theta_beta2_3 = 0.4)
+
+  estimates <- list(
+    y = list(
+      beta_jw = replicate(5, c(1.1, 0.5, 0.3), simplify = FALSE),
+      gamma_jw = replicate(5, NA_real_, simplify = FALSE)
+    )
+  )
+  est <- structure(
+    list(estimates = estimates, sys_eq = sys_eq),
+    class = "koma_estimate"
+  )
+
+  formatted <- cli::ansi_strip(paste(format(est), collapse = "\n"))
+
+  expect_match(formatted, "0\\.6\\s*\\*\\s*y\\b")
+  expect_match(formatted, "0\\.4\\s*\\*\\s*x\\b")
+  expect_no_match(formatted, "nom_")
+})
+
 test_that("identity equations can be placed anywhere in the system, not only last", {
   skip_on_cran()
   dates <- list(estimation = list(start = c(1977, 1), end = c(2019, 4)))

@@ -541,18 +541,20 @@ format.koma_estimate <- function(x,
       }
     }
     # replace calculated weights for identity equations
-    if (grepl("\\(*\\)", lhs)) {
-      lhs <- sub("\\([^)]*\\)\\*", "", lhs)
-      iden <- x$sys_eq$identities[[lhs]]
+    iden <- x$sys_eq$identities[[lhs]]
+    if (op == "==" && !is.null(iden)) {
       # Replace the components with their weights
       for (component in names(iden$components)) {
         weight_name <- iden$components[[component]]
-        weight <- round(iden$weights[[weight_name]], digits)
+        weight <- iden$weights[[weight_name]]
+        if (!is.numeric(weight)) next
         # Regular expression to find the pattern (value)*component
-        pattern <- paste0("\\(([^\\)]+)\\)\\*", component)
-        replacement <- paste0(weight, "*", component)
+        pattern <- paste0(
+          "\\(([^\\)]+)\\)\\*", escape_regex(component), "(?![A-Za-z0-9_\\.])"
+        )
+        replacement <- paste0(round(weight, digits), "*", component)
 
-        rhs <- sub(pattern, replacement, rhs)
+        rhs <- sub(pattern, replacement, rhs, perl = TRUE)
       }
     }
     # replace +- with -
