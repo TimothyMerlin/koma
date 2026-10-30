@@ -229,6 +229,21 @@ test_that("density forecast draws have the variance of the shocks", {
   # Var(y_{T+h}) = sigma^2 * (1 + phi^2 + ... + phi^(2(h-1)))
   expected <- sigma2 * cumsum(phi^(2 * (0:2)))
   expect_equal(apply(draws, 2, stats::var), expected, tolerance = 0.1)
+
+  # y ends a quarter before the forecast: each draw fills 2022 Q4 with its own
+  # shock, so the forecast has the variance of one more period
+  # with the lags, as stored by estimate() and used to fill the edge
+  estimates$ts_data <- create_lagged_variables(
+    list(y = stats::window(y, end = c(2022, 3)), x = x),
+    "y", "x", sys_eq$predetermined_variables
+  )
+  out <- withr::with_seed(1, forecast(estimates, dates))
+  draws <- t(vapply(
+    out$forecasts, function(draw) as.numeric(draw[, "y"]), numeric(3)
+  ))
+  expect_equal(stats::start(out$forecasts[[1]]), c(2023, 1))
+  expected <- sigma2 * cumsum(phi^(2 * (0:3)))[2:4]
+  expect_equal(apply(draws, 2, stats::var), expected, tolerance = 0.1)
 })
 
 test_that("estimate and forecast support monthly single-frequency data", {
@@ -1406,6 +1421,81 @@ test_that("density forecasts keep the unadjusted draws", {
   expect_equal(out$unadjusted$mean, base$mean)
   expect_equal(out$unadjusted$quantiles, base$quantiles)
   expect_true(out$mean$service[1] > base$mean$service[1])
+})
+
+test_that("density forecasts fill the ragged edge in each draw", {
+  skip_on_cran()
+  testthat::local_mocked_bindings(
+    readline = function(...) "y",
+    .package = "base"
+  )
+  equations <- "manufacturing ~ world_gdp + manufacturing.L(1),
+    service ~ population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service"
+  # estimate() fills manufacturing and gdp in 2022 Q4, forecast() fills all
+  # variables in 2023 Q1
+  model <- estimate_adjustment_model(
+    equations,
+    estimation_end = c(2022, 4),
+    data_end = list(
+      manufacturing = c(2022, 3), gdp = c(2022, 3), service = c(2022, 4)
+    )
+  )
+  est <- model$est
+  restrictions <- list(service = list(value = 0.5, date = c(2023, 2)))
+
+  # each draw starts after 2022 Q3; the observed value of service in 2022 Q4
+  # and the restriction, two quarters later, are restrictions
+  captured <- NULL
+  original <- forecast_sem
+  testthat::with_mocked_bindings(
+    expect_error(
+      forecast(est, model$dates, restrictions = restrictions),
+      "captured"
+    ),
+    # conditional_fill() calls it before, without fill_periods
+    forecast_sem = function(...) {
+      args <- list(...)
+      if (is.null(args$fill_periods)) {
+        return(original(...))
+      }
+      captured <<- args
+      stop("captured")
+    }
+  )
+  observed <- as.numeric(stats::window(
+    rate(simulated_data$ts_data$service),
+    start = c(2022, 4), end = c(2022, 4)
+  ))
+  expect_equal(
+    captured[[3]],
+    list(service = list(horizon = c(1, 3), value = c(observed, 0.5)))
+  )
+  expect_equal(nrow(captured[[4]]), sum(stats::time(est$y_matrix) <= 2022.5))
+  expect_equal(captured[[6]], 6)
+  expect_equal(captured$fill_periods, 2)
+
+  out <- withr::with_seed(3, forecast(est, model$dates, restrictions = restrictions))
+  expect_equal(stats::start(out$mean$service), c(2023, 2))
+  for (draw in out$forecasts) {
+    expect_equal(stats::start(draw), c(2023, 2))
+    expect_equal(nrow(draw), 4)
+    expect_equal(unname(draw[1, "service"]), 0.5)
+  }
+
+  # adjustments start at the forecast, after the filled quarters
+  out <- withr::with_seed(3, forecast(est, model$dates,
+    adjustments = list(service = list(value = 0.5, horizon = 1))
+  ))
+  expect_equal(
+    out$adjustments$service,
+    stats::ts(c(0.5, 0, 0, 0), start = c(2023, 2), frequency = 4)
+  )
+  expect_true(out$mean$service[1] > out$unadjusted$mean$service[1])
+
+  # filled once with approximate = TRUE, as before
+  out <- forecast(est, model$dates, options = list(approximate = TRUE))
+  expect_equal(stats::start(out$mean$service), c(2023, 2))
 })
 
 test_that("restrictions and adjustments cannot be combined", {

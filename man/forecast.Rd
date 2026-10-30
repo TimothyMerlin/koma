@@ -91,7 +91,8 @@ mean/median of coefficient draws (fast approximation).
 quantiles are returned. When \code{approximate = FALSE} and \code{probs} is
 NULL, defaults to \code{setdiff(get_quantiles(), 0.5)}.
 \item \code{fill$method}: "mean" or "median" used for conditional fill
-before forecasting.
+before forecasting. Density forecasts fill in each draw instead (see
+Details) and keep this fill only in the returned \code{ts_data}.
 \item \code{conditional_innov_method}: Method for drawing conditional
 innovations. One of \code{"projection"} (default) or \code{"eigen"}.
 }}
@@ -139,9 +140,16 @@ Each predictive draw uses the coefficients of one posterior draw and draws
 new structural shocks for every forecast period, so the quantiles include
 both parameter and shock uncertainty. The structural shocks are independent
 across equations, with the variance of the draw. Exogenous variables are
-taken as given, without uncertainty. Periods before the forecast that are
-filled because a series ends earlier (ragged edge) are filled once, with
-the mean or median coefficients, so their uncertainty is not included.
+taken as given, without uncertainty.
+
+If a series ends before the forecast (ragged edge), the missing periods are
+filled conditional on the observed values of the other variables. Each
+predictive draw fills them with its own coefficients and shocks, starting
+after the last period in which all endogenous variables are observed, so
+the quantiles include their uncertainty. This includes periods that
+\code{\link{estimate}} filled for estimation. With
+\code{options$approximate = TRUE}, the missing periods are filled once,
+with the mean or median of the coefficients (\code{options$fill$method}).
 
 The returned \code{koma_forecast} object keeps forecasts as named lists of
 \code{koma_ts} (for \code{mean}, \code{median}, and \code{quantiles}) alongside the input data

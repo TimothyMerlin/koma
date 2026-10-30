@@ -12,6 +12,7 @@
 * `estimate()` now errors early when the sample is too short for equations with flat priors, naming the equations and the degrees of freedom needed, and suggests informative priors. Before, this failed inside the sampler with `v must be >= dimension of S in rwish()`, or, with more regressors than observations, as a rank deficiency that blamed lagged identities (#85).
 * The annual annotations in `plot()` of a forecast now average the quarters (or months) of a year instead of summing them. For rate series such as interest rates (`method = "none"`) and for `method = "diff"`, the annotations were a multiple of the actual value, e.g. 4% for a rate of 1% in every quarter. Annual growth rates of level series (`diff_log`, `percentage`) are unchanged (#134).
 * Printing an estimate now shows the computed weights of identities with data-based weights, e.g. `gdp == 0.55 * consumption` instead of `gdp == (nom_consumption/nom_gdp) * consumption` (#93).
+* Density forecasts with a ragged edge now include the uncertainty of the filled periods. Each draw fills the periods before the forecast with its own coefficients and shocks, conditional on the observed values, instead of starting from one path filled with the mean coefficients. This includes periods filled by `estimate()`. The bands are wider, mostly at the start of the forecast. `options = list(approximate = TRUE)` fills once, as before (#144).
 
 ## Performance
 

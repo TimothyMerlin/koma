@@ -16,7 +16,8 @@ forecast_sem(
   approximate,
   probs,
   conditional_innov_method = "projection",
-  adjustments = NULL
+  adjustments = NULL,
+  fill_periods = 0
 )
 }
 \arguments{
@@ -59,6 +60,10 @@ variables.}
 Adjustments given by date or as time series must already be converted to
 horizons by \code{\link[=dates_to_horizon]{dates_to_horizon()}}. Decaying adjustments are expanded here, to
 the possibly shortened horizon.}
+
+\item{fill_periods}{Number of periods at the start of a density forecast
+that fill the ragged edge, see \code{\link[=fill_in_draws]{fill_in_draws()}}. They are dropped from
+the forecast draws and the adjustments before these are summarised.}
 }
 \value{
 A list containing the forecast values. With adjustments, it also

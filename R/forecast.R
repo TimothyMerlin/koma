@@ -62,7 +62,8 @@
 #'   quantiles are returned. When \code{approximate = FALSE} and \code{probs} is
 #'   NULL, defaults to \code{setdiff(get_quantiles(), 0.5)}.
 #'   \item \code{fill$method}: "mean" or "median" used for conditional fill
-#'   before forecasting.
+#'   before forecasting. Density forecasts fill in each draw instead (see
+#'   Details) and keep this fill only in the returned \code{ts_data}.
 #'   \item \code{conditional_innov_method}: Method for drawing conditional
 #'   innovations. One of \code{"projection"} (default) or \code{"eigen"}.
 #' }
@@ -136,9 +137,16 @@
 #' new structural shocks for every forecast period, so the quantiles include
 #' both parameter and shock uncertainty. The structural shocks are independent
 #' across equations, with the variance of the draw. Exogenous variables are
-#' taken as given, without uncertainty. Periods before the forecast that are
-#' filled because a series ends earlier (ragged edge) are filled once, with
-#' the mean or median coefficients, so their uncertainty is not included.
+#' taken as given, without uncertainty.
+#'
+#' If a series ends before the forecast (ragged edge), the missing periods are
+#' filled conditional on the observed values of the other variables. Each
+#' predictive draw fills them with its own coefficients and shocks, starting
+#' after the last period in which all endogenous variables are observed, so
+#' the quantiles include their uncertainty. This includes periods that
+#' \code{\link{estimate}} filled for estimation. With
+#' \code{options$approximate = TRUE}, the missing periods are filled once,
+#' with the mean or median of the coefficients (\code{options$fill$method}).
 #'
 #' The returned `koma_forecast` object keeps forecasts as named lists of
 #' `koma_ts` (for `mean`, `median`, and `quantiles`) alongside the input data
@@ -275,6 +283,12 @@ new_forecast <- function(estimates, dates, restrictions, adjustments, options) {
   adjustments <- adjustments[
     names(adjustments) %in% estimates$sys_eq$endogenous_variables
   ]
+  if (length(restrictions) > 0 && length(adjustments) > 0) {
+    cli::cli_abort(c(
+      "x" = "{.arg restrictions} and {.arg adjustments} cannot be combined.",
+      "i" = "Use either conditional forecasting or residual adjustments."
+    ))
+  }
   check_last_residuals(adjustments, estimates, dates$current, frequency)
 
   edge <- detect_edge(
@@ -347,13 +361,63 @@ new_forecast <- function(estimates, dates, restrictions, adjustments, options) {
     x_matrix <- NULL
   }
 
-  ##### Forecast model
-  forecasts <- forecast_sem(
-    estimates$sys_eq, estimates$estimates, restrictions, y_matrix, x_matrix,
-    horizon, balanced_data$freq, dates$forecast, approximate, probs,
-    conditional_innov_method,
-    adjustments = adjustments
+  # Shorten the horizon and expand decaying adjustments here, so that they
+  # refer to the forecast periods before they are shifted below.
+  horizon <- shorten_forecast_horizon(horizon, x_matrix)
+  restrictions <- validate_restrictions(
+    restrictions, estimates$sys_eq$endogenous_variables, horizon
   )
+  adjustments <- validate_adjustments(
+    adjustments,
+    estimates$sys_eq$endogenous_variables,
+    names(estimates$sys_eq$identities),
+    horizon
+  )
+
+  ##### Forecast model
+  # Density forecasts fill the ragged edge in each draw: they start after the
+  # last period with all endogenous variables observed, and the restrictions
+  # and adjustments follow the filled periods.
+  fill <- if (!approximate) {
+    fill_in_draws(estimates, rate(ts_data), dates, frequency)
+  }
+  if (is.null(fill)) {
+    forecasts <- forecast_sem(
+      estimates$sys_eq, estimates$estimates, restrictions, y_matrix, x_matrix,
+      horizon, balanced_data$freq, dates$forecast, approximate, probs,
+      conditional_innov_method,
+      adjustments = adjustments
+    )
+  } else {
+    fill_periods <- fill$fill_periods
+    shift <- function(entries) {
+      lapply(entries, function(x) {
+        x$horizon <- x$horizon + fill_periods
+        x
+      })
+    }
+    fill_restrictions <- fill$restrictions
+    for (variable in names(restrictions)) {
+      fill_restrictions[[variable]] <- list(
+        horizon = c(
+          fill_restrictions[[variable]]$horizon,
+          restrictions[[variable]]$horizon + fill_periods
+        ),
+        value = c(
+          fill_restrictions[[variable]]$value,
+          restrictions[[variable]]$value
+        )
+      )
+    }
+    forecasts <- forecast_sem(
+      estimates$sys_eq, estimates$estimates, fill_restrictions,
+      fill$y_matrix, fill$x_matrix, horizon + fill_periods,
+      balanced_data$freq,
+      list(start = fill$start, end = dates$forecast$end),
+      approximate, probs, conditional_innov_method,
+      adjustments = shift(adjustments), fill_periods = fill_periods
+    )
+  }
 
   exogenous_ts_data <- rate(estimates$ts_data[estimates$sys_eq$exogenous_variables])
   exogenous_ts_data <- lapply(exogenous_ts_data, function(x) {

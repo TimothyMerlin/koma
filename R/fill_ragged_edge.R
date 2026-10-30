@@ -127,6 +127,79 @@ fill_ragged_edge <- function(ts_data, sys_eq,
   ts_data
 }
 
+#' Fill the Ragged Edge in Each Forecast Draw
+#'
+#' Prepares a density forecast that fills the periods before the forecast in
+#' each draw, with the coefficients and shocks of the draw, instead of once.
+#' The forecast of each draw starts after the last period in which all
+#' endogenous variables are observed, and the observed values of the periods
+#' up to the forecast are restrictions. Periods filled by [estimate()] count
+#' as unobserved, see `observed_end` in [estimate()].
+#'
+#' @param estimates A `koma_estimate` object (see \code{\link{estimate}}).
+#' @param ts_data The data prepared for the forecast, in rates and with lags.
+#' Up to the edge it is observed.
+#' @param dates The dates of the forecast, with `current`, the period before
+#' the forecast.
+#' @param frequency Number of periods per year.
+#'
+#' @return `NULL` if all endogenous variables are observed up to `current`.
+#' Otherwise a list with `fill_periods`, the number of filled periods, `start`,
+#' the first filled period, `restrictions` for the observed values of the
+#' filled periods, and `y_matrix` and `x_matrix`, the endogenous data up to
+#' the edge and the exogenous data from `start` to the end of the forecast.
+#' @keywords internal
+fill_in_draws <- function(estimates, ts_data, dates, frequency) {
+  sys_eq <- estimates$sys_eq
+  endogenous_variables <- sys_eq$endogenous_variables
+  observed_data <- rate(estimates$ts_data[endogenous_variables])
+  observed_end <- estimates$observed_end
+  if (is.null(observed_end)) {
+    observed_end <- vapply(observed_data, function(x) {
+      stats::tsp(stats::na.omit(x))[2]
+    }, numeric(1))
+  }
+  observed_end <- observed_end[endogenous_variables]
+
+  edge <- min(observed_end)
+  fill_periods <- round((dates$current - edge) * frequency)
+  if (fill_periods < 1) {
+    return(NULL)
+  }
+  start <- iterate_n_periods(edge, 1, frequency)
+
+  # Values after observed_end were filled by estimate(), so they are dropped.
+  observed_data <- lapply(endogenous_variables, function(x) {
+    stats::window(observed_data[[x]], end = observed_end[[x]])
+  })
+  names(observed_data) <- endogenous_variables
+  restricted <- endogenous_variables[observed_end > edge + 0.5 / frequency]
+  restrictions <- set_restrictions(
+    observed_data, restricted,
+    start = start, end = dates$current
+  )
+
+  y_matrix <- construct_balanced_data(
+    ts_data, endogenous_variables, sys_eq$total_exogenous_variables,
+    dates$estimation$start, edge
+  )$y_matrix
+  x_matrix <- NULL
+  if (length(sys_eq$exogenous_variables) > 0) {
+    x_matrix <- stats::window(
+      as_mets(ts_data[sys_eq$exogenous_variables]),
+      start = start, end = dates$forecast$end
+    )
+  }
+
+  list(
+    fill_periods = fill_periods,
+    start = start,
+    restrictions = restrictions,
+    y_matrix = y_matrix,
+    x_matrix = x_matrix
+  )
+}
+
 #' Conditional Fill and Forecast for Time Series Data
 #'
 #' This function fills missing observations and extends the time series data

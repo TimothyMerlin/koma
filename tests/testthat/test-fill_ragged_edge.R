@@ -105,6 +105,66 @@ test_that("fill_ragged_edge - no observations to fill", {
   expect_length(result$current_account, 200)
 })
 
+test_that("fill_in_draws restricts the observed values of the ragged edge", {
+  sys_eq <- system_of_equations(
+    "manufacturing ~ world_gdp + manufacturing.L(1),
+    service ~ population + gdp,
+    gdp == 0.5*manufacturing + 0.5*service",
+    c("world_gdp", "population")
+  )
+  endogenous <- sys_eq$endogenous_variables
+  data <- rate(simulated_data$ts_data[c(endogenous, sys_eq$exogenous_variables)])
+  data$gdp <- stats::window(data$gdp, end = c(2022, 3))
+  data[c("manufacturing", "service")] <- lapply(
+    data[c("manufacturing", "service")], stats::window,
+    end = c(2023, 1)
+  )
+  # manufacturing in 2023 Q1 was filled by estimate()
+  estimates <- list(
+    sys_eq = sys_eq,
+    ts_data = data,
+    observed_end = c(manufacturing = 2022.75, service = 2023, gdp = 2022.5)
+  )
+  ts_data <- create_lagged_variables(
+    data, endogenous, sys_eq$exogenous_variables, sys_eq$predetermined_variables
+  )
+  dates <- list(
+    estimation = list(start = 1977, end = 2019.75),
+    forecast = list(start = 2023.25, end = 2024),
+    current = 2023
+  )
+  observed <- function(x, start, end) {
+    as.numeric(stats::window(data[[x]], start = start, end = end))
+  }
+
+  fill <- fill_in_draws(estimates, ts_data, dates, frequency = 4)
+
+  # gdp ends first, in 2022 Q3; 2022 Q4 and 2023 Q1 are filled
+  expect_equal(fill$fill_periods, 2)
+  expect_equal(fill$start, 2022.75)
+  # only observed values are restrictions, not those filled by estimate()
+  expect_equal(fill$restrictions, list(
+    manufacturing = list(
+      horizon = 1, value = observed("manufacturing", 2022.75, 2022.75)
+    ),
+    service = list(horizon = 1:2, value = observed("service", 2022.75, 2023))
+  ))
+  expect_equal(stats::tsp(fill$y_matrix)[2], 2022.5)
+  expect_equal(stats::tsp(fill$x_matrix)[1:2], c(2022.75, 2024))
+  expect_equal(colnames(fill$x_matrix), sys_eq$exogenous_variables)
+
+  # without observed_end, the ends of the data count as observed
+  estimates$observed_end <- NULL
+  fill <- fill_in_draws(estimates, ts_data, dates, frequency = 4)
+  expect_equal(fill$restrictions$manufacturing, list(
+    horizon = 1:2, value = observed("manufacturing", 2022.75, 2023)
+  ))
+
+  # all observed up to the forecast: nothing to fill
+  estimates$observed_end <- c(manufacturing = 2023, service = 2023, gdp = 2023)
+  expect_null(fill_in_draws(estimates, ts_data, dates, frequency = 4))
+})
+
 test_that("conditional_fill fills up edge correctly", {
   skip_on_cran()
   # Case: test shortens current account data, which sem will fill with

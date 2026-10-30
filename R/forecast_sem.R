@@ -16,6 +16,9 @@
 #' Adjustments given by date or as time series must already be converted to
 #' horizons by [dates_to_horizon()]. Decaying adjustments are expanded here, to
 #' the possibly shortened horizon.
+#' @param fill_periods Number of periods at the start of a density forecast
+#' that fill the ragged edge, see [fill_in_draws()]. They are dropped from
+#' the forecast draws and the adjustments before these are summarised.
 #' @inheritParams forecast
 #' @inheritParams estimate
 #'
@@ -28,7 +31,7 @@ forecast_sem <- function(sys_eq, estimates,
                          restrictions, y_matrix, forecast_x_matrix, horizon,
                          freq, forecast_dates, approximate, probs,
                          conditional_innov_method = "projection",
-                         adjustments = NULL) {
+                         adjustments = NULL, fill_periods = 0) {
   # The same for every draw, so shorten (and warn) once in the main process
   # instead of per draw, where multisession workers cannot share the state.
   horizon <- shorten_forecast_horizon(horizon, forecast_x_matrix)
@@ -41,12 +44,6 @@ forecast_sem <- function(sys_eq, estimates,
   adjustments <- validate_adjustments(
     adjustments, sys_eq$endogenous_variables, names(sys_eq$identities), horizon
   )
-  if (length(restrictions) > 0 && length(adjustments) > 0) {
-    cli::cli_abort(c(
-      "x" = "{.arg restrictions} and {.arg adjustments} cannot be combined.",
-      "i" = "Use either conditional forecasting or residual adjustments."
-    ))
-  }
   adjustment_matrix <- NULL
   if (length(adjustments) > 0) {
     adjustment_matrix <- matrix(0,
@@ -195,6 +192,14 @@ forecast_sem <- function(sys_eq, estimates,
     }
 
     forecasts <- lapply(forecasts, split_unadjusted)
+    if (fill_periods > 0) {
+      forecasts <- lapply(forecasts, lapply, function(x) {
+        if (is.null(x)) {
+          return(x)
+        }
+        stats::window(x, start = stats::tsp(x)[1] + fill_periods / freq)
+      })
+    }
     unadjusted_forecasts <- lapply(forecasts, `[[`, "unadjusted")
     forecasts <- lapply(forecasts, `[[`, "adjusted")
 
@@ -227,6 +232,9 @@ forecast_sem <- function(sys_eq, estimates,
     }
   }
 
+  if (!is.null(adjustment_matrix) && fill_periods > 0) {
+    adjustment_matrix <- adjustment_matrix[, -seq_len(fill_periods), drop = FALSE]
+  }
   out$adjustment_matrix <- adjustment_matrix
   out
 }
@@ -575,8 +583,9 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
   }
 
   # Adjustments shift the structural residuals; like the shocks, they enter
-  # the forecast as reduced-form innovations. forecast_sem() rejects
-  # adjustments together with restrictions.
+  # the forecast as reduced-form innovations. forecast() rejects adjustments
+  # together with restrictions of the user; the only restrictions here fill
+  # the ragged edge, in periods before the adjustments start.
   v_adjustment <- solve(t(posterior$gamma_matrix), adjustment_matrix)
   ts_out <- as_forecast_ts(simulate(vc + v_adjustment))
   attr(ts_out, "unadjusted") <- as_forecast_ts(simulate(vc))
