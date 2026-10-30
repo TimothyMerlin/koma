@@ -148,7 +148,7 @@ new_plot <- function(x, ...) {
   }
 
   out_annual <- tempdisagg::ta(level(out),
-    conversion = "sum", to = "annual"
+    conversion = "average", to = "annual"
   )
 
   df_long <- prepare_data_to_plot(

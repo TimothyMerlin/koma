@@ -243,6 +243,37 @@ test_that("plot.koma_forecast() validates variables", {
   }
 })
 
+test_that("annual annotations average the quarters of rate series", {
+  skip_if_not_installed("plotly")
+  as_rate <- function(x) as_ets(x, series_type = "rate", method = "none")
+  as_level <- function(x) as_ets(x, series_type = "level", method = "diff_log")
+  fake_forecast <- structure(
+    list(
+      mean = list(
+        interest_rate = as_rate(ts(rep(2, 4), start = c(2022, 1), freq = 4)),
+        gdp = as_level(ts(rep(110, 4), start = c(2022, 1), freq = 4))
+      ),
+      ts_data = list(
+        interest_rate = as_rate(ts(rep(1, 8), start = c(2020, 1), freq = 4)),
+        gdp = as_level(ts(rep(100, 8), start = c(2020, 1), freq = 4))
+      )
+    ),
+    class = "koma_forecast"
+  )
+  annotation_text <- function(variable) {
+    fig <- plot(fake_forecast, variables = variable)
+    vapply(fig$x$layoutAttrs[[1]]$annotations, `[[`, character(1), "text")
+  }
+
+  # a rate of 1% in each quarter is 1% for the year, not 4%
+  expect_equal(
+    annotation_text("interest_rate"),
+    c("<b>1</b>%", "<b>1</b>%", "<b>2</b>%")
+  )
+  # growth of a level series is the same for annual sums and averages
+  expect_equal(annotation_text("gdp")[3], "<b>9.53</b>%")
+})
+
 test_that("plot.koma_forecast() errors cleanly when plotly is missing", {
   skip_if(
     requireNamespace("plotly", quietly = TRUE),
