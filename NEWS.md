@@ -13,6 +13,10 @@
 * The annual annotations in `plot()` of a forecast now average the quarters (or months) of a year instead of summing them. For rate series such as interest rates (`method = "none"`) and for `method = "diff"`, the annotations were a multiple of the actual value, e.g. 4% for a rate of 1% in every quarter. Annual growth rates of level series (`diff_log`, `percentage`) are unchanged (#134).
 * Printing an estimate now shows the computed weights of identities with data-based weights, e.g. `gdp == 0.55 * consumption` instead of `gdp == (nom_consumption/nom_gdp) * consumption` (#93).
 
+## Performance
+
+* Conditional forecasts only condition the shocks up to the last restricted period, so restrictions early in a long horizon are much faster, especially in large models. The forecasts are unchanged, except that density forecasts with `conditional_innov_method = "eigen"` give different draws for the same seed (the distribution is the same).
+
 # koma 0.4.1
 
 ## Breaking changes

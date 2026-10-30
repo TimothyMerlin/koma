@@ -461,10 +461,19 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
         unname(posterior$gamma_matrix)
     )
 
-    psi_transpose <- vector("list", horizon)
+    # Only the innovations up to the last restricted period enter the
+    # restrictions, so only these are conditioned; the later ones stay
+    # unconditional.
+    restricted_horizon <- max(unlist(lapply(restrictions, `[[`, "horizon")))
+    if (restricted_horizon < 1 || restricted_horizon > horizon) {
+      stop("hx must be in 1..horizon")
+    }
+    restricted_periods <- seq_len(restricted_horizon)
+
+    psi_transpose <- vector("list", restricted_horizon)
     a_pow <- diag(n * p)
 
-    for (j in seq_len(horizon)) {
+    for (j in restricted_periods) {
       psi_transpose[[j]] <- j_matrix %*% t(a_pow) %*% t(j_matrix) # Psi_{j-1}^0
       a_pow <- a_pow %*% companion_theta # next power
     }
@@ -475,7 +484,7 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
     number_restrictions <- sum(
       vapply(restrictions, function(x) length(x[["horizon"]]), 1L)
     )
-    R <- matrix(0, nrow = number_restrictions, ncol = n * horizon)
+    R <- matrix(0, nrow = number_restrictions, ncol = n * restricted_horizon)
     r <- matrix(0, nrow = number_restrictions, ncol = 1)
 
     rr <- 1L
@@ -500,7 +509,7 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
       }
     }
     stopifnot(rr - 1L == number_restrictions)
-    stopifnot(ncol(R) == n * horizon)
+    stopifnot(ncol(R) == n * restricted_horizon)
 
     # Omega = (Gamma^{-1})' Sigma Gamma^{-1}
     # omega_matrix <- t(inv_gamma) %*% posterior$sigma_matrix %*% inv_gamma
@@ -512,7 +521,7 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
     # (theoretically symmetric; numerical operations may introduce asymmetry)
     omega_matrix <- 0.5 * (omega_matrix + t(omega_matrix))
     # isTRUE(all.equal(omega_matrix, t(omega_matrix)))
-    omega_matrix_h <- kronecker(diag(horizon), omega_matrix)
+    omega_matrix_h <- kronecker(diag(restricted_horizon), omega_matrix)
 
     #    mvc <- sigma_v %*% t(R) %*% solve(R %*% sigma_v %*% t(R)) %*% r
     A <- R %*% omega_matrix_h %*% t(R)
@@ -542,7 +551,7 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
     }
 
     v_cond <- draw_conditional_innovations(
-      v_uncond_vec = as.vector(v_matrix),
+      v_uncond_vec = as.vector(v_matrix[, restricted_periods]),
       omega_matrix_h = omega_matrix_h,
       R = R,
       r = r,
@@ -550,7 +559,8 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
       method = conditional_innov_method
     )
     v_cond_vec <- if (stochastic) v_cond$draw_vec else v_cond$mean_vec
-    vc <- matrix(v_cond_vec, nrow = n, ncol = horizon)
+    vc <- if (stochastic) v_matrix else matrix(0, nrow = n, ncol = horizon)
+    vc[, restricted_periods] <- v_cond_vec
   }
 
   as_forecast_ts <- function(out) {
