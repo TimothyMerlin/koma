@@ -435,6 +435,141 @@ test_that("dynamic identity weights retain endogenous and exogenous values", {
   expect_identical(unname(identities$y$weights), list(0.3, 0.7))
 })
 
+# Component volumes and lagged nominal shares, in the format of
+# calculate_eq_weights(), from quarterly prices and quantities.
+chain_link_inputs <- function(prices, quantities, signs, start = c(1990, 1)) {
+  year <- start[1] + (seq_len(nrow(quantities)) + start[2] - 2) %/% 4
+  annual_nominal <- rowsum(prices * quantities, year)
+  totals <- drop(annual_nominal %*% signs)
+  share_start <- as.numeric(rownames(annual_nominal)[1]) + 1
+  components <- colnames(quantities)
+  levels <- lapply(components, function(comp) {
+    stats::ts(quantities[, comp], start = start, frequency = 4)
+  })
+  shares <- lapply(seq_along(components), function(i) {
+    stats::ts(signs[i] * annual_nominal[, i] / totals,
+      start = share_start, frequency = 1
+    )
+  })
+  names(levels) <- names(shares) <- components
+  list(levels = levels, shares = shares)
+}
+
+# Textbook annual overlap: value each quarter at the average prices of the
+# previous year and link it to the previous year's average at those prices.
+annual_overlap <- function(prices, quantities, signs) {
+  year <- 1990 + (seq_len(nrow(quantities)) - 1) %/% 4
+  annual_price <- rowsum(prices * quantities, year) / rowsum(quantities, year)
+  annual_quantity <- rowsum(quantities, year) / 4
+  out <- c()
+  base <- 100
+  for (y in unique(year)[-1]) {
+    previous_price <- signs * annual_price[as.character(y - 1), ]
+    at_previous_prices <- drop(quantities[year == y, ] %*% previous_price)
+    previous_average <- sum(previous_price * annual_quantity[as.character(y - 1), ])
+    level <- base * at_previous_prices / previous_average
+    out <- c(out, level)
+    base <- mean(level)
+  }
+  stats::ts(out, start = c(1991, 1), frequency = 4)
+}
+
+random_walk <- function(n, k, scale) {
+  scale * exp(apply(matrix(rnorm(n * k, sd = 0.02), n, k), 2, cumsum))
+}
+
+test_that("chain_link matches annual overlap at previous-year prices", {
+  set.seed(1)
+  quantities <- random_walk(24, 3, c(100, 60, 30))
+  prices <- random_walk(24, 3, 1)
+  colnames(quantities) <- colnames(prices) <- c("consumption", "exports", "imports")
+  signs <- c(1, 1, -1)
+  inputs <- chain_link_inputs(prices, quantities, signs)
+
+  result <- chain_link(inputs$levels, inputs$shares)
+
+  expect_equal(result, annual_overlap(prices, quantities, signs))
+})
+
+test_that("chain_link with constant prices grows like the fixed-price sum", {
+  set.seed(2)
+  quantities <- random_walk(20, 2, c(100, 50))
+  colnames(quantities) <- c("manufacturing", "service")
+  prices <- matrix(c(1.2, 0.8), nrow = 20, ncol = 2, byrow = TRUE)
+  inputs <- chain_link_inputs(prices, quantities, c(1, 1))
+
+  result <- chain_link(inputs$levels, inputs$shares)
+
+  fixed_price_sum <- stats::window(
+    stats::ts(drop(quantities %*% c(1.2, 0.8)), start = 1990, frequency = 4),
+    start = 1991
+  )
+  expect_equal(
+    as.numeric(result / stats::lag(result, -1)),
+    as.numeric(fixed_price_sum / stats::lag(fixed_price_sum, -1))
+  )
+})
+
+test_that("chain_link of a single component follows the component", {
+  component <- stats::ts(100 * 1.01^(0:15), start = 1990, frequency = 4)
+  shares <- stats::ts(rep(1, 3), start = 1991, frequency = 1)
+
+  result <- chain_link(list(a = component), list(a = shares))
+
+  expected <- 100 * stats::window(component, start = 1991) / mean(component[1:4])
+  expect_equal(result, expected)
+})
+
+test_that("chain_link does not depend on the scale of component levels", {
+  set.seed(3)
+  quantities <- random_walk(16, 2, c(100, 50))
+  prices <- random_walk(16, 2, 1)
+  colnames(quantities) <- colnames(prices) <- c("a", "b")
+  inputs <- chain_link_inputs(prices, quantities, c(1, 1))
+  rescaled <- inputs$levels
+  rescaled$a <- 1000 * rescaled$a
+
+  expect_equal(
+    chain_link(rescaled, inputs$shares),
+    chain_link(inputs$levels, inputs$shares)
+  )
+})
+
+test_that("chain_link does not require shares that add up to 1", {
+  set.seed(4)
+  quantities <- random_walk(16, 2, c(100, 50))
+  prices <- random_walk(16, 2, 1)
+  colnames(quantities) <- colnames(prices) <- c("a", "b")
+  inputs <- chain_link_inputs(prices, quantities, c(1, 1))
+  scaled_shares <- lapply(inputs$shares, function(x) 0.9 * x)
+
+  expect_equal(
+    chain_link(inputs$levels, scaled_shares),
+    chain_link(inputs$levels, inputs$shares)
+  )
+})
+
+test_that("chain_link starts after the first complete year", {
+  set.seed(5)
+  # 1990 Q2 to 1993 Q3: 1990 and 1993 are incomplete.
+  quantities <- random_walk(14, 2, c(100, 50))
+  prices <- random_walk(14, 2, 1)
+  colnames(quantities) <- colnames(prices) <- c("a", "b")
+  inputs <- chain_link_inputs(prices, quantities, c(1, 1), start = c(1990, 2))
+
+  result <- chain_link(inputs$levels, inputs$shares)
+
+  expect_equal(stats::start(result), c(1992, 1))
+  expect_equal(stats::end(result), c(1993, 3))
+})
+
+test_that("chain_link stops when components and shares differ", {
+  levels <- list(a = stats::ts(1:8, start = 1990, frequency = 4))
+  shares <- list(b = stats::ts(1, start = 1991, frequency = 1))
+
+  expect_error(chain_link(levels, shares), "must match")
+})
+
 test_that("update_identity_weights throws error when NA", {
   weights <- list(gdp = list(manufacturing = 0.4, service = NA))
 

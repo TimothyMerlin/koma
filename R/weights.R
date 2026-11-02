@@ -199,3 +199,88 @@ update_identity_weights <- function(weights, identities) {
 
   identities
 }
+
+#' Chain-Link an Aggregate with Annual Overlap
+#'
+#' Builds the volume of an aggregate from the volumes of its components, the
+#' way national accounts chain-link with annual overlap: within year \eqn{y},
+#' the components are valued at the average prices of year \eqn{y-1}, and each
+#' year is linked to the average of the previous year,
+#' \deqn{\frac{x_{q,y}}{\bar{x}_{y-1}} = \frac{\sum_i s_{i,y-1}\,
+#' x_{i,q,y}/\bar{x}_{i,y-1}}{\sum_i s_{i,y-1}},}
+#' where \eqn{s_{i,y-1}} is the nominal share of component \eqn{i} in year
+#' \eqn{y-1} and bars denote annual averages. Dividing by the sum of the shares
+#' links each year exactly, also when the shares do not add up to 1.
+#'
+#' @param levels A named list of `stats::ts` objects with the volumes (real
+#' levels) of the components, all of the same frequency.
+#' @param shares A named list of annual `stats::ts` objects with the same names
+#' as `levels`. The value in year \eqn{y} is the share of year \eqn{y-1}, as
+#' returned for an identity by `calculate_eq_weights()`. Subtracted components
+#' have negative shares.
+#'
+#' @return A `stats::ts` object with the volume of the aggregate. It starts in
+#' the first year with shares and a complete previous year of all components;
+#' the average of that previous year is 100. Only its growth rates are
+#' meaningful.
+#' @keywords internal
+chain_link <- function(levels, shares) {
+  components <- names(levels)
+  if (!setequal(components, names(shares))) {
+    cli::cli_abort(c(
+      "!" = "Components of {.arg levels} and {.arg shares} must match.",
+      "x" = "{.arg levels}: {.val {components}}; {.arg shares}: {.val {names(shares)}}."
+    ))
+  }
+
+  frequency <- stats::frequency(levels[[1]])
+  start <- max(vapply(levels, function(x) stats::tsp(x)[1], numeric(1)))
+  end <- min(vapply(levels, function(x) stats::tsp(x)[2], numeric(1)))
+  periods <- round(seq(start, end, by = 1 / frequency) * frequency)
+  year <- periods %/% frequency
+
+  ratio_terms <- lapply(components, function(comp) {
+    x <- as.numeric(stats::window(levels[[comp]], start, end))
+    # Averages of complete years only
+    annual_mean <- tapply(x, year, mean)
+    annual_mean[tapply(x, year, length) < frequency] <- NA
+    previous_mean <- as.numeric(annual_mean)[match(year - 1, names(annual_mean))]
+
+    share <- shares[[comp]]
+    share_year <- round(stats::time(share))
+    share <- as.numeric(share)[match(year, share_year)]
+
+    list(weighted = share * x / previous_mean, share = share)
+  })
+  weighted <- Reduce(`+`, lapply(ratio_terms, `[[`, "weighted"))
+  share_sum <- Reduce(`+`, lapply(ratio_terms, `[[`, "share"))
+  ratio <- weighted / share_sum
+
+  valid <- which(!is.na(ratio))
+  if (!length(valid)) {
+    cli::cli_abort(c(
+      "!" = "Cannot chain-link the aggregate.",
+      "x" = "No year has shares and a complete previous year of all components."
+    ))
+  }
+  if (any(diff(valid) != 1L)) {
+    cli::cli_abort(c(
+      "!" = "Cannot chain-link the aggregate.",
+      "x" = "Shares or component levels are missing within the linked years."
+    ))
+  }
+  ratio <- ratio[valid]
+  year <- year[valid]
+
+  # The average of each year is the base of the next one.
+  annual_ratio <- tapply(ratio, year, mean)
+  base <- 100 * cumprod(c(1, annual_ratio[-length(annual_ratio)]))
+  names(base) <- names(annual_ratio)
+
+  first <- periods[valid[1]]
+  stats::ts(
+    unname(base[as.character(year)] * ratio),
+    start = c(first %/% frequency, first %% frequency + 1),
+    frequency = frequency
+  )
+}
