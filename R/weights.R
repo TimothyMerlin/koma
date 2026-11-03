@@ -215,14 +215,13 @@ update_identity_weights <- function(weights, identities) {
 #' @param levels A named list of `stats::ts` objects with the volumes (real
 #' levels) of the components, all of the same frequency.
 #' @param shares A named list of annual `stats::ts` objects with the same names
-#' as `levels`. The value in year \eqn{y} is the share of year \eqn{y-1}, as
-#' returned for an identity by `calculate_eq_weights()`. Subtracted components
+#' as `levels`, with the nominal share of each year. Subtracted components
 #' have negative shares.
 #'
 #' @return A `stats::ts` object with the volume of the aggregate. It starts in
-#' the first year with shares and a complete previous year of all components;
-#' the average of that previous year is 100. Only its growth rates are
-#' meaningful.
+#' the first year whose previous year has shares and complete levels of all
+#' components; the average of that previous year is 100. Only its growth rates
+#' are meaningful.
 #' @keywords internal
 chain_link <- function(levels, shares) {
   components <- names(levels)
@@ -246,10 +245,7 @@ chain_link <- function(levels, shares) {
     annual_mean[tapply(x, year, length) < frequency] <- NA
     previous_mean <- as.numeric(annual_mean)[match(year - 1, names(annual_mean))]
 
-    share <- shares[[comp]]
-    share_year <- round(stats::time(share))
-    share <- as.numeric(share)[match(year, share_year)]
-
+    share <- share_of_year(shares[[comp]], year - 1)
     list(weighted = share * x / previous_mean, share = share)
   })
   weighted <- Reduce(`+`, lapply(ratio_terms, `[[`, "weighted"))
@@ -283,4 +279,76 @@ chain_link <- function(levels, shares) {
     start = c(first %/% frequency, first %% frequency + 1),
     frequency = frequency
   )
+}
+
+#' Weights of a Chain-Linked Aggregate
+#'
+#' Computes the weights that aggregate the growth rates of the components to
+#' the growth rate of the aggregate chain-linked by [chain_link()]. For period
+#' \eqn{h} in year \eqn{y},
+#' \deqn{w_{i,h} = \frac{s_{i,y-1}}{\sum_j s_{j,y-1}}
+#' \frac{x_{i,h-1}/\bar{x}_{i,y-1}}{x_{h-1}/\bar{x}_{y-1}},}
+#' where \eqn{x} is the chain-linked aggregate. The simple growth rates then
+#' satisfy
+#' \deqn{g_h = \sum_i w_{i,h}\, g_{i,h} + \Big(\sum_i w_{i,h} - 1\Big).}
+#' Within a year the weights add up to 1. In the first quarter of a year, the
+#' previous quarter is valued at the prices of year \eqn{y-2}, and the second
+#' term links it to the prices of year \eqn{y-1}.
+#'
+#' The weights for period \eqn{h} only use the levels up to \eqn{h-1}, so the
+#' last weights are for the period after the levels.
+#'
+#' @inheritParams chain_link
+#'
+#' @return A named list of `stats::ts` objects with the weights of the
+#' components. They start in the first year with a complete previous year of
+#' the chain-linked aggregate.
+#' @keywords internal
+chain_link_weights <- function(levels, shares) {
+  aggregate <- chain_link(levels, shares)
+  frequency <- stats::frequency(aggregate)
+  # The weights for period h use the levels of h - 1.
+  start <- stats::tsp(aggregate)[1]
+  end <- stats::tsp(aggregate)[2]
+  year <- floor(stats::time(aggregate) + 1 / frequency + 1e-8)
+
+  previous_aggregate <- as.numeric(aggregate) /
+    complete_year_means(aggregate)[as.character(year - 1)]
+  share_sum <- Reduce(`+`, lapply(shares, share_of_year, year - 1))
+
+  weights <- lapply(names(levels), function(comp) {
+    x <- stats::window(levels[[comp]], start, end)
+    previous_component <- as.numeric(x) /
+      complete_year_means(levels[[comp]])[as.character(year - 1)]
+    share_of_year(shares[[comp]], year - 1) / share_sum *
+      previous_component / previous_aggregate
+  })
+  names(weights) <- names(levels)
+
+  valid <- which(!is.na(Reduce(`+`, weights)))
+  if (!length(valid)) {
+    cli::cli_abort(c(
+      "!" = "Cannot compute chain-link weights.",
+      "x" = "No period has shares and a complete previous year of the aggregate."
+    ))
+  }
+  first <- round(start * frequency) + valid[1]
+  lapply(weights, function(w) {
+    stats::ts(unname(w[valid]),
+      start = c(first %/% frequency, first %% frequency + 1),
+      frequency = frequency
+    )
+  })
+}
+
+complete_year_means <- function(x) {
+  frequency <- stats::frequency(x)
+  year <- floor(stats::time(x) + 1e-8)
+  means <- tapply(as.numeric(x), year, mean)
+  means[tapply(as.numeric(x), year, length) < frequency] <- NA
+  means
+}
+
+share_of_year <- function(share, year) {
+  as.numeric(share)[match(year, round(stats::time(share)))]
 }

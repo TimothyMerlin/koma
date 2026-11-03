@@ -435,13 +435,13 @@ test_that("dynamic identity weights retain endogenous and exogenous values", {
   expect_identical(unname(identities$y$weights), list(0.3, 0.7))
 })
 
-# Component volumes and lagged nominal shares, in the format of
-# calculate_eq_weights(), from quarterly prices and quantities.
+# Component volumes and annual nominal shares from quarterly prices and
+# quantities.
 chain_link_inputs <- function(prices, quantities, signs, start = c(1990, 1)) {
   year <- start[1] + (seq_len(nrow(quantities)) + start[2] - 2) %/% 4
   annual_nominal <- rowsum(prices * quantities, year)
   totals <- drop(annual_nominal %*% signs)
-  share_start <- as.numeric(rownames(annual_nominal)[1]) + 1
+  share_start <- as.numeric(rownames(annual_nominal)[1])
   components <- colnames(quantities)
   levels <- lapply(components, function(comp) {
     stats::ts(quantities[, comp], start = start, frequency = 4)
@@ -512,7 +512,7 @@ test_that("chain_link with constant prices grows like the fixed-price sum", {
 
 test_that("chain_link of a single component follows the component", {
   component <- stats::ts(100 * 1.01^(0:15), start = 1990, frequency = 4)
-  shares <- stats::ts(rep(1, 3), start = 1991, frequency = 1)
+  shares <- stats::ts(rep(1, 3), start = 1990, frequency = 1)
 
   result <- chain_link(list(a = component), list(a = shares))
 
@@ -568,6 +568,64 @@ test_that("chain_link stops when components and shares differ", {
   shares <- list(b = stats::ts(1, start = 1991, frequency = 1))
 
   expect_error(chain_link(levels, shares), "must match")
+})
+
+growth <- function(x) x / stats::lag(x, -1) - 1
+
+test_that("chain_link_weights aggregate the growth of the chain-linked volume", {
+  set.seed(6)
+  quantities <- random_walk(24, 3, c(100, 60, 30))
+  prices <- random_walk(24, 3, 1)
+  colnames(quantities) <- colnames(prices) <- c("consumption", "exports", "imports")
+  inputs <- chain_link_inputs(prices, quantities, c(1, 1, -1))
+
+  weights <- chain_link_weights(inputs$levels, inputs$shares)
+
+  # The weights of the last period are for the period after the levels.
+  expected <- stats::window(
+    growth(chain_link(inputs$levels, inputs$shares)),
+    start = stats::start(weights$consumption)
+  )
+  periods <- stats::tsp(expected)
+  weighted <- Reduce(`+`, lapply(names(weights), function(comp) {
+    w <- stats::window(weights[[comp]], periods[1], periods[2])
+    w * (1 + stats::window(growth(inputs$levels[[comp]]), periods[1], periods[2]))
+  })) - 1
+  expect_equal(weighted, expected)
+})
+
+test_that("chain_link_weights add up to 1 except in the first quarter", {
+  set.seed(7)
+  quantities <- random_walk(20, 2, c(100, 50))
+  prices <- random_walk(20, 2, 1)
+  colnames(quantities) <- colnames(prices) <- c("a", "b")
+  inputs <- chain_link_inputs(prices, quantities, c(1, 1))
+
+  weights <- chain_link_weights(inputs$levels, inputs$shares)
+
+  total <- weights$a + weights$b
+  first_quarter <- stats::cycle(total) == 1
+  expect_equal(as.numeric(total[!first_quarter]), rep(1, sum(!first_quarter)))
+  expect_true(all(abs(total[first_quarter] - 1) > 1e-6))
+})
+
+test_that("chain_link_weights are the shares when volumes are constant", {
+  levels <- list(
+    a = stats::ts(rep(10, 12), start = 1990, frequency = 4),
+    b = stats::ts(rep(5, 12), start = 1990, frequency = 4)
+  )
+  shares <- list(
+    a = stats::ts(c(0.6, 0.7, 0.8), start = 1990, frequency = 1),
+    b = stats::ts(c(0.4, 0.3, 0.2), start = 1990, frequency = 1)
+  )
+
+  weights <- chain_link_weights(levels, shares)
+
+  # From the first year with a complete previous year of the aggregate, to
+  # the period after the levels.
+  expect_equal(stats::tsp(weights$a), c(1992, 1993, 4))
+  expect_equal(as.numeric(weights$a), c(0.7, 0.7, 0.7, 0.7, 0.8))
+  expect_equal(as.numeric(weights$b), c(0.3, 0.3, 0.3, 0.3, 0.2))
 })
 
 test_that("update_identity_weights throws error when NA", {

@@ -11,15 +11,14 @@ chain_link(levels, shares)
 levels) of the components, all of the same frequency.}
 
 \item{shares}{A named list of annual \code{stats::ts} objects with the same names
-as \code{levels}. The value in year \eqn{y} is the share of year \eqn{y-1}, as
-returned for an identity by \code{calculate_eq_weights()}. Subtracted components
+as \code{levels}, with the nominal share of each year. Subtracted components
 have negative shares.}
 }
 \value{
 A \code{stats::ts} object with the volume of the aggregate. It starts in
-the first year with shares and a complete previous year of all components;
-the average of that previous year is 100. Only its growth rates are
-meaningful.
+the first year whose previous year has shares and complete levels of all
+components; the average of that previous year is 100. Only its growth rates
+are meaningful.
 }
 \description{
 Builds the volume of an aggregate from the volumes of its components, the
