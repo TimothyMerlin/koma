@@ -4,29 +4,21 @@
 \alias{get_seq_weights}
 \title{Get System of Equations Weights}
 \usage{
-get_seq_weights(ts_data, identities, dates, frequency = 4)
+get_seq_weights(ts_data, identities)
 }
 \arguments{
 \item{ts_data}{A named list of \code{stats::ts} objects. This list should contain
 the time series data for both the aggregate values and their components.}
 
 \item{identities}{A named list of identities, each containing components
-and their respective weights. The list should include elements with
-"lhs_weight" in their names.}
-
-\item{dates}{A list with start and end dates for dynamic weight calculations.
-The dates list should have a sub-list \code{dynamic_weights} with \code{start} and
-\code{end} entries, each being a numeric representation of a date, it should be
-in the format produced by \code{dates_to_num}.}
+and their respective weights.}
 }
 \value{
-The function updates the \code{identities} list with the calculated
-dynamic weights and returns nothing explicitly.
+The \code{identities} list with the calculated weights.
 }
 \description{
-Calculates dynamic weights for a system of equations and updates the
-identities with these weights. The function processes a list of time
-series data (\code{ts_data}), a list of identities (\code{identities}), and a set of
-dates (\code{dates}) to compute and update weights dynamically.
+Calculates the weights of identities from the data and updates the
+identities with them. Each weight is the share of the last year that is
+complete for all series of the identity.
 }
 \keyword{internal}

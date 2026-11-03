@@ -30,55 +30,68 @@ test_that("get_seq_weights", {
     )
   )
 
-  dates <- list(
-    dynamic_weights = list(start = 1992, end = 1997.25)
-  )
-  seq_weights <- get_seq_weights(ts_data, identities, dates)
+  seq_weights <- get_seq_weights(ts_data, identities)
 
   expect_equal(seq_weights$gdp$weights$theta_gamma6_4, weight_manufacturing)
   expect_equal(seq_weights$gdp$weights$theta_gamma6_5, weight_service)
 })
 
-test_that("validate_dynamic_weights_dates stops when dates are missing", {
-  dates <- list()
-
-  expect_error(
-    koma:::validate_dynamic_weights_dates(dates),
-    "dates\\$dynamic_weights"
+# Nominal series whose annual shares are `shares`, one per year from `start`.
+nominal_with_shares <- function(shares, start = 1995, extra_quarters = 0) {
+  n <- 4 * length(shares) + extra_quarters
+  share <- c(rep(shares, each = 4), rep(0.5, extra_quarters))
+  total <- stats::ts(rep(100, n), start = start, frequency = 4)
+  list(
+    nom_gdp = total,
+    nom_manufacturing = total * share,
+    nom_service = total * (1 - share)
   )
+}
+
+identity_weights <- function() {
+  sys_eq <- system_of_equations(
+    "manufacturing ~ manufacturing.L(1),
+    service ~ service.L(1),
+    gdp == (nom_manufacturing/nom_gdp)*manufacturing + (nom_service/nom_gdp)*service"
+  )
+  sys_eq$identities
+}
+
+test_that("get_seq_weights uses the share of the last year in the data", {
+  ts_data <- nominal_with_shares(c(0.6, 0.7, 0.8))
+
+  result <- get_seq_weights(ts_data, identity_weights())
+
+  expect_equal(result$gdp$weights$theta_gamma3_1, 0.8)
+  expect_equal(result$gdp$weights$theta_gamma3_2, 0.2)
 })
 
-test_that("validate_dynamic_weights_dates stops when start is after end", {
-  dates <- list(
-    dynamic_weights = list(start = c(2020, 2), end = c(2019, 4))
-  )
+test_that("get_seq_weights ignores an incomplete last year", {
+  ts_data <- nominal_with_shares(c(0.6, 0.7, 0.8), extra_quarters = 2)
 
-  expect_error(
-    koma:::validate_dynamic_weights_dates(dates),
-    "start.*before.*end"
-  )
+  result <- get_seq_weights(ts_data, identity_weights())
+
+  expect_equal(result$gdp$weights$theta_gamma3_1, 0.8)
 })
 
-test_that("validate_dynamic_weights_dates stops on invalid date format", {
-  dates <- list(
-    dynamic_weights = list(start = c(2020, 5), end = c(2021, 1))
-  )
+test_that("get_seq_weights ignores a last year with missing values", {
+  ts_data <- nominal_with_shares(c(0.6, 0.7, 0.8))
+  ts_data$nom_service[12] <- NA
 
-  expect_error(
-    koma:::validate_dynamic_weights_dates(dates),
-    "period must be between 1 and 4"
-  )
+  result <- get_seq_weights(ts_data, identity_weights())
+
+  expect_equal(result$gdp$weights$theta_gamma3_1, 0.7)
+  expect_equal(result$gdp$weights$theta_gamma3_2, 0.3)
 })
 
-test_that("validate_dynamic_weights_dates stops on non-numeric dates", {
-  dates <- list(
-    dynamic_weights = list(start = "2020 Q1", end = "2021 Q1")
-  )
+test_that("get_seq_weights uses the last year complete for all series", {
+  ts_data <- nominal_with_shares(c(0.6, 0.7, 0.8))
+  ts_data$nom_service <- stats::window(ts_data$nom_service, end = c(1997, 3))
 
-  expect_error(
-    koma:::validate_dynamic_weights_dates(dates),
-    "must be numeric"
-  )
+  result <- get_seq_weights(ts_data, identity_weights())
+
+  expect_equal(result$gdp$weights$theta_gamma3_1, 0.7)
+  expect_equal(result$gdp$weights$theta_gamma3_2, 0.3)
 })
 
 test_that("calculate_eq_weights computes fixed weights correctly", {
@@ -114,17 +127,15 @@ test_that("calculate_eq_weights computes fixed weights correctly", {
   identities <- sys_eq$identities
   iden <- identities[1] # gdp
 
-  result <- calculate_eq_weights(
-    ts_data, iden,
-    start = 1992, end = 1995.75
-  )
+  result <- calculate_eq_weights(ts_data, iden)
 
   expect_equal(result$gdp$manufacturing[1], weight_manufacturing)
   expect_equal(result$gdp$service[1], weight_service)
   expect_equal(names(result), "gdp")
 
-  expect_length(result$gdp$manufacturing, 4)
-  expect_length(result$gdp$service, 4)
+  # 1990 Q1 to 1997 Q2: complete years 1990 to 1996 weight 1991 to 1997
+  expect_equal(stats::tsp(result$gdp$manufacturing)[1:2], c(1991, 1997))
+  expect_length(result$gdp$service, 7)
 })
 
 test_that("calculate_eq_weights computes dynamic weights", {
@@ -176,7 +187,7 @@ test_that("calculate_eq_weights computes dynamic weights", {
     )
   )
 
-  result <- calculate_eq_weights(ts_data, iden, 1991, 1993.75)
+  result <- calculate_eq_weights(ts_data, iden)
 
   expect_equal(result$gdp$manufacturing[1], weight_comp1_1990)
   expect_equal(result$gdp$manufacturing[2], weight_comp1_1991)
@@ -234,7 +245,7 @@ test_that("calculate_eq_weights with negative weights", {
     )
   )
 
-  result <- calculate_eq_weights(ts_data, iden, 1992, 1995.75)
+  result <- calculate_eq_weights(ts_data, iden)
 
   expect_equal(result$gdp$consumption[1], weight_consumption)
   expect_equal(result$gdp$investment[1], weight_investment)
@@ -287,7 +298,7 @@ test_that("calculate_eq_weights with weights", {
     )
   )
 
-  result <- calculate_eq_weights(tslist, iden, 1992, 1995.75)
+  result <- calculate_eq_weights(tslist, iden)
 
   expect_equal(result$gdp$consumption[1], weight_consumption)
   expect_equal(result$gdp$investment[1], weight_investment)
@@ -320,9 +331,7 @@ value and components are not contained in tslist", {
   )
 
   expect_error(
-    calculate_eq_weights(
-      ts_data, iden, c(1981, 1), c(1983, 1)
-    ),
+    calculate_eq_weights(ts_data, iden),
     "The following time series are missing from 'ts_data': nom_agg_val"
   )
 })

@@ -14,9 +14,6 @@ test_that("forecast_sem", {
   dates$forecast$start <- c(2019, 1)
   # Last quarter of forecast
   dates$forecast$end <- c(2019, 2)
-  # Dates for Dynamic Weights calculation
-  dates$dynamic_weights$start <- c(1992, 1)
-  dates$dynamic_weights$end <- c(2018, 4)
   dates <- dates_to_num(dates, frequency = 4)
 
   # Define identity weights

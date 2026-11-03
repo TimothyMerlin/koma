@@ -1,143 +1,48 @@
 #' Get System of Equations Weights
 #'
-#' Calculates dynamic weights for a system of equations and updates the
-#' identities with these weights. The function processes a list of time
-#' series data (`ts_data`), a list of identities (`identities`), and a set of
-#' dates (`dates`) to compute and update weights dynamically.
+#' Calculates the weights of identities from the data and updates the
+#' identities with them. Each weight is the share of the last year that is
+#' complete for all series of the identity.
 #'
 #' @param ts_data A named list of `stats::ts` objects. This list should contain
 #' the time series data for both the aggregate values and their components.
 #' @param identities A named list of identities, each containing components
-#' and their respective weights. The list should include elements with
-#' "lhs_weight" in their names.
-#' @param dates A list with start and end dates for dynamic weight calculations.
-#' The dates list should have a sub-list `dynamic_weights` with `start` and
-#' `end` entries, each being a numeric representation of a date, it should be
-#' in the format produced by `dates_to_num`.
+#' and their respective weights.
 #'
-#' @return The function updates the `identities` list with the calculated
-#' dynamic weights and returns nothing explicitly.
+#' @return The `identities` list with the calculated weights.
 #' @keywords internal
-get_seq_weights <- function(ts_data, identities, dates, frequency = 4) {
-  # Calculate dynamic weights
+get_seq_weights <- function(ts_data, identities) {
   weights <- c()
 
   for (ix in seq_along(identities)) {
     is_na <- is.na(suppressWarnings(as.numeric(identities[ix][[1]]$weights)))
 
     if (any(is_na)) {
-      validate_dynamic_weights_dates(dates, frequency = frequency)
-      dynamic_start <- dates_to_num(dates$dynamic_weights$start, frequency = frequency)
-      dynamic_end <- dates_to_num(dates$dynamic_weights$end, frequency = frequency)
-      out <- calculate_eq_weights(
-        ts_data, identities[ix],
-        dynamic_start,
-        dynamic_end
-      )
-      weights <- c(weights, out)
+      weights <- c(weights, calculate_eq_weights(ts_data, identities[ix]))
     }
   }
 
-  # Update identities with dynamic weights
   update_identity_weights(weights, identities)
 }
 
-validate_dynamic_weights_dates <- function(dates, frequency = 4) {
-  if (is.null(dates$dynamic_weights) ||
-    is.null(dates$dynamic_weights$start) ||
-    is.null(dates$dynamic_weights$end) ||
-    length(dates$dynamic_weights$start) == 0L ||
-    length(dates$dynamic_weights$end) == 0L
-  ) {
-    cli::cli_abort(c(
-      "!" = "Invalid {.field dates$dynamic_weights}:",
-      "x" = "{.field start} and {.field end} must be provided"
-    ))
-  }
-  if (!is.numeric(dates$dynamic_weights$start) ||
-    !is.numeric(dates$dynamic_weights$end)
-  ) {
-    cli::cli_abort(c(
-      "!" = "Invalid {.field dates$dynamic_weights}:",
-      "x" = "{.field start} and {.field end} must be numeric"
-    ))
-  }
-  if (!length(dates$dynamic_weights$start) %in% c(1L, 2L) ||
-    !length(dates$dynamic_weights$end) %in% c(1L, 2L)
-  ) {
-    cli::cli_abort(c(
-      "!" = "Invalid {.field dates$dynamic_weights}:",
-      "x" = "{.field start} and {.field end} must be length 1 or 2"
-    ))
-  }
-  if (anyNA(dates$dynamic_weights$start) ||
-    anyNA(dates$dynamic_weights$end) ||
-    any(!is.finite(dates$dynamic_weights$start), na.rm = TRUE) ||
-    any(!is.finite(dates$dynamic_weights$end), na.rm = TRUE)
-  ) {
-    cli::cli_abort(c(
-      "!" = "Invalid {.field dates$dynamic_weights}:",
-      "x" = "{.field start} and {.field end} must be finite"
-    ))
-  }
-  if (length(dates$dynamic_weights$start) == 2L &&
-    (dates$dynamic_weights$start[2] < 1L ||
-      dates$dynamic_weights$start[2] > frequency)
-  ) {
-    cli::cli_abort(c(
-      "!" = "Invalid {.field dates$dynamic_weights}:",
-      "x" = "{.field start} period must be between 1 and {frequency}"
-    ))
-  }
-  if (length(dates$dynamic_weights$end) == 2L &&
-    (dates$dynamic_weights$end[2] < 1L ||
-      dates$dynamic_weights$end[2] > frequency)
-  ) {
-    cli::cli_abort(c(
-      "!" = "Invalid {.field dates$dynamic_weights}:",
-      "x" = "{.field end} period must be between 1 and {frequency}"
-    ))
-  }
-
-  dynamic_start <- dates_to_num(dates$dynamic_weights$start, frequency = frequency)
-  dynamic_end <- dates_to_num(dates$dynamic_weights$end, frequency = frequency)
-  if (length(dynamic_start) != 1L || length(dynamic_end) != 1L) {
-    cli::cli_abort(c(
-      "!" = "Invalid {.field dates$dynamic_weights}:",
-      "x" = "{.field start} and {.field end} must be scalar dates"
-    ))
-  }
-  if (dynamic_start > dynamic_end) {
-    cli::cli_abort(c(
-      "!" = "Invalid {.field dates$dynamic_weights}:",
-      "x" = "{.field start} must be before {.field end}"
-    ))
-  }
-
-  invisible(NULL)
-}
-
-#' Calculate Dynamic Weights for Identity Equations
+#' Calculate Weights for Identity Equations
 #'
-#' Computes the weights required for identity equations using time series data.
-#' The weights represent how components collectively sum up to or are related to
-#' an aggregate value over the specified time period.
+#' Computes the weights of an identity from annual sums of the series in its
+#' weight expressions. The weight for year \eqn{y} uses the data of year
+#' \eqn{y-1}, so the series are labelled one year after the data. They end
+#' with the last year that is complete for all series of the identity.
 #'
 #' @param ts_data A named list of `stats::ts` objects. It should contain the
 #' time series data for both the aggregate value and its components. Ensure that
 #' `ts_data` contains the time series listed in `iden`.
-#' @param start A numeric value representing the start date for the time series
-#' data subset. This value should be in the numeric format used by the function
-#' `dates_to_num`.
-#' @param end A numeric value representing the end date for the time series data
-#' subset, in the same numeric format as `start`.
+#' @param iden A named list with one identity, as in `sys_eq$identities`.
 #'
 #' @return A list of `stats::ts` objects containing the calculated weights for
 #' the given aggregate value and its components. The top-level name of the
 #' list is the aggregate value, and its sub-level names correspond to the
 #' component names.
 #' @keywords internal
-calculate_eq_weights <- function(ts_data, iden, start, end) {
+calculate_eq_weights <- function(ts_data, iden) {
   agg_value <- names(iden)
   components <- unlist(iden[[1]]$weights)
   names(components) <- names(iden[[1]]$components)
@@ -174,26 +79,18 @@ calculate_eq_weights <- function(ts_data, iden, start, end) {
     }
   }
 
-  # annualize the all time series
-  annualized_ts <- lapply(
-    ts_names,
-    function(comp, start, end) {
-      aggregated_ts <- tempdisagg::ta(ts_data[[comp]],
-        conversion = "sum", to = "annual"
-      )
-      # back shift times series by 1 year
-      lagged_agg_ts <- stats::lag(aggregated_ts, -1)
-      suppressWarnings(
-        subset_lagged_agg_ts <- stats::window(
-          lagged_agg_ts,
-          start = c(floor(start)), end = c(floor(end))
-        )
-      )
-      return(subset_lagged_agg_ts)
-    },
-    start = floor(start), end = floor(end)
-  )
+  # Annual sums of complete years, labelled with the year they weight
+  annualized_ts <- lapply(ts_names, function(comp) {
+    annual <- tempdisagg::ta(ts_data[[comp]], conversion = "sum", to = "annual")
+    observed <- which(!is.na(annual))
+    annual <- stats::window(annual, end = stats::time(annual)[max(observed)])
+    stats::lag(annual, -1)
+  })
   names(annualized_ts) <- ts_names
+
+  # All weights come from the same years.
+  common_end <- min(vapply(annualized_ts, function(x) stats::tsp(x)[2], numeric(1)))
+  annualized_ts <- lapply(annualized_ts, stats::window, end = common_end)
 
   evaluate_component <- function(component, annualized_ts) {
     # Replace variables with annualized_ts$variable format

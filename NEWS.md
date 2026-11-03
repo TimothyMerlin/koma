@@ -1,5 +1,10 @@
 # koma (development version)
 
+## Breaking changes
+
+* Identity weights computed from data, e.g. `(nom_consumption/nom_gdp)*consumption`, now use the nominal shares of the last year that is complete for all series of the identity. `dates$dynamic_weights` is deprecated and ignored with a warning; `estimate()` no longer needs it. Before, the weights used the year before the year of `dates$dynamic_weights$end`, so with `end` at the last observed quarter, as in `vignette("koma-klein")`, they were one year older than the data allowed. Results change for such models (#147).
+* `model_evaluation()` now computes identity weights in each iteration only from data up to the forecast origin. Before, the weights used data after it (#147).
+
 ## New features
 
 * Restrictions for conditional forecasts can now name the forecast period instead of the horizon, either as a time series, e.g. `list(gdp = ts(c(0.5, 0.4), start = c(2025, 1), frequency = 4))`, or with `date`, e.g. `list(gdp = list(value = 0.5, date = c(2025, 2)))` (#88).

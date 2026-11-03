@@ -132,10 +132,16 @@ new_model_evaluation <- function(sys_eq, variables,
   ) {
     temp_dates <- dates
 
-    # Prepare the in-sample data window
+    # Prepare the in-sample data window. The weight series are cut too, so
+    # identity weights only use data known at the forecast origin; exogenous
+    # series are needed over the forecast.
+    in_sample_variables <- union(
+      sys_eq$endogenous_variables,
+      setdiff(sys_eq$weight_variables, sys_eq$exogenous_variables)
+    )
     ts_data_temp <- ts_data
-    ts_data_temp[sys_eq$endogenous_variables] <-
-      lapply(sys_eq$endogenous_variables, function(x) {
+    ts_data_temp[in_sample_variables] <-
+      lapply(in_sample_variables, function(x) {
         stats::window(ts_data_temp[[x]], end = temp_dates$in_sample$end)
       })
 

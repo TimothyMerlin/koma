@@ -12,10 +12,6 @@ test_that("model_evaluation", {
     forecast = list(
       start = c(2023, 2),
       end = c(2025, 4)
-    ),
-    dynamic_weights = list(
-      start = c(1992, 1),
-      end = c(2022, 4)
     )
   )
 
@@ -75,6 +71,44 @@ test_that("model_evaluation", {
   )
 })
 
+test_that("model_evaluation cuts weight series at each forecast origin", {
+  sys_eq <- system_of_equations(
+    "manufacturing ~ manufacturing.L(1) + world_gdp,
+    service ~ service.L(1) + world_gdp,
+    gdp == (nom_manufacturing/nom_gdp)*manufacturing + (nom_service/nom_gdp)*service",
+    exogenous_variables = "world_gdp"
+  )
+  ts_data <- simulated_data$ts_data
+  ts_data$nom_gdp <- ts_data$gdp
+  ts_data$nom_manufacturing <- ts_data$manufacturing
+  ts_data$nom_service <- ts_data$service
+  dates <- list(
+    estimation = list(start = c(1977, 1), end = c(2018, 4)),
+    forecast = list(start = c(2020, 1), end = c(2020, 2))
+  )
+
+  weight_ends <- list()
+  local_mocked_bindings(
+    run_model_iteration = function(i_params, ...) {
+      weight_ends[[length(weight_ends) + 1]] <<- vapply(
+        i_params$ts_data[sys_eq$weight_variables],
+        function(x) stats::tsp(x)[2], numeric(1)
+      )
+      list(estimates = NULL, error = matrix(0, 1, 1))
+    }
+  )
+
+  new_model_evaluation(
+    sys_eq, "gdp", 1, ts_data, dates,
+    evaluate_on_levels = FALSE, summary = "mean", approximate = FALSE,
+    restrictions = NULL
+  )
+
+  expect_length(weight_ends, 2)
+  expect_true(all(weight_ends[[1]] == 2019.75))
+  expect_true(all(weight_ends[[2]] == 2020))
+})
+
 test_that("run_model_iteration", {
   skip_on_cran()
   horizon <- 4
@@ -95,10 +129,6 @@ test_that("run_model_iteration", {
     forecast = list(
       start = c(2023, 2),
       end = c(2025, 4)
-    ),
-    dynamic_weights = list(
-      start = c(1992, 1),
-      end = c(2022, 4)
     )
   )
 

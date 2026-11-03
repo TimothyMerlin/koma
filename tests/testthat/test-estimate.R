@@ -461,6 +461,22 @@ test_that("estimate errors on too few degrees of freedom for flat priors", {
   expect_no_match(err, "manufacturing")
 })
 
+test_that("estimate warns that dates$dynamic_weights is deprecated", {
+  dates <- list(
+    estimation = list(start = c(2000, 1), end = c(2002, 3)),
+    dynamic_weights = list(start = c(2000, 1), end = c(2002, 3))
+  )
+
+  # Stops after the warning, before the sampler.
+  expect_warning(
+    expect_error(
+      estimate(simulated_data$ts_data, simulated_data$sys_eq, dates),
+      "degrees of freedom"
+    ),
+    class = "lifecycle_warning_deprecated"
+  )
+})
+
 test_that("estimate errors on more regressors than observations", {
   # Before, this failed as a rank deficiency without naming any variables.
   dates <- list(estimation = list(start = c(2000, 1), end = c(2002, 1)))
@@ -524,16 +540,6 @@ test_that("dates not provided", {
 
   # incomplete estimation dates
   dates <- list(estimation = list(
-    end = c(2019, 4)
-  ))
-  expect_error(
-    estimate(ts_data, sys_eq, dates),
-    "Invalid"
-  )
-
-  # incomplete dynamic weight dates
-  dates <- list(estimation = list(
-    start = c(1977, 1),
     end = c(2019, 4)
   ))
   expect_error(

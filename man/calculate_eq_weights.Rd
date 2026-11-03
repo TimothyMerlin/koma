@@ -2,21 +2,16 @@
 % Please edit documentation in R/weights.R
 \name{calculate_eq_weights}
 \alias{calculate_eq_weights}
-\title{Calculate Dynamic Weights for Identity Equations}
+\title{Calculate Weights for Identity Equations}
 \usage{
-calculate_eq_weights(ts_data, iden, start, end)
+calculate_eq_weights(ts_data, iden)
 }
 \arguments{
 \item{ts_data}{A named list of \code{stats::ts} objects. It should contain the
 time series data for both the aggregate value and its components. Ensure that
 \code{ts_data} contains the time series listed in \code{iden}.}
 
-\item{start}{A numeric value representing the start date for the time series
-data subset. This value should be in the numeric format used by the function
-\code{dates_to_num}.}
-
-\item{end}{A numeric value representing the end date for the time series data
-subset, in the same numeric format as \code{start}.}
+\item{iden}{A named list with one identity, as in \code{sys_eq$identities}.}
 }
 \value{
 A list of \code{stats::ts} objects containing the calculated weights for
@@ -25,8 +20,9 @@ list is the aggregate value, and its sub-level names correspond to the
 component names.
 }
 \description{
-Computes the weights required for identity equations using time series data.
-The weights represent how components collectively sum up to or are related to
-an aggregate value over the specified time period.
+Computes the weights of an identity from annual sums of the series in its
+weight expressions. The weight for year \eqn{y} uses the data of year
+\eqn{y-1}, so the series are labelled one year after the data. They end
+with the last year that is complete for all series of the identity.
 }
 \keyword{internal}

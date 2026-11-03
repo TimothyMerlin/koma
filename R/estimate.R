@@ -174,6 +174,15 @@ estimate.list <- function(ts_data, sys_eq, dates,
     ))
   }
 
+  if (!is.null(dates$dynamic_weights)) {
+    lifecycle::deprecate_warn(
+      "0.5.0",
+      I("`dates$dynamic_weights`"),
+      details = "Identity weights now use the last complete year in the data."
+    )
+    dates$dynamic_weights <- NULL
+  }
+
   pre <- new_prepare_estimation(ts_data, sys_eq, dates, fill_method)
   if (!is.null(estimates)) {
     cli::cli_warn(c(
@@ -288,13 +297,8 @@ new_prepare_estimation <- function(ts_data, sys_eq, dates, fill_method) {
     sys_eq$predetermined_variables
   )
 
-  #### Calculate dynamic weights
-  sys_eq$identities <- get_seq_weights(
-    level(ts_data),
-    sys_eq$identities,
-    dates,
-    frequency = frequency
-  )
+  #### Calculate identity weights
+  sys_eq$identities <- get_seq_weights(level(ts_data), sys_eq$identities)
 
   # Check if model can be identified
   model_identification(
