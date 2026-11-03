@@ -628,6 +628,78 @@ test_that("chain_link_weights are the shares when volumes are constant", {
   expect_equal(as.numeric(weights$b), c(0.3, 0.3, 0.3, 0.3, 0.2))
 })
 
+# Prices that follow a random walk until the end of `base_year` and stay at
+# that year's average prices afterwards, as in a forecast.
+prices_fixed_after <- function(quantities, base_year, start = 1990) {
+  prices <- random_walk(nrow(quantities), ncol(quantities), 1)
+  year <- start + (seq_len(nrow(quantities)) - 1) %/% 4
+  in_base <- year == base_year
+  base_price <- colSums(prices[in_base, ] * quantities[in_base, ]) /
+    colSums(quantities[in_base, ])
+  prices[year > base_year, ] <- rep(base_price, each = sum(year > base_year))
+  prices
+}
+
+test_that("fixed_price_weights aggregate like chain-linking with base-year prices", {
+  set.seed(8)
+  quantities <- random_walk(24, 3, c(100, 60, 30))
+  colnames(quantities) <- c("consumption", "exports", "imports")
+  prices <- prices_fixed_after(quantities, base_year = 1992)
+  colnames(prices) <- colnames(quantities)
+  inputs <- chain_link_inputs(prices, quantities, c(1, 1, -1))
+  expected <- growth(chain_link(inputs$levels, inputs$shares))
+
+  history <- lapply(inputs$levels, stats::window, end = c(1992, 4))
+  prices <- base_prices(history, inputs$shares, base_year = 1992)
+
+  # From the second forecast quarter on, including the next first quarter
+  for (h in seq(1993.25, 1995.75, by = 0.25)) {
+    previous <- vapply(inputs$levels, function(x) {
+      as.numeric(stats::window(x, h - 0.25, h - 0.25))
+    }, numeric(1))
+    growth_h <- vapply(inputs$levels, function(x) {
+      as.numeric(stats::window(growth(x), h, h))
+    }, numeric(1))
+    weights <- fixed_price_weights(previous, prices)
+
+    expect_equal(sum(weights), 1)
+    expect_equal(
+      sum(weights * (1 + growth_h)) - 1,
+      as.numeric(stats::window(expected, h, h))
+    )
+  }
+})
+
+test_that("chain_link_weights give the first forecast quarter", {
+  set.seed(9)
+  quantities <- random_walk(24, 2, c(100, 50))
+  colnames(quantities) <- c("a", "b")
+  prices <- prices_fixed_after(quantities, base_year = 1992)
+  colnames(prices) <- colnames(quantities)
+  inputs <- chain_link_inputs(prices, quantities, c(1, 1))
+  expected <- growth(chain_link(inputs$levels, inputs$shares))
+
+  history <- lapply(inputs$levels, stats::window, end = c(1992, 4))
+  weights <- chain_link_weights(history, inputs$shares)
+  link <- vapply(weights, function(w) as.numeric(utils::tail(w, 1)), numeric(1))
+  growth_link <- vapply(inputs$levels, function(x) {
+    as.numeric(stats::window(growth(x), c(1993, 1), c(1993, 1)))
+  }, numeric(1))
+
+  expect_equal(stats::end(weights$a), c(1993, 1))
+  expect_equal(
+    sum(link * (1 + growth_link)) - 1,
+    as.numeric(stats::window(expected, c(1993, 1), c(1993, 1)))
+  )
+})
+
+test_that("base_prices errors without shares and levels of the base year", {
+  levels <- list(a = stats::ts(1:8, start = 1990, frequency = 4))
+  shares <- list(a = stats::ts(1, start = 1990, frequency = 1))
+
+  expect_error(base_prices(levels, shares, base_year = 1991), "1991")
+})
+
 test_that("update_identity_weights throws error when NA", {
   weights <- list(gdp = list(manufacturing = 0.4, service = NA))
 

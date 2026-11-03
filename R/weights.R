@@ -341,6 +341,57 @@ chain_link_weights <- function(levels, shares) {
   })
 }
 
+#' Prices of the Base Year
+#'
+#' In the forecast, the components are valued at the prices of the last
+#' observed year, the base year \eqn{b}. The price of component \eqn{i} is
+#' \eqn{p_i = s_{i,b}/\bar{x}_{i,b}}, proportional to its deflator in the base
+#' year, where \eqn{s_{i,b}} is its nominal share and \eqn{\bar{x}_{i,b}} its
+#' average volume.
+#'
+#' @inheritParams chain_link
+#' @param base_year The base year.
+#'
+#' @return A named numeric vector with the prices of the components.
+#' @keywords internal
+base_prices <- function(levels, shares, base_year) {
+  prices <- vapply(names(levels), function(comp) {
+    share_of_year(shares[[comp]], base_year) /
+      complete_year_means(levels[[comp]])[as.character(base_year)]
+  }, numeric(1))
+  if (anyNA(prices)) {
+    cli::cli_abort(c(
+      "!" = "Cannot compute the prices of base year {base_year}.",
+      "x" = "Shares or complete levels are missing for
+        {.val {names(prices)[is.na(prices)]}}."
+    ))
+  }
+  prices
+}
+
+#' Weights at Fixed Prices
+#'
+#' The weight of component \eqn{i} in period \eqn{h} is its share of the
+#' previous period at fixed prices,
+#' \deqn{w_{i,h} = \frac{p_i\, x_{i,h-1}}{\sum_j p_j\, x_{j,h-1}}.}
+#' With the prices of the base year, these weights aggregate the components'
+#' simple growth rates to the growth of the chain-linked aggregate in all
+#' periods after the first quarter after the base year. That quarter links the
+#' prices of the base year to those of the year before; see
+#' [chain_link_weights()].
+#'
+#' @param previous_levels A named numeric vector with the levels of the
+#' components in the previous period.
+#' @param prices A named numeric vector with the prices of the components, as
+#' returned by [base_prices()].
+#'
+#' @return A named numeric vector with the weights.
+#' @keywords internal
+fixed_price_weights <- function(previous_levels, prices) {
+  values <- prices * previous_levels[names(prices)]
+  values / sum(values)
+}
+
 complete_year_means <- function(x) {
   frequency <- stats::frequency(x)
   year <- floor(stats::time(x) + 1e-8)
