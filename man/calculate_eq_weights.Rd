@@ -4,7 +4,7 @@
 \alias{calculate_eq_weights}
 \title{Calculate Weights for Identity Equations}
 \usage{
-calculate_eq_weights(ts_data, iden)
+calculate_eq_weights(ts_data, iden, period = NULL)
 }
 \arguments{
 \item{ts_data}{A named list of \code{stats::ts} objects. It should contain the
@@ -12,17 +12,19 @@ time series data for both the aggregate value and its components. Ensure that
 \code{ts_data} contains the time series listed in \code{iden}.}
 
 \item{iden}{A named list with one identity, as in \code{sys_eq$identities}.}
+
+\item{period}{The period of the shares, \code{dates$weights}: a year, e.g.
+\code{2017}, for the shares of the annual sums, or a year and period, e.g.
+\code{c(2017, 3)}, for the shares of that period. If \code{NULL}, the last year that
+is complete for all series of the identity.}
 }
 \value{
-A list of \code{stats::ts} objects containing the calculated weights for
-the given aggregate value and its components. The top-level name of the
-list is the aggregate value, and its sub-level names correspond to the
-component names.
+A list with the calculated weights for the given aggregate value and
+its components. The top-level name of the list is the aggregate value, and
+its sub-level names correspond to the component names.
 }
 \description{
-Computes the weights of an identity from annual sums of the series in its
-weight expressions. The weight for year \eqn{y} uses the data of year
-\eqn{y-1}, so the series are labelled one year after the data. They end
-with the last year that is complete for all series of the identity.
+Computes the weights of an identity from the series in its weight
+expressions, as the shares of one period.
 }
 \keyword{internal}

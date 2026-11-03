@@ -12,7 +12,11 @@ conditional_fill(ts_data, sys_eq, dates, estimates, fill_method)
 \item{sys_eq}{A \code{koma_seq} object (\link{system_of_equations}) containing details
 about the system of equations used in the model.}
 
-\item{dates}{Key-value list for date ranges in various model operations.}
+\item{dates}{Key-value list for date ranges in various model operations.
+\code{dates$weights} optionally sets the period of the nominal shares used as
+identity weights: a year, e.g. \code{2017}, for the shares of the annual sums,
+or a year and quarter, e.g. \code{c(2017, 3)}, for the shares of that quarter.
+By default, the last year that is complete for all series of an identity.}
 
 \item{estimates}{A \code{koma_estimate} object (see \code{\link{estimate}})
 containing the estimates of the simultaneous equations model.}

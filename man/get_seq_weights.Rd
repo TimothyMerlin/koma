@@ -4,7 +4,7 @@
 \alias{get_seq_weights}
 \title{Get System of Equations Weights}
 \usage{
-get_seq_weights(ts_data, identities)
+get_seq_weights(ts_data, identities, period = NULL)
 }
 \arguments{
 \item{ts_data}{A named list of \code{stats::ts} objects. This list should contain
@@ -12,13 +12,18 @@ the time series data for both the aggregate values and their components.}
 
 \item{identities}{A named list of identities, each containing components
 and their respective weights.}
+
+\item{period}{The period of the shares, \code{dates$weights}: a year, e.g.
+\code{2017}, for the shares of the annual sums, or a year and period, e.g.
+\code{c(2017, 3)}, for the shares of that period. If \code{NULL}, the last year that
+is complete for all series of the identity.}
 }
 \value{
 The \code{identities} list with the calculated weights.
 }
 \description{
 Calculates the weights of identities from the data and updates the
-identities with them. Each weight is the share of the last year that is
-complete for all series of the identity.
+identities with them. Each weight is the share of one period: by default
+the last year that is complete for all series of the identity.
 }
 \keyword{internal}

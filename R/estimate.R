@@ -8,6 +8,10 @@
 #' @param sys_eq A `koma_seq` object ([system_of_equations]) containing details
 #' about the system of equations used in the model.
 #' @param dates Key-value list for date ranges in various model operations.
+#' `dates$weights` optionally sets the period of the nominal shares used as
+#' identity weights: a year, e.g. `2017`, for the shares of the annual sums,
+#' or a year and quarter, e.g. `c(2017, 3)`, for the shares of that quarter.
+#' By default, the last year that is complete for all series of an identity.
 #' @param ... Additional parameters.
 #' @param options Optional settings for estimation. Use
 #' \code{list(gibbs = list(), fill = list(method = "mean"))}. Elements:
@@ -178,7 +182,7 @@ estimate.list <- function(ts_data, sys_eq, dates,
     lifecycle::deprecate_warn(
       "0.5.0",
       I("`dates$dynamic_weights`"),
-      details = "Identity weights now use the last complete year in the data."
+      I("`dates$weights`")
     )
     dates$dynamic_weights <- NULL
   }
@@ -283,6 +287,7 @@ new_prepare_estimation <- function(ts_data, sys_eq, dates, fill_method) {
   fill_method <- match.arg(fill_method, c("mean", "median"))
   frequency <- get_single_frequency(ts_data)
   validate_estimation_dates(dates, frequency = frequency)
+  weights_period <- dates$weights
   dates <- dates_to_num(dates, frequency = frequency)
 
   # only keep data needed for system
@@ -298,7 +303,9 @@ new_prepare_estimation <- function(ts_data, sys_eq, dates, fill_method) {
   )
 
   #### Calculate identity weights
-  sys_eq$identities <- get_seq_weights(level(ts_data), sys_eq$identities)
+  sys_eq$identities <- get_seq_weights(
+    level(ts_data), sys_eq$identities, weights_period
+  )
 
   # Check if model can be identified
   model_identification(

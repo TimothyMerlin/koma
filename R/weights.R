@@ -1,24 +1,28 @@
 #' Get System of Equations Weights
 #'
 #' Calculates the weights of identities from the data and updates the
-#' identities with them. Each weight is the share of the last year that is
-#' complete for all series of the identity.
+#' identities with them. Each weight is the share of one period: by default
+#' the last year that is complete for all series of the identity.
 #'
 #' @param ts_data A named list of `stats::ts` objects. This list should contain
 #' the time series data for both the aggregate values and their components.
 #' @param identities A named list of identities, each containing components
 #' and their respective weights.
+#' @param period The period of the shares, `dates$weights`: a year, e.g.
+#' `2017`, for the shares of the annual sums, or a year and period, e.g.
+#' `c(2017, 3)`, for the shares of that period. If `NULL`, the last year that
+#' is complete for all series of the identity.
 #'
 #' @return The `identities` list with the calculated weights.
 #' @keywords internal
-get_seq_weights <- function(ts_data, identities) {
+get_seq_weights <- function(ts_data, identities, period = NULL) {
   weights <- c()
 
   for (ix in seq_along(identities)) {
     is_na <- is.na(suppressWarnings(as.numeric(identities[ix][[1]]$weights)))
 
     if (any(is_na)) {
-      weights <- c(weights, calculate_eq_weights(ts_data, identities[ix]))
+      weights <- c(weights, calculate_eq_weights(ts_data, identities[ix], period))
     }
   }
 
@@ -27,22 +31,20 @@ get_seq_weights <- function(ts_data, identities) {
 
 #' Calculate Weights for Identity Equations
 #'
-#' Computes the weights of an identity from annual sums of the series in its
-#' weight expressions. The weight for year \eqn{y} uses the data of year
-#' \eqn{y-1}, so the series are labelled one year after the data. They end
-#' with the last year that is complete for all series of the identity.
+#' Computes the weights of an identity from the series in its weight
+#' expressions, as the shares of one period.
 #'
 #' @param ts_data A named list of `stats::ts` objects. It should contain the
 #' time series data for both the aggregate value and its components. Ensure that
 #' `ts_data` contains the time series listed in `iden`.
 #' @param iden A named list with one identity, as in `sys_eq$identities`.
+#' @inheritParams get_seq_weights
 #'
-#' @return A list of `stats::ts` objects containing the calculated weights for
-#' the given aggregate value and its components. The top-level name of the
-#' list is the aggregate value, and its sub-level names correspond to the
-#' component names.
+#' @return A list with the calculated weights for the given aggregate value and
+#' its components. The top-level name of the list is the aggregate value, and
+#' its sub-level names correspond to the component names.
 #' @keywords internal
-calculate_eq_weights <- function(ts_data, iden) {
+calculate_eq_weights <- function(ts_data, iden, period = NULL) {
   agg_value <- names(iden)
   components <- unlist(iden[[1]]$weights)
   names(components) <- names(iden[[1]]$components)
@@ -79,35 +81,78 @@ calculate_eq_weights <- function(ts_data, iden) {
     }
   }
 
-  # Annual sums of complete years, labelled with the year they weight
-  annualized_ts <- lapply(ts_names, function(comp) {
-    annual <- tempdisagg::ta(ts_data[[comp]], conversion = "sum", to = "annual")
-    observed <- which(!is.na(annual))
-    annual <- stats::window(annual, end = stats::time(annual)[max(observed)])
-    stats::lag(annual, -1)
+  frequency <- stats::frequency(ts_data[[ts_names[1]]])
+  period <- validate_weights_period(period, frequency)
+
+  if (length(period) == 2L) {
+    period_ts <- ts_data[ts_names]
+  } else {
+    # Annual sums; a year with missing values is NA
+    period_ts <- lapply(ts_data[ts_names], function(x) {
+      tempdisagg::ta(x, conversion = "sum", to = "annual")
+    })
+  }
+
+  if (is.null(period)) {
+    # The last year that is complete for all series
+    period <- min(vapply(period_ts, function(x) {
+      max(stats::time(x)[!is.na(x)])
+    }, numeric(1)))
+  }
+
+  # The values of all series in the period
+  period_num <- dates_to_num(period, frequency = frequency)
+  period_values <- lapply(period_ts, function(x) {
+    as.numeric(x)[abs(stats::time(x) - period_num) < 1e-8]
   })
-  names(annualized_ts) <- ts_names
+  if (any(lengths(period_values) != 1L) || anyNA(unlist(period_values))) {
+    cli::cli_abort(c(
+      "x" = "Weights for {.field {agg_value}} need the data of
+        {dates_to_str(period, frequency)}.",
+      "i" = "Not all of {.val {ts_names}} are complete in that period."
+    ))
+  }
 
-  # All weights come from the same years.
-  common_end <- min(vapply(annualized_ts, function(x) stats::tsp(x)[2], numeric(1)))
-  annualized_ts <- lapply(annualized_ts, stats::window, end = common_end)
-
-  evaluate_component <- function(component, annualized_ts) {
-    # Replace variables with annualized_ts$variable format
-    expr <- gsub("(\\b[0-9a-zA-Z_]+\\b)", "annualized_ts$\\1", component)
+  evaluate_component <- function(component, period_values) {
+    # Replace variables with period_values$variable format
+    expr <- gsub("(\\b[0-9a-zA-Z_]+\\b)", "period_values$\\1", component)
     parsed_expr <- parse(text = expr)
     eval(parsed_expr)
   }
 
   # Calculate weights
-  ts_weights <- list()
+  weights <- list()
 
   # Apply evaluate_component to each component
-  ts_weights[[agg_value]] <- lapply(
-    components, evaluate_component, annualized_ts
+  weights[[agg_value]] <- lapply(
+    components, evaluate_component, period_values
   )
 
-  ts_weights
+  weights
+}
+
+#' Validate the Period of Identity Weights
+#'
+#' @inheritParams get_seq_weights
+#' @param frequency Frequency of the time series.
+#'
+#' @return `period` as a double vector, or `NULL`.
+#' @keywords internal
+validate_weights_period <- function(period, frequency) {
+  if (is.null(period)) {
+    return(NULL)
+  }
+  if (!is.numeric(period) || !length(period) %in% c(1L, 2L) ||
+    any(!is.finite(period)) ||
+    (length(period) == 2L && !period[2] %in% seq_len(frequency))
+  ) {
+    cli::cli_abort(c(
+      "!" = "Invalid {.field dates$weights}:",
+      "x" = "Use a year, e.g. {.code 2017}, or a year and period, e.g.
+        {.code c(2017, 3)}."
+    ))
+  }
+  as.numeric(period)
 }
 
 #' Update Identity Weights

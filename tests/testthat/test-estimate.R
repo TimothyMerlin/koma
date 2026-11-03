@@ -477,6 +477,26 @@ test_that("estimate warns that dates$dynamic_weights is deprecated", {
   )
 })
 
+test_that("estimate passes dates$weights to the identity weights", {
+  period <- NULL
+  local_mocked_bindings(
+    get_seq_weights = function(ts_data, identities, period = NULL) {
+      period <<- period
+      stop("weights called")
+    }
+  )
+  dates <- list(
+    estimation = list(start = c(1977, 1), end = c(2018, 4)),
+    weights = c(2017, 1)
+  )
+
+  expect_error(
+    estimate(simulated_data$ts_data, simulated_data$sys_eq, dates),
+    "weights called"
+  )
+  expect_identical(period, c(2017, 1))
+})
+
 test_that("estimate errors on more regressors than observations", {
   # Before, this failed as a rank deficiency without naming any variables.
   dates <- list(estimation = list(start = c(2000, 1), end = c(2002, 1)))

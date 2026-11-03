@@ -94,6 +94,62 @@ test_that("get_seq_weights uses the last year complete for all series", {
   expect_equal(result$gdp$weights$theta_gamma3_2, 0.3)
 })
 
+test_that("get_seq_weights uses the share of the chosen year", {
+  ts_data <- nominal_with_shares(c(0.6, 0.7, 0.8))
+
+  result <- get_seq_weights(ts_data, identity_weights(), period = 1996)
+
+  expect_equal(result$gdp$weights$theta_gamma3_1, 0.7)
+  expect_equal(result$gdp$weights$theta_gamma3_2, 0.3)
+})
+
+test_that("get_seq_weights uses the share of the chosen quarter", {
+  ts_data <- nominal_with_shares(c(0.6, 0.7, 0.8))
+  # 1996 Q2
+  ts_data$nom_manufacturing[6] <- 90
+  ts_data$nom_service[6] <- 10
+
+  result <- get_seq_weights(ts_data, identity_weights(), period = c(1996, 2))
+
+  expect_equal(result$gdp$weights$theta_gamma3_1, 0.9)
+  expect_equal(result$gdp$weights$theta_gamma3_2, 0.1)
+})
+
+test_that("get_seq_weights errors if the chosen period is not complete", {
+  ts_data <- nominal_with_shares(c(0.6, 0.7, 0.8), extra_quarters = 2)
+  ts_data$nom_service <- stats::window(ts_data$nom_service, start = c(1996, 3))
+
+  expect_error(
+    get_seq_weights(ts_data, identity_weights(), period = 1998),
+    "1998"
+  )
+  expect_error(
+    get_seq_weights(ts_data, identity_weights(), period = 1996),
+    "1996"
+  )
+  expect_error(
+    get_seq_weights(ts_data, identity_weights(), period = c(1996, 2)),
+    "1996 Q2"
+  )
+  expect_error(
+    get_seq_weights(ts_data, identity_weights(), period = 2010),
+    "2010"
+  )
+})
+
+test_that("get_seq_weights checks the chosen period", {
+  ts_data <- nominal_with_shares(c(0.6, 0.7, 0.8))
+
+  expect_error(
+    get_seq_weights(ts_data, identity_weights(), period = "1996"),
+    "dates\\$weights"
+  )
+  expect_error(
+    get_seq_weights(ts_data, identity_weights(), period = c(1996, 5)),
+    "dates\\$weights"
+  )
+})
+
 test_that("calculate_eq_weights computes fixed weights correctly", {
   weight_manufacturing <- 0.7
   weight_service <- 1 - weight_manufacturing
@@ -132,13 +188,10 @@ test_that("calculate_eq_weights computes fixed weights correctly", {
   expect_equal(result$gdp$manufacturing[1], weight_manufacturing)
   expect_equal(result$gdp$service[1], weight_service)
   expect_equal(names(result), "gdp")
-
-  # 1990 Q1 to 1997 Q2: complete years 1990 to 1996 weight 1991 to 1997
-  expect_equal(stats::tsp(result$gdp$manufacturing)[1:2], c(1991, 1997))
-  expect_length(result$gdp$service, 7)
+  expect_length(result$gdp$service, 1)
 })
 
-test_that("calculate_eq_weights computes dynamic weights", {
+test_that("calculate_eq_weights uses the share of the chosen year", {
   weight_comp1_1990 <- 0.7
   weight_comp2_1990 <- 1 - weight_comp1_1990
   weight_comp1_1991 <- 0.3
@@ -187,18 +240,18 @@ test_that("calculate_eq_weights computes dynamic weights", {
     )
   )
 
+  result_1990 <- calculate_eq_weights(ts_data, iden, period = 1990)
+  result_1991 <- calculate_eq_weights(ts_data, iden, period = 1991)
   result <- calculate_eq_weights(ts_data, iden)
 
-  expect_equal(result$gdp$manufacturing[1], weight_comp1_1990)
-  expect_equal(result$gdp$manufacturing[2], weight_comp1_1991)
-  expect_equal(result$gdp$manufacturing[3], weight_comp1_1992)
-  expect_equal(result$gdp$service[1], weight_comp2_1990)
-  expect_equal(result$gdp$service[2], weight_comp2_1991)
-  expect_equal(result$gdp$service[3], weight_comp2_1992)
+  expect_equal(result_1990$gdp$manufacturing, weight_comp1_1990)
+  expect_equal(result_1990$gdp$service, weight_comp2_1990)
+  expect_equal(result_1991$gdp$manufacturing, weight_comp1_1991)
+  expect_equal(result_1991$gdp$service, weight_comp2_1991)
+  # Without a period, the last year
+  expect_equal(result$gdp$manufacturing, weight_comp1_1992)
+  expect_equal(result$gdp$service, weight_comp2_1992)
   expect_equal(names(result), "gdp")
-
-  expect_length(result$gdp$manufacturing, 3)
-  expect_length(result$gdp$service, 3)
 })
 
 test_that("calculate_eq_weights with negative weights", {

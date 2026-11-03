@@ -31,7 +31,11 @@ the estimates for the simultaneous equations model, as well as a list of time
 series and a \code{koma_seq} object (\code{\link{system_of_equations}}) that were
 used in the estimation.}
 
-\item{dates}{Key-value list for date ranges in various model operations.}
+\item{dates}{Key-value list for date ranges in various model operations.
+\code{dates$weights} optionally sets the period of the nominal shares used as
+identity weights: a year, e.g. \code{2017}, for the shares of the annual sums,
+or a year and quarter, e.g. \code{c(2017, 3)}, for the shares of that quarter.
+By default, the last year that is complete for all series of an identity.}
 
 \item{...}{Additional parameters.}
 

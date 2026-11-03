@@ -28,7 +28,11 @@ be calculated.}
 \item{ts_data}{time series data set, must include data until end date of
 forecasting period.}
 
-\item{dates}{Key-value list for date ranges in various model operations.}
+\item{dates}{Key-value list for date ranges in various model operations.
+\code{dates$weights} optionally sets the period of the nominal shares used as
+identity weights: a year, e.g. \code{2017}, for the shares of the annual sums,
+or a year and quarter, e.g. \code{c(2017, 3)}, for the shares of that quarter.
+By default, the last year that is complete for all series of an identity.}
 
 \item{evaluate_on_levels}{Boolean, if TRUE RMSE is calculated on levels if
 FALSE on growth rates.}

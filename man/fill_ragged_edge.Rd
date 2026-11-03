@@ -14,7 +14,11 @@ about the system of equations used in the model.}
 
 \item{exogenous_variables}{A character vector of exogenous variables.}
 
-\item{dates}{Key-value list for date ranges in various model operations.}
+\item{dates}{Key-value list for date ranges in various model operations.
+\code{dates$weights} optionally sets the period of the nominal shares used as
+identity weights: a year, e.g. \code{2017}, for the shares of the annual sums,
+or a year and quarter, e.g. \code{c(2017, 3)}, for the shares of that quarter.
+By default, the last year that is complete for all series of an identity.}
 
 \item{fill_method}{Character string indicating which central tendency measure
 ("mean" or "median") to use when filling ragged edges.}
