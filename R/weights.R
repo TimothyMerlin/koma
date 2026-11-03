@@ -13,7 +13,9 @@
 #' `c(2017, 3)`, for the shares of that period. If `NULL`, the last year that
 #' is complete for all series of the identity.
 #'
-#' @return The `identities` list with the calculated weights.
+#' @return The `identities` list with the calculated weights. Identities with
+#' weights computed from data keep the weight expressions in `expressions`,
+#' named by component.
 #' @keywords internal
 get_seq_weights <- function(ts_data, identities, period = NULL) {
   weights <- c()
@@ -23,6 +25,11 @@ get_seq_weights <- function(ts_data, identities, period = NULL) {
 
     if (any(is_na)) {
       weights <- c(weights, calculate_eq_weights(ts_data, identities[ix], period))
+      iden <- identities[[ix]]
+      expressions <- iden$weights[unlist(iden$components)]
+      names(expressions) <- names(iden$components)
+      from_data <- is.na(suppressWarnings(as.numeric(expressions)))
+      identities[[ix]]$expressions <- expressions[from_data]
     }
   }
 

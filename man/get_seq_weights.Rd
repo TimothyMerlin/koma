@@ -19,7 +19,9 @@ and their respective weights.}
 is complete for all series of the identity.}
 }
 \value{
-The \code{identities} list with the calculated weights.
+The \code{identities} list with the calculated weights. Identities with
+weights computed from data keep the weight expressions in \code{expressions},
+named by component.
 }
 \description{
 Calculates the weights of identities from the data and updates the

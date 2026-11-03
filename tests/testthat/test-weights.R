@@ -66,6 +66,30 @@ test_that("get_seq_weights uses the share of the last year in the data", {
   expect_equal(result$gdp$weights$theta_gamma3_2, 0.2)
 })
 
+test_that("get_seq_weights keeps the weight expressions", {
+  ts_data <- nominal_with_shares(c(0.6, 0.7, 0.8))
+
+  result <- get_seq_weights(ts_data, identity_weights())
+
+  expect_equal(
+    result$gdp$expressions,
+    list(
+      manufacturing = "nom_manufacturing/nom_gdp",
+      service = "nom_service/nom_gdp"
+    )
+  )
+})
+
+test_that("get_seq_weights keeps no expressions for numeric weights", {
+  sys_eq <- system_of_equations(
+    "a ~ a.L(1), b ~ b.L(1), y == 0.5*a + 0.5*b"
+  )
+
+  result <- get_seq_weights(list(), sys_eq$identities)
+
+  expect_null(result$y$expressions)
+})
+
 test_that("get_seq_weights ignores an incomplete last year", {
   ts_data <- nominal_with_shares(c(0.6, 0.7, 0.8), extra_quarters = 2)
 
