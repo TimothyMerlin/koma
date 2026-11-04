@@ -1118,6 +1118,15 @@ test_that("get_weight_variables", {
   expected_result <- c("nom_gdp", "nom_manufacturing", "nom_service")
 
   expect_equal(result, expected_result)
+  expect_identical(get_weight_variables("gdp==0.3*manufacturing"), character(0))
+})
+
+test_that("system_of_equations names an invalid weight expression", {
+  expect_error(
+    system_of_equations("a ~ a.L(1), b ~ b.L(1), y == (n_a/)*a + (n_b/n_y)*b"),
+    "Invalid weight .*n_a/.* in equation .*y==",
+    class = "rlang_error"
+  )
 })
 
 test_that("parse_lags", {

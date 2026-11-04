@@ -59,33 +59,14 @@ calculate_eq_weights <- function(ts_data, iden, period = NULL) {
   # Filter components that are not numeric or cannot be converted to numeric
   components <- components[is.na(suppressWarnings(as.numeric(components)))]
 
-  # Split by mathematical operators
-  ts_names <- unique(unlist(strsplit(
-    components,
-    "[+*/-]"
-  )))
-  ts_names <- ts_names[ts_names != ""]
-  # Trim whitespace
-  ts_names <- trimws(ts_names)
+  ts_names <- weight_series(components)
 
-  ts_present <- ts_names %in% names(ts_data)
-  if (!all(ts_present)) {
-    # Check for negative weight indicators and update ts_names if needed
-    missing_ts_names <- ts_names[!ts_present]
-
-    if (any(grepl("^-", missing_ts_names))) {
-      ts_names <- gsub("^-", "", ts_names)
-      components <- gsub("^-", "", components)
-      ts_present <- ts_names %in% names(ts_data)
-    }
-
-    if (!all(ts_present)) {
-      missing_ts <- ts_names[!ts_present]
-      stop(
-        "The following time series are missing from 'ts_data': ",
-        paste(missing_ts, collapse = ", "), "."
-      )
-    }
+  missing_ts <- setdiff(ts_names, names(ts_data))
+  if (length(missing_ts)) {
+    stop(
+      "The following time series are missing from 'ts_data': ",
+      paste(missing_ts, collapse = ", "), "."
+    )
   }
 
   frequency <- stats::frequency(ts_data[[ts_names[1]]])
@@ -120,22 +101,35 @@ calculate_eq_weights <- function(ts_data, iden, period = NULL) {
     ))
   }
 
-  evaluate_component <- function(component, period_values) {
-    # Replace variables with period_values$variable format
-    expr <- gsub("(\\b[0-9a-zA-Z_]+\\b)", "period_values$\\1", component)
-    parsed_expr <- parse(text = expr)
-    eval(parsed_expr)
-  }
-
-  # Calculate weights
   weights <- list()
-
-  # Apply evaluate_component to each component
-  weights[[agg_value]] <- lapply(
-    components, evaluate_component, period_values
-  )
+  weights[[agg_value]] <- lapply(components, evaluate_weight, period_values)
 
   weights
+}
+
+#' Series in Weight Expressions
+#'
+#' @param expressions Weight expressions, e.g. `"n_a/n_y"` or
+#' `"-0.5*n_m/n_y"`.
+#'
+#' @return A character vector with the names of the series in the
+#' expressions, without numbers.
+#' @keywords internal
+weight_series <- function(expressions) {
+  as.character(unique(unlist(lapply(expressions, function(expression) {
+    all.vars(str2lang(expression))
+  }))))
+}
+
+#' Evaluate a Weight Expression
+#'
+#' @param expression A weight expression, e.g. `"n_a/n_y"`.
+#' @param values A named list with the values of the series in `expression`.
+#'
+#' @return The value of the expression.
+#' @keywords internal
+evaluate_weight <- function(expression, values) {
+  eval(str2lang(expression), values, baseenv())
 }
 
 #' Validate the Period of Identity Weights
@@ -397,6 +391,125 @@ base_prices <- function(levels, shares, base_year) {
 fixed_price_weights <- function(previous_levels, prices) {
   values <- prices * previous_levels[names(prices)]
   values / sum(values)
+}
+
+#' Annual Nominal Shares from Weight Expressions
+#'
+#' Evaluates the weight expressions of an identity on the annual sums of the
+#' series in them, e.g. `n_a/n_y` gives the nominal share of `a` in each year.
+#'
+#' @param ts_data A named list of `koma_ts` with the series in the
+#' expressions, as levels or rates.
+#' @param expressions A named list of weight expressions, as kept by
+#' [get_seq_weights()] in the identity.
+#'
+#' @return A named list of annual `stats::ts` objects with the share of each
+#' year. Years that are not complete are `NA`.
+#' @keywords internal
+annual_shares <- function(ts_data, expressions) {
+  ts_names <- weight_series(expressions)
+  annual <- lapply(stats::as.ts(level(ts_data[ts_names])), tempdisagg::ta,
+    conversion = "sum", to = "annual"
+  )
+  lapply(expressions, evaluate_weight, annual)
+}
+
+#' Start of Time-Varying Identity Weights
+#'
+#' Computes the weights of an identity's components for the first forecast
+#' period, with the prices of the base year: the last year in which the
+#' nominal shares and the real components are complete. If the data ends in
+#' the fourth quarter of the base year, the first forecast period links the
+#' prices of the year before to those of the base year, see
+#' [chain_link_weights()]. Otherwise the weights are [fixed_price_weights()].
+#'
+#' The weights add up to the sum of the base year's shares, as the weights of
+#' the "last" scheme, except for a link, which adds `shift` to the
+#' aggregate's growth.
+#'
+#' @param ts_data A named list of `koma_ts` with the components and the series
+#' in the weight expressions, up to the period before the forecast.
+#' @param iden An identity of `sys_eq$identities` with `expressions`.
+#' @param forecast_start The first forecast period as a number, e.g. `1994`
+#' for the first quarter of 1994.
+#'
+#' @return A list with `weights`, the weights of the components, `shift`, the
+#' constant added to the aggregate's rate in the first forecast period, and
+#' `base_year`.
+#' @keywords internal
+chain_link_start <- function(ts_data, iden, forecast_start) {
+  components <- names(iden$expressions)
+  no_conversion <- components[vapply(components, function(comp) {
+    identical(attr(ts_data[[comp]], "method"), "none")
+  }, logical(1))]
+  if (length(no_conversion)) {
+    cli::cli_abort(c(
+      "!" = "Time-varying weights need the levels of the components.",
+      "x" = "{.val {no_conversion}} {?has/have} method {.val none}."
+    ))
+  }
+
+  frequency <- stats::frequency(ts_data[[components[1]]])
+  previous <- forecast_start - 1 / frequency
+  levels <- lapply(ts_data[components], function(x) {
+    stats::window(stats::as.ts(level(x)), end = previous)
+  })
+  shares <- annual_shares(ts_data, iden$expressions)
+
+  complete_years <- lapply(components, function(comp) {
+    means <- complete_year_means(levels[[comp]])
+    years <- as.numeric(names(means)[!is.na(means)])
+    share_years <- round(stats::time(shares[[comp]]))[!is.na(shares[[comp]])]
+    intersect(years, share_years)
+  })
+  base_year <- max(Reduce(intersect, complete_years), -Inf)
+  if (!is.finite(base_year)) {
+    cli::cli_abort(c(
+      "!" = "Cannot compute time-varying weights.",
+      "x" = "No year is complete for all components and their nominal shares."
+    ))
+  }
+  share_total <- sum(vapply(shares, share_of_year, numeric(1), base_year))
+
+  link <- abs(previous - (base_year + (frequency - 1) / frequency)) < 1e-8
+  if (link) {
+    weights <- chain_link_weights(levels, shares)
+    weights <- vapply(weights, function(w) as.numeric(utils::tail(w, 1)), numeric(1))
+    shift <- 100 * share_total * (sum(weights) - 1)
+  } else {
+    last_levels <- vapply(levels, function(x) as.numeric(utils::tail(x, 1)), numeric(1))
+    weights <- fixed_price_weights(last_levels, base_prices(levels, shares, base_year))
+    shift <- 0
+  }
+
+  list(weights = share_total * weights, shift = shift, base_year = base_year)
+}
+
+#' Growth Factors of a Rate Series
+#'
+#' Computes \eqn{1 + g_h = x_h / x_{h-1}} from the levels that [level()] gives
+#' for the rates, so that the conversion of the series' method is used,
+#' including a custom one.
+#'
+#' @param rates A `koma_ts` with `series_type = "rate"`.
+#'
+#' @return A `stats::ts` with the growth factors, on the periods of `rates`.
+#' `NA` where the previous level is not available.
+#' @keywords internal
+growth_factors <- function(rates) {
+  if (identical(attr(rates, "method"), "none")) {
+    cli::cli_abort(c(
+      "!" = "Cannot compute growth factors of a series with method {.val none}.",
+      "i" = "Its rates have no conversion to levels."
+    ))
+  }
+  levels <- level(rates)
+  factors <- levels / stats::lag(levels, -1)
+  out <- as.numeric(factors)[match(
+    round(stats::time(rates) * stats::frequency(rates)),
+    round(stats::time(factors) * stats::frequency(factors))
+  )]
+  stats::ts(out, start = stats::start(rates), frequency = stats::frequency(rates))
 }
 
 complete_year_means <- function(x) {

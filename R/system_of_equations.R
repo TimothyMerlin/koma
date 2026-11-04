@@ -633,29 +633,26 @@ get_weights <- function(eq) {
 #' parentheses in the input equations.
 #'
 #' @keywords internal
-get_weight_variables <- function(equations) {
-  # Extract words with parentheses
-  x <- unlist(regmatches(
-    equations,
-    gregexpr("\\(([^)]+)\\)", equations)
-  ))
-  # Remove parentheses
-  x <- gsub("[()]", "", x)
+get_weight_variables <- function(equations, call = rlang::caller_env()) {
+  x <- lapply(equations, function(equation) {
+    # Extract words with parentheses
+    weights <- regmatches(equation, gregexpr("\\(([^)]+)\\)", equation))[[1]]
+    # Remove parentheses
+    weights <- gsub("[()]", "", weights)
+    lapply(weights, function(weight) {
+      tryCatch(
+        weight_series(weight),
+        error = function(e) {
+          cli::cli_abort(c(
+            "x" = "Invalid weight {.code {weight}} in equation {.code {equation}}.",
+            "i" = "Weights must be valid R expressions, e.g. {.code n_a/n_y}."
+          ), parent = e, call = call)
+        }
+      )
+    })
+  })
 
-  # Split by mathematical operators
-  x <- unique(unlist(strsplit(x, "[+*/-]")))
-
-  # Trim whitespace
-  x <- trimws(x)
-
-  # Keep only non-numeric strings
-  pattern <- "^([0-9]+(\\.[0-9]*)?|\\.[0-9]+)([eE][+-]?[0-9]+)?$"
-  x <- x[!grepl(pattern, x)]
-
-  # remove empty elements
-  x <- x[nzchar(x)]
-
-  sort(x)
+  sort(unique(as.character(unlist(x))))
 }
 
 #' Parse Lagged Variables in Equation Strings

@@ -4,7 +4,7 @@
 \alias{get_weight_variables}
 \title{Extract Weight Names from Equations}
 \usage{
-get_weight_variables(equations)
+get_weight_variables(equations, call = rlang::caller_env())
 }
 \arguments{
 \item{equations}{A character string or vector containing the system of

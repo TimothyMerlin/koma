@@ -384,6 +384,18 @@ test_that("calculate_eq_weights with weights", {
   expect_equal(names(result), "gdp")
 })
 
+test_that("calculate_eq_weights evaluates numbers in weight expressions", {
+  ts_data <- nominal_with_shares(c(0.6, 0.7, 0.8))
+  iden <- list(gdp = list(
+    components = list(manufacturing = "theta_gamma3_1"),
+    weights = list(theta_gamma3_1 = "nom_manufacturing/nom_gdp/2")
+  ))
+
+  result <- calculate_eq_weights(ts_data, iden)
+
+  expect_equal(result$gdp$manufacturing, 0.4)
+})
+
 test_that("calculate_eq_weights returns error if the names of aggregate
 value and components are not contained in tslist", {
   time_series_1 <- stats::ts(rnorm(100), start = c(1981, 1), frequency = 12)
@@ -498,8 +510,10 @@ annual_overlap <- function(prices, quantities, signs) {
   stats::ts(out, start = c(1991, 1), frequency = 4)
 }
 
+# k random walks of length n, column j around scale[j]
 random_walk <- function(n, k, scale) {
-  scale * exp(apply(matrix(rnorm(n * k, sd = 0.02), n, k), 2, cumsum))
+  walks <- exp(apply(matrix(rnorm(n * k, sd = 0.02), n, k), 2, cumsum))
+  sweep(walks, 2, rep_len(scale, k), `*`)
 }
 
 test_that("chain_link matches annual overlap at previous-year prices", {
@@ -722,6 +736,150 @@ test_that("base_prices errors without shares and levels of the base year", {
   shares <- list(a = stats::ts(1, start = 1990, frequency = 1))
 
   expect_error(base_prices(levels, shares, base_year = 1991), "1991")
+})
+
+test_that("growth_factors follow the levels of the method", {
+  r <- c(0.5, -1.2, 2)
+
+  diff_log <- ets(r, start = c(2020, 1), frequency = 4,
+    series_type = "rate", method = "diff_log"
+  )
+  percentage <- ets(r, start = c(2020, 1), frequency = 4,
+    series_type = "rate", method = "percentage"
+  )
+
+  expect_equal(as.numeric(growth_factors(diff_log)), exp(r / 100))
+  expect_equal(as.numeric(growth_factors(percentage)), 1 + r / 100)
+  expect_equal(stats::tsp(growth_factors(diff_log)), stats::tsp(diff_log))
+})
+
+test_that("growth_factors use a custom conversion", {
+  custom <- ets(c(1, 2, 4), start = c(2020, 1), frequency = 4,
+    series_type = "rate", method = expression(x * 10)
+  )
+
+  # levels 10, 20, 40: the first period has no previous level
+  expect_equal(as.numeric(growth_factors(custom)), c(NA, 2, 2))
+})
+
+# Real components and nominal series as koma_ts, and the identity
+# y == (n_a/n_y)*a - (n_m/n_y)*m with its weights computed from the data.
+chain_link_data <- function(prices, quantities, start = c(1990, 1)) {
+  real <- function(x) {
+    ets(x, start = start, frequency = 4, series_type = "level", method = "diff_log")
+  }
+  nominal <- prices * quantities
+  ts_data <- list(
+    a = real(quantities[, 1]),
+    m = real(quantities[, 2]),
+    n_a = real(nominal[, 1]),
+    n_m = real(nominal[, 2]),
+    n_y = real(nominal[, 1] - nominal[, 2])
+  )
+  sys_eq <- system_of_equations(
+    "a ~ a.L(1), m ~ m.L(1), y == (n_a/n_y)*a - (n_m/n_y)*m"
+  )
+  identities <- get_seq_weights(level(ts_data), sys_eq$identities)
+  list(ts_data = ts_data, iden = identities$y)
+}
+
+test_that("chain_link_start links the first quarter after the base year", {
+  set.seed(10)
+  quantities <- random_walk(16, 2, c(100, 30))
+  prices <- random_walk(16, 2, 1)
+  data <- chain_link_data(prices, quantities)
+  levels <- lapply(data$ts_data[c("a", "m")], function(x) stats::ts(c(x),
+    start = stats::start(x), frequency = 4
+  ))
+  shares <- annual_shares(data$ts_data, data$iden$expressions)
+
+  start <- chain_link_start(data$ts_data, data$iden, forecast_start = 1994)
+
+  link <- chain_link_weights(levels, shares)
+  link <- vapply(link, function(w) as.numeric(utils::tail(w, 1)), numeric(1))
+  expect_equal(start$weights, link)
+  expect_equal(start$shift, 100 * (sum(link) - 1))
+})
+
+test_that("chain_link_start uses base-year prices within the year", {
+  set.seed(11)
+  quantities <- random_walk(14, 2, c(100, 30))
+  prices <- random_walk(14, 2, 1)
+  data <- chain_link_data(prices, quantities)
+  levels <- lapply(data$ts_data[c("a", "m")], function(x) stats::ts(c(x),
+    start = stats::start(x), frequency = 4
+  ))
+  shares <- annual_shares(data$ts_data, data$iden$expressions)
+
+  # data until 1993 Q2: the base year is 1992
+  start <- chain_link_start(data$ts_data, data$iden, forecast_start = 1993.5)
+
+  previous <- vapply(levels, function(x) as.numeric(utils::tail(x, 1)), numeric(1))
+  expected <- fixed_price_weights(previous, base_prices(levels, shares, 1992))
+  expect_equal(start$weights, expected)
+  expect_equal(start$shift, 0)
+})
+
+test_that("annual_shares evaluate the weight expressions per year", {
+  set.seed(12)
+  quantities <- random_walk(12, 2, c(100, 30))
+  prices <- random_walk(12, 2, 1)
+  data <- chain_link_data(prices, quantities)
+
+  shares <- annual_shares(data$ts_data, data$iden$expressions)
+
+  nominal <- unname(rowsum(prices * quantities, rep(1990:1992, each = 4)))
+  expect_equal(as.numeric(shares$a), nominal[, 1] / (nominal[, 1] - nominal[, 2]))
+  expect_equal(as.numeric(shares$m), -nominal[, 2] / (nominal[, 1] - nominal[, 2]))
+  expect_equal(stats::start(shares$a), c(1990, 1))
+})
+
+test_that("annual_shares evaluate numbers in weight expressions", {
+  set.seed(15)
+  quantities <- random_walk(12, 2, c(100, 30))
+  prices <- random_walk(12, 2, 1)
+  data <- chain_link_data(prices, quantities)
+
+  halved <- annual_shares(data$ts_data, list(a = "n_a/n_y/2"))
+  shares <- annual_shares(data$ts_data, data$iden$expressions)
+
+  expect_equal(halved$a, 0.5 * shares$a)
+})
+
+test_that("annual_shares convert rates to levels", {
+  set.seed(14)
+  quantities <- random_walk(12, 2, c(100, 30))
+  prices <- random_walk(12, 2, 1)
+  data <- chain_link_data(prices, quantities)
+
+  as_rates <- rate(data$ts_data)
+
+  expect_equal(
+    annual_shares(as_rates, data$iden$expressions),
+    annual_shares(data$ts_data, data$iden$expressions)
+  )
+})
+
+test_that("chain_link_start needs components with a conversion to levels", {
+  set.seed(13)
+  quantities <- random_walk(16, 2, c(100, 30))
+  prices <- random_walk(16, 2, 1)
+  data <- chain_link_data(prices, quantities)
+  data$ts_data$a <- rate(data$ts_data$a)
+  attr(data$ts_data$a, "method") <- "none"
+
+  expect_error(
+    chain_link_start(data$ts_data, data$iden, forecast_start = 1994),
+    "none"
+  )
+})
+
+test_that("growth_factors need a conversion to levels", {
+  none <- ets(c(1, 2), start = c(2020, 1), frequency = 4,
+    series_type = "rate", method = "none"
+  )
+
+  expect_error(growth_factors(none), "none")
 })
 
 test_that("update_identity_weights throws error when NA", {
