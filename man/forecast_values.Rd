@@ -18,7 +18,9 @@ forecast_values(
   identities,
   conditional_innov_method = "projection",
   stochastic = FALSE,
-  adjustment_matrix = NULL
+  adjustment_matrix = NULL,
+  varying_weights = NULL,
+  with_weights = NULL
 )
 }
 \arguments{
@@ -63,9 +65,19 @@ Dates use the frequency of the data: for quarterly data,
 \code{ts} must have the frequency of the data.}
 
 \item{stochastic}{Logical; when \code{TRUE}, returns a stochastic forecast draw.}
+
+\item{varying_weights}{The start of the time-varying identity weights, as
+returned by \code{\link[=setup_varying_weights]{setup_varying_weights()}}, or \code{NULL} for the constant weights
+of the identities.}
+
+\item{with_weights}{A function that returns \eqn{\Gamma} and the reduced
+form with given identity weights, see \code{\link[=system_with_weights]{system_with_weights()}}. Used with
+\code{varying_weights}.}
 }
 \value{
-A matrix with the base forecast of Y.
+A matrix with the base forecast of Y. With \code{varying_weights}, the
+attribute \code{weights} holds the weights of each identity by forecast period,
+see \code{\link[=forecast_stepwise]{forecast_stepwise()}}.
 }
 \description{
 This function calculates the forecast for a given set of parameters and data.

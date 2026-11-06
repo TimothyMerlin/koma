@@ -9,7 +9,7 @@
 #' about the system of equations used in the model.
 #' @param dates Key-value list for date ranges in various model operations.
 #' `dates$weights` optionally sets the period of the nominal shares used as
-#' identity weights: a year, e.g. `2017`, for the shares of the annual sums,
+#' identity weights: a year, e.g. `2017`, for the shares of the annual averages,
 #' or a year and quarter, e.g. `c(2017, 3)`, for the shares of that quarter.
 #' By default, the last year that is complete for all series of an identity.
 #' @param ... Additional parameters.

@@ -14,7 +14,7 @@ the time series data for both the aggregate values and their components.}
 and their respective weights.}
 
 \item{period}{The period of the shares, \code{dates$weights}: a year, e.g.
-\code{2017}, for the shares of the annual sums, or a year and period, e.g.
+\code{2017}, for the shares of the annual averages, or a year and period, e.g.
 \code{c(2017, 3)}, for the shares of that period. If \code{NULL}, the last year that
 is complete for all series of the identity.}
 }

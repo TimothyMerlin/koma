@@ -384,6 +384,24 @@ test_that("calculate_eq_weights with weights", {
   expect_equal(names(result), "gdp")
 })
 
+test_that("calculate_eq_weights gives a year the scale of its periods", {
+  ts_data <- list(
+    nom_manufacturing = stats::ts(rep(c(100, 200, 300), each = 4),
+      start = 1990, frequency = 4
+    )
+  )
+  iden <- list(gdp = list(
+    components = list(manufacturing = "theta_gamma3_1"),
+    weights = list(theta_gamma3_1 = "nom_manufacturing/1000")
+  ))
+
+  year <- calculate_eq_weights(ts_data, iden, period = 1991)
+  quarter <- calculate_eq_weights(ts_data, iden, period = c(1991, 4))
+
+  expect_equal(year$gdp$manufacturing, 0.2)
+  expect_equal(year, quarter)
+})
+
 test_that("calculate_eq_weights evaluates numbers in weight expressions", {
   ts_data <- nominal_with_shares(c(0.6, 0.7, 0.8))
   iden <- list(gdp = list(
@@ -610,62 +628,6 @@ test_that("chain_link stops when components and shares differ", {
 
 growth <- function(x) x / stats::lag(x, -1) - 1
 
-test_that("chain_link_weights aggregate the growth of the chain-linked volume", {
-  set.seed(6)
-  quantities <- random_walk(24, 3, c(100, 60, 30))
-  prices <- random_walk(24, 3, 1)
-  colnames(quantities) <- colnames(prices) <- c("consumption", "exports", "imports")
-  inputs <- chain_link_inputs(prices, quantities, c(1, 1, -1))
-
-  weights <- chain_link_weights(inputs$levels, inputs$shares)
-
-  # The weights of the last period are for the period after the levels.
-  expected <- stats::window(
-    growth(chain_link(inputs$levels, inputs$shares)),
-    start = stats::start(weights$consumption)
-  )
-  periods <- stats::tsp(expected)
-  weighted <- Reduce(`+`, lapply(names(weights), function(comp) {
-    w <- stats::window(weights[[comp]], periods[1], periods[2])
-    w * (1 + stats::window(growth(inputs$levels[[comp]]), periods[1], periods[2]))
-  })) - 1
-  expect_equal(weighted, expected)
-})
-
-test_that("chain_link_weights add up to 1 except in the first quarter", {
-  set.seed(7)
-  quantities <- random_walk(20, 2, c(100, 50))
-  prices <- random_walk(20, 2, 1)
-  colnames(quantities) <- colnames(prices) <- c("a", "b")
-  inputs <- chain_link_inputs(prices, quantities, c(1, 1))
-
-  weights <- chain_link_weights(inputs$levels, inputs$shares)
-
-  total <- weights$a + weights$b
-  first_quarter <- stats::cycle(total) == 1
-  expect_equal(as.numeric(total[!first_quarter]), rep(1, sum(!first_quarter)))
-  expect_true(all(abs(total[first_quarter] - 1) > 1e-6))
-})
-
-test_that("chain_link_weights are the shares when volumes are constant", {
-  levels <- list(
-    a = stats::ts(rep(10, 12), start = 1990, frequency = 4),
-    b = stats::ts(rep(5, 12), start = 1990, frequency = 4)
-  )
-  shares <- list(
-    a = stats::ts(c(0.6, 0.7, 0.8), start = 1990, frequency = 1),
-    b = stats::ts(c(0.4, 0.3, 0.2), start = 1990, frequency = 1)
-  )
-
-  weights <- chain_link_weights(levels, shares)
-
-  # From the first year with a complete previous year of the aggregate, to
-  # the period after the levels.
-  expect_equal(stats::tsp(weights$a), c(1992, 1993, 4))
-  expect_equal(as.numeric(weights$a), c(0.7, 0.7, 0.7, 0.7, 0.8))
-  expect_equal(as.numeric(weights$b), c(0.3, 0.3, 0.3, 0.3, 0.2))
-})
-
 # Prices that follow a random walk until the end of `base_year` and stay at
 # that year's average prices afterwards, as in a forecast.
 prices_fixed_after <- function(quantities, base_year, start = 1990) {
@@ -708,27 +670,60 @@ test_that("fixed_price_weights aggregate like chain-linking with base-year price
   }
 })
 
-test_that("chain_link_weights give the first forecast quarter", {
-  set.seed(9)
-  quantities <- random_walk(24, 2, c(100, 50))
-  colnames(quantities) <- c("a", "b")
-  prices <- prices_fixed_after(quantities, base_year = 1992)
-  colnames(prices) <- colnames(quantities)
-  inputs <- chain_link_inputs(prices, quantities, c(1, 1))
-  expected <- growth(chain_link(inputs$levels, inputs$shares))
+test_that("weight_series lists each series in the expressions once", {
+  expressions <- list(a = "n_a/n_y", m = "-0.5*n_m/n_y")
 
-  history <- lapply(inputs$levels, stats::window, end = c(1992, 4))
-  weights <- chain_link_weights(history, inputs$shares)
-  link <- vapply(weights, function(w) as.numeric(utils::tail(w, 1)), numeric(1))
-  growth_link <- vapply(inputs$levels, function(x) {
-    as.numeric(stats::window(growth(x), c(1993, 1), c(1993, 1)))
-  }, numeric(1))
+  expect_equal(weight_series(expressions), c("n_a", "n_y", "n_m"))
+  expect_equal(weight_series(list(a = "0.5")), character(0))
+})
 
-  expect_equal(stats::end(weights$a), c(1993, 1))
-  expect_equal(
-    sum(link * (1 + growth_link)) - 1,
-    as.numeric(stats::window(expected, c(1993, 1), c(1993, 1)))
+test_that("evaluate_weight evaluates on the given values only", {
+  values <- list(n_a = c(2, 3), n_y = c(4, 6))
+
+  expect_equal(evaluate_weight("-0.5*n_a/n_y", values), c(-0.25, -0.25))
+  n_m <- 1
+  expect_error(evaluate_weight("n_a/n_m", values), "n_m")
+})
+
+test_that("link_quarter_weights are fixed_price_weights without a price change", {
+  last_levels <- c(a = 110, m = 40)
+  mean_levels <- c(a = 100, m = 35)
+  prices <- c(a = 1.2, m = -0.8)
+
+  weights <- link_quarter_weights(last_levels, mean_levels, prices, prices)
+
+  expect_equal(weights, fixed_price_weights(last_levels, prices))
+  expect_equal(sum(weights), 1)
+})
+
+test_that("link_quarter_weights do not add up to 1 after a price change", {
+  last_levels <- c(a = 110, m = 40)
+  mean_levels <- c(a = 100, m = 35)
+
+  weights <- link_quarter_weights(
+    last_levels, mean_levels,
+    prices = c(a = 1.2, m = -0.8), previous_prices = c(a = 1, m = -1)
   )
+
+  link <- (100 - 35) / (110 - 40)
+  expect_equal(weights, c(a = 1.2 * 110, m = -0.8 * 40) / (1.2 * 100 - 0.8 * 35) * link)
+  expect_false(isTRUE(all.equal(sum(weights), 1)))
+})
+
+test_that("complete_year_means are NA for incomplete years", {
+  # 1990 Q2 to 1992 Q3: only 1991 is complete
+  x <- stats::ts(1:10, start = c(1990, 2), frequency = 4)
+
+  means <- complete_year_means(x)
+
+  expect_equal(names(means), c("1990", "1991", "1992"))
+  expect_equal(as.numeric(means), c(NA, mean(4:7), NA))
+})
+
+test_that("share_of_year looks up the share of each year", {
+  share <- stats::ts(c(0.6, 0.7, 0.8), start = 1990, frequency = 1)
+
+  expect_equal(share_of_year(share, c(1991, 1991, 1990, 1993)), c(0.7, 0.7, 0.6, NA))
 })
 
 test_that("base_prices errors without shares and levels of the base year", {
@@ -736,30 +731,6 @@ test_that("base_prices errors without shares and levels of the base year", {
   shares <- list(a = stats::ts(1, start = 1990, frequency = 1))
 
   expect_error(base_prices(levels, shares, base_year = 1991), "1991")
-})
-
-test_that("growth_factors follow the levels of the method", {
-  r <- c(0.5, -1.2, 2)
-
-  diff_log <- ets(r, start = c(2020, 1), frequency = 4,
-    series_type = "rate", method = "diff_log"
-  )
-  percentage <- ets(r, start = c(2020, 1), frequency = 4,
-    series_type = "rate", method = "percentage"
-  )
-
-  expect_equal(as.numeric(growth_factors(diff_log)), exp(r / 100))
-  expect_equal(as.numeric(growth_factors(percentage)), 1 + r / 100)
-  expect_equal(stats::tsp(growth_factors(diff_log)), stats::tsp(diff_log))
-})
-
-test_that("growth_factors use a custom conversion", {
-  custom <- ets(c(1, 2, 4), start = c(2020, 1), frequency = 4,
-    series_type = "rate", method = expression(x * 10)
-  )
-
-  # levels 10, 20, 40: the first period has no previous level
-  expect_equal(as.numeric(growth_factors(custom)), c(NA, 2, 2))
 })
 
 # Real components and nominal series as koma_ts, and the identity
@@ -785,20 +756,27 @@ chain_link_data <- function(prices, quantities, start = c(1990, 1)) {
 
 test_that("chain_link_start links the first quarter after the base year", {
   set.seed(10)
-  quantities <- random_walk(16, 2, c(100, 30))
-  prices <- random_walk(16, 2, 1)
+  quantities <- random_walk(20, 2, c(100, 30))
+  prices <- prices_fixed_after(quantities, base_year = 1993)
   data <- chain_link_data(prices, quantities)
   levels <- lapply(data$ts_data[c("a", "m")], function(x) stats::ts(c(x),
     start = stats::start(x), frequency = 4
   ))
   shares <- annual_shares(data$ts_data, data$iden$expressions)
+  expected <- growth(chain_link(levels, shares))
 
-  start <- chain_link_start(data$ts_data, data$iden, forecast_start = 1994)
+  history <- lapply(data$ts_data, stats::window, end = c(1993, 4))
+  start <- chain_link_start(history, data$iden, forecast_start = 1994)
 
-  link <- chain_link_weights(levels, shares)
-  link <- vapply(link, function(w) as.numeric(utils::tail(w, 1)), numeric(1))
-  expect_equal(start$weights, link)
-  expect_equal(start$shift, 100 * (sum(link) - 1))
+  growth_link <- vapply(levels, function(x) {
+    as.numeric(stats::window(growth(x), c(1994, 1), c(1994, 1)))
+  }, numeric(1))
+  expect_equal(start$base_year, 1993)
+  expect_true(abs(start$link) > 1e-6)
+  expect_equal(
+    sum(start$weights * 100 * growth_link) + start$link,
+    100 * as.numeric(stats::window(expected, c(1994, 1), c(1994, 1)))
+  )
 })
 
 test_that("chain_link_start uses base-year prices within the year", {
@@ -817,7 +795,58 @@ test_that("chain_link_start uses base-year prices within the year", {
   previous <- vapply(levels, function(x) as.numeric(utils::tail(x, 1)), numeric(1))
   expected <- fixed_price_weights(previous, base_prices(levels, shares, 1992))
   expect_equal(start$weights, expected)
-  expect_equal(start$shift, 0)
+  expect_equal(start$link, 0)
+})
+
+test_that("setup_varying_weights prepares the identities with weights from data", {
+  set.seed(16)
+  # Forecast from 1993 Q1: a link quarter
+  quantities <- random_walk(16, 2, c(100, 30))
+  prices <- random_walk(16, 2, 1)
+  data <- chain_link_data(prices, quantities)
+  sys_eq <- system_of_equations(paste(
+    "a ~ a.L(1), m ~ m.L(1), y == (n_a/n_y)*a - (n_m/n_y)*m,",
+    "z == (n_a/n_y)*a + 0.2*m, w == 0.5*a + 0.5*m"
+  ))
+  identities <- get_seq_weights(level(data$ts_data), sys_eq$identities)
+  attr(data$ts_data$m, "method") <- "percentage"
+
+  varying <- setup_varying_weights(data$ts_data, identities, forecast_start = 1993)
+
+  expect_named(varying, c("y", "z"))
+  for (lhs in c("y", "z")) {
+    expect_equal(
+      varying[[lhs]][names(varying[[lhs]]) != "methods"],
+      chain_link_start(data$ts_data, identities[[lhs]], forecast_start = 1993)
+    )
+  }
+  expect_true(abs(varying$y$link) > 1e-6)
+  expect_equal(varying$y$methods, c(a = "diff_log", m = "percentage"))
+  expect_equal(varying$z$methods, c(a = "diff_log"))
+})
+
+test_that("next_chain_weights continue the weights at fixed prices", {
+  set.seed(13)
+  quantities <- random_walk(3, 2, c(100, 30))
+  prices <- c(1.2, 0.8)
+  weights <- fixed_price_weights(quantities[1, ], prices)
+
+  expected <- 0.9 * fixed_price_weights(quantities[2, ], prices)
+  growth <- quantities[2, ] / quantities[1, ]
+  expect_equal(next_chain_weights(0.9 * weights, growth, 0.9), expected)
+})
+
+test_that("growth_factor follows the levels of the method", {
+  r <- c(0.5, -1.2, 2)
+  for (method in c("percentage", "diff_log")) {
+    levels <- level(ets(r, start = c(2020, 1), frequency = 4,
+      series_type = "rate", method = method
+    ))
+    expect_equal(
+      vapply(r, growth_factor, numeric(1), method),
+      as.numeric(levels / stats::lag(levels, -1))
+    )
+  }
 })
 
 test_that("annual_shares evaluate the weight expressions per year", {
@@ -846,6 +875,18 @@ test_that("annual_shares evaluate numbers in weight expressions", {
   expect_equal(halved$a, 0.5 * shares$a)
 })
 
+test_that("annual_shares evaluate the expressions on annual averages", {
+  set.seed(17)
+  quantities <- random_walk(12, 2, c(100, 30))
+  prices <- random_walk(12, 2, 1)
+  data <- chain_link_data(prices, quantities)
+
+  shares <- annual_shares(data$ts_data, list(a = "n_a/1000"))
+
+  averages <- tapply(prices[, 1] * quantities[, 1], rep(1990:1992, each = 4), mean)
+  expect_equal(as.numeric(shares$a), as.numeric(averages) / 1000)
+})
+
 test_that("annual_shares convert rates to levels", {
   set.seed(14)
   quantities <- random_walk(12, 2, c(100, 30))
@@ -860,26 +901,35 @@ test_that("annual_shares convert rates to levels", {
   )
 })
 
-test_that("chain_link_start needs components with a conversion to levels", {
+test_that("setup_varying_weights explains a component with a custom method", {
   set.seed(13)
   quantities <- random_walk(16, 2, c(100, 30))
   prices <- random_walk(16, 2, 1)
   data <- chain_link_data(prices, quantities)
-  data$ts_data$a <- rate(data$ts_data$a)
-  attr(data$ts_data$a, "method") <- "none"
+  attr(data$ts_data$a, "method") <- expression(x * 10)
 
   expect_error(
-    chain_link_start(data$ts_data, data$iden, forecast_start = 1994),
-    "none"
+    setup_varying_weights(data$ts_data, list(y = data$iden), forecast_start = 1994),
+    "percentage"
   )
 })
 
-test_that("growth_factors need a conversion to levels", {
-  none <- ets(c(1, 2), start = c(2020, 1), frequency = 4,
-    series_type = "rate", method = "none"
-  )
+test_that("chain_link_start needs components with percentage or diff_log", {
+  set.seed(13)
+  quantities <- random_walk(16, 2, c(100, 30))
+  prices <- random_walk(16, 2, 1)
+  data <- chain_link_data(prices, quantities)
 
-  expect_error(growth_factors(none), "none")
+  for (method in list("none", expression(x * 10))) {
+    unsupported <- data
+    unsupported$ts_data$a <- rate(unsupported$ts_data$a)
+    attr(unsupported$ts_data$a, "method") <- method
+
+    expect_error(
+      chain_link_start(unsupported$ts_data, unsupported$iden, forecast_start = 1994),
+      "percentage"
+    )
+  }
 })
 
 test_that("update_identity_weights throws error when NA", {

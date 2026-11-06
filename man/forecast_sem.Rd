@@ -17,7 +17,8 @@ forecast_sem(
   probs,
   conditional_innov_method = "projection",
   adjustments = NULL,
-  fill_periods = 0
+  fill_periods = 0,
+  varying_weights = NULL
 )
 }
 \arguments{
@@ -64,6 +65,10 @@ the possibly shortened horizon.}
 \item{fill_periods}{Number of periods at the start of a density forecast
 that fill the ragged edge, see \code{\link[=fill_in_draws]{fill_in_draws()}}. They are dropped from
 the forecast draws and the adjustments before these are summarised.}
+
+\item{varying_weights}{The start of the time-varying identity weights, as
+returned by \code{\link[=setup_varying_weights]{setup_varying_weights()}}, or \code{NULL} for the constant weights
+of the identities.}
 }
 \value{
 A list containing the forecast values. With adjustments, it also

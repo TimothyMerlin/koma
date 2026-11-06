@@ -24,6 +24,6 @@ With the prices of the base year, these weights aggregate the components'
 simple growth rates to the growth of the chain-linked aggregate in all
 periods after the first quarter after the base year. That quarter links the
 prices of the base year to those of the year before; see
-\code{\link[=chain_link_weights]{chain_link_weights()}}.
+\code{\link[=link_quarter_weights]{link_quarter_weights()}}.
 }
 \keyword{internal}

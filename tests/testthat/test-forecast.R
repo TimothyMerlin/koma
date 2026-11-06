@@ -1993,3 +1993,181 @@ test_that("forecast dates incomplete", {
   )
   expect_error(forecast(estimates, dates), "Invalid")
 })
+
+#' Estimates of an aggregate of two components with data from 1990 Q1 until
+#' `data_end`, and the simulated volumes and nominal values.
+estimate_chain_link_model <- function(data_end,
+                                      identity = "y == (n_a/n_y)*a + (n_m/n_y)*m") {
+  set.seed(5)
+  n <- 4 * (data_end[1] - 1990) + data_end[2]
+  walk <- function(scale) scale * exp(cumsum(rnorm(n, 0.005, 0.01)))
+  quantities <- cbind(a = walk(100), m = walk(50))
+  prices <- cbind(a = walk(1), m = walk(1))
+  nominal <- prices * quantities
+  as_level <- function(x) {
+    ets(x,
+      start = c(1990, 1), frequency = 4,
+      series_type = "level", method = "percentage"
+    )
+  }
+  ts_data <- list(
+    a = as_level(quantities[, "a"]),
+    m = as_level(quantities[, "m"]),
+    y = as_level(rowSums(quantities)),
+    n_a = as_level(nominal[, "a"]),
+    n_m = as_level(nominal[, "m"]),
+    n_y = as_level(rowSums(nominal))
+  )
+  sys_eq <- system_of_equations(paste("a ~ a.L(1), m ~ m.L(1),", identity))
+  forecast_start <- if (data_end[2] == 4) {
+    c(data_end[1] + 1, 1)
+  } else {
+    c(data_end[1], data_end[2] + 1)
+  }
+  dates <- list(
+    estimation = list(start = c(1991, 1), end = data_end),
+    forecast = list(start = forecast_start, end = c(2021, 4))
+  )
+  est <- withr::with_seed(7, estimate(ts_data, sys_eq, dates,
+    options = list(gibbs = list(ndraws = 50))
+  ))
+  list(
+    est = est, dates = dates, ts_data = ts_data,
+    quantities = quantities, nominal = nominal
+  )
+}
+
+test_that("chain-linked weights keep the forecast at the prices of the base year", {
+  skip_on_cran()
+  model <- estimate_chain_link_model(c(2019, 2))
+
+  out <- forecast(model$est, model$dates,
+    options = list(approximate = TRUE, weights = "chain_linked")
+  )
+
+  # The data end in 2019 Q2, so the forecast is valued at the prices of 2018,
+  # the last complete year: the nominal value over the volume of each
+  # component.
+  in_2018 <- 113:116
+  price <- colSums(model$nominal[in_2018, ]) / colSums(model$quantities[in_2018, ])
+  fixed_price <- as.numeric(
+    price[["a"]] * level(out$mean$a) + price[["m"]] * level(out$mean$m)
+  )
+  growth <- 100 * (fixed_price[-1] / fixed_price[-length(fixed_price)] - 1)
+  expect_equal(as.numeric(out$mean$y), growth)
+
+  # the weights of each period, without a link
+  weights <- out$weights$mean$y
+  expect_identical(colnames(weights), c("a", "m", "link"))
+  expect_equal(stats::start(weights), c(2019, 3))
+  expect_equal(as.numeric(weights[, "link"]), rep(0, 10))
+  start <- chain_link_start(
+    model$ts_data, model$est$sys_eq$identities$y, 2019.5
+  )
+  expect_equal(weights[1, c("a", "m")], start$weights)
+  # later weights follow the median forecast
+  expect_equal(out$weights$median$y[1, ], weights[1, ])
+  expect_false(isTRUE(all.equal(out$weights$median$y, weights)))
+})
+
+test_that("chain-linked weights link the first quarter after a complete year", {
+  skip_on_cran()
+  model <- estimate_chain_link_model(c(2019, 4))
+
+  out <- forecast(model$est, model$dates,
+    options = list(approximate = TRUE, weights = "chain_linked")
+  )
+
+  # In 2020, the forecast equals the aggregate chain-linked with annual
+  # overlap: valued at the prices of 2019, linked to 2018 prices in Q1.
+  levels <- lapply(c(a = "a", m = "m"), function(component) {
+    observed <- model$quantities[, component]
+    forecast <- as.numeric(level(out$mean[[component]]))[-1]
+    stats::ts(c(observed, forecast), start = c(1990, 1), frequency = 4)
+  })
+  shares <- annual_shares(model$ts_data, model$est$sys_eq$identities$y$expressions)
+  aggregate <- chain_link(levels, shares)
+  growth <- 100 * (aggregate / stats::lag(aggregate, -1) - 1)
+  expect_equal(
+    as.numeric(out$mean$y)[1:4],
+    as.numeric(stats::window(growth, start = c(2020, 1), end = c(2020, 4)))
+  )
+  link <- out$weights$mean$y[, "link"]
+  expect_true(link[1] != 0)
+  expect_equal(as.numeric(link[-1]), rep(0, 7))
+})
+
+test_that("chain-linked weights work with the weight on the left-hand side", {
+  skip_on_cran()
+  options <- list(approximate = TRUE, weights = "chain_linked")
+  long <- estimate_chain_link_model(c(2019, 4))
+  short <- estimate_chain_link_model(c(2019, 4),
+    identity = "(n_y)*y == (n_a)*a + (n_m)*m"
+  )
+
+  expected <- forecast(long$est, long$dates, options = options)
+  out <- forecast(short$est, short$dates, options = options)
+
+  expect_equal(out$mean, expected$mean)
+  expect_equal(out$weights, expected$weights)
+})
+
+test_that("chain-linked weights of density forecasts are kept per draw", {
+  skip_on_cran()
+  model <- estimate_chain_link_model(c(2019, 2))
+
+  expect_no_warning(out <- withr::with_seed(3, forecast(model$est, model$dates,
+    options = list(weights = "chain_linked")
+  )))
+
+  draw_weights <- lapply(out$forecasts, function(draw) attr(draw, "weights")$y)
+  expect_length(draw_weights, length(out$forecasts))
+  # the weights follow the forecast of each draw
+  expect_false(isTRUE(all.equal(draw_weights[[1]], draw_weights[[2]])))
+  expect_equal(
+    as.numeric(out$weights$mean$y),
+    as.numeric(Reduce(`+`, draw_weights) / length(draw_weights))
+  )
+})
+
+test_that("chain-linked weights cannot be used with restrictions yet", {
+  skip_on_cran()
+  model <- estimate_chain_link_model(c(2019, 2))
+
+  expect_error(
+    forecast(model$est, model$dates,
+      restrictions = list(a = list(value = 0.5, horizon = 1)),
+      options = list(approximate = TRUE, weights = "chain_linked")
+    ),
+    "restrictions or a ragged edge"
+  )
+})
+
+test_that("chain-linked weights need components of the same period", {
+  skip_on_cran()
+  model <- estimate_chain_link_model(c(2019, 2),
+    identity = "y == (n_a/n_y)*a + (n_m/n_y)*m.L(1)"
+  )
+
+  expect_error(
+    forecast(model$est, model$dates,
+      options = list(approximate = TRUE, weights = "chain_linked")
+    ),
+    "m.L(1)",
+    fixed = TRUE
+  )
+})
+
+test_that("chain-linked weights cannot be used with dates$weights", {
+  skip_on_cran()
+  model <- estimate_chain_link_model(c(2019, 2))
+  dates <- model$dates
+  dates$weights <- 2017
+
+  expect_error(
+    forecast(model$est, dates,
+      options = list(approximate = TRUE, weights = "chain_linked")
+    ),
+    "dates\\$weights"
+  )
+})

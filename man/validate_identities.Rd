@@ -4,7 +4,13 @@
 \alias{validate_identities}
 \title{Check Identity Equations in Forecast Output}
 \usage{
-validate_identities(ts_out, identities, tol = 1e-08, x_matrix = NULL)
+validate_identities(
+  ts_out,
+  identities,
+  tol = 1e-08,
+  x_matrix = NULL,
+  weights = NULL
+)
 }
 \arguments{
 \item{ts_out}{A forecast output time-series matrix.}
@@ -17,6 +23,10 @@ reconstructed value.}
 
 \item{x_matrix}{Optional matrix of exogenous variables to include when
 checking identities.}
+
+\item{weights}{Optional named list with the time-varying weights of
+identities, as returned by \code{\link[=forecast_stepwise]{forecast_stepwise()}}. For these, the
+weights and the link of each period are used.}
 }
 \value{
 Invisibly returns \code{NULL}.

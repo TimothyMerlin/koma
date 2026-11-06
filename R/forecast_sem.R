@@ -19,6 +19,9 @@
 #' @param fill_periods Number of periods at the start of a density forecast
 #' that fill the ragged edge, see [fill_in_draws()]. They are dropped from
 #' the forecast draws and the adjustments before these are summarised.
+#' @param varying_weights The start of the time-varying identity weights, as
+#' returned by [setup_varying_weights()], or `NULL` for the constant weights
+#' of the identities.
 #' @inheritParams forecast
 #' @inheritParams estimate
 #'
@@ -31,7 +34,8 @@ forecast_sem <- function(sys_eq, estimates,
                          restrictions, y_matrix, forecast_x_matrix, horizon,
                          freq, forecast_dates, approximate, probs,
                          conditional_innov_method = "projection",
-                         adjustments = NULL, fill_periods = 0) {
+                         adjustments = NULL, fill_periods = 0,
+                         varying_weights = NULL) {
   # The same for every draw, so shorten (and warn) once in the main process
   # instead of per draw, where multisession workers cannot share the state.
   horizon <- shorten_forecast_horizon(horizon, forecast_x_matrix)
@@ -78,7 +82,8 @@ forecast_sem <- function(sys_eq, estimates,
         phi_positions,
         conditional_innov_method = conditional_innov_method,
         central_tendency = central_tendency,
-        adjustment_matrix = adjustment_matrix
+        adjustment_matrix = adjustment_matrix,
+        varying_weights = varying_weights
       ))
     }
     mean_forecast <- point_forecast("mean")
@@ -87,6 +92,12 @@ forecast_sem <- function(sys_eq, estimates,
     out$median <- median_forecast$adjusted
     out$quantiles <- NULL
     out$forecasts <- NULL
+    if (length(varying_weights) > 0) {
+      out$weights <- list(
+        mean = attr(out$mean, "weights"),
+        median = attr(out$median, "weights")
+      )
+    }
     if (!is.null(adjustment_matrix)) {
       out$unadjusted <- list(
         mean = mean_forecast$unadjusted,
@@ -117,6 +128,7 @@ forecast_sem <- function(sys_eq, estimates,
     force(forecast_dates)
     force(conditional_innov_method)
     force(adjustment_matrix)
+    force(varying_weights)
 
     p <- progressr::progressor(steps = nsave)
 
@@ -130,7 +142,8 @@ forecast_sem <- function(sys_eq, estimates,
           y_matrix, forecast_x_matrix, horizon, freq, forecast_dates,
           restrictions, phi_positions,
           conditional_innov_method = conditional_innov_method,
-          adjustment_matrix = adjustment_matrix
+          adjustment_matrix = adjustment_matrix,
+          varying_weights = varying_weights
         ),
         warning = function(w) {
           warnings <<- c(warnings, conditionMessage(w))
@@ -227,6 +240,20 @@ forecast_sem <- function(sys_eq, estimates,
     out$median <- summary$median
     out$quantiles <- summary$quantiles
     out$forecasts <- forecasts
+    if (length(varying_weights) > 0) {
+      draw_weights <- lapply(forecasts, attr, "weights")
+      summary <- lapply(names(varying_weights), function(lhs) {
+        quantiles_from_forecasts(
+          lapply(draw_weights, `[[`, lhs), freq,
+          probs = 0.5, include_mean = TRUE
+        )
+      })
+      names(summary) <- names(varying_weights)
+      out$weights <- list(
+        mean = lapply(summary, `[[`, "q_mean"),
+        median = lapply(summary, `[[`, "q_50")
+      )
+    }
     if (!is.null(adjustment_matrix)) {
       out$unadjusted <- summarise_forecasts(unadjusted_forecasts)
     }
@@ -354,7 +381,8 @@ forecast_draw <- function(sys_eq, estimates, jx,
                           restrictions, phi_positions,
                           conditional_innov_method = "projection",
                           central_tendency = NULL,
-                          adjustment_matrix = NULL) {
+                          adjustment_matrix = NULL,
+                          varying_weights = NULL) {
   if (is.null(jx)) {
     # Case point forecast with option to extract mean or median estimates
     estimates <- extract_estimates_from_draws(
@@ -377,7 +405,11 @@ forecast_draw <- function(sys_eq, estimates, jx,
     restrictions, sys_eq$identities,
     conditional_innov_method = conditional_innov_method,
     stochastic = is.null(central_tendency),
-    adjustment_matrix = adjustment_matrix
+    adjustment_matrix = adjustment_matrix,
+    varying_weights = varying_weights,
+    with_weights = function(weights) {
+      system_with_weights(sys_eq, posterior, phi_positions, weights)
+    }
   )
 }
 
@@ -395,9 +427,14 @@ forecast_draw <- function(sys_eq, estimates, jx,
 #' @param endogenous_variables A character vector containing the names of
 #' endogenous variables.
 #' @param stochastic Logical; when `TRUE`, returns a stochastic forecast draw.
+#' @param with_weights A function that returns \eqn{\Gamma} and the reduced
+#' form with given identity weights, see [system_with_weights()]. Used with
+#' `varying_weights`.
 #' @inheritParams forecast_sem
 #'
-#' @return A matrix with the base forecast of Y.
+#' @return A matrix with the base forecast of Y. With `varying_weights`, the
+#' attribute `weights` holds the weights of each identity by forecast period,
+#' see [forecast_stepwise()].
 #'
 #' @keywords internal
 forecast_values <- function(posterior, companion_matrix, reduced_form,
@@ -406,13 +443,17 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
                             restrictions, identities,
                             conditional_innov_method = "projection",
                             stochastic = FALSE,
-                            adjustment_matrix = NULL) {
+                            adjustment_matrix = NULL,
+                            varying_weights = NULL,
+                            with_weights = NULL) {
   companion_gamma_matrix <- companion_matrix$gamma_matrix
+  n <- companion_matrix$n
+  p <- companion_matrix$p
+  has_lags <- !is.null(reduced_form$companion_theta)
+  reduced_form <- zero_fill_reduced_form(reduced_form, n, p)
   companion_pi <- reduced_form$companion_pi
   companion_theta <- reduced_form$companion_theta
   companion_d <- reduced_form$companion_d
-  n <- companion_matrix$n
-  p <- companion_matrix$p
 
   number_of_observations <- dim(y_matrix)[1]
   if (!is.null(forecast_x_matrix)) {
@@ -420,10 +461,9 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
   } else {
     # Case where there are no exogenous variables: e.g. AR(p) model
     forecast_x_matrix <- matrix(0, horizon, n)
-    companion_pi <- matrix(0, n, n * p)
   }
 
-  if (!is.null(companion_theta)) {
+  if (has_lags) {
     # selection matrix J
     j_matrix <- cbind(diag(n), matrix(0, n, n * (p - 1)))
     y0 <- t(do.call(rbind, lapply(0:(p - 1), function(x) {
@@ -431,7 +471,6 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
     })))
   } else {
     # Case where there are no lagged variables
-    companion_theta <- matrix(0, n, n) # no persitence when p = 1
     j_matrix <- diag(n) # select current y_t from state
     y0 <- matrix(0, nrow = 1, ncol = n)
   }
@@ -441,10 +480,44 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
   sd <- sqrt(pmax(diag(posterior$sigma_matrix), 0))
   z_matrix <- matrix(rnorm(horizon * n), nrow = n, ncol = horizon)
   u_matrix <- z_matrix * sd
+
+  as_forecast_ts <- function(out, weights = NULL) {
+    colnames(out) <- endogenous_variables
+    ts_out <- stats::ts(out, start = start_forecast, frequency = freq)
+    validate_identities(ts_out, identities,
+      x_matrix = forecast_x_matrix, weights = weights
+    )
+    ts_out
+  }
+
+  # Time-varying identity weights change Gamma in every period, so the
+  # forecast goes period by period; forecast() excludes restrictions here.
+  if (length(varying_weights) > 0) {
+    shocks <- if (stochastic) u_matrix else matrix(0, nrow = n, ncol = horizon)
+    forecast_varying_weights <- function(residuals) {
+      out <- forecast_stepwise(
+        varying_weights, with_weights, residuals, horizon, y0,
+        forecast_x_matrix, j_matrix, endogenous_variables
+      )
+      weights <- lapply(out$weights, stats::ts,
+        start = start_forecast, frequency = freq
+      )
+      ts_out <- as_forecast_ts(out$forecast, weights)
+      attr(ts_out, "weights") <- weights
+      ts_out
+    }
+    if (is.null(adjustment_matrix)) {
+      return(forecast_varying_weights(shocks))
+    }
+    ts_out <- forecast_varying_weights(shocks + adjustment_matrix)
+    attr(ts_out, "unadjusted") <- forecast_varying_weights(shocks)
+    return(ts_out)
+  }
+
   # reduced-form innovations
   v_matrix <- solve(t(posterior$gamma_matrix), u_matrix) # = t(inv_gamma) %*% u_matrix
 
-  simulate <- function(vc) {
+  forecast_fixed_weights <- function(vc) {
     forecast_companion(
       horizon,
       y0,
@@ -462,7 +535,9 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
     vc <- if (stochastic) v_matrix else matrix(0, nrow = n, ncol = horizon)
   } else {
     # use deterministic base forecast (expectation)
-    deterministic_uncond <- simulate(matrix(0, nrow = n, ncol = horizon))
+    deterministic_uncond <- forecast_fixed_weights(
+      matrix(0, nrow = n, ncol = horizon)
+    )
 
     stopifnot(
       j_matrix %*% companion_gamma_matrix %*% t(j_matrix) ==
@@ -571,15 +646,8 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
     vc[, restricted_periods] <- v_cond_vec
   }
 
-  as_forecast_ts <- function(out) {
-    colnames(out) <- endogenous_variables
-    ts_out <- stats::ts(out, start = start_forecast, frequency = freq)
-    validate_identities(ts_out, identities, x_matrix = forecast_x_matrix)
-    ts_out
-  }
-
   if (is.null(adjustment_matrix)) {
-    return(as_forecast_ts(simulate(vc)))
+    return(as_forecast_ts(forecast_fixed_weights(vc)))
   }
 
   # Adjustments shift the structural residuals; like the shocks, they enter
@@ -587,8 +655,8 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
   # together with restrictions of the user; the only restrictions here fill
   # the ragged edge, in periods before the adjustments start.
   v_adjustment <- solve(t(posterior$gamma_matrix), adjustment_matrix)
-  ts_out <- as_forecast_ts(simulate(vc + v_adjustment))
-  attr(ts_out, "unadjusted") <- as_forecast_ts(simulate(vc))
+  ts_out <- as_forecast_ts(forecast_fixed_weights(vc + v_adjustment))
+  attr(ts_out, "unadjusted") <- as_forecast_ts(forecast_fixed_weights(vc))
   ts_out
 }
 
@@ -623,6 +691,114 @@ draw_conditional_innovations <- function(v_uncond_vec,
     mean_vec = as.vector(mean_vec),
     draw_vec = as.vector(draw_vec)
   )
+}
+
+#' Forecast Period by Period with Time-Varying Identity Weights
+#'
+#' Computes the forecast period by period with `forecast_companion()`, with
+#' the reduced form of each period's identity weights. The weights of the
+#' first period and the link of a link quarter come from `varying_weights`;
+#' after each period, [next_chain_weights()] continues the weights with the
+#' growth of the components in that period.
+#'
+#' @param residuals The structural residuals, the shocks and adjustments, a
+#' matrix with one row per endogenous variable and one column per forecast
+#' period. The link of a link quarter is added to the residual of the
+#' identity in the first period.
+#' @param y0 The state before the forecast.
+#' @param j_matrix The selection matrix of the current period in the state.
+#' @inheritParams forecast_values
+#'
+#' @return A list with `forecast`, a matrix with one row per forecast period,
+#' and `weights`, a named list with one matrix per identity: the weights of its
+#' components and the `link` by forecast period.
+#' @keywords internal
+forecast_stepwise <- function(varying_weights, with_weights, residuals,
+                              horizon, y0, forecast_x_matrix, j_matrix,
+                              endogenous_variables) {
+  n <- nrow(j_matrix)
+  p <- ncol(j_matrix) / n
+  weights <- lapply(varying_weights, `[[`, "weights")
+  weight_path <- lapply(weights, function(w) {
+    matrix(0,
+      nrow = horizon, ncol = length(w) + 1,
+      dimnames = list(NULL, c(names(w), "link"))
+    )
+  })
+  # The link term enters the identity as its structural residual in the
+  # first period, like an adjustment.
+  for (lhs in names(varying_weights)) {
+    link <- varying_weights[[lhs]]$link
+    weight_path[[lhs]][1, "link"] <- link
+    row <- match(lhs, endogenous_variables)
+    residuals[row, 1] <- residuals[row, 1] + link
+  }
+
+  forecast <- matrix(NA_real_,
+    nrow = horizon, ncol = n,
+    dimnames = list(NULL, endogenous_variables)
+  )
+  # forecast rate of a component, endogenous or exogenous, in period h
+  component_rate <- function(component, h) {
+    if (component %in% endogenous_variables) {
+      forecast[h, component]
+    } else {
+      forecast_x_matrix[h, component]
+    }
+  }
+
+  state <- y0
+  for (h in seq_len(horizon)) {
+    system <- with_weights(weights)
+    reduced_form <- zero_fill_reduced_form(system$reduced_form, n, p)
+    step <- forecast_companion(
+      1, state, reduced_form$companion_d,
+      forecast_x_matrix[h, , drop = FALSE],
+      reduced_form$companion_pi, reduced_form$companion_theta, j_matrix,
+      vc = solve(t(system$gamma_matrix), residuals[, h, drop = FALSE])
+    )
+    state <- step$state
+    forecast[h, ] <- step$forecast
+
+    for (lhs in names(weights)) {
+      weight_path[[lhs]][h, names(weights[[lhs]])] <- weights[[lhs]]
+      if (h == horizon) next
+      growth <- vapply(names(weights[[lhs]]), function(component) {
+        growth_factor(
+          component_rate(component, h),
+          varying_weights[[lhs]]$methods[[component]]
+        )
+      }, numeric(1))
+      weights[[lhs]] <- next_chain_weights(
+        weights[[lhs]], growth, varying_weights[[lhs]]$share_total
+      )
+    }
+  }
+
+  list(forecast = forecast, weights = weight_path)
+}
+
+#' Fill the Missing Reduced-Form Matrices with Zeros
+#'
+#' Replaces the matrices that [construct_reduced_form()] leaves `NULL` by
+#' zeros: `companion_pi` without exogenous variables, `companion_theta`
+#' without lags.
+#'
+#' @param reduced_form The reduced form, as returned by
+#' [construct_reduced_form()].
+#' @param n The number of endogenous variables.
+#' @param p The number of lags in the companion form.
+#'
+#' @return `reduced_form` with `companion_pi` and `companion_theta`.
+#' @keywords internal
+zero_fill_reduced_form <- function(reduced_form, n, p) {
+  if (is.null(reduced_form$companion_pi)) {
+    reduced_form$companion_pi <- matrix(0, n, n * p)
+  }
+  if (is.null(reduced_form$companion_theta)) {
+    reduced_form$companion_theta <- matrix(0, n, n) # no persistence when p = 1
+  }
+  reduced_form
 }
 
 forecast_companion <- function(horizon,
@@ -675,11 +851,14 @@ forecast_companion <- function(horizon,
 #'   reconstructed value.
 #' @param x_matrix Optional matrix of exogenous variables to include when
 #'   checking identities.
+#' @param weights Optional named list with the time-varying weights of
+#'   identities, as returned by [forecast_stepwise()]. For these, the
+#'   weights and the link of each period are used.
 #'
 #' @return Invisibly returns `NULL`.
 #' @keywords internal
 validate_identities <- function(ts_out, identities, tol = 1e-8,
-                                x_matrix = NULL) {
+                                x_matrix = NULL, weights = NULL) {
   if (is.null(identities) || !length(identities)) {
     return(invisible(NULL))
   }
@@ -707,14 +886,24 @@ validate_identities <- function(ts_out, identities, tol = 1e-8,
     comps <- names(iden$components)
     if (!length(comps)) next
 
-    weights <- vapply(comps, function(comp) {
+    fixed <- vapply(comps, function(comp) {
       weight_name <- iden$components[[comp]]
       wt <- iden$weights[[weight_name]]
       suppressWarnings(as.numeric(wt))
     }, numeric(1))
+    period_weights <- matrix(fixed,
+      nrow = nrow(ts_out), ncol = length(comps), byrow = TRUE,
+      dimnames = list(NULL, comps)
+    )
+    link <- 0
+    if (!is.null(weights[[lhs]])) {
+      varying <- setdiff(colnames(weights[[lhs]]), "link")
+      period_weights[, varying] <- weights[[lhs]][, varying]
+      link <- as.numeric(weights[[lhs]][, "link"])
+    }
 
     missing_components <- setdiff(comps, colnames(ts_out))
-    missing_weights <- comps[is.na(weights)]
+    missing_weights <- comps[colSums(is.na(period_weights)) > 0]
     if (length(missing_components) || length(missing_weights)) {
       warn <- c(
         "!" = "Identity {.val {lhs}} could not be checked."
@@ -737,7 +926,7 @@ validate_identities <- function(ts_out, identities, tol = 1e-8,
 
 
     X <- ts_out[, comps, drop = FALSE]
-    rhs <- as.numeric(X %*% weights)
+    rhs <- rowSums(X * period_weights) + link
 
     lhs_series <- ts_out[, lhs]
     diff <- abs(lhs_series - rhs)

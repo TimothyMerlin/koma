@@ -66,6 +66,16 @@
 #'   Details) and keep this fill only in the returned \code{ts_data}.
 #'   \item \code{conditional_innov_method}: Method for drawing conditional
 #'   innovations. One of \code{"projection"} (default) or \code{"eigen"}.
+#'   \item \code{weights}: The weights of identities with weights computed
+#'   from data, e.g. \code{(n_a/n_y)*a}. \code{"last"} (default) keeps the
+#'   weights of the estimation constant. \code{"chain_linked"} lets them vary
+#'   over the forecast, so that the aggregate is chain-linked with annual
+#'   overlap, at the prices of the last complete year. If the data end in its
+#'   last quarter, the first forecast quarter links the prices of the year
+#'   before. The components need the method \code{"percentage"} or
+#'   \code{"diff_log"} and must not be lagged. Cannot be used with
+#'   \code{dates$weights}, and not with
+#'   restrictions or a ragged edge yet.
 #' }
 #'
 #' @inheritSection estimate Parallel
@@ -95,6 +105,15 @@
 #'   \item{adjustments}{The applied adjustments as a named list of time series,
 #'   one per adjusted variable, indexed by forecast period.}
 #'   \item{adjustments_spec}{The \code{adjustments} as given.}
+#' }
+#' With \code{options$weights = "chain_linked"}, the list also contains:
+#' \describe{
+#'   \item{weights}{The weights of the identities by forecast period, as
+#'   \code{mean} and \code{median}: a named list with one time series per
+#'   identity, with one column per component and the column \code{link},
+#'   which is added to the aggregate's rate in a link quarter. For density
+#'   forecasts, these summarise the draws; the weights of each draw are the
+#'   attribute \code{weights} of the draw in \code{forecasts}.}
 #' }
 #'
 #' @examples
@@ -244,6 +263,18 @@ new_forecast <- function(estimates, dates, restrictions, adjustments, options) {
     conditional_innov_method <- "projection"
   }
   conditional_innov_method <- match.arg(conditional_innov_method, c("projection", "eigen"))
+  weights <- options$weights
+  if (is.null(weights)) {
+    weights <- "last"
+  }
+  weights <- match.arg(weights, c("last", "chain_linked"))
+  if (weights == "chain_linked" && !is.null(dates$weights)) {
+    cli::cli_abort(c(
+      "x" = "{.code dates$weights} cannot be used with
+        {.code options$weights = \"chain_linked\"}.",
+      "i" = "Chain-linked weights use the prices of the last complete year."
+    ))
+  }
 
   dates <- dates_to_num(dates, frequency = frequency)
 
@@ -381,13 +412,27 @@ new_forecast <- function(estimates, dates, restrictions, adjustments, options) {
   fill <- if (!approximate) {
     fill_in_draws(estimates, rate(ts_data), dates, frequency)
   }
+  varying_weights <- NULL
+  if (weights == "chain_linked") {
+    if (length(restrictions) > 0 || edge$date != dates$current ||
+      !is.null(fill)) {
+      cli::cli_abort(c(
+        "x" = "{.code options$weights = \"chain_linked\"} cannot be used with
+          restrictions or a ragged edge yet.",
+        "i" = "Use {.code options$weights = \"last\"}."
+      ))
+    }
+    varying_weights <- setup_varying_weights(
+      ts_data, estimates$sys_eq$identities, dates$forecast$start
+    )
+  }
   if (is.null(fill)) {
     check_identity_restrictions(restrictions, estimates$sys_eq)
     forecasts <- forecast_sem(
       estimates$sys_eq, estimates$estimates, restrictions, y_matrix, x_matrix,
       horizon, balanced_data$freq, dates$forecast, approximate, probs,
       conditional_innov_method,
-      adjustments = adjustments
+      adjustments = adjustments, varying_weights = varying_weights
     )
   } else {
     fill_periods <- fill$fill_periods
@@ -467,6 +512,10 @@ new_forecast <- function(estimates, dates, restrictions, adjustments, options) {
     y_matrix = y_matrix,
     x_matrix = x_matrix
   )
+
+  if (!is.null(forecasts$weights)) {
+    result$weights <- forecasts$weights
+  }
 
   if (!is.null(forecasts$adjustment_matrix)) {
     result$unadjusted <- as_output(forecasts$unadjusted)

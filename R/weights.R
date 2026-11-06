@@ -9,7 +9,7 @@
 #' @param identities A named list of identities, each containing components
 #' and their respective weights.
 #' @param period The period of the shares, `dates$weights`: a year, e.g.
-#' `2017`, for the shares of the annual sums, or a year and period, e.g.
+#' `2017`, for the shares of the annual averages, or a year and period, e.g.
 #' `c(2017, 3)`, for the shares of that period. If `NULL`, the last year that
 #' is complete for all series of the identity.
 #'
@@ -75,9 +75,9 @@ calculate_eq_weights <- function(ts_data, iden, period = NULL) {
   if (length(period) == 2L) {
     period_ts <- ts_data[ts_names]
   } else {
-    # Annual sums; a year with missing values is NA
+    # Annual averages; a year with missing values is NA
     period_ts <- lapply(ts_data[ts_names], function(x) {
-      tempdisagg::ta(x, conversion = "sum", to = "annual")
+      tempdisagg::ta(x, conversion = "average", to = "annual")
     })
   }
 
@@ -201,147 +201,6 @@ update_identity_weights <- function(weights, identities) {
   identities
 }
 
-#' Chain-Link an Aggregate with Annual Overlap
-#'
-#' Builds the volume of an aggregate from the volumes of its components, the
-#' way national accounts chain-link with annual overlap: within year \eqn{y},
-#' the components are valued at the average prices of year \eqn{y-1}, and each
-#' year is linked to the average of the previous year,
-#' \deqn{\frac{x_{q,y}}{\bar{x}_{y-1}} = \frac{\sum_i s_{i,y-1}\,
-#' x_{i,q,y}/\bar{x}_{i,y-1}}{\sum_i s_{i,y-1}},}
-#' where \eqn{s_{i,y-1}} is the nominal share of component \eqn{i} in year
-#' \eqn{y-1} and bars denote annual averages. Dividing by the sum of the shares
-#' links each year exactly, also when the shares do not add up to 1.
-#'
-#' @param levels A named list of `stats::ts` objects with the volumes (real
-#' levels) of the components, all of the same frequency.
-#' @param shares A named list of annual `stats::ts` objects with the same names
-#' as `levels`, with the nominal share of each year. Subtracted components
-#' have negative shares.
-#'
-#' @return A `stats::ts` object with the volume of the aggregate. It starts in
-#' the first year whose previous year has shares and complete levels of all
-#' components; the average of that previous year is 100. Only its growth rates
-#' are meaningful.
-#' @keywords internal
-chain_link <- function(levels, shares) {
-  components <- names(levels)
-  if (!setequal(components, names(shares))) {
-    cli::cli_abort(c(
-      "!" = "Components of {.arg levels} and {.arg shares} must match.",
-      "x" = "{.arg levels}: {.val {components}}; {.arg shares}: {.val {names(shares)}}."
-    ))
-  }
-
-  frequency <- stats::frequency(levels[[1]])
-  start <- max(vapply(levels, function(x) stats::tsp(x)[1], numeric(1)))
-  end <- min(vapply(levels, function(x) stats::tsp(x)[2], numeric(1)))
-  periods <- round(seq(start, end, by = 1 / frequency) * frequency)
-  year <- periods %/% frequency
-
-  ratio_terms <- lapply(components, function(comp) {
-    x <- as.numeric(stats::window(levels[[comp]], start, end))
-    # Averages of complete years only
-    annual_mean <- tapply(x, year, mean)
-    annual_mean[tapply(x, year, length) < frequency] <- NA
-    previous_mean <- as.numeric(annual_mean)[match(year - 1, names(annual_mean))]
-
-    share <- share_of_year(shares[[comp]], year - 1)
-    list(weighted = share * x / previous_mean, share = share)
-  })
-  weighted <- Reduce(`+`, lapply(ratio_terms, `[[`, "weighted"))
-  share_sum <- Reduce(`+`, lapply(ratio_terms, `[[`, "share"))
-  ratio <- weighted / share_sum
-
-  valid <- which(!is.na(ratio))
-  if (!length(valid)) {
-    cli::cli_abort(c(
-      "!" = "Cannot chain-link the aggregate.",
-      "x" = "No year has shares and a complete previous year of all components."
-    ))
-  }
-  if (any(diff(valid) != 1L)) {
-    cli::cli_abort(c(
-      "!" = "Cannot chain-link the aggregate.",
-      "x" = "Shares or component levels are missing within the linked years."
-    ))
-  }
-  ratio <- ratio[valid]
-  year <- year[valid]
-
-  # The average of each year is the base of the next one.
-  annual_ratio <- tapply(ratio, year, mean)
-  base <- 100 * cumprod(c(1, annual_ratio[-length(annual_ratio)]))
-  names(base) <- names(annual_ratio)
-
-  first <- periods[valid[1]]
-  stats::ts(
-    unname(base[as.character(year)] * ratio),
-    start = c(first %/% frequency, first %% frequency + 1),
-    frequency = frequency
-  )
-}
-
-#' Weights of a Chain-Linked Aggregate
-#'
-#' Computes the weights that aggregate the growth rates of the components to
-#' the growth rate of the aggregate chain-linked by [chain_link()]. For period
-#' \eqn{h} in year \eqn{y},
-#' \deqn{w_{i,h} = \frac{s_{i,y-1}}{\sum_j s_{j,y-1}}
-#' \frac{x_{i,h-1}/\bar{x}_{i,y-1}}{x_{h-1}/\bar{x}_{y-1}},}
-#' where \eqn{x} is the chain-linked aggregate. The simple growth rates then
-#' satisfy
-#' \deqn{g_h = \sum_i w_{i,h}\, g_{i,h} + \Big(\sum_i w_{i,h} - 1\Big).}
-#' Within a year the weights add up to 1. In the first quarter of a year, the
-#' previous quarter is valued at the prices of year \eqn{y-2}, and the second
-#' term links it to the prices of year \eqn{y-1}.
-#'
-#' The weights for period \eqn{h} only use the levels up to \eqn{h-1}, so the
-#' last weights are for the period after the levels.
-#'
-#' @inheritParams chain_link
-#'
-#' @return A named list of `stats::ts` objects with the weights of the
-#' components. They start in the first year with a complete previous year of
-#' the chain-linked aggregate.
-#' @keywords internal
-chain_link_weights <- function(levels, shares) {
-  aggregate <- chain_link(levels, shares)
-  frequency <- stats::frequency(aggregate)
-  # The weights for period h use the levels of h - 1.
-  start <- stats::tsp(aggregate)[1]
-  end <- stats::tsp(aggregate)[2]
-  year <- floor(stats::time(aggregate) + 1 / frequency + 1e-8)
-
-  previous_aggregate <- as.numeric(aggregate) /
-    complete_year_means(aggregate)[as.character(year - 1)]
-  share_sum <- Reduce(`+`, lapply(shares, share_of_year, year - 1))
-
-  weights <- lapply(names(levels), function(comp) {
-    x <- stats::window(levels[[comp]], start, end)
-    previous_component <- as.numeric(x) /
-      complete_year_means(levels[[comp]])[as.character(year - 1)]
-    share_of_year(shares[[comp]], year - 1) / share_sum *
-      previous_component / previous_aggregate
-  })
-  names(weights) <- names(levels)
-
-  valid <- which(!is.na(Reduce(`+`, weights)))
-  if (!length(valid)) {
-    cli::cli_abort(c(
-      "!" = "Cannot compute chain-link weights.",
-      "x" = "No period has shares and a complete previous year of the aggregate."
-    ))
-  }
-  first <- round(start * frequency) + valid[1]
-  lapply(weights, function(w) {
-    stats::ts(unname(w[valid]),
-      start = c(first %/% frequency, first %% frequency + 1),
-      frequency = frequency
-    )
-  })
-}
-
 #' Prices of the Base Year
 #'
 #' In the forecast, the components are valued at the prices of the last
@@ -350,7 +209,11 @@ chain_link_weights <- function(levels, shares) {
 #' year, where \eqn{s_{i,b}} is its nominal share and \eqn{\bar{x}_{i,b}} its
 #' average volume.
 #'
-#' @inheritParams chain_link
+#' @param levels A named list of `stats::ts` objects with the volumes (real
+#' levels) of the components, all of the same frequency.
+#' @param shares A named list of annual `stats::ts` objects with the same names
+#' as `levels`, with the nominal share of each year. Subtracted components
+#' have negative shares.
 #' @param base_year The base year.
 #'
 #' @return A named numeric vector with the prices of the components.
@@ -379,7 +242,7 @@ base_prices <- function(levels, shares, base_year) {
 #' simple growth rates to the growth of the chain-linked aggregate in all
 #' periods after the first quarter after the base year. That quarter links the
 #' prices of the base year to those of the year before; see
-#' [chain_link_weights()].
+#' [link_quarter_weights()].
 #'
 #' @param previous_levels A named numeric vector with the levels of the
 #' components in the previous period.
@@ -393,10 +256,39 @@ fixed_price_weights <- function(previous_levels, prices) {
   values / sum(values)
 }
 
+#' Weights of the Link Quarter
+#'
+#' The first quarter after the base year \eqn{b} links the prices \eqn{p'} of
+#' year \eqn{b-1}, at which the fourth quarter of \eqn{b} is valued, to the
+#' prices \eqn{p} of year \eqn{b},
+#' \deqn{w_{i} = \frac{p_i\, x_{i,h-1}}{\sum_j p_j\, \bar{x}_{j,b}}
+#' \frac{\sum_j p'_j\, \bar{x}_{j,b}}{\sum_j p'_j\, x_{j,h-1}},}
+#' where \eqn{x_{h-1}} are the levels of the fourth quarter and bars denote
+#' averages of year \eqn{b}. This gives the growth of the aggregate
+#' chain-linked with annual overlap. The weights add up to 1 only if the
+#' relative prices do not change; the difference links the price bases.
+#'
+#' @param last_levels A named numeric vector with the levels of the
+#' components in the fourth quarter of the base year.
+#' @param mean_levels A named numeric vector with the average levels of the
+#' components in the base year.
+#' @param prices,previous_prices Named numeric vectors with the prices of the
+#' components in the base year and the year before, as returned by
+#' [base_prices()].
+#'
+#' @return A named numeric vector with the weights.
+#' @keywords internal
+link_quarter_weights <- function(last_levels, mean_levels, prices,
+                                 previous_prices) {
+  prices * last_levels / sum(prices * mean_levels) *
+    sum(previous_prices * mean_levels) / sum(previous_prices * last_levels)
+}
+
 #' Annual Nominal Shares from Weight Expressions
 #'
-#' Evaluates the weight expressions of an identity on the annual sums of the
-#' series in them, e.g. `n_a/n_y` gives the nominal share of `a` in each year.
+#' Evaluates the weight expressions of an identity on the annual averages of
+#' the series in them, e.g. `n_a/n_y` gives the nominal share of `a` in each
+#' year.
 #'
 #' @param ts_data A named list of `koma_ts` with the series in the
 #' expressions, as levels or rates.
@@ -409,7 +301,7 @@ fixed_price_weights <- function(previous_levels, prices) {
 annual_shares <- function(ts_data, expressions) {
   ts_names <- weight_series(expressions)
   annual <- lapply(stats::as.ts(level(ts_data[ts_names])), tempdisagg::ta,
-    conversion = "sum", to = "annual"
+    conversion = "average", to = "annual"
   )
   lapply(expressions, evaluate_weight, annual)
 }
@@ -417,15 +309,18 @@ annual_shares <- function(ts_data, expressions) {
 #' Start of Time-Varying Identity Weights
 #'
 #' Computes the weights of an identity's components for the first forecast
-#' period, with the prices of the base year: the last year in which the
-#' nominal shares and the real components are complete. If the data ends in
-#' the fourth quarter of the base year, the first forecast period links the
-#' prices of the year before to those of the base year, see
-#' [chain_link_weights()]. Otherwise the weights are [fixed_price_weights()].
+#' period, with the prices of the base year \eqn{b}: the last year in which the
+#' nominal shares and the real components are complete. The weights are
+#' [fixed_price_weights()], unless the data ends in the fourth quarter of
+#' the base year. Then the first forecast period links the prices of the year
+#' before to those of the base year, see [link_quarter_weights()].
 #'
 #' The weights add up to the sum of the base year's shares, as the weights of
-#' the "last" scheme, except for a link, which adds `shift` to the
-#' aggregate's growth.
+#' the "last" scheme, except in a link quarter, where `link` adds the change
+#' of the price base to the aggregate's growth.
+#'
+#' The components need method `"percentage"` or `"diff_log"`, so that their
+#' growth factors follow from their rates, and must not be lagged.
 #'
 #' @param ts_data A named list of `koma_ts` with the components and the series
 #' in the weight expressions, up to the period before the forecast.
@@ -433,19 +328,28 @@ annual_shares <- function(ts_data, expressions) {
 #' @param forecast_start The first forecast period as a number, e.g. `1994`
 #' for the first quarter of 1994.
 #'
-#' @return A list with `weights`, the weights of the components, `shift`, the
-#' constant added to the aggregate's rate in the first forecast period, and
-#' `base_year`.
+#' @return A list with `weights`, the weights of the components, `link`, the
+#' constant added to the aggregate's rate in the first forecast period,
+#' `base_year`, and `share_total`, the sum of the base year's shares.
 #' @keywords internal
 chain_link_start <- function(ts_data, iden, forecast_start) {
   components <- names(iden$expressions)
-  no_conversion <- components[vapply(components, function(comp) {
-    identical(attr(ts_data[[comp]], "method"), "none")
-  }, logical(1))]
-  if (length(no_conversion)) {
+  lagged <- components[grepl("\\.L\\(\\d+\\)$", components)]
+  if (length(lagged)) {
     cli::cli_abort(c(
-      "!" = "Time-varying weights need the levels of the components.",
-      "x" = "{.val {no_conversion}} {?has/have} method {.val none}."
+      "!" = "Time-varying weights need components of the same period.",
+      "x" = "{.val {lagged}} {?is/are} lagged."
+    ))
+  }
+  unsupported <- components[!vapply(components, function(comp) {
+    method <- attr(ts_data[[comp]], "method")
+    is.character(method) && method %in% c("percentage", "diff_log")
+  }, logical(1))]
+  if (length(unsupported)) {
+    cli::cli_abort(c(
+      "!" = "Time-varying weights need components with method
+        {.val percentage} or {.val diff_log}.",
+      "x" = "{.val {unsupported}} {?has/have} another method."
     ))
   }
 
@@ -471,45 +375,91 @@ chain_link_start <- function(ts_data, iden, forecast_start) {
   }
   share_total <- sum(vapply(shares, share_of_year, numeric(1), base_year))
 
-  link <- abs(previous - (base_year + (frequency - 1) / frequency)) < 1e-8
-  if (link) {
-    weights <- chain_link_weights(levels, shares)
-    weights <- vapply(weights, function(w) as.numeric(utils::tail(w, 1)), numeric(1))
-    shift <- 100 * share_total * (sum(weights) - 1)
+  prices <- base_prices(levels, shares, base_year)
+  last_levels <- vapply(levels, function(x) as.numeric(utils::tail(x, 1)), numeric(1))
+  link_quarter <- abs(previous - (base_year + (frequency - 1) / frequency)) < 1e-8
+  if (link_quarter) {
+    mean_levels <- vapply(levels, function(x) {
+      complete_year_means(x)[[as.character(base_year)]]
+    }, numeric(1))
+    weights <- link_quarter_weights(
+      last_levels, mean_levels, prices,
+      base_prices(levels, shares, base_year - 1)
+    )
+    link <- 100 * share_total * (sum(weights) - 1)
   } else {
-    last_levels <- vapply(levels, function(x) as.numeric(utils::tail(x, 1)), numeric(1))
-    weights <- fixed_price_weights(last_levels, base_prices(levels, shares, base_year))
-    shift <- 0
+    weights <- fixed_price_weights(last_levels, prices)
+    link <- 0
   }
 
-  list(weights = share_total * weights, shift = shift, base_year = base_year)
+  list(
+    weights = share_total * weights, link = link, base_year = base_year,
+    share_total = share_total
+  )
 }
 
-#' Growth Factors of a Rate Series
+#' Growth Factor of a Rate
 #'
-#' Computes \eqn{1 + g_h = x_h / x_{h-1}} from the levels that [level()] gives
-#' for the rates, so that the conversion of the series' method is used,
-#' including a custom one.
+#' Computes \eqn{1 + g_h = x_h / x_{h-1}} from the rate of period \eqn{h},
+#' with the conversion of [level()] for the method.
 #'
-#' @param rates A `koma_ts` with `series_type = "rate"`.
+#' @param rate The rate of period \eqn{h}.
+#' @param method `"percentage"` or `"diff_log"`.
 #'
-#' @return A `stats::ts` with the growth factors, on the periods of `rates`.
-#' `NA` where the previous level is not available.
+#' @return The growth factor.
 #' @keywords internal
-growth_factors <- function(rates) {
-  if (identical(attr(rates, "method"), "none")) {
-    cli::cli_abort(c(
-      "!" = "Cannot compute growth factors of a series with method {.val none}.",
-      "i" = "Its rates have no conversion to levels."
-    ))
-  }
-  levels <- level(rates)
-  factors <- levels / stats::lag(levels, -1)
-  out <- as.numeric(factors)[match(
-    round(stats::time(rates) * stats::frequency(rates)),
-    round(stats::time(factors) * stats::frequency(factors))
-  )]
-  stats::ts(out, start = stats::start(rates), frequency = stats::frequency(rates))
+growth_factor <- function(rate, method) {
+  switch(method,
+    percentage = 1 + rate / 100,
+    diff_log = exp(rate / 100)
+  )
+}
+
+#' Set Up Time-Varying Identity Weights for a Forecast
+#'
+#' Prepares the chain-linked weights of each identity with weights computed
+#' from data: the weights of the first forecast period from
+#' [chain_link_start()], and the methods of the components, with which
+#' [growth_factor()] converts their forecast rates for [next_chain_weights()].
+#'
+#' @param ts_data A named list of `koma_ts` with the components and the series
+#' in the weight expressions, up to the period before the forecast.
+#' @param identities The identities of `sys_eq`, with the `expressions` kept by
+#' [get_seq_weights()].
+#' @inheritParams chain_link_start
+#'
+#' @return A named list with one element per identity with weights from data,
+#' as returned by [chain_link_start()], with `methods`, the methods of the
+#' components.
+#' @keywords internal
+setup_varying_weights <- function(ts_data, identities, forecast_start) {
+  identities <- Filter(function(iden) length(iden$expressions) > 0, identities)
+  lapply(identities, function(iden) {
+    # chain_link_start() checks the methods of the components first.
+    start <- chain_link_start(ts_data, iden, forecast_start)
+    components <- names(iden$expressions)
+    methods <- vapply(ts_data[components], attr, character(1), "method")
+    c(start, list(methods = methods))
+  })
+}
+
+#' Weights of the Next Forecast Period
+#'
+#' Continues the chain-linked weights at the prices of the base year:
+#' \deqn{w_{i,h+1} = c\,\frac{w_{i,h}(1 + g_{i,h})}{\sum_j w_{j,h}(1 + g_{j,h})},}
+#' where \eqn{1 + g_{i,h}} is the growth factor of component \eqn{i} in period
+#' \eqn{h} and \eqn{c} the sum of the base year's shares.
+#'
+#' @param weights A named numeric vector with the weights of period \eqn{h}.
+#' @param growth A numeric vector with the growth factors of period \eqn{h},
+#' in the order of `weights`.
+#' @param share_total The sum of the base year's shares.
+#'
+#' @return A named numeric vector with the weights of period \eqn{h + 1}.
+#' @keywords internal
+next_chain_weights <- function(weights, growth, share_total) {
+  values <- weights * growth
+  share_total * values / sum(values)
 }
 
 complete_year_means <- function(x) {

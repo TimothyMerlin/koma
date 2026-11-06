@@ -33,7 +33,7 @@ used in the estimation.}
 
 \item{dates}{Key-value list for date ranges in various model operations.
 \code{dates$weights} optionally sets the period of the nominal shares used as
-identity weights: a year, e.g. \code{2017}, for the shares of the annual sums,
+identity weights: a year, e.g. \code{2017}, for the shares of the annual averages,
 or a year and quarter, e.g. \code{c(2017, 3)}, for the shares of that quarter.
 By default, the last year that is complete for all series of an identity.}
 
@@ -99,6 +99,16 @@ before forecasting. Density forecasts fill in each draw instead (see
 Details) and keep this fill only in the returned \code{ts_data}.
 \item \code{conditional_innov_method}: Method for drawing conditional
 innovations. One of \code{"projection"} (default) or \code{"eigen"}.
+\item \code{weights}: The weights of identities with weights computed
+from data, e.g. \code{(n_a/n_y)*a}. \code{"last"} (default) keeps the
+weights of the estimation constant. \code{"chain_linked"} lets them vary
+over the forecast, so that the aggregate is chain-linked with annual
+overlap, at the prices of the last complete year. If the data end in its
+last quarter, the first forecast quarter links the prices of the year
+before. The components need the method \code{"percentage"} or
+\code{"diff_log"} and must not be lagged. Cannot be used with
+\code{dates$weights}, and not with
+restrictions or a ragged edge yet.
 }}
 }
 \value{
@@ -127,6 +137,15 @@ difference to \code{mean} is the effect of the adjustments.}
 \item{adjustments}{The applied adjustments as a named list of time series,
 one per adjusted variable, indexed by forecast period.}
 \item{adjustments_spec}{The \code{adjustments} as given.}
+}
+With \code{options$weights = "chain_linked"}, the list also contains:
+\describe{
+\item{weights}{The weights of the identities by forecast period, as
+\code{mean} and \code{median}: a named list with one time series per
+identity, with one column per component and the column \code{link},
+which is added to the aggregate's rate in a link quarter. For density
+forecasts, these summarise the draws; the weights of each draw are the
+attribute \code{weights} of the draw in \code{forecasts}.}
 }
 }
 \description{

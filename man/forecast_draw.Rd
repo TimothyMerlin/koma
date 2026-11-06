@@ -17,7 +17,8 @@ forecast_draw(
   phi_positions,
   conditional_innov_method = "projection",
   central_tendency = NULL,
-  adjustment_matrix = NULL
+  adjustment_matrix = NULL,
+  varying_weights = NULL
 )
 }
 \arguments{
@@ -57,6 +58,10 @@ Dates use the frequency of the data: for quarterly data,
 
 \item{phi_positions}{Positions of the lagged endogenous regressors, as
 returned by \code{\link[=find_phi_positions]{find_phi_positions()}}.}
+
+\item{varying_weights}{The start of the time-varying identity weights, as
+returned by \code{\link[=setup_varying_weights]{setup_varying_weights()}}, or \code{NULL} for the constant weights
+of the identities.}
 }
 \description{
 This function computes a forecast for a single draw of the parameter

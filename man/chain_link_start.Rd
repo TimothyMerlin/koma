@@ -16,21 +16,24 @@ in the weight expressions, up to the period before the forecast.}
 for the first quarter of 1994.}
 }
 \value{
-A list with \code{weights}, the weights of the components, \code{shift}, the
-constant added to the aggregate's rate in the first forecast period, and
-\code{base_year}.
+A list with \code{weights}, the weights of the components, \code{link}, the
+constant added to the aggregate's rate in the first forecast period,
+\code{base_year}, and \code{share_total}, the sum of the base year's shares.
 }
 \description{
 Computes the weights of an identity's components for the first forecast
-period, with the prices of the base year: the last year in which the
-nominal shares and the real components are complete. If the data ends in
-the fourth quarter of the base year, the first forecast period links the
-prices of the year before to those of the base year, see
-\code{\link[=chain_link_weights]{chain_link_weights()}}. Otherwise the weights are \code{\link[=fixed_price_weights]{fixed_price_weights()}}.
+period, with the prices of the base year \eqn{b}: the last year in which the
+nominal shares and the real components are complete. The weights are
+\code{\link[=fixed_price_weights]{fixed_price_weights()}}, unless the data ends in the fourth quarter of
+the base year. Then the first forecast period links the prices of the year
+before to those of the base year, see \code{\link[=link_quarter_weights]{link_quarter_weights()}}.
 }
 \details{
 The weights add up to the sum of the base year's shares, as the weights of
-the "last" scheme, except for a link, which adds \code{shift} to the
-aggregate's growth.
+the "last" scheme, except in a link quarter, where \code{link} adds the change
+of the price base to the aggregate's growth.
+
+The components need method \code{"percentage"} or \code{"diff_log"}, so that their
+growth factors follow from their rates, and must not be lagged.
 }
 \keyword{internal}

@@ -298,6 +298,56 @@ test_that("mixed dynamic identity weights produce numeric model coefficients", {
   expect_identical(coefficients$beta_matrix["x1", "y"], 0.7)
 })
 
+test_that("system_with_weights replaces the weights of the identities", {
+  sys_eq <- system_of_equations(
+    "a ~ a.L(1) + x, b ~ a + b.L(1), y == (n_a/n_y)*a + (n_x/n_y)*x + 0.2*b",
+    exogenous_variables = "x"
+  )
+  with_weights <- function(a, x) {
+    update_identity_weights(list(y = list(a = a, x = x)), sys_eq$identities)
+  }
+  sys_eq$identities <- with_weights(0.5, 0.3)
+  set.seed(3)
+  random <- function(character_matrix) {
+    values <- matrix(rnorm(length(character_matrix)), nrow(character_matrix))
+    values[character_matrix == 0] <- 0
+    dimnames(values) <- dimnames(character_matrix)
+    values
+  }
+  gamma_matrix <- random(sys_eq$character_gamma_matrix)
+  diag(gamma_matrix) <- 1
+  estimate <- list(
+    gamma_matrix = gamma_matrix,
+    beta_matrix = random(sys_eq$character_beta_matrix),
+    sigma_matrix = diag(c(1, 1, 0))
+  )
+  phi_positions <- find_phi_positions(sys_eq)
+  reduced_form <- function(sys_eq) {
+    posterior <- construct_posterior(sys_eq, estimate, phi_positions)
+    list(
+      gamma_matrix = posterior$gamma_matrix,
+      reduced_form = construct_reduced_form(
+        construct_companion_matrix(posterior, sys_eq$exogenous_variables)
+      )
+    )
+  }
+  posterior <- construct_posterior(sys_eq, estimate, phi_positions)
+
+  # the weights of the identity give the system of the posterior
+  same <- system_with_weights(
+    sys_eq, posterior, phi_positions, list(y = c(a = 0.5, x = 0.3))
+  )
+  expect_equal(same, reduced_form(sys_eq))
+
+  # other weights give the system estimated with them, the fixed weight stays
+  other <- system_with_weights(
+    sys_eq, posterior, phi_positions, list(y = c(a = 0.6, x = 0.1))
+  )
+  sys_eq$identities <- with_weights(0.6, 0.1)
+  expect_equal(other, reduced_form(sys_eq))
+  expect_equal(other$gamma_matrix[c("a", "b"), "y"], c(a = -0.6, b = -0.2))
+})
+
 test_that("update_estimates_with_weights", {
   equations <-
     "consumption ~ gdp + consumption.L(1) + consumption.L(2),

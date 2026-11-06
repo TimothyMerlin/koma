@@ -204,6 +204,35 @@ update_estimates_with_weights <- function(identities, gamma_matrix, beta_matrix)
   )
 }
 
+#' System Matrices with Given Identity Weights
+#'
+#' Replaces the weights of identity components in the posterior and computes
+#' \eqn{\Gamma} and the reduced form of the system. With time-varying identity
+#' weights, [forecast_stepwise()] uses it to rebuild the system with the
+#' weights of each forecast period. The estimated coefficients and the other
+#' identity weights stay as they are.
+#'
+#' @param posterior Posterior system matrices from [construct_posterior()].
+#' @param weights A named list with one element per identity: a named numeric
+#' vector with the weights of its components.
+#' @inheritParams construct_posterior
+#'
+#' @return A list with `gamma_matrix`, \eqn{\Gamma} with the given weights,
+#' and `reduced_form`, as returned by [construct_reduced_form()].
+#' @keywords internal
+system_with_weights <- function(sys_eq, posterior, phi_positions, weights) {
+  identities <- update_identity_weights(lapply(weights, as.list), sys_eq$identities)
+  matrices <- update_estimates_with_weights(
+    identities, posterior$gamma_matrix, posterior$beta_matrix
+  )
+  matrices$phi_matrix <- construct_phi(phi_positions, matrices$beta_matrix)
+  companion <- construct_companion_matrix(matrices, sys_eq$exogenous_variables)
+  list(
+    gamma_matrix = matrices$gamma_matrix,
+    reduced_form = construct_reduced_form(companion)
+  )
+}
+
 
 #' Construct a Dynamic SEM (Structural Equation Model) Phi Matrix
 #'

@@ -18,7 +18,8 @@ A named list of annual \code{stats::ts} objects with the share of each
 year. Years that are not complete are \code{NA}.
 }
 \description{
-Evaluates the weight expressions of an identity on the annual sums of the
-series in them, e.g. \code{n_a/n_y} gives the nominal share of \code{a} in each year.
+Evaluates the weight expressions of an identity on the annual averages of
+the series in them, e.g. \code{n_a/n_y} gives the nominal share of \code{a} in each
+year.
 }
 \keyword{internal}
