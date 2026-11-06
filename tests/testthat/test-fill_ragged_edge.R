@@ -311,3 +311,43 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
   )
   expect_length(result$investment, length(realized_investment) + 2)
 })
+
+test_that("conditional_fill fills the edge of a model without exogenous variables", {
+  skip_on_cran()
+  dates <- list(estimation = list(), forecast = list(), current = NULL)
+  dates$current <- c(2023, 2)
+  dates$estimation$start <- c(1996, 1)
+  dates$estimation$end <- c(2019, 4)
+  dates$forecast$start <- c(2023, 3)
+  dates$forecast$end <- c(2024, 4)
+  dates <- dates_to_num(dates, 4)
+
+  sys_eq <- system_of_equations(
+    "consumption ~ consumption.L(1),
+investment ~ investment.L(1),
+gdp == 0.64*consumption + 0.27*investment"
+  )
+
+  ts_data <- lapply(small_open_economy[sys_eq$endogenous_variables], function(x) {
+    as_ets(x, series_type = "level", method = "diff_log")
+  })
+  ts_data$investment <- stats::window(ts_data$investment, end = c(2022, 4))
+  ts_data <- rate(ts_data)
+
+  estimates <- withr::with_seed(7, estimate(ts_data, sys_eq, dates))
+  ts_data <- create_lagged_variables(
+    estimates$ts_data, sys_eq$endogenous_variables,
+    NULL, sys_eq$predetermined_variables
+  )
+
+  result <- conditional_fill(
+    ts_data, sys_eq, dates, estimates$estimates,
+    fill_method = "mean"
+  )
+
+  expect_equal(stats::end(result$investment), c(2023, 2))
+  expect_equal(
+    result$investment[seq_along(ts_data$investment)],
+    as.vector(ts_data$investment)
+  )
+})

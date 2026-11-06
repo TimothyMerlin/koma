@@ -91,11 +91,14 @@ fill_ragged_edge <- function(ts_data, sys_eq,
     # because horizon is 1 the end date will be disregarded
     forecast_dates$end <- iterate_n_periods(edge$date, 2, frequency = balanced_data$freq)
 
-    forecast_x_matrix <- stats::window(
-      as_mets(ts_data[sys_eq$exogenous_variables]),
-      start = forecast_dates$start,
-      end = forecast_dates$end
-    )
+    forecast_x_matrix <- NULL
+    if (length(sys_eq$exogenous_variables) > 0) {
+      forecast_x_matrix <- stats::window(
+        as_mets(ts_data[sys_eq$exogenous_variables]),
+        start = forecast_dates$start,
+        end = forecast_dates$end
+      )
+    }
 
     ##### Produce forecasts
     forecasts <- forecast_sem(
@@ -270,11 +273,14 @@ conditional_fill <- function(ts_data, sys_eq, dates,
   # because horizon is 1 the end date will be disregarded
   forecast_dates$end <- iterate_n_periods(edge$date, horizon, frequency = frequency)
 
-  forecast_x_matrix <- stats::window(
-    as_mets(ts_data[sys_eq$exogenous_variables]),
-    start = forecast_dates$start,
-    end = forecast_dates$end
-  )
+  forecast_x_matrix <- NULL
+  if (length(sys_eq$exogenous_variables) > 0) {
+    forecast_x_matrix <- stats::window(
+      as_mets(ts_data[sys_eq$exogenous_variables]),
+      start = forecast_dates$start,
+      end = forecast_dates$end
+    )
+  }
 
   ##### Produce forecasts
   forecasts <- forecast_sem(
