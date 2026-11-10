@@ -1,9 +1,13 @@
 KOMA - Large Macroeconomic Model
 ================
 
-[![Lifecycle:
-maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/koma)](https://CRAN.R-project.org/package=koma)
+[![R-CMD-check](https://github.com/TimothyMerlin/koma/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/TimothyMerlin/koma/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/TimothyMerlin/koma/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/TimothyMerlin/koma/actions/workflows/pkgdown.yaml)
 [![codecov](https://codecov.io/gh/TimothyMerlin/koma/branch/main/graph/badge.svg?token=8X0PR1F6TP)](https://app.codecov.io/gh/TimothyMerlin/koma)
+[![Lifecycle:
+stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 
 **koma** is an R package for Bayesian estimation of simultaneous
 equation models (SEMs) using Metropolis-within-Gibbs Markov Chain Monte
@@ -38,7 +42,8 @@ pak::pak("TimothyMerlin/koma")
 - **Example: small macro model** → [Estimating small macro model for
   Switzerland](https://timothymerlin.github.io/koma/articles/koma-small-macro-model.html)
 - **Example: error correction** → [Error correction in a small open
-  economy model](https://timothymerlin.github.io/koma/articles/koma-error-correction.html)
+  economy
+  model](https://timothymerlin.github.io/koma/articles/koma-error-correction.html)
 - **Diagnostics** → [MCMC diagnostics for an estimated
   SEM](https://timothymerlin.github.io/koma/articles/koma-diagnostics.html)
 - **HPD intervals** → [Highest probability density (HDR and
@@ -51,6 +56,6 @@ for the complete function reference.
 
 Contributions are welcome! See
 [CONTRIBUTING.md](https://github.com/TimothyMerlin/koma/blob/main/CONTRIBUTING.md)
-for the development setup and pull request process. Bug reports and feature
-requests are welcome via
-[GitHub issues](https://github.com/TimothyMerlin/koma/issues).
+for the development setup and pull request process. Bug reports and
+feature requests are welcome via [GitHub
+issues](https://github.com/TimothyMerlin/koma/issues).

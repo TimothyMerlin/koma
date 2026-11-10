@@ -3,8 +3,11 @@ title: "KOMA - Large Macroeconomic Model"
 output: github_document
 ---
 
-[![Lifecycle: maturing](https://img.shields.io/badge/lifecycle-maturing-blue.svg)](https://lifecycle.r-lib.org/articles/stages.html#maturing)
+[![CRAN status](https://www.r-pkg.org/badges/version/koma)](https://CRAN.R-project.org/package=koma)
+[![R-CMD-check](https://github.com/TimothyMerlin/koma/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/TimothyMerlin/koma/actions/workflows/R-CMD-check.yaml)
+[![pkgdown](https://github.com/TimothyMerlin/koma/actions/workflows/pkgdown.yaml/badge.svg)](https://github.com/TimothyMerlin/koma/actions/workflows/pkgdown.yaml)
 [![codecov](https://codecov.io/gh/TimothyMerlin/koma/branch/main/graph/badge.svg?token=8X0PR1F6TP)](https://app.codecov.io/gh/TimothyMerlin/koma)
+[![Lifecycle: stable](https://img.shields.io/badge/lifecycle-stable-brightgreen.svg)](https://lifecycle.r-lib.org/articles/stages.html#stable)
 
 **koma** is an R package for Bayesian estimation of simultaneous equation
 models (SEMs) using Metropolis-within-Gibbs Markov Chain Monte Carlo (MCMC)
