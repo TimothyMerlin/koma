@@ -240,6 +240,21 @@ test_that("construct_balanced_data, SEM with only one equation", {
   expect_true(inherits(result$x_matrix, "matrix"))
 })
 
+test_that("construct_balanced_data with only a constant as regressor", {
+  ts_data <- list(
+    a = stats::ts(1:8, start = c(2000, 1), frequency = 4),
+    b = stats::ts(9:16, start = c(2000, 1), frequency = 4)
+  )
+
+  result <- construct_balanced_data(
+    ts_data, c("a", "b"), "constant", 2000, 2001.75
+  )
+
+  expect_equal(colnames(result$x_matrix), "constant")
+  expect_equal(as.vector(result$x_matrix), rep(1, 8))
+  expect_equal(as.vector(result$y_matrix[, "b"]), as.numeric(9:16))
+})
+
 # Test 1: Checking that the function correctly identifies NA-containing columns
 test_that("validate_matrices, with NAs", {
   dataset1 <- data.frame(

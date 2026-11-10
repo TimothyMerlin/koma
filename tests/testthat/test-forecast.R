@@ -364,6 +364,34 @@ test_that("estimate and forecast support yearly single-frequency data", {
   expect_identical(names(result$quantiles), c("q_10", "q_90"))
 })
 
+test_that("estimate and forecast a model with only constants", {
+  rate <- function(mean) {
+    as_ets(
+      stats::ts(mean + stats::rnorm(40, sd = 0.2), start = c(2010, 1), frequency = 4),
+      series_type = "rate", method = "none"
+    )
+  }
+  ts_data <- withr::with_seed(1, list(a = rate(0.5), b = rate(0.3)))
+  ts_data$c <- 0.5 * ts_data$a + 0.5 * ts_data$b
+  sys_eq <- system_of_equations("a ~ 1, b ~ 1, c == 0.5*a + 0.5*b")
+  dates <- list(
+    estimation = list(start = c(2010, 1), end = c(2019, 4)),
+    forecast = list(start = c(2020, 1), end = c(2020, 4))
+  )
+
+  estimates <- withr::with_seed(
+    42,
+    estimate(ts_data, sys_eq, dates, options = list(gibbs = list(ndraws = 40)))
+  )
+  result <- withr::with_seed(42, forecast(estimates, dates))
+
+  expect_s3_class(result, "koma_forecast")
+  expect_equal(
+    as.numeric(result$mean$c),
+    as.numeric(0.5 * result$mean$a + 0.5 * result$mean$b)
+  )
+})
+
 test_that("forecast conditional innovation methods", {
   skip_on_cran()
   # yield approximatively equal distributions

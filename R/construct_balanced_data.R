@@ -51,9 +51,12 @@ construct_balanced_data <- function(ts_data, endogenous_variables,
     end = stats::end(truncated_ts_data),
     frequency = freq
   )
-  x_matrix_without_constant <- truncated_ts_data[, total_exogenous_variables[-1]]
-
-  x_matrix <- as.matrix(cbind(constant_matrix, x_matrix_without_constant))
+  if (length(total_exogenous_variables) > 1) {
+    x_matrix_without_constant <- truncated_ts_data[, total_exogenous_variables[-1]]
+    x_matrix <- as.matrix(cbind(constant_matrix, x_matrix_without_constant))
+  } else {
+    x_matrix <- as.matrix(constant_matrix)
+  }
   colnames(x_matrix) <- total_exogenous_variables
 
   validate_matrices(x_matrix, y_matrix)

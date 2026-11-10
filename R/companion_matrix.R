@@ -16,6 +16,7 @@ construct_companion_matrix <- function(posterior, exogenous_variables) {
   # Construct B_tilde matrix and constant
   indices_exogenous_variables <-
     which(rownames(beta_matrix) %in% exogenous_variables)
+  beta_tilde_matrix <- NULL
   # Case: e.g. AR(p)
   if (length(indices_exogenous_variables) != 0) {
     beta_tilde_matrix <- beta_matrix[indices_exogenous_variables, , drop = FALSE]

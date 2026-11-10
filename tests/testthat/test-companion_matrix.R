@@ -42,6 +42,17 @@ test_that("construct_reduced_form without lagged endogenous variables", {
   )
 })
 
+test_that("construct_companion_matrix without lags and exogenous variables", {
+  posterior <- random_posterior(n = 3, p = 0, exogenous = character())
+  companion <- construct_companion_matrix(posterior, character())
+
+  expect_null(companion$beta_tilde_matrix)
+  expect_equal(
+    construct_reduced_form(companion),
+    reduced_form_reference(companion)
+  )
+})
+
 test_that("construct_reduced_form with one lag and no exogenous variables", {
   posterior <- random_posterior(n = 3, p = 1, exogenous = character())
   companion <- construct_companion_matrix(posterior, character())

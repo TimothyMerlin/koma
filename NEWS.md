@@ -20,6 +20,7 @@
 
 ## Bug fixes
 
+* Models whose stochastic equations have only a constant, e.g. `a ~ 1, b ~ 1, c == 0.5*a + 0.5*b`, can now be estimated and forecast. Before, `estimate()` failed with `subscript out of bounds`, and `forecast()` failed with `object 'beta_tilde_matrix' not found` (#152).
 * `forecast()` no longer warns that identities with lagged components, e.g. `d == x - x.L(1)`, `could not be checked`. The forecast no longer recomputes the identities in each draw: the identities hold by construction. The forecasts themselves were correct (#150).
 * Forecasts with a ragged edge no longer fail for models without exogenous variables. Before, the fill of the missing periods failed with `cannot assign 'tsp' to zero-length vector` (#149).
 * Identity weights computed from data can contain numbers, e.g. `(nom_consumption/nom_gdp/2)*consumption`. Before, `estimate()` failed with an error about a missing time series `2`. Invalid weight expressions, e.g. `(n_a/)*a`, now fail in `system_of_equations()` with an error that names the weight and the equation.
