@@ -17,6 +17,7 @@
 
 ## Bug fixes
 
+* `forecast()` no longer warns that identities with lagged components, e.g. `d == x - x.L(1)`, `could not be checked`. The forecast no longer recomputes the identities in each draw: the identities hold by construction. The forecasts themselves were correct (#150).
 * Forecasts with a ragged edge no longer fail for models without exogenous variables. Before, the fill of the missing periods failed with `cannot assign 'tsp' to zero-length vector` (#149).
 * Identity weights computed from data can contain numbers, e.g. `(nom_consumption/nom_gdp/2)*consumption`. Before, `estimate()` failed with an error about a missing time series `2`. Invalid weight expressions, e.g. `(n_a/)*a`, now fail in `system_of_equations()` with an error that names the weight and the equation.
 * `system_of_equations()` now warns about unknown equation settings, e.g. a typo like `[ndraw = 100]` or an unsupported option like `[dates = ...]`. Before, they were silently ignored (#121).

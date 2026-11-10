@@ -15,7 +15,6 @@ forecast_values(
   start_forecast,
   endogenous_variables,
   restrictions,
-  identities,
   conditional_innov_method = "projection",
   stochastic = FALSE,
   adjustment_matrix = NULL,

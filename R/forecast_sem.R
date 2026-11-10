@@ -402,7 +402,7 @@ forecast_draw <- function(sys_eq, estimates, jx,
   forecast_values(
     posterior, companion_matrix, reduced_form, y_matrix, forecast_x_matrix,
     horizon, freq, forecast_dates$start, sys_eq$endogenous_variables,
-    restrictions, sys_eq$identities,
+    restrictions,
     conditional_innov_method = conditional_innov_method,
     stochastic = is.null(central_tendency),
     adjustment_matrix = adjustment_matrix,
@@ -440,7 +440,7 @@ forecast_draw <- function(sys_eq, estimates, jx,
 forecast_values <- function(posterior, companion_matrix, reduced_form,
                             y_matrix, forecast_x_matrix, horizon, freq,
                             start_forecast, endogenous_variables,
-                            restrictions, identities,
+                            restrictions,
                             conditional_innov_method = "projection",
                             stochastic = FALSE,
                             adjustment_matrix = NULL,
@@ -481,13 +481,9 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
   z_matrix <- matrix(rnorm(horizon * n), nrow = n, ncol = horizon)
   u_matrix <- z_matrix * sd
 
-  as_forecast_ts <- function(out, weights = NULL) {
+  as_forecast_ts <- function(out) {
     colnames(out) <- endogenous_variables
-    ts_out <- stats::ts(out, start = start_forecast, frequency = freq)
-    validate_identities(ts_out, identities,
-      x_matrix = forecast_x_matrix, weights = weights
-    )
-    ts_out
+    stats::ts(out, start = start_forecast, frequency = freq)
   }
 
   # Time-varying identity weights change Gamma in every period, so the
@@ -502,7 +498,7 @@ forecast_values <- function(posterior, companion_matrix, reduced_form,
       weights <- lapply(out$weights, stats::ts,
         start = start_forecast, frequency = freq
       )
-      ts_out <- as_forecast_ts(out$forecast, weights)
+      ts_out <- as_forecast_ts(out$forecast)
       attr(ts_out, "weights") <- weights
       ts_out
     }
@@ -837,106 +833,4 @@ forecast_companion <- function(horizon,
 
   forecast <- state %*% t(j_matrix)
   list(state = state, forecast = forecast)
-}
-
-#' Check Identity Equations in Forecast Output
-#'
-#' Recomputes each identity from its component series and weights, then warns if
-#' deviations exceed `tol`. Intended as a safeguard against identity drift.
-#'
-#' @param ts_out A forecast output time-series matrix.
-#' @param identities A named list of identity definitions produced by
-#'   [get_identities()] and updated by [get_seq_weights()].
-#' @param tol Numeric tolerance for deviations between the identity and its
-#'   reconstructed value.
-#' @param x_matrix Optional matrix of exogenous variables to include when
-#'   checking identities.
-#' @param weights Optional named list with the time-varying weights of
-#'   identities, as returned by [forecast_stepwise()]. For these, the
-#'   weights and the link of each period are used.
-#'
-#' @return Invisibly returns `NULL`.
-#' @keywords internal
-validate_identities <- function(ts_out, identities, tol = 1e-8,
-                                x_matrix = NULL, weights = NULL) {
-  if (is.null(identities) || !length(identities)) {
-    return(invisible(NULL))
-  }
-
-  if (!is.null(x_matrix)) {
-    x_matrix <- as.matrix(x_matrix)
-    if (is.null(colnames(x_matrix))) {
-      colnames(x_matrix) <- paste0("x", seq_len(ncol(x_matrix)))
-    }
-    ts_x <- stats::ts(x_matrix,
-      start = stats::start(ts_out),
-      frequency = stats::frequency(ts_out)
-    )
-    new_cols <- setdiff(colnames(ts_x), colnames(ts_out))
-    if (length(new_cols)) {
-      output_names <- c(colnames(ts_out), new_cols)
-      ts_out <- cbind(ts_out, ts_x[, new_cols, drop = FALSE])
-      colnames(ts_out) <- output_names
-    }
-  }
-
-  for (lhs in names(identities)) {
-    iden <- identities[[lhs]]
-    if (!lhs %in% colnames(ts_out)) next
-    comps <- names(iden$components)
-    if (!length(comps)) next
-
-    fixed <- vapply(comps, function(comp) {
-      weight_name <- iden$components[[comp]]
-      wt <- iden$weights[[weight_name]]
-      suppressWarnings(as.numeric(wt))
-    }, numeric(1))
-    period_weights <- matrix(fixed,
-      nrow = nrow(ts_out), ncol = length(comps), byrow = TRUE,
-      dimnames = list(NULL, comps)
-    )
-    link <- 0
-    if (!is.null(weights[[lhs]])) {
-      varying <- setdiff(colnames(weights[[lhs]]), "link")
-      period_weights[, varying] <- weights[[lhs]][, varying]
-      link <- as.numeric(weights[[lhs]][, "link"])
-    }
-
-    missing_components <- setdiff(comps, colnames(ts_out))
-    missing_weights <- comps[colSums(is.na(period_weights)) > 0]
-    if (length(missing_components) || length(missing_weights)) {
-      warn <- c(
-        "!" = "Identity {.val {lhs}} could not be checked."
-      )
-      if (length(missing_components)) {
-        warn <- c(
-          warn,
-          ">" = "Missing components in forecast output: {.val {missing_components}}."
-        )
-      }
-      if (length(missing_weights)) {
-        warn <- c(
-          warn,
-          ">" = "Weights missing or non-numeric for components: {.val {missing_weights}}."
-        )
-      }
-      cli::cli_warn(warn)
-      next
-    }
-
-
-    X <- ts_out[, comps, drop = FALSE]
-    rhs <- rowSums(X * period_weights) + link
-
-    lhs_series <- ts_out[, lhs]
-    diff <- abs(lhs_series - rhs)
-    if (any(diff > tol, na.rm = TRUE)) {
-      where <- which(diff > tol)
-      cli::cli_warn(c(
-        "!" = "Identity {.val {lhs}} not satisfied at horizon {.val {paste(where, collapse = ', ')}}."
-      ))
-    }
-  }
-
-  invisible(NULL)
 }

@@ -410,27 +410,25 @@ gdp == 0.64*consumption + 0.27*investment + 0.57*exports - 0.48*imports"
     gdp = list(horizon = 1L, value = 0)
   )
 
-  # No warnings: the draws of both methods have to satisfy the identities.
-  expect_no_warning(
-    res_projection <- withr::with_seed(
-      11,
-      forecast(
-        estimates, dates,
-        restrictions = restrictions,
-        options = list(conditional_innov_method = "projection")
-      )
+  res_projection <- withr::with_seed(
+    11,
+    forecast(
+      estimates, dates,
+      restrictions = restrictions,
+      options = list(conditional_innov_method = "projection")
     )
   )
-  expect_no_warning(
-    res_eigen <- withr::with_seed(
-      11,
-      forecast(
-        estimates, dates,
-        restrictions = restrictions,
-        options = list(conditional_innov_method = "eigen")
-      )
+  res_eigen <- withr::with_seed(
+    11,
+    forecast(
+      estimates, dates,
+      restrictions = restrictions,
+      options = list(conditional_innov_method = "eigen")
     )
   )
+  # the draws of both methods satisfy the identity
+  expect_identities_hold(res_projection, estimates$sys_eq$identities)
+  expect_identities_hold(res_eigen, estimates$sys_eq$identities)
 
   get_draws <- function(result, horizon, variable) {
     vapply(
@@ -1135,16 +1133,15 @@ test_that("forecast without lags and with restrictions", {
     tolerance = 1e-12
   )
 
-  # No warnings: the eigen draws have to satisfy the identities.
-  expect_no_warning(
-    out_eigen <- withr::with_seed(
-      7,
-      forecast(est, dates,
-        restrictions = restrictions,
-        options = list(conditional_innov_method = "eigen")
-      )
+  out_eigen <- withr::with_seed(
+    7,
+    forecast(est, dates,
+      restrictions = restrictions,
+      options = list(conditional_innov_method = "eigen")
     )
   )
+  # the eigen draws satisfy the identity
+  expect_identities_hold(out_eigen, est$sys_eq$identities)
 
   # Restriction hit at h=1 also with eigen draws.
   expect_equal(out_eigen$mean$manufacturing[1], 0.5)
@@ -1231,6 +1228,31 @@ test_that("restricting aggregate alone keeps identity intact", {
     out$mean$manufacturing[2],
     base$mean$manufacturing[2]
   )
+})
+
+test_that("identities with lagged components hold in the forecast", {
+  set.seed(1)
+  sys_eq <- system_of_equations("a ~ a.L(1), b ~ c, c == a + a.L(1)")
+  a <- stats::ts(cumsum(rnorm(60)) + 100, start = c(2000, 1), frequency = 4)
+  ts_data <- list(
+    a = as_ets(a, series_type = "level", method = "diff_log"),
+    b = as_ets(a + rnorm(60), series_type = "level", method = "diff_log")
+  )
+  a_rate <- 100 * diff(log(a))
+  ts_data$c <- as_ets(a_rate + stats::lag(a_rate, -1),
+    series_type = "level", method = "none"
+  )
+  dates <- list(
+    estimation = list(start = c(2001, 1), end = c(2013, 4)),
+    forecast = list(start = c(2015, 1), end = c(2015, 4))
+  )
+  estimates <- estimate(ts_data, sys_eq, dates,
+    options = list(gibbs = list(ndraws = 200))
+  )
+
+  expect_no_warning(out <- forecast(estimates, dates))
+  # the first period uses the last observed value of a
+  expect_identities_hold(out, estimates$sys_eq$identities)
 })
 
 test_that("restrictions as ts, date or horizon give the same forecast", {
@@ -1421,6 +1443,8 @@ test_that("density forecasts keep the unadjusted draws", {
   expect_equal(out$unadjusted$mean, base$mean)
   expect_equal(out$unadjusted$quantiles, base$quantiles)
   expect_true(out$mean$service[1] > base$mean$service[1])
+  # the adjusted draws satisfy the identity
+  expect_identities_hold(out, est$sys_eq$identities)
 })
 
 test_that("density forecasts fill the ragged edge in each draw", {
@@ -1482,6 +1506,7 @@ test_that("density forecasts fill the ragged edge in each draw", {
     expect_equal(nrow(draw), 4)
     expect_equal(unname(draw[1, "service"]), 0.5)
   }
+  expect_identities_hold(out, est$sys_eq$identities)
 
   # adjustments start at the forecast, after the filled quarters
   out <- withr::with_seed(3, forecast(est, model$dates,
@@ -2116,9 +2141,11 @@ test_that("chain-linked weights of density forecasts are kept per draw", {
   skip_on_cran()
   model <- estimate_chain_link_model(c(2019, 2))
 
-  expect_no_warning(out <- withr::with_seed(3, forecast(model$est, model$dates,
+  out <- withr::with_seed(3, forecast(model$est, model$dates,
     options = list(weights = "chain_linked")
-  )))
+  ))
+  # the identity holds with the weights of each draw and period
+  expect_identities_hold(out, model$est$sys_eq$identities)
 
   draw_weights <- lapply(out$forecasts, function(draw) attr(draw, "weights")$y)
   expect_length(draw_weights, length(out$forecasts))
