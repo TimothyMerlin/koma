@@ -57,7 +57,7 @@ construct_companion_matrix <- function(posterior, exogenous_variables) {
     companion_phi <- phi_matrix_stacked
     companion_beta_tilde <- beta_tilde_matrix
     companion_gamma <- gamma_matrix
-    companion_c <- constant
+    companion_c <- t(constant)
   }
 
   list(
@@ -75,33 +75,33 @@ construct_companion_matrix <- function(posterior, exogenous_variables) {
 #' This function computes the reduced form parameters companion_pi,
 #' companion_theta, and companion_d using the provided companion_matrix.
 #'
+#' The companion matrix \eqn{\Gamma_c} is block-diagonal with \eqn{\Gamma} and an
+#' identity matrix, so its inverse has \eqn{\Gamma^{-1}} in the first block.
+#' Only the first \eqn{n} columns of each matrix are multiplied by
+#' \eqn{\Gamma^{-1}}; the remaining columns stay as they are.
+#'
 #' @param companion_matrix A list containing the matrices beta_tilde_matrix,
 #' phi_matrix, gamma_matrix, and c_matrix used to calculate the reduced form
-#' parameters.
+#' parameters, and the number of equations n.
 #'
 #' @return A list containing the matrices companion_pi, companion_theta, and
 #' companion_d that represent the reduced form parameters
 #' @keywords internal
 construct_reduced_form <- function(companion_matrix) {
-  # Reduced form parameters
-  if (!is.null(companion_matrix$beta_tilde_matrix)) {
-    companion_pi <-
-      companion_matrix$beta_tilde_matrix %*% solve(companion_matrix$gamma_matrix)
-  } else {
-    companion_pi <- NULL
+  n <- companion_matrix$n
+  first <- seq_len(n)
+  gamma_inv <- solve(companion_matrix$gamma_matrix[first, first, drop = FALSE])
+  times_inv <- function(m) {
+    if (is.null(m)) {
+      return(NULL)
+    }
+    m[, first] <- m[, first, drop = FALSE] %*% gamma_inv
+    m
   }
-  if (!is.null(companion_matrix$phi_matrix)) {
-    companion_theta <-
-      companion_matrix$phi_matrix %*% solve(companion_matrix$gamma_matrix)
-  } else {
-    companion_theta <- NULL
-  }
-  companion_d <-
-    companion_matrix$c_matrix %*% solve(companion_matrix$gamma_matrix)
 
   list(
-    companion_pi = companion_pi,
-    companion_theta = companion_theta,
-    companion_d = companion_d
+    companion_pi = times_inv(companion_matrix$beta_tilde_matrix),
+    companion_theta = times_inv(companion_matrix$phi_matrix),
+    companion_d = times_inv(companion_matrix$c_matrix)
   )
 }

@@ -9,7 +9,7 @@ construct_reduced_form(companion_matrix)
 \arguments{
 \item{companion_matrix}{A list containing the matrices beta_tilde_matrix,
 phi_matrix, gamma_matrix, and c_matrix used to calculate the reduced form
-parameters.}
+parameters, and the number of equations n.}
 }
 \value{
 A list containing the matrices companion_pi, companion_theta, and
@@ -18,5 +18,11 @@ companion_d that represent the reduced form parameters
 \description{
 This function computes the reduced form parameters companion_pi,
 companion_theta, and companion_d using the provided companion_matrix.
+}
+\details{
+The companion matrix \eqn{\Gamma_c} is block-diagonal with \eqn{\Gamma} and an
+identity matrix, so its inverse has \eqn{\Gamma^{-1}} in the first block.
+Only the first \eqn{n} columns of each matrix are multiplied by
+\eqn{\Gamma^{-1}}; the remaining columns stay as they are.
 }
 \keyword{internal}
