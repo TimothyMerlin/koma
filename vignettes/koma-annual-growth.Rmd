@@ -1,0 +1,131 @@
+---
+title: "Year-over-Year Growth Rates as Regressors"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{koma-annual-growth}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{R, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>"
+)
+```
+
+```{R}
+library(koma)
+set.seed(1)
+```
+
+# Overview
+
+`koma` models quarter-on-quarter (qoq) growth rates. Some relationships are better
+described with year-over-year growth, e.g. wages, which are often indexed to
+the inflation of the past year. This vignette adds year-over-year inflation to
+a wage equation with an identity of qoq growth rates.
+
+Let \(P_t\) be the consumer price level in quarter \(t\). With
+`method = "diff_log"`, the year-over-year growth rate is the sum of the last
+four qoq growth rates \(\pi_t = 100\,\Delta \ln P_t\):
+\[
+\pi^{yoy}_t = 100\,(\ln P_t - \ln P_{t-4})
+= \pi_t + \pi_{t-1} + \pi_{t-2} + \pi_{t-3} .
+\]
+With `method = "percentage"` the sum is only an approximation.
+
+# Model
+
+```{R}
+equations <- "inflation ~ inflation.L(1),
+n_wages ~ inflation_yoy + n_wages.L(1),
+inflation_yoy == inflation + inflation.L(1:3)"
+
+sys_eq <- system_of_equations(equations)
+print(sys_eq)
+```
+
+Variables enter the equations as qoq growth rates: `inflation` is qoq inflation
+\(\pi_t\) and `n_wages` is nominal wage growth.
+
+# Data
+
+We use the U.S. data in `klein`. `inflation` holds the PCE deflator, computed
+from nominal and real consumption, as a level; `rate()` turns it into qoq
+inflation.
+`inflation_yoy` is endogenous and needs data too; it is already a growth rate,
+so `series_type = "rate"`, and `method = "none"` because its level is the
+price level, which `inflation` already holds.
+
+```{R}
+deflator <- klein$n_consumption / klein$consumption * 100
+
+ts_data <- list(
+    inflation = as_ets(deflator, series_type = "level", method = "diff_log"),
+    n_wages = as_ets(klein$n_wages, series_type = "level", method = "diff_log"),
+    inflation_yoy = as_ets(100 * diff(log(deflator), lag = 4),
+        series_type = "rate", method = "none"
+    )
+)
+```
+
+# Estimation
+
+The sample starts in 1972 to include the inflation swings of the 1970s and
+1980s.
+
+```{R}
+dates <- list(
+    estimation = list(start = c(1972, 1), end = c(2019, 4)),
+    forecast = list(start = c(2024, 1), end = c(2025, 4))
+)
+
+estimates <- estimate(ts_data, sys_eq, dates)
+summary(estimates, variables = "n_wages")
+```
+
+# Forecast
+
+We end the data in 2023 Q4, the quarter before the forecast.
+
+```{R}
+estimates$ts_data[sys_eq$endogenous_variables] <-
+    lapply(sys_eq$endogenous_variables, function(x) {
+        stats::window(estimates$ts_data[[x]], end = c(2023, 4))
+    })
+
+forecasts <- forecast(estimates, dates)
+print(forecasts)
+```
+
+A change in qoq inflation enters `inflation_yoy` for four quarters. The
+forecast of `inflation_yoy` is the sum of the last four qoq rates, including
+the observed ones at the start:
+
+```{R}
+inflation <- stats::ts(
+    c(
+        stats::window(rate(ts_data$inflation), end = c(2023, 4)),
+        rate(forecasts$mean$inflation)
+    ),
+    end = c(2025, 4), frequency = 4
+)
+cbind(
+    inflation_yoy = forecasts$mean$inflation_yoy,
+    sum_of_quarters = stats::window(
+        stats::filter(inflation, rep(1, 4), sides = 1),
+        start = c(2024, 1)
+    )
+)
+```
+
+# Notes
+
+If the model already has the log price level, e.g. for an error-correction
+term as in `vignette("koma-error-correction")`, the same rate can be defined as
+`inflation_yoy == p_level - p_level.L(4)`.
+
+Keep year-over-year rates on the right-hand side. As the dependent variable of
+a stochastic equation, consecutive values share three quarters, so the
+residuals are correlated over time, and koma cannot rebuild levels from them.

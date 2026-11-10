@@ -140,7 +140,10 @@ articles:
   - title: "Example: Error Correction"
     contents:
       - koma-error-correction
-      
+
+  - title: "Example: Year-over-Year Growth"
+    contents:
+      - koma-annual-growth
 
 authors:
   - Samad Sarferaz:
