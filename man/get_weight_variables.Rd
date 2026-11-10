@@ -7,8 +7,7 @@
 get_weight_variables(equations, call = rlang::caller_env())
 }
 \arguments{
-\item{equations}{A character string or vector containing the system of
-equations. If a single string, equations should be separated by commas.}
+\item{equations}{A character vector of parsed equations, one per element.}
 }
 \value{
 A character vector of unique weight names that appeared within

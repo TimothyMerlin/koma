@@ -330,6 +330,7 @@ is_valid_var <- function(name) {
 #'
 #' The function checks if all exogenous variables are declared.
 #'
+#' @param equations A character vector of parsed equations, one per element.
 #' @inheritParams system_of_equations
 #'
 #' @return Logical. Returns `TRUE` if the equation is valid.

@@ -16,6 +16,7 @@
 * New `vignette("koma-annual-growth")` shows how to use year-over-year growth rates as regressors, e.g. year-over-year inflation in a wage equation, with an identity of qoq growth rates.
 * `small_open_economy` now runs until 2026 Q2, from a newer data vintage, so results computed with it change. It also contains the nominal series `nominal_consumption`, `nominal_investment` and `nominal_domestic_demand`. `vignette("koma-small-macro-model")` uses them for identity weights computed from data and compares the weights `"last"` and `"chain_linked"`.
 * Identities with weights computed from data can put the aggregate's weight on the left-hand side, e.g. `(nom_gdp)*gdp == (nom_cons)*cons + (nom_inv)*inv` instead of `gdp == (nom_cons/nom_gdp)*cons + (nom_inv/nom_gdp)*inv` (#116).
+* An equation can continue over several lines: a line that ends in `~`, `==`, `+`, `-` or `*` continues on the next line, e.g. `"y ==\n  0.5*a + 0.5*b"`. Before, a newline always ended the equation (#151).
 * `forecast()` is faster for large models with lags: the reduced form inverts Γ instead of the companion matrix, about 17 times faster for 150 equations with 4 lags. This matters most with `options$weights = "chain_linked"`, which computes the reduced form in every forecast period (#148).
 
 ## Bug fixes

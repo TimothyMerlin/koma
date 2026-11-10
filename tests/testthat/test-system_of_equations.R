@@ -189,6 +189,26 @@ test_that("system_of_equations stores omitted exogenous variables as character(0
   expect_identical(result$total_exogenous_variables, c("constant", "y.L(1)"))
 })
 
+test_that("system_of_equations continues a line that ends in an operator", {
+  one_line <- system_of_equations(
+    "a ~ b + a.L(1), b ~ b.L(1), y == 0.5*a + 0.5*b - 0.2*b.L(1)"
+  )
+
+  wrapped <- c(
+    "a ~ b + a.L(1), b ~ b.L(1), y ==\n  0.5*a + 0.5*b - 0.2*b.L(1)",
+    "a ~ b + a.L(1), b ~ b.L(1), y == 0.5*a +\n  0.5*b - 0.2*b.L(1)",
+    "a ~ b +\n  a.L(1), b ~ b.L(1), y == 0.5*a + 0.5*b - 0.2*b.L(1)",
+    "a ~\n  b + a.L(1), b ~ b.L(1), y == 0.5*a + 0.5*b - 0.2*b.L(1)",
+    "a ~ b + a.L(1), b ~ b.L(1), y == 0.5*a + 0.5*b -\n  0.2*b.L(1)",
+    "a ~ b + a.L(1), b ~ b.L(1), y == 0.5*\n  a + 0.5*b - 0.2*b.L(1)",
+    "a ~ b + a.L(1)\nb ~ b.L(1)\ny == 0.5*a +\n  0.5*b - 0.2*b.L(1)",
+    "a ~ b + a.L(1)\r\nb ~ b.L(1)\r\ny == 0.5*a +\r\n  0.5*b - 0.2*b.L(1)"
+  )
+  for (equations in wrapped) {
+    expect_equal(system_of_equations(equations), one_line, info = equations)
+  }
+})
+
 test_that("system_of_equations requires at least one equation", {
   expect_error(
     system_of_equations(),

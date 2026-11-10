@@ -32,7 +32,9 @@
 #' \code{vignette("equations")}.
 #'
 #' @param equations A character string or vector containing the system of
-#' equations. If a single string, equations should be separated by commas.
+#' equations. If a single string, equations are separated by commas or
+#' newlines. A line that ends in `~`, `==`, `+`, `-` or `*` continues on the
+#' next line.
 #' @param exogenous_variables A character vector of exogenous variables.
 #' @param ... Additional arguments for future extensions.
 #'
@@ -69,6 +71,9 @@
 system_of_equations <- function(equations = vector(),
                                 exogenous_variables = vector(),
                                 ...) {
+  # A line that ends in an operator continues on the next line
+  equations <- gsub("(~|==|\\+|-|\\*)[ \t]*\r?\n", "\\1", equations)
+
   if (length(equations) == 1) {
     split_equations <- function(text) {
       # split on comma or newline, but not inside {}, [], or ()
@@ -627,6 +632,7 @@ get_weights <- function(eq) {
 #' This function takes a vector of equations and extracts the names of the
 #' variables that appear within parentheses.
 #'
+#' @param equations A character vector of parsed equations, one per element.
 #' @inheritParams system_of_equations
 #'
 #' @return A character vector of unique weight names that appeared within

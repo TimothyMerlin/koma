@@ -7,8 +7,7 @@
 validate_completeness(equations, exogenous_variables)
 }
 \arguments{
-\item{equations}{A character string or vector containing the system of
-equations. If a single string, equations should be separated by commas.}
+\item{equations}{A character vector of parsed equations, one per element.}
 
 \item{exogenous_variables}{A character vector of exogenous variables.}
 }

@@ -8,7 +8,9 @@ system_of_equations(equations = vector(), exogenous_variables = vector(), ...)
 }
 \arguments{
 \item{equations}{A character string or vector containing the system of
-equations. If a single string, equations should be separated by commas.}
+equations. If a single string, equations are separated by commas or
+newlines. A line that ends in \code{~}, \code{==}, \code{+}, \code{-} or \code{*} continues on the
+next line.}
 
 \item{exogenous_variables}{A character vector of exogenous variables.}
 
