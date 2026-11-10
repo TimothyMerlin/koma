@@ -7,16 +7,21 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
+```{r, include=FALSE}
+knitr::opts_chunk$set(fig.width = 8, fig.height = 4.5, dpi = 144, out.width = "100%")
+options(scipen = 10)
+```
+
 # Equations of the Small Macro Model
 
 **Stochastic equations**
 
 $$
 \begin{aligned}
-\text{Consumption}\quad C_t &= \beta_1 + \beta_{1,2} C_{t-1} + \gamma_{1,7} GDP_t + \varepsilon_{1t},\\
-\text{Investment}\quad I_t &= \beta_2 + \beta_{2,3} I_{t-1} + \varepsilon_{2t},\\
-\text{Exports}\quad X_t &= \beta_3 + \beta_{3,4} X_{t-1} + \beta_{3,7} WGDP_t + \varepsilon_{3t},\\
-\text{Imports}\quad M_t &= \beta_4 + \gamma_{4,8} D_t + \beta_{4,5} M_{t-1} + \varepsilon_{4t},\\
+\text{Consumption}\quad c_t &= \beta_1 + \beta_{1,2} c_{t-1} + \gamma_{1,7} gdp_t + \varepsilon_{1t},\\
+\text{Investment}\quad i_t &= \beta_2 + \beta_{2,3} i_{t-1} + \varepsilon_{2t},\\
+\text{Exports}\quad x_t &= \beta_3 + \beta_{3,4} x_{t-1} + \beta_{3,7} wgdp_t + \varepsilon_{3t},\\
+\text{Imports}\quad m_t &= \beta_4 + \gamma_{4,8} d_t + \beta_{4,5} m_{t-1} + \varepsilon_{4t},\\
 \text{Prices}\quad P_t &= \beta_5 + \beta_{5,9} ER_t + \beta_{5,10} OP_t 
      + \beta_{5,6} P_{t-1} + \varepsilon_{5t},\\
 \text{Interest Rate}\quad R_t &= \beta_6 + \beta_{6,6} P_{t-1} + \beta_{6,8} R_{GE,t} 
@@ -28,7 +33,7 @@ $$
 
 $$
 \begin{aligned}
-\text{Equilibrium Output}\quad GDP_t &= 0.9*D_t + 0.5*X_t - 0.4*M_t
+\text{Equilibrium Output}\quad gdp_t &= 0.9*d_t + 0.5*x_t - 0.4*m_t
 \end{aligned}
 $$
 
@@ -36,36 +41,36 @@ $$
 
 $$
 \begin{aligned}
-\text{Domestic Demand}\quad D_t &= 0.6*C_t + 0.4*I_t
+\text{Domestic Demand}\quad d_t &= 0.6*c_t + 0.4*i_t
 \end{aligned}
 $$
 
 **Coefficients**  
 - The $\beta$’s and $\gamma$’s are structural coefficients to be estimated.
 
-**Endogenous variables**  
+**Endogenous variables**
 
-- $C_t$: Consumption at time $t$.
-- $I_t$: Gross fixed capital formation (investment) at time $t$.
-- $X_t$: Exports at time $t$.
-- $M_t$: Imports at time $t$.
+Real quantities are written in lower case.
+
+- $c_t$: Consumption at time $t$.
+- $i_t$: Gross fixed capital formation (investment) at time $t$.
+- $x_t$: Exports at time $t$.
+- $m_t$: Imports at time $t$.
 - $P_t$: Price level at time $t$.
 - $R_t$: Short-term interest rate at time $t$.
-- $D_t$: Domestic demand, defined by $D_t = 0.6 * C_t + 0.4 * I_t$.
-- $GDP_t$: Equilibrium output (demand), defined by
-  $GDP_t = 0.9 * D_t + 0.5 * X_t - 0.4 * M_t$.
+- $d_t$: Domestic demand, defined by $d_t = 0.6 * c_t + 0.4 * i_t$.
+- $gdp_t$: Equilibrium output (demand), defined by
+  $gdp_t = 0.9 * d_t + 0.5 * x_t - 0.4 * m_t$.
 
-**Exogenous variables**  
+**Exogenous variables**
 
-- $WGDP_t$: World GDP at time $t$.
+- $wgdp_t$: World GDP at time $t$.
 - $ER_t$: Exchange rate at time $t$.
 - $OP_t$: Oil price at time $t$.
 - $R_{GE,t}$: German interest rate at time $t$.
 
-**Other variables**  
+**Other variables**
 
-- $G_t$: Government spending at time $t$.
-- $T_t$: Taxes at time $t$.
 - $\varepsilon_{it}$: Stochastic error term for equation $i$ at time $t$.
 
 
@@ -161,7 +166,10 @@ ts_data[sys_eq$endogenous_variables] <-
 The names of the list elements should match the variable names used in the equations.
 Now, we can estimate the model using the `estimate` function. 
 
+The sampler draws random numbers, so a seed makes the results reproducible.
+
 ```{R, collapse=TRUE}
+set.seed(1)
 estimates <- estimate(
   sys_eq,
   ts_data = ts_data,
@@ -184,15 +192,15 @@ To see how to run the estimation in parallel, refer to the [parallel estimation 
 
 You can visualize MCMC diagnostics for coefficient draws using `trace_plot()`.
 
-```{R, eval=FALSE}
+```{R}
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   trace_plot(estimates, variables = c("consumption", "investment"))
 }
 ```
 
-You can also inspect running means (cumulative averages) with `running_mean_plot()`.
+You can also inspect running means (cumulative averages) with `running_mean_plot()`. The running means should settle as the draws accumulate. The grey band marks the first draws after the burn-in, by default 10% of the saved draws but at least 50, where a running mean averages only a few draws and moves a lot even when the sampler has converged. Set its length with `grace_draws`.
 
-```{R, eval=FALSE}
+```{R}
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   running_mean_plot(estimates, variables = c("consumption", "investment"))
 }
@@ -200,7 +208,7 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
 
 You can inspect autocorrelation diagnostics with `acf_plot()`.
 
-```{R, eval=FALSE}
+```{R}
 if (requireNamespace("ggplot2", quietly = TRUE)) {
   acf_plot(estimates, variables = c("consumption", "investment"))
 }
@@ -250,3 +258,131 @@ restrictions <- list(prices = list(value = 0.5, date = c(2023, 1)))
 ## Residual Adjustments
 
 Residual adjustments (add-factors) add a value to the residual of selected stochastic equations in the forecast period, e.g. to include information the model does not capture. See the [residual adjustments vignette](koma-residual-adjustments.html).
+
+# Identity Weights from Nominal Data
+
+So far, domestic demand aggregates consumption and investment with fixed weights. In the national accounts, the weights are the nominal shares of the components. Because the shares change over time, the weights can be computed from the nominal series in `small_open_economy`:
+
+$$
+d_t = \frac{C}{D} c_t + \frac{I}{D} i_t,
+$$
+
+where the upper-case $C$, $I$ and $D$ are nominal consumption, investment and domestic demand, and the lower-case $c_t$, $i_t$ and $d_t$ their real counterparts. The nominal shares are those of one year, by default the last complete year of the data, so they carry no time index. In the equations, the nominal series are written in parentheses:
+
+```{R, collapse=TRUE}
+equations_nominal <- "consumption ~ gdp + consumption.L(1),
+investment ~ investment.L(1),
+exports ~ world_gdp + exports.L(1),
+imports ~ domestic_demand + imports.L(1),
+prices ~ exchange_rate + oil_price + prices.L(1),
+interest_rate ~ prices + interest_rate_germany + prices.L(1),
+gdp == 0.9*domestic_demand + 0.5*exports - 0.4*imports,
+(nominal_domestic_demand)*domestic_demand == (nominal_consumption)*consumption + (nominal_investment)*investment"
+
+sys_eq_nominal <- system_of_equations(equations_nominal, exogenous_variables)
+sys_eq_nominal$identities$domestic_demand$weights
+```
+
+The endogenous variables and the nominal series end in the last quarter of 2024, so that the forecast starts in a new year. The exogenous variables are known over the forecast:
+
+```{R}
+dates_nominal <- list(
+  estimation = list(start = c(1996, 1), end = c(2024, 4)),
+  forecast = list(start = c(2025, 1), end = c(2026, 2))
+)
+
+ts_data_nominal <- lapply(series, function(x) {
+  as_ets(small_open_economy[[x]], series_type = "level", method = "diff_log")
+})
+names(ts_data_nominal) <- series
+ts_data_nominal$interest_rate <- as_ets(small_open_economy$interest_rate,
+  series_type = "rate", method = "none"
+)
+ts_data_nominal$interest_rate_germany <- as_ets(
+  small_open_economy$interest_rate_germany,
+  series_type = "rate", method = "none"
+)
+
+until_2024 <- c(
+  sys_eq_nominal$endogenous_variables, sys_eq_nominal$weight_variables
+)
+ts_data_nominal[until_2024] <- lapply(ts_data_nominal[until_2024],
+  stats::window,
+  end = c(2024, 4)
+)
+
+estimates_nominal <- estimate(
+  sys_eq_nominal,
+  ts_data = ts_data_nominal,
+  dates = dates_nominal,
+  options = list(gibbs = list(ndraws = 500)) # fewer draws for speed
+)
+```
+
+The estimation evaluates the weights on the last year of the data, 2024. In the forecast, `options$weights` decides how the weights continue:
+
+- `"last"` (default) keeps the weights of 2024 constant.
+- `"chain_linked"` values the forecast of the components at the prices of 2024, as the national accounts do with annual overlap. A component that grows faster than the others gains weight over the forecast. Because the data end in the last quarter of the year, the first forecast quarter also links the prices of 2023 to those of 2024.
+
+The weights aggregate simple growth rates exactly. Here, the series use the method `"diff_log"`, so the identity of the log growth rates, and with it the chain-linking, holds only approximately, with both `"last"` and `"chain_linked"`. With the method `"percentage"`, it holds exactly.
+
+To compare the weights alone, both are point forecasts with the mean of the coefficients and without shocks (`approximate = TRUE`), so that they differ only in the weights.
+
+```{R, collapse=TRUE}
+forecasts_last <- forecast(estimates_nominal,
+  dates = dates_nominal,
+  options = list(approximate = TRUE, weights = "last")
+)
+forecasts_chain <- forecast(estimates_nominal,
+  dates = dates_nominal,
+  options = list(approximate = TRUE, weights = "chain_linked")
+)
+```
+
+With chain-linked weights, the forecast contains the weights of each forecast quarter. The column `link` is added to the growth rate of domestic demand in the link quarter:
+
+```{R, collapse=TRUE}
+forecasts_chain$weights$mean$domestic_demand
+```
+
+The weight of investment, with its nominal share in the history: the chain-linked weight rises, as investment is forecast to grow faster than consumption, while the weight `"last"` stays at the share of 2024.
+
+```{R}
+share <- stats::window(
+  small_open_economy$nominal_investment /
+    small_open_economy$nominal_domestic_demand,
+  start = c(2019, 1), end = c(2024, 4)
+)
+chain_linked <- forecasts_chain$weights$mean$domestic_demand[, "investment"]
+# "last": the share of the annual averages of 2024
+mean_2024 <- function(x) mean(stats::window(x, start = c(2024, 1), end = c(2024, 4)))
+last <- mean_2024(small_open_economy$nominal_investment) /
+  mean_2024(small_open_economy$nominal_domestic_demand)
+
+plot(share,
+  xlim = c(2019, 2026.5), ylim = range(share, chain_linked, last),
+  xlab = "", ylab = "weight of investment"
+)
+lines(chain_linked, col = "steelblue", lwd = 2, type = "o", pch = 16)
+segments(2025, last, 2026.5, last, col = "firebrick", lwd = 2, lty = 2)
+abline(v = 2025, col = "grey60", lty = 3)
+legend("topleft",
+  c("nominal share", "\"chain_linked\"", "\"last\""),
+  col = c("black", "steelblue", "firebrick"), lty = c(1, 1, 2), lwd = c(1, 2, 2),
+  bty = "n"
+)
+```
+
+The levels of domestic demand forecast with both weights, and the difference of the chain-linked forecast in percent:
+
+```{R, collapse=TRUE}
+level_last <- level(forecasts_last$mean$domestic_demand)
+level_chain <- level(forecasts_chain$mean$domestic_demand)
+cbind(
+  last = level_last,
+  chain_linked = level_chain,
+  difference_percent = round(100 * (level_chain / level_last - 1), 4)
+)
+```
+
+The differences in the growth rates add up in the levels, so the gap grows over the horizon. Here it stays small, as the shares of consumption and investment change slowly.

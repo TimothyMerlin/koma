@@ -34,7 +34,8 @@
 
 #' Quarterly time series of key macro variables for a small open economy (Switzerland)
 #'
-#' @format A \code{list} of 12 \code{ts} objects (quarterly):
+#' @format A \code{list} of 15 \code{ts} objects (quarterly), until the second
+#' quarter of 2026:
 #' \describe{
 #'   \item{consumption}{Private consumption \(C_t\).}
 #'   \item{investment}{Gross fixed capital formation \(I_t\).}
@@ -48,6 +49,10 @@
 #'   \item{interest_rate_germany}{German short‐term rate (exog) \eqn{R_{GE,t}}.}
 #'   \item{exchange_rate}{Nominal exchange rate (exog) \(ER_t\).}
 #'   \item{oil_price}{Oil price (exogenous) \(OP_t\).}
+#'   \item{nominal_consumption}{Private consumption at current prices.}
+#'   \item{nominal_investment}{Gross fixed capital formation at current
+#'   prices.}
+#'   \item{nominal_domestic_demand}{Domestic demand at current prices.}
 #' }
 #' @source \url{https://www.seco.admin.ch/}, \url{https://kof.ethz.ch/}
 "small_open_economy"

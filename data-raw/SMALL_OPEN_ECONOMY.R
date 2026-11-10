@@ -5,7 +5,7 @@ imtot1 ~  domdemoi + imtot1.L(1),
 pconsp ~ wkfreuro + poilusd + pconsp.L(1),
 srate ~ pconsp + srate_ge + srate.L(1),
 gdpos ==  0.9*domdemoi + 0.5*extot1 - 0.4*imtot1,
-domdemoi == 0.6*constot + 0.4*ifix"
+(ndomdemoi)*domdemoi == (nconstot)*constot + (nifix)*ifix"
 
 exogenous_variables <- c("xworld", "wkfreuro", "poilusd", "srate_ge")
 
@@ -28,7 +28,7 @@ keys <- paste0("ch.kof.modelinput.", varfor)
 # ts_data <- koftsdb::db_ts_read(
 #   con,
 #   ts_keys = keys,
-#   valid_on = "2025-01-01",
+#   valid_on = "2026-07-01",
 #   schema = "vja"
 # )
 
@@ -45,8 +45,11 @@ small_open_economy$world_gdp <- ts_data$ch.kof.modelinput.xworld
 small_open_economy$exchange_rate <- ts_data$ch.kof.modelinput.wkfreuro
 small_open_economy$oil_price <- ts_data$ch.kof.modelinput.poilusd
 small_open_economy$interest_rate_germany <- ts_data$ch.kof.modelinput.srate_ge
+small_open_economy$nominal_consumption <- ts_data$ch.kof.modelinput.nconstot
+small_open_economy$nominal_investment <- ts_data$ch.kof.modelinput.nifix
+small_open_economy$nominal_domestic_demand <- ts_data$ch.kof.modelinput.ndomdemoi
 
-small_open_economy <- lapply(small_open_economy, stats::window, end = c(2024, 4))
+small_open_economy <- lapply(small_open_economy, stats::window, end = c(2026, 2))
 
 usethis::use_data(
   small_open_economy,
